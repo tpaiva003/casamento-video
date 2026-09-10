@@ -69,15 +69,17 @@ def cartao(r, estimado=False):
     %s
     <div class="leg">%s</div>
     <input type="number" class="ano" min="1990" max="2026" step="1"
-           placeholder="ano" value="%s">
+           placeholder="ano" value="%s" data-inicial="%s">
     <div class="btns">
       <button type="button" data-a="rep">= anterior</button>
       <button type="button" data-a="mais">+1</button>
       <button type="button" data-a="menos">-1</button>
+      <button type="button" data-a="conf" title="confirmar que este ano esta certo">confirmo</button>
     </div>
+    <div class="orig" data-orig=""></div>
   </div>
 </div>""" % (html.escape(r["id"]), img, html.escape(r["id"]), bloco,
-             marca, legenda or "<i>sem legenda</i>", ano)
+             marca, legenda or "<i>sem legenda</i>", ano, ano)
 
 
 PAGINA = """<!doctype html>
@@ -127,12 +129,21 @@ button.p{background:#3a6ea5;color:#fff;border:0;padding:10px 18px;
 button.p:hover{background:#4a7eb5}
 .st{font-size:13px;color:#9aa}
 .dica{padding:0 20px;color:#8a8a94;font-size:13px;max-width:900px}
+.orig{font-size:11px;margin-top:6px;min-height:15px;color:#6fd6a6;font-weight:600}
+.c.tocado{border-color:#2f6b3f}
+.aviso-topo{background:#3d1f22;color:#f0a0a4;padding:10px 20px;font-size:13px}
 </style>
 <header>
   <h1>Anos em falta</h1>
   <span class="st" id="st"></span>
   <button class="p" id="grav">Gravar ficheiro</button>
 </header>
+<div class="aviso-topo">
+  <b>Importante:</b> um ano que eu sugeri e que tu n&atilde;o toques continua a ser
+  estimativa minha, e n&atilde;o vai ser registado como indica&ccedil;&atilde;o tua. Se
+  concordares com uma sugest&atilde;o e quiseres dar-lhe o teu aval, carrega em
+  <b>confirmo</b>. Se n&atilde;o carregares, fica marcada como palpite meu.
+</div>
 <div class="legenda-topo">
   De onde vem cada ano:
   <span class="et exif">data da m&aacute;quina</span> fi&aacute;vel
@@ -154,18 +165,19 @@ const st=document.getElementById('st');
 function marcar(c){c.classList.toggle('ok',!!c.querySelector('.ano').value)}
 function conta(){
   const n=cs.filter(c=>c.querySelector('.ano').value).length;
-  st.textContent=n+' de '+cs.length+' preenchidas';
+  const teu=cs.filter(c=>['escrito','corrigido','confirmado'].includes(origem(c))).length;
+  st.textContent=n+' de '+cs.length+' com ano  |  '+teu+' vindas de ti';
 }
 cs.forEach((c,i)=>{
   const inp=c.querySelector('.ano');
-  inp.addEventListener('input',()=>{marcar(c);conta()});
+  inp.addEventListener('input',()=>{marcar(c);pintar(c);conta()});
   inp.addEventListener('keydown',e=>{
     if(e.key!=='Enter')return;
     e.preventDefault();
     const seg=cs[i+1]; if(!seg)return;
     const si=seg.querySelector('.ano');
     if(!si.value&&inp.value)si.value=inp.value;
-    marcar(seg);conta();si.focus();si.select();
+    marcar(seg);pintar(seg);conta();si.focus();si.select();
   });
   c.querySelector('img').addEventListener('click',ev=>ev.target.classList.toggle('z'));
   c.querySelectorAll('.btns button').forEach(b=>{
@@ -176,20 +188,41 @@ cs.forEach((c,i)=>{
           const v=cs[j].querySelector('.ano').value;
           if(v){inp.value=v;break}
         }
+      }else if(a==='conf'){
+        c.querySelector('.orig').dataset.orig='conf';
       }else if(inp.value){
         inp.value=(+inp.value)+(a==='mais'?1:-1);
       }
-      marcar(c);conta();
+      marcar(c);pintar(c);conta();
     });
   });
-  marcar(c);
+  marcar(c);pintar(c);
 });
 conta();
+function origem(c){
+  const inp=c.querySelector('.ano');
+  const ini=(inp.dataset.inicial||'').trim();
+  const v=inp.value.trim();
+  if(!v)return '';
+  if(!ini)return 'escrito';
+  if(v!==ini)return 'corrigido';
+  return c.querySelector('.orig').dataset.orig==='conf'?'confirmado':'intacto';
+}
+function pintar(c){
+  const o=origem(c);
+  const d=c.querySelector('.orig');
+  const txt={escrito:'escrito por ti',corrigido:'corrigido por ti',
+             confirmado:'confirmado por ti',intacto:'sugestao minha, nao tocaste'};
+  d.textContent=txt[o]||'';
+  d.style.color=(o==='intacto')?'#8a8a94':'#6fd6a6';
+  c.classList.toggle('tocado',o==='escrito'||o==='corrigido'||o==='confirmado');
+}
 document.getElementById('grav').addEventListener('click',()=>{
-  let txt='id,ano\\n';
+  let txt='id,ano,origem\\n';
   cs.forEach(c=>{
     const v=c.querySelector('.ano').value.trim();
-    if(v)txt+=c.dataset.id+','+v+'\\n';
+    const o=origem(c);
+    if(v)txt+=c.dataset.id+','+v+','+o+'\\n';
   });
   const a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob([txt],{type:'text/csv'}));

@@ -391,39 +391,74 @@ ficou só o HTML.
 
 ---
 
+### 2026-09-10 | 016 | Uma sugestão não tocada nunca conta como palavra do Tiago
+
+**Decisão:** só conta como indicação do Tiago um valor que ele escreveu de
+raiz, corrigiu, ou confirmou explicitamente. Um valor sugerido por mim que ele
+simplesmente não tocou continua a ser estimativa minha. Todas as ferramentas
+passam a gravar uma coluna `origem` com um de quatro valores: `escrito`,
+`corrigido`, `confirmado`, `intacto`. A leitura só aceita os três primeiros.
+
+**Razão:** o botão de gravar da primeira ferramenta exportava todos os campos
+com valor, incluindo os 81 que eu tinha pré-preenchido com estimativas minhas.
+Eu carimbei os 95 como indicação do Tiago. Ele deu por isso e corrigiu-me:
+"estás a assumir que nos casos em que não editei fui eu que disse e isso é
+mentira".
+
+Estava certo. Dos 95, apenas **14** eram dele: 9 escritos de raiz e 5
+correções a estimativas minhas. Os outros 81 eram meus, disfarçados da palavra
+dele.
+
+Isto não é um pormenor de contabilidade. Todo o valor deste registo está em
+saber, mais tarde, o que foi verificado por uma pessoa e o que foi deduzido por
+uma máquina. Uma estimativa minha com a assinatura dele é pior do que uma
+estimativa assumida, porque ninguém a vai voltar a questionar.
+
+**Consequência:** `data/anos_tiago.csv` reduzido de 95 para 14 registos, com
+coluna `origem`. Os 81 voltaram a ser tratados como estimativa e vão marcados
+como tal. A cobertura de ano manteve-se nos 84 por cento, o que muda é a
+honestidade da etiqueta, não o número.
+
+A ferramenta ganhou um botão `confirmo` por foto, para ele poder dar aval a uma
+sugestão sem a alterar, e um aviso no topo a explicar que não tocar não é
+concordar. Cada cartão mostra em texto o que aconteceu: "escrito por ti",
+"corrigido por ti", "confirmado por ti", ou "sugestão minha, não tocaste".
+
+**Quem:** Tiago.
+
+**Substitui:** 013, que dizia que os anos indicados por ele eram 95.
+
+---
+
+### 2026-09-10 | 017 | Os quatro tratamentos visuais são todos aprovados
+
+**Decisão:** os quatro tratamentos (A fundo desfocado, B colagem, C rajada, D
+pilha) ficam todos disponíveis e podem ser usados em momentos diferentes do
+vídeo, para ir variando o andamento.
+
+**Razão:** o problema do vídeo original é andamento único do princípio ao fim,
+com uma só transição e um só movimento. Ter quatro tratamentos distintos ataca
+isso na raiz. O Tiago viu-os e aprovou-os todos.
+
+**Consequência:** o vocabulário de ritmo do `CLAUDE.md` passa a mapear para
+estes quatro. Falta decidir a atribuição, ou seja que tratamento serve que
+bloco, e isso depende da montagem.
+
+Nota sobre o tremor que ele apontou na primeira versão: eram dois defeitos meus
+de implementação, não escolhas. Quantização a inteiro da posição e do tamanho
+em cada fotograma, e reamostragem repetida a partir do original. Corrigido com
+transformação afim de sub-pixel sobre uma imagem preparada uma só vez. Na
+rajada o tremor era deliberado e foi removido.
+
+**Quem:** Tiago.
+
+**Substitui:** fecha o ponto D, que estava em aberto.
+
+---
+
 ## Em aberto
 
 Não assumir nenhuma destas sem decisão explícita do Tiago.
-
-### D. Ritmo de rajada, a decidir depois de um teste em vídeo
-
-**Estado:** o Tiago decidiu não decidir no escuro. Na fase de montagem faço um
-teste de 15 segundos com fotos reais de amigos ou viagens, e ele decide a ver.
-
-O que o teste tem de responder, e que não se resolve a discutir:
-
-1. Duas ou três fotos ao mesmo tempo ainda se leem a 15 metros numa cortina?
-2. O deslize lateral cansa ao fim de dez fotos?
-
-Contexto abaixo, para não se perder.
-
-A regra fixa do briefing diz "nunca menos de 3 segundos por foto", e existe
-por causa da sala de jantar, com gente de costas e a conversar. Uma rajada de
-fotos a 1 segundo entra em conflito direto com ela.
-
-O Tiago propôs uma saída que possivelmente resolve o conflito em vez de o
-contornar: **as fotos não desaparecem quando entra a seguinte**. Uma foto
-entra ao centro, e quando chega a próxima desloca-se para o lado em vez de
-sair. Ficam duas ou três visíveis ao mesmo tempo, em movimento contínuo.
-
-Se assim for, cada foto continua no ecrã 3 segundos ou mais, apenas deixa de
-estar centrada durante todo esse tempo. A cadência de entrada fica rápida e
-mexida, a permanência mantém-se dentro da regra, e não é preciso abrir
-exceção. Fica por confirmar em teste real: legibilidade a 15 metros com duas
-ou três fotos simultâneas, e se o movimento lateral cansa ao fim de 10 fotos.
-
-Aplicação prevista: amigos, colegas, viagens, festas. Nunca em retratos nem
-em fotos de infância a solo.
 
 ### G. Recuperar os dois ficheiros de som em falta
 

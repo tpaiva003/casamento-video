@@ -163,12 +163,15 @@ def normalizar_pasta(nome):
 
 
 def ler_anos_tiago():
-    """Anos indicados pelo Tiago na ferramenta HTML.
+    """Anos que o Tiago escreveu de raiz ou corrigiu na ferramenta HTML.
 
-    INDICATIVOS. Ele proprio disse que quer validar com a Clara e que nao sao
-    finais. Entram no inventario porque valem muito mais do que nada para
-    ordenar, mas vao sempre marcados como indicacao dele e nunca como facto.
-    Ver DECISOES.md, entrada 013.
+    INDICATIVOS. Ele proprio disse que quer validar com a Clara.
+
+    ATENCAO a coluna `origem`. So contam como indicacao dele os valores com
+    origem `escrito`, `corrigido` ou `confirmado`. Um valor que a ferramenta
+    sugeriu e que ele nao tocou continua a ser estimativa minha, e chamar-lhe
+    indicacao dele seria por-lhe na boca uma coisa que ele nao disse.
+    Ver DECISOES.md, entrada 016.
     """
     caminho = os.path.join(REPO, "data", "anos_tiago.csv")
     anos = {}
@@ -177,7 +180,9 @@ def ler_anos_tiago():
     with open(caminho, encoding="utf-8-sig", newline="") as fh:
         linhas = [l for l in fh if not l.lstrip().startswith("#")]
     for r in csv.DictReader(linhas):
-        if r.get("id") and r.get("ano"):
+        origem = (r.get("origem") or "escrito").strip()
+        if r.get("id") and r.get("ano") and origem in ("escrito", "corrigido",
+                                                       "confirmado"):
             anos[r["id"].strip()] = r["ano"].strip()
     return anos
 
