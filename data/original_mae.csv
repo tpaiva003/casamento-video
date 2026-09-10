@@ -1,0 +1,504 @@
+﻿ordem,faixa,tipo,inicio_s,fim_s,duracao_s,ficheiro,caminho_original,encontrado,caminho_disco,in_s,out_s,movimento,transicao,transicao_s,texto_ecra,largura,altura,resolucao_ok
+1,video,video,0.0,20.371,20.371,20th Century Fox   Abertura Clássic.mp4,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\20th Century Fox   Abertura Clássic.mp4,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\20th Century Fox   Abertura Clássic.mp4,1.796,22.168,,,,,480,360,Nao
+2,musica,musica,20.361,32.301,11.94,Dumbo - música de abertura.wmv(1).mp3,C:\Users\Rosa Moreira\Music\Dumbo - música de abertura.wmv(1).mp3,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_ana-faria-clara-mp3_2026-09-10_1128\Dumbo - música de abertura.wmv(1).mp3,2.16,14.1,,,,,0,0,
+3,video,cartao,20.371,27.371,7.0,,,,,,,,,,,,,
+4,texto,cartao,20.371,27.371,7.0,,,,,,,,,,A História de Clara e Tiago,,,
+5,video,cartao,27.371,32.371,5.0,,,,,,,,,,,,,
+6,texto,cartao,27.371,32.371,5.0,,,,,,,,,,Clara,,,
+7,musica,musica,32.361,43.881,11.52,Candidato a vereador.mp3,C:\Users\Rosa Moreira\Music\Vídeo Anos Clara\Candidato a vereador.mp3,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_ana-faria-clara-mp3_2026-09-10_1128\Candidato a vereador.mp3,173.67,185.19,,,,,0,0,
+8,video,cartao,32.371,38.371,6.0,,,,,,,,,,,,,
+9,texto,cartao,32.371,38.371,6.0,,,,,,,,,,Era uma vez uma  menina que nasceu no  ano da graça de 1995,,,
+10,video,foto,38.371,45.371,7.0,1 (2).jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\1 (2).jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\1 (2).jpg,,,Zoom in,,,,769,1086,Nao
+11,texto,cartao,38.371,43.871,5.5,,,,,,,,,,"Era clara,  e como  já estava  vaticinado, chamar-se-ia  Clara.",,,
+12,video,foto,43.871,49.871,6.0,2.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\2.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\2.jpg,,,Zoom in,Crossfade,1.5,,1074,597,Nao
+13,musica,musica,43.881,95.391,51.51,Ana Faria - Clara.mp3,C:\Users\Rosa Moreira\Music\Ana Faria - Clara.mp3,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_ana-faria-clara-mp3_2026-09-10_1128\Ana Faria - Clara.mp3,6.03,57.54,,,,,0,0,
+14,texto,cartao,45.512,48.512,3.0,,,,,,,,,,Era muito bem disposta...,,,
+15,video,foto,48.371,54.371,6.0,5 (2).jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\5 (2).jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\5 (2).jpg,,,Zoom in,Crossfade,1.5,,1194,789,Nao
+16,video,foto,52.871,57.871,5.0,6.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\6.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\Originals\6.jpg,,,Zoom in,Crossfade,1.5,,793,1222,Nao
+17,texto,cartao,54.378,57.871,3.494,,,,,,,,,,Muito curiosa...,,,
+18,video,foto,57.871,64.871,7.0,5-3.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\5-3.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\Originals\5-3.jpg,,,Zoom in,,,,592,911,Nao
+19,texto,cartao,57.871,62.871,5.0,,,,,,,,,,"Muito  rebelde...  (Dizia  ""não se  mexe"",  e  mexia...)",,,
+20,video,foto,63.371,68.371,5.0,7.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\7.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\7.jpg,,,Zoom in,Crossfade,1.5,,769,1007,Nao
+21,texto,cartao,64.921,66.921,2.0,,,,,,,,,,Muito irrequieta...,,,
+22,video,foto,66.871,72.871,6.0,9-25.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\9-25.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\9-25.jpg,,,Zoom in,Crossfade,1.5,,805,1233,Nao
+23,texto,cartao,68.371,71.371,3.0,,,,,,,,,,Gostava  dos  bichinhos  todos,,,
+24,video,foto,71.371,77.371,6.0,7-1.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\7-1.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\7-1.jpg,,,Zoom in,Crossfade,1.5,,616,911,Nao
+25,texto,cartao,73.223,75.723,2.5,,,,,,,,,,Clarinha  e  as  pombas,,,
+26,video,foto,75.871,81.871,6.0,8.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\8.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\8.jpg,,,Zoom in,Crossfade,1.5,,1230,744,Nao
+27,texto,cartao,77.371,80.371,3.0,,,,,,,,,,"Era endiabrada, mas também encantadora.",,,
+28,video,foto,80.371,85.371,5.0,8-1.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\8-1.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\8-1.jpg,,,Zoom in,Crossfade,1.5,,796,1178,Nao
+29,video,foto,83.871,89.871,6.0,8-3.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\8-3.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\8-3.jpg,,,Zoom in,Crossfade,1.5,,786,1017,Nao
+30,texto,cartao,85.376,87.376,2.0,,,,,,,,,,E clarividente,,,
+31,video,foto,88.371,95.371,7.0,8-5.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\8-5.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\8-5.jpg,,,Zoom in,Crossfade,1.5,,591,911,Nao
+32,texto,cartao,90.219,95.219,5.0,,,,,,,,,,Desde muito cedo criou uma  grande empatia com colegas e amigos,,,
+33,video,foto,95.371,107.871,12.5,8-6.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\8-6.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\8-6.jpg,,,Nenhum,,,,1202,514,Nao
+34,musica,musica,95.421,145.461,50.04,OS TRIBALISTAS - VELHA INFÂNCIA (INSTRUMENTAL).MP3,C:\Users\Rosa Moreira\Music\OS TRIBALISTAS - VELHA INFÂNCIA (INSTRUMENTAL).MP3,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_ana-faria-clara-mp3_2026-09-10_1128\OS TRIBALISTAS - VELHA INFÂNCIA (INSTRUMENTAL).MP3,0.0,50.04,,,,,0,0,
+35,texto,cartao,95.515,102.515,7.0,,,,,,,,,,E logo ganhou um Clube de Fãs,,,
+36,video,foto,106.371,118.871,12.5,8-7.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\8-7.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\8-7.jpg,,,Nenhum,Crossfade,1.5,,1355,671,Sim
+37,texto,cartao,108.09,115.09,7.0,,,,,,,,,,Inspirou figuras de estilo...,,,
+38,video,foto,117.371,124.371,7.0,8-8.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\8-8.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\8-8.jpg,,,Nenhum,Crossfade,1.5,,1280,638,Sim
+39,texto,cartao,119.119,121.845,2.727,,,,,,,,,,Repetições e aliterações...,,,
+40,video,foto,122.871,129.871,7.0,8-9.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\8-9.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\8-9.jpg,,,Zoom in,Crossfade,1.5,,1455,727,Sim
+41,texto,cartao,124.476,127.211,2.736,,,,,,,,,,Conotações...,,,
+42,video,foto,129.871,138.871,9.0,8-9-1.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\8-9-1.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\8-9-1.jpg,,,Zoom in,,,,1280,838,Sim
+43,texto,cartao,129.965,135.965,6.0,,,,,,,,,,Metáforas e hipérboles...,,,
+44,video,foto,138.871,146.871,8.0,8-9-2.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\8-9-2.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\8-9-2.jpg,,,Zoom in,,,,960,1280,Nao
+45,texto,cartao,138.871,145.371,6.5,,,,,,,,,,"Aos 8 anos recebeu o primeiro pedido de  casamento, uma aliança feita de  uma argola de porta-chaves...",,,
+46,video,foto,145.371,151.371,6.0,9.1.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\9.1.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\9.1.jpg,,,Zoom in,Crossfade,1.5,,616,911,Nao
+47,musica,musica,145.421,312.461,167.04,Gilbert O`Sullivan   CLAIR   (  The Sweetest `Clair ` video Ever !)   And Clair answers back !.mp3,C:\Users\Rosa Moreira\Music\Vídeo Anos Clara\Gilbert O`Sullivan   CLAIR   (  The Sweetest `Clair ` video Ever !)   And Clair answers back !.mp3,Sim (nome aproximado),C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_ana-faria-clara-mp3_2026-09-10_1128\Gilbert O`Sullivan - CLAIR - ( The Sweetest `Clair ` video Ever !) - And Clair answers back !.mp3,6.54,173.58,,,,,0,0,
+48,texto,cartao,146.942,149.942,3.0,,,,,,,,,,Já usou um  penteado à  Emma Watson,,,
+49,video,foto,149.871,154.871,5.0,9.4.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\9.4.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\9.4.JPG,,,Zoom in,Crossfade,1.5,,1280,960,Sim
+50,texto,cartao,151.403,154.14,2.737,,,,,,,,,,Aos 16 anos,,,
+51,video,foto,153.371,158.371,5.0,9-5.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\9-5.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\9-5.JPG,,,Zoom in,Crossfade,1.5,,1280,1158,Sim
+52,video,foto,156.871,162.871,6.0,9-2.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\9-2.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\9-2.jpg,,,Zoom in,Crossfade,1.5,,1215,911,Nao
+53,texto,cartao,158.561,161.308,2.746,,,,,,,,,,Aos 18 anos,,,
+54,video,foto,161.371,167.371,6.0,9-14.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\9-14.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\9-14.JPG,,,Zoom in,Crossfade,1.5,,1280,854,Sim
+55,texto,cartao,162.887,165.887,3.0,,,,,,,,,,Foi sempre irreverente...,,,
+56,video,foto,165.871,170.871,5.0,19-1.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\19-1.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\19-1.JPG,,,Zoom in,Crossfade,1.5,,855,1280,Nao
+57,video,foto,169.371,176.371,7.0,19-2.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\19-2.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\19-2.JPG,,,Zoom in,Crossfade,1.5,,1280,855,Sim
+58,texto,cartao,171.09,174.79,3.7,,,,,,,,,,E comunicativa (No Rock in Rio Lisboa),,,
+59,video,foto,174.871,183.871,9.0,9-12.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\9-12.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\9-12.JPG,,,Zoom in,Crossfade,1.5,,968,1280,Nao
+60,texto,cartao,176.476,181.476,5.0,,,,,,,,,,Colaborando com uma  estátua viva  em Barcelona,,,
+61,video,foto,182.371,187.371,5.0,9-13.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\9-13.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\9-13.JPG,,,Zoom in,Crossfade,1.5,,1175,1280,Nao
+62,video,foto,187.371,197.371,10.0,9-15.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\9-15.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\9-15.JPG,,,Zoom in,,,,1280,960,Sim
+63,texto,cartao,187.548,195.548,8.0,,,,,,,,,,"Com um vendedor de artesanato no vulcão Etna  (Sicília). ""Chiara, siediti qui per una foto.""",,,
+64,video,foto,195.871,201.871,6.0,9-15-1.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\9-15-1.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\9-15-1.JPG,,,Zoom in,Crossfade,1.5,,986,911,Nao
+65,texto,cartao,197.395,200.395,3.0,,,,,,,,,,"Com o Miguel Araújo, na Feira do Livro.",,,
+66,video,foto,200.371,206.371,6.0,9-15-2.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\9-15-2.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\9-15-2.jpg,,,Zoom in,Crossfade,1.5,,1092,819,Nao
+67,texto,cartao,201.976,204.709,2.733,,,,,,,,,,Numa Ação de  Voluntariado  Morais Leitão,,,
+68,video,foto,204.871,214.871,10.0,9-15-4.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\9-15-4.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\9-15-4.jpg,,,Nenhum,Crossfade,1.5,,3762,3096,Sim
+69,texto,cartao,206.633,213.633,7.0,,,,,,,,,,Orgulhosa do primeiro automóvel. Com ele    iria ganhar... algumas multas por excesso                                                      de  velocidade...,,,
+70,video,foto,213.371,220.371,7.0,9-16.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\9-16.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\9-16.JPG,,,Zoom in,Crossfade,1.5,,2736,3648,Sim
+71,texto,cartao,214.832,218.832,4.0,,,,,,,,,,Eterna fã do Harry Potter (Local de filmagens em  Londres)...,,,
+72,video,foto,218.871,225.871,7.0,9-17.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\9-17.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\9-17.JPG,,,Zoom in,Crossfade,1.5,,2736,3648,Sim
+73,texto,cartao,220.447,224.447,4.0,,,,,,,,,,"Do ""Game of Thrones"". (Local de  filmagens na Croácia)...",,,
+74,video,foto,224.371,230.371,6.0,9-18.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\9-18.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\9-18.JPG,,,Zoom in,Crossfade,1.5,,3240,4320,Sim
+75,texto,cartao,225.947,228.69,2.744,,,,,,,,,,E de futebolistas...,,,
+76,video,foto,228.871,233.871,5.0,9-23.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\9-23.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\9-23.JPG,,,Zoom in,Crossfade,1.5,,3648,2736,Sim
+77,texto,cartao,230.533,232.533,2.0,,,,,,,,,,Gosta de festas...,,,
+78,video,foto,232.371,237.371,5.0,9-24.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\9-24.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\9-24.JPG,,,Zoom in,Crossfade,1.5,,1105,1280,Nao
+79,video,foto,235.871,240.871,5.0,9-24-1.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\9-24-1.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\9-24-1.JPG,,,Zoom in,Crossfade,1.5,,987,1280,Nao
+80,texto,cartao,237.476,239.476,2.0,,,,,,,,,,E de convívios,,,
+81,video,foto,239.371,245.371,6.0,9-24-4.jpeg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\9-24-4.jpeg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\9-24-4.jpeg,,,Zoom in,Crossfade,1.5,,961,1280,Nao
+82,texto,cartao,240.918,243.663,2.745,,,,,,,,,,Gosta de  futebol  e  adora  o FCP,,,
+83,video,foto,243.871,250.871,7.0,9-24-5.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\9-24-5.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\9-24-5.JPG,,,Zoom in,Crossfade,1.5,,1280,959,Sim
+84,texto,cartao,245.562,249.562,4.0,,,,,,,,,,Quando lhe  dizem  que o FCP  vai perder...,,,
+85,video,foto,249.371,254.871,5.5,20260623_201228.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\20260623_201228.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\20260623_201228.jpg,,,Zoom in,Crossfade,1.5,,706,1280,Nao
+86,texto,cartao,250.994,253.494,2.5,,,,,,,,,,No Mundial  de futebol  2026,,,
+87,video,foto,253.371,259.371,6.0,Scanner_20260814.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\Scanner_20260814.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\Scanner_20260814.jpg,,,Zoom in,Crossfade,1.5,,998,651,Nao
+88,texto,cartao,255.012,258.012,3.0,,,,,,,,,,É desde sempre  apaixonada por cães,,,
+89,video,foto,257.871,262.871,5.0,9-26.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\9-26.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\9-26.JPG,,,Zoom in,Crossfade,1.5,,1215,911,Nao
+90,texto,cartao,259.421,261.421,2.0,,,,,,,,,,Pelos dela...,,,
+91,video,foto,261.371,266.371,5.0,9-27.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\9-27.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\9-27.JPG,,,Zoom in,Crossfade,1.5,,1280,855,Sim
+92,video,foto,264.871,269.871,5.0,9-28.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\9-28.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\9-28.JPG,,,Zoom in,Crossfade,1.5,,1280,1101,Sim
+93,texto,cartao,266.395,268.395,2.0,,,,,,,,,,... E pelos dos outros.,,,
+94,video,foto,268.371,274.371,6.0,9-29.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\9-29.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\9-29.JPG,,,Zoom in,Crossfade,1.5,,1280,1179,Sim
+95,video,foto,272.871,278.871,6.0,20-1.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\20-1.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\20-1.jpg,,,Zoom in,Crossfade,1.5,,1280,960,Sim
+96,texto,cartao,274.395,277.119,2.724,,,,,,,,,,Aprecia atividades  ao ar livre,,,
+97,video,foto,277.371,282.371,5.0,20-2.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\20-2.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\20-2.JPG,,,Zoom in,Crossfade,1.5,,1280,960,Sim
+98,video,foto,280.871,287.871,7.0,20-3.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\20-3.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\20-3.JPG,,,Nenhum,Crossfade,1.5,,1280,960,Sim
+99,texto,cartao,282.366,286.366,4.0,,,,,,,,,,"Velozes,  de preferência...",,,
+100,video,foto,286.371,293.371,7.0,20-4.png,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\20-4.png,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\20-4.png,,,Nenhum,Crossfade,1.5,,1280,578,Sim
+101,texto,cartao,287.976,291.947,3.971,,,,,,,,,,... E com adrenalina...,,,
+102,video,foto,291.871,297.871,6.0,21-2.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-2.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-2.jpg,,,Zoom in,Crossfade,1.5,,885,794,Nao
+103,texto,cartao,293.53,296.53,3.0,,,,,,,,,,"Não gosta de perder, nem a feijões. Preparando-se para fazer um strike...",,,
+104,video,foto,296.371,303.371,7.0,21-3.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-3.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-3.jpg,,,Zoom in,Crossfade,1.5,,844,795,Nao
+105,texto,cartao,298.147,301.147,3.0,,,,,,,,,,Sem medos...,,,
+106,video,foto,301.871,308.871,7.0,21-4.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-4.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-4.JPG,,,Zoom in,Crossfade,1.5,,4416,3312,Sim
+107,texto,cartao,303.28,307.28,4.0,,,,,,,,,,Sem comentários...,,,
+108,video,foto,307.371,312.371,5.0,20.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\20.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\20.JPG,,,Zoom in,Crossfade,1.5,,2672,4000,Sim
+109,texto,cartao,309.064,312.655,3.591,,,,,,,,,,Cena de filme à Marilyn Monroe,,,
+110,video,foto,312.371,322.871,10.5,21-5.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-5.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-5.JPG,,,Zoom in,,,,3470,3240,Sim
+111,texto,cartao,312.382,321.382,9.0,,,,,,,,,,"Mas nem tudo é diversão. Estudando na véspera  do exame de Físico- -Química, na festa da  Comunhão da Irene...",,,
+112,musica,musica,312.482,498.872,186.39,Claire Song Ninety Years of You.MP3,C:\Users\Rosa Moreira\Music\Claire Song Ninety Years of You.MP3,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_ana-faria-clara-mp3_2026-09-10_1128\Claire Song Ninety Years of You.MP3,1.59,187.98,,,,,0,0,
+113,video,foto,321.371,328.371,7.0,21-6.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-6.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-6.jpg,,,Zoom in,Crossfade,1.5,,1184,1423,Nao
+114,texto,cartao,322.902,326.902,4.0,,,,,,,,,,"Praxe. A alcunha de  Caloira era ""Rapunzel  Sabichónis"".",,,
+115,video,foto,326.871,333.871,7.0,21-7.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-7.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-7.JPG,,,Zoom in,Crossfade,1.5,,3072,2304,Sim
+116,texto,cartao,328.524,332.524,4.0,,,,,,,,,,Cortejo da Queima das Fitas 2017.  Onde está a Wally?,,,
+117,video,foto,333.871,342.871,9.0,21-9.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-9.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-9.JPG,,,Zoom in,,,,1280,851,Sim
+118,texto,cartao,333.871,344.871,11.0,,,,,,,,,,Em 2018 foi eleita para representar a  Faculdade na competição  Moot Court Direito da Concorrência,,,
+119,video,foto,342.871,350.871,8.0,21-10.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-10.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-10.JPG,,,Zoom in,,,,1280,960,Sim
+120,texto,cartao,342.871,348.871,6.0,,,,,,,,,,E ganhou o Prémio de Melhor Oradora  pela FDUP,,,
+121,video,foto,349.371,354.371,5.0,IMG_7790.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\IMG_7790.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\IMG_7790.JPG,,,Zoom in,Crossfade,1.5,,192,256,Nao
+122,texto,cartao,350.957,352.957,2.0,,,,,,,,,,Finalista de Direito,,,
+123,video,foto,352.871,359.871,7.0,21-11.jpeg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-11.jpeg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-11.jpeg,,,Zoom in,Crossfade,1.5,,960,1280,Nao
+124,texto,cartao,354.474,359.474,5.0,,,,,,,,,,"Passeios. O verbo ""ir""  é o que  melhor sabe  conjugar.",,,
+125,video,foto,358.371,363.371,5.0,21-11-1.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-11-1.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-11-1.JPG,,,Zoom in,Crossfade,1.5,,1280,960,Sim
+126,texto,cartao,359.895,361.895,2.0,,,,,,,,,,Em Serralves,,,
+127,video,foto,361.871,366.871,5.0,21-11-2.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-11-2.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-11-2.JPG,,,Zoom in,Crossfade,1.5,,1280,960,Sim
+128,texto,cartao,363.494,365.494,2.0,,,,,,,,,,Em Sintra,,,
+129,video,foto,365.371,370.371,5.0,21-11-3.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-11-3.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-11-3.jpg,,,Zoom in,Crossfade,1.5,,1215,911,Nao
+130,texto,cartao,366.809,368.809,2.0,,,,,,,,,,Em Setúbal,,,
+131,video,foto,368.871,373.871,5.0,21-12.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-12.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-12.JPG,,,Zoom in,Crossfade,1.5,,983,911,Nao
+132,texto,cartao,370.366,372.366,2.0,,,,,,,,,,Nos Açores,,,
+133,video,foto,372.371,377.371,5.0,21-13.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-13.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-13.JPG,,,Zoom in,Crossfade,1.5,,1215,911,Nao
+134,video,foto,375.871,380.871,5.0,21-15.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-15.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-15.JPG,,,Zoom in,Crossfade,1.5,,1215,911,Nao
+135,video,foto,379.371,384.371,5.0,21-16.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-16.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-16.JPG,,,Zoom in,Crossfade,1.5,,960,1280,Nao
+136,texto,cartao,380.866,382.866,2.0,,,,,,,,,,Na Croácia,,,
+137,video,foto,382.871,387.871,5.0,21-31.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-31.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-31.jpg,,,Zoom in,Crossfade,1.5,,1280,960,Sim
+138,video,foto,386.371,391.371,5.0,21-30.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-30.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-30.JPG,,,Zoom in,Crossfade,1.5,,1280,960,Sim
+139,texto,cartao,387.976,389.976,2.0,,,,,,,,,,Em Bruges,,,
+140,video,foto,389.871,395.871,6.0,21-17.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-17.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-17.JPG,,,Zoom in,Crossfade,1.5,,1280,960,Sim
+141,texto,cartao,391.447,394.447,3.0,,,,,,,,,,No Parlamento de Budapeste,,,
+142,video,foto,394.371,399.371,5.0,21-18.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-18.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-18.JPG,,,Zoom in,Crossfade,1.5,,1280,960,Sim
+143,texto,cartao,395.923,397.923,2.0,,,,,,,,,,Na Sicília. Siracusa;,,,
+144,video,foto,397.871,403.871,6.0,21-29.jpeg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-29.jpeg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-29.jpeg,,,Zoom in,Crossfade,1.5,,1280,978,Sim
+145,texto,cartao,399.366,402.366,3.0,,,,,,,,,,Em Taormina,,,
+146,video,foto,402.371,408.371,6.0,21-20.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-20.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-20.JPG,,,Zoom in,Crossfade,1.5,,1280,960,Sim
+147,texto,cartao,403.962,406.962,3.0,,,,,,,,,,Na Alemanha.  Em Dinkelsbuhl;,,,
+148,video,foto,406.871,413.871,7.0,21-24.jpeg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-24.jpeg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-24.jpeg,,,Zoom in,Crossfade,1.5,,1280,960,Sim
+149,texto,cartao,408.391,412.371,3.98,,,,,,,,,,Em Wurzburg (Ponte Alte Mainbrucke);,,,
+150,video,foto,412.371,419.371,7.0,21-22.jpeg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-22.jpeg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-22.jpeg,,,Zoom in,Crossfade,1.5,,1280,960,Sim
+151,texto,cartao,413.725,417.705,3.979,,,,,,,,,,"Em Schwangau,  contemplando o Castelo de  Neuschwanstein;",,,
+152,video,foto,417.871,422.871,5.0,IMG_4362.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\IMG_4362.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\IMG_4362.JPG,,,Zoom in,Crossfade,1.5,,1280,960,Sim
+153,texto,cartao,419.494,421.494,2.0,,,,,,,,,,Em Frankfurt,,,
+154,video,foto,421.371,426.371,5.0,21-21.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-21.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-21.JPG,,,Zoom in,Crossfade,1.5,,1252,1280,Nao
+155,texto,cartao,422.78,424.78,2.0,,,,,,,,,,Em Bratislava,,,
+156,video,foto,424.871,429.871,5.0,21-25.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-25.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-25.JPG,,,Zoom in,Crossfade,1.5,,1280,960,Sim
+157,texto,cartao,426.418,428.418,2.0,,,,,,,,,,"Em Roma, espelho de rua.",,,
+158,video,foto,428.371,437.371,9.0,21-23.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-23.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-23.jpg,,,Nenhum,Crossfade,1.5,,864,1712,Nao
+159,texto,cartao,429.908,435.908,6.0,,,,,,,,,,Na Fontana  di Trevi. A Anita  Ekberg  portuguesa  do filme La  Dolce Vita.,,,
+160,video,foto,435.871,440.871,5.0,21-26.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-26.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-26.JPG,,,Zoom in,Crossfade,1.5,,3648,2736,Sim
+161,texto,cartao,437.504,439.504,2.0,,,,,,,,,,Em Florença,,,
+162,video,foto,439.371,444.371,5.0,21-28.jpeg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-28.jpeg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-28.jpeg,,,Zoom in,Crossfade,1.5,,2807,3241,Sim
+163,texto,cartao,440.923,442.923,2.0,,,,,,,,,,Em Londres,,,
+164,video,foto,442.871,447.871,5.0,21-32.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-32.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-32.jpg,,,Zoom in,Crossfade,1.5,,1125,2000,Nao
+165,texto,cartao,444.223,446.223,2.0,,,,,,,,,,Em Nova York,,,
+166,video,foto,446.371,454.371,8.0,IMG_3835.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\IMG_3835.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\IMG_3835.jpg,,,Zoom in,Crossfade,1.5,,4000,3000,Sim
+167,texto,cartao,448.033,453.033,5.0,,,,,,,,,,"Em Lanzarote, com Pilar del Río.",,,
+168,video,foto,452.871,459.871,7.0,9-24-8.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\9-24-8.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\9-24-8.JPG,,,Zoom in,Crossfade,1.5,,3648,2736,Sim
+169,texto,cartao,454.476,458.459,3.983,,,,,,,,,,"Passeia muito, mas está sempre  conectada com o mundo do trabalho.",,,
+170,video,foto,458.371,465.371,7.0,9-24-7.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\9-24-7.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\9-24-7.JPG,,,Zoom in,Crossfade,1.5,,1280,960,Sim
+171,texto,cartao,459.895,463.895,4.0,,,,,,,,,,"Numa viagem de comboio, em férias.",,,
+172,video,foto,463.871,470.871,7.0,IMG_4477.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\IMG_4477.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\IMG_4477.JPG,,,Zoom in,Crossfade,1.5,,256,192,Nao
+173,texto,cartao,465.535,469.535,4.0,,,,,,,,,,"Férias 2026, nas ilhas também  se costuma trabalhar bem...",,,
+174,video,foto,469.371,474.371,5.0,21-38.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-38.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-38.jpg,,,Zoom in,Crossfade,1.5,,1280,960,Sim
+175,texto,cartao,470.866,472.866,2.0,,,,,,,,,,Caminhadas pelo Parque das  Serras do Porto,,,
+176,video,foto,472.871,477.871,5.0,21-39.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-39.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-39.jpg,,,Zoom in,Crossfade,1.5,,1280,963,Sim
+177,video,foto,476.371,481.371,5.0,21-41.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-41.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-41.JPG,,,Zoom in,Crossfade,1.5,,3648,2736,Sim
+178,video,foto,479.871,484.871,5.0,21-42.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-42.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-42.JPG,,,Zoom in,Crossfade,1.5,,3648,2736,Sim
+179,video,foto,483.371,488.371,5.0,21-43.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-43.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-43.JPG,,,Zoom in,Crossfade,1.5,,3648,2736,Sim
+180,video,foto,486.871,491.871,5.0,21-44.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-44.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-44.JPG,,,Zoom in,Crossfade,1.5,,3132,2736,Sim
+181,video,foto,490.371,495.371,5.0,21-45.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-45.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-45.JPG,,,Zoom in,Crossfade,1.5,,3648,2736,Sim
+182,video,foto,493.871,498.871,5.0,9-24-2.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\9-24-2.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\9-24-2.JPG,,,Zoom in,Crossfade,1.5,,3648,2736,Sim
+183,video,cartao,498.871,503.871,5.0,,,,,,,,,,,,,
+184,texto,cartao,498.871,502.471,3.6,,,,,,,,,,Família,,,
+185,musica,musica,498.932,604.972,106.04,Ed Sheeran - Camera (Official Music Video).MP3,C:\Users\Rosa Moreira\Music\Ed Sheeran - Camera (Official Music Video).MP3,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_ana-faria-clara-mp3_2026-09-10_1128\Ed Sheeran - Camera (Official Music Video).MP3,10.0,116.04,,,,,0,0,
+186,video,foto,503.871,510.871,7.0,10-1 (2).jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\10-1 (2).jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\Originals\10-1 (2).jpg,,,Nenhum,,,,1203,789,Nao
+187,texto,cartao,503.9,509.371,5.472,,,,,,,,,,Com o pai. Era pequenina  e já lhe dava ouras...,,,
+188,video,foto,509.371,514.371,5.0,10-2.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\10-2.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\10-2.jpg,,,Zoom in,Crossfade,1.5,,912,730,Nao
+189,video,foto,512.871,517.871,5.0,10-4.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\10-4.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\10-4.jpg,,,Zoom in,Crossfade,1.5,,1167,789,Nao
+190,video,foto,516.371,521.371,5.0,10-3.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\10-3.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\Originals\10-3.jpg,,,Nenhum,Crossfade,1.5,,484,1071,Nao
+191,video,foto,521.371,528.371,7.0,10-5.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\Originals\10-5.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\Originals\10-5.JPG,,,Zoom in,,,,96,72,Nao
+192,texto,cartao,521.39,526.871,5.481,,,,,,,,,,"""Pai, põe a mochila, depois levas o skate...""",,,
+193,video,foto,526.871,531.871,5.0,11.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\11.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\11.jpg,,,Zoom in,Crossfade,1.5,,1165,794,Nao
+194,texto,cartao,528.512,530.512,2.0,,,,,,,,,,Com a mãe,,,
+195,video,foto,530.371,536.371,6.0,69916331_2555139434539758_2920736718019624960_n.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\69916331_2555139434539758_2920736718019624960_n.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\69916331_2555139434539758_2920736718019624960_n.jpg,,,Zoom in,Crossfade,1.5,,256,192,Nao
+196,video,foto,534.871,539.871,5.0,11-4.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\11-4.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\11-4.JPG,,,Zoom in,Crossfade,1.5,,1215,911,Nao
+197,video,foto,538.371,544.371,6.0,11-5.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\11-5.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\11-5.jpg,,,Zoom in,Crossfade,1.5,,720,504,Nao
+198,texto,cartao,539.762,542.489,2.727,,,,,,,,,,Com o Henrique (o mano),,,
+199,video,foto,542.871,547.871,5.0,11-6.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\11-6.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\11-6.jpg,,,Zoom in,Crossfade,1.5,,615,911,Nao
+200,video,foto,546.371,551.371,5.0,11-7.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\11-7.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\11-7.jpg,,,Zoom in,Crossfade,1.5,,551,1178,Nao
+201,video,foto,549.871,554.871,5.0,11-8.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\11-8.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\11-8.jpg,,,Zoom in,Crossfade,1.5,,610,911,Nao
+202,video,foto,553.371,559.371,6.0,11-9.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\11-9.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\11-9.jpg,,,Zoom in,Crossfade,1.5,,1227,911,Nao
+203,video,foto,557.871,562.871,5.0,11-10.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\11-10.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\11-10.JPG,,,Zoom in,Crossfade,1.5,,1280,960,Sim
+204,video,foto,562.871,575.371,12.5,11-12.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\11-12.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\11-12.JPG,,,Nenhum,,,,1280,960,Sim
+205,texto,cartao,562.871,573.871,11.0,,,,,,,,,,"Em Viena:   -Estas sobremesas são bem instagramáveis!   -Demoramos menos tempo a comê-las, do que a         fotografá-las...",,,
+206,video,foto,573.871,582.871,9.0,11-13.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\11-13.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\Originals\11-13.jpg,,,Zoom in,Crossfade,1.5,,256,192,Nao
+207,texto,cartao,575.489,583.96,8.471,,,,,,,,,,"-Clara, gostas dessa    canção do Ed Sheeran? -Gosto! -Então não a estragues...",,,
+208,video,foto,582.871,591.871,9.0,IMG_4224.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\IMG_4224.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\IMG_4224.JPG,,,Nenhum,,,,256,192,Nao
+209,texto,cartao,582.976,589.976,7.0,,,,,,,,,,"O pai: -Clara, já vais outra vez em excesso                             de velocidade! O irmão: -Ela é uma Fora-da-Lei...",,,
+210,video,foto,590.371,597.371,7.0,11-14.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\11-14.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\11-14.jpg,,,Zoom in,Crossfade,1.5,,1178,755,Nao
+211,texto,cartao,591.934,595.934,4.0,,,,,,,,,,Com o mano  e a mãe,,,
+212,video,foto,595.871,600.871,5.0,11-15.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\11-15.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\11-15.jpg,,,Zoom in,Crossfade,1.5,,802,1194,Nao
+213,video,foto,599.371,606.371,7.0,11-20.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\11-20.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\11-20.jpg,,,Zoom in,Crossfade,1.5,,1684,1589,Sim
+214,texto,cartao,600.877,603.602,2.725,,,,,,,,,,E com o pai,,,
+215,video,foto,604.871,611.871,7.0,21-45-2.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-45-2.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-45-2.jpg,,,Zoom in,Crossfade,1.5,,1772,1181,Sim
+216,musica,musica,605.031,664.881,59.85,"Migos, KAROL G, Snoop Dogg u0026 Rock Mafia – My Family.mp3","C:\Users\Rosa Moreira\Music\Migos, KAROL G, Snoop Dogg u0026 Rock Mafia – My Family.mp3",Sim,"C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_ana-faria-clara-mp3_2026-09-10_1128\Migos, KAROL G, Snoop Dogg u0026 Rock Mafia – My Family.mp3",6.99,66.84,,,,,0,0,
+217,texto,cartao,606.405,609.122,2.716,,,,,,,,,,Com os padrinhos de batismo  e de casamento,,,
+218,video,foto,610.371,620.371,10.0,21-45-4.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-45-4.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-45-4.jpg,,,Nenhum,Crossfade,1.5,,1699,902,Sim
+219,texto,cartao,612.02,619.02,7.0,,,,,,,,,,Com a família materna,,,
+220,video,foto,618.871,628.871,10.0,21-45-5.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-45-5.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-45-5.JPG,,,Nenhum,Crossfade,1.5,,2111,1380,Sim
+221,video,foto,627.371,634.371,7.0,21-45-3.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-45-3.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-45-3.JPG,,,Zoom in,Crossfade,1.5,,256,192,Nao
+222,video,foto,632.871,642.871,10.0,21-45-6.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-45-6.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-45-6.jpg,,,Nenhum,Crossfade,1.5,,256,171,Nao
+223,texto,cartao,634.387,641.387,7.0,,,,,,,,,,Com a família paterna,,,
+224,video,foto,641.371,651.371,10.0,21-45-8.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-45-8.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-45-8.jpg,,,Zoom in,Crossfade,1.5,,691,571,Nao
+225,texto,cartao,642.715,649.715,7.0,,,,,,,,,,No casamento do primo Filipe,,,
+226,video,foto,649.871,659.871,10.0,21-45-9.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-45-9.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-45-9.jpg,,,Zoom in,Crossfade,1.5,,4000,3000,Sim
+227,texto,cartao,651.215,660.215,9.0,,,,,,,,,,No 99.º Aniversário da avó  Maria dos Anjos,,,
+228,video,cartao,659.871,664.871,5.0,,,,,,,,,,,,,
+229,texto,cartao,659.882,664.882,5.0,,,,,,,,,,Amigos e colegas,,,
+230,video,foto,664.871,670.871,6.0,WhatsApp Image 2021-11-15 at 18.54.22.jpeg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\WhatsApp Image 2021-11-15 at 18.54.22.jpeg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\WhatsApp Image 2021-11-15 at 18.54.22.jpeg,,,Nenhum,,,,2048,1536,Sim
+231,texto,cartao,664.871,668.871,4.0,,,,,,,,,,Com amigos da Secundária...,,,
+232,musica,musica,664.931,761.711,96.78,Rina Sawayama - Chosen Family (Lyrics).mp3,C:\Users\Rosa Moreira\Music\Rina Sawayama - Chosen Family (Lyrics).mp3,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_ana-faria-clara-mp3_2026-09-10_1128\Rina Sawayama - Chosen Family (Lyrics).mp3,1.89,98.67,,,,,0,0,
+233,video,foto,669.371,674.371,5.0,DSC02999.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\DSC02999.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\DSC02999.JPG,,,Zoom in,Crossfade,1.5,,3000,4000,Sim
+234,video,foto,672.871,678.871,6.0,IMG_9013.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\IMG_9013.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\IMG_9013.JPG,,,Zoom in,Crossfade,1.5,,2281,2687,Sim
+235,texto,cartao,674.408,677.408,3.0,,,,,,,,,,E da Faculdade,,,
+236,video,foto,677.371,683.371,6.0,21-1.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-1.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-1.JPG,,,Zoom in,Crossfade,1.5,,2944,3000,Sim
+237,texto,cartao,678.986,681.986,3.0,,,,,,,,,,Com as amigas de sempre,,,
+238,video,foto,681.871,688.871,7.0,21-45-10.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-45-10.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-45-10.jpg,,,Nenhum,Crossfade,1.5,,1185,803,Nao
+239,video,foto,687.371,695.371,8.0,21-45-11.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-45-11.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-45-11.jpg,,,Nenhum,Crossfade,1.5,,1188,795,Nao
+240,texto,cartao,689.029,694.029,5.0,,,,,,,,,,Farmácia vs Direito vs Bioquímica vs Engenharia,,,
+241,video,cartao,695.371,700.371,5.0,,,,,,,,,,,,,
+242,texto,cartao,695.371,700.371,5.0,,,,,,,,,,Colegas de trabalho,,,
+243,video,foto,700.371,706.371,6.0,21-45-16.jpeg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-45-16.jpeg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-45-16.jpeg,,,Zoom in,,,,1280,554,Sim
+244,video,foto,704.871,710.871,6.0,200_ML_FestaNatal2022.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\200_ML_FestaNatal2022.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\200_ML_FestaNatal2022.jpg,,,Nenhum,Crossfade,1.5,,256,171,Nao
+245,video,foto,709.371,714.371,5.0,content.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\content.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\content.jpg,,,Zoom in,Crossfade,1.5,,1280,1280,Sim
+246,video,foto,712.871,717.871,5.0,content5.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\content5.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\content5.jpg,,,Zoom in,Crossfade,1.5,,1280,1279,Sim
+247,video,foto,716.371,722.371,6.0,499_ML_FestaNatal2024.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\499_ML_FestaNatal2024.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\499_ML_FestaNatal2024.jpg,,,Zoom in,Crossfade,1.5,,256,171,Nao
+248,video,foto,720.871,725.871,5.0,IMG_1475.jpeg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\IMG_1475.jpeg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\IMG_1475.jpeg,,,Nenhum,Crossfade,1.5,,1280,960,Sim
+249,video,foto,724.371,731.371,7.0,21-45-17.jpeg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-45-17.jpeg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-45-17.jpeg,,,Nenhum,Crossfade,1.5,,873,1280,Nao
+250,video,foto,729.871,736.871,7.0,21-45-18.jpeg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-45-18.jpeg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-45-18.jpeg,,,Zoom in,Crossfade,1.5,,960,1280,Nao
+251,texto,cartao,731.319,735.319,4.0,,,,,,,,,,A  verdadeira  Claque do FCP,,,
+252,video,foto,735.371,741.371,6.0,IMG_2601.jpeg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\IMG_2601.jpeg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\IMG_2601.jpeg,,,Zoom in,Crossfade,1.5,,1280,960,Sim
+253,video,foto,739.871,744.871,5.0,WhatsApp Image 2025-10-10 at 14.45.56 (1).jpeg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\WhatsApp Image 2025-10-10 at 14.45.56 (1).jpeg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\WhatsApp Image 2025-10-10 at 14.45.56 (1).jpeg,,,Zoom in,Crossfade,1.5,,960,1280,Nao
+254,texto,cartao,741.494,743.464,1.97,,,,,,,,,,A Task Force  de Corporate,,,
+255,video,foto,743.371,748.371,5.0,WhatsApp Image 2025-10-10 at 14.45.56.jpeg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\WhatsApp Image 2025-10-10 at 14.45.56.jpeg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\WhatsApp Image 2025-10-10 at 14.45.56.jpeg,,,Zoom in,Crossfade,1.5,,960,1280,Nao
+256,video,foto,746.871,751.871,5.0,IMG_7886.jpeg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\IMG_7886.jpeg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\IMG_7886.jpeg,,,Nenhum,Crossfade,1.5,,4032,3024,Sim
+257,texto,cartao,748.398,750.382,1.984,,,,,,,,,,Hora de almoço,,,
+258,video,foto,750.371,755.371,5.0,21-45-19.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-45-19.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-45-19.jpg,,,Zoom in,Crossfade,1.5,,1180,792,Nao
+259,texto,cartao,751.746,753.746,2.0,,,,,,,,,,Com a Inês,,,
+260,video,foto,753.871,758.871,5.0,448_ML_FestaNatal2024.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\448_ML_FestaNatal2024.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\448_ML_FestaNatal2024.jpg,,,Zoom in,Crossfade,1.5,,256,170,Nao
+261,texto,cartao,755.371,757.201,1.829,,,,,,,,,,Com a Francisca,,,
+262,video,foto,757.371,761.371,4.0,b0773331-cf53-4b1c-bb33-9cbe08cb4031.jpeg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\b0773331-cf53-4b1c-bb33-9cbe08cb4031.jpeg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\b0773331-cf53-4b1c-bb33-9cbe08cb4031.jpeg,,,Zoom in,Crossfade,1.5,,960,1280,Nao
+263,video,cartao,761.371,768.371,7.0,,,,,,,,,,,,,
+264,texto,cartao,761.548,768.548,7.0,,,,,,,,,,Tiago,,,
+265,musica,musica,761.608,768.688,7.08,Paris Filmes Reversed.MP3,C:\Users\Rosa Moreira\Music\Paris Filmes Reversed.MP3,Nao,,3.27,10.35,,,,,0,0,
+266,video,cartao,768.371,777.371,9.0,,,,,,,,,,,,,
+267,texto,cartao,768.564,776.064,7.5,,,,,,,,,,"Era uma vez  um menino loiro,  de olhos azuis, que também nasceu  em 1995.",,,
+268,musica,musica,768.688,776.188,7.5,Candidato a vereador.mp3,C:\Users\Rosa Moreira\Music\Vídeo Anos Clara\Candidato a vereador.mp3,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_ana-faria-clara-mp3_2026-09-10_1128\Candidato a vereador.mp3,173.82,181.32,,,,,0,0,
+269,video,foto,775.871,782.871,7.0,21-46.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-46.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-46.jpg,,,Zoom in,Crossfade,1.5,,533,720,Nao
+270,musica,musica,776.178,811.098,34.92,aleluia.mp3,C:\Users\Rosa Moreira\Music\aleluia.mp3,Nao,,184.17,219.09,,,,,0,0,
+271,texto,cartao,777.562,781.548,3.987,,,,,,,,,,Foi o  segundo filho,,,
+272,video,foto,781.371,788.371,7.0,21-47.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-47.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-47.jpg,,,Zoom in,Crossfade,1.5,,785,1181,Nao
+273,texto,cartao,783.009,787.009,4.0,,,,,,,,,,E era amoroso,,,
+274,video,foto,786.871,793.871,7.0,21-48.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-48.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-48.jpg,,,Zoom in,Crossfade,1.5,,698,578,Nao
+275,texto,cartao,788.538,792.538,4.0,,,,,,,,,,"Com a mãe, o mano e as primas.",,,
+276,video,foto,792.371,797.371,5.0,21-49.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-49.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-49.jpg,,,Zoom in,Crossfade,1.5,,1248,818,Nao
+277,texto,cartao,794.181,796.907,2.725,,,,,,,,,,E com o pai,,,
+278,video,foto,795.871,800.871,5.0,21-49-2.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-49-2.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-49-2.jpg,,,Zoom in,Crossfade,1.5,,638,826,Nao
+279,texto,cartao,797.568,799.568,2.0,,,,,,,,,,Com a avó Orquídia,,,
+280,video,foto,799.371,805.371,6.0,21-49-3.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-49-3.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-49-3.jpg,,,Zoom in,Crossfade,1.5,,1192,747,Nao
+281,texto,cartao,801.067,804.067,3.0,,,,,,,,,,Primeiro aniversário.  O pai faz anos no mesmo dia.,,,
+282,video,foto,803.871,808.871,5.0,21-49-4.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-49-4.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-49-4.jpg,,,Zoom in,Crossfade,1.5,,612,554,Nao
+283,texto,cartao,805.679,807.679,2.0,,,,,,,,,,Segundo aniversário,,,
+284,video,foto,807.371,812.371,5.0,21-49-11.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-49-11.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-49-11.jpg,,,Zoom in,Crossfade,1.5,,1237,805,Nao
+285,texto,cartao,808.996,810.996,2.0,,,,,,,,,,Terceiro aniversário,,,
+286,video,foto,810.871,815.871,5.0,21-49-6.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-49-6.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-49-6.jpg,,,Zoom in,Crossfade,1.5,,1208,795,Nao
+287,musica,musica,811.026,953.406,142.38,Tiago Celebration Song (Reggae).mp3,C:\Users\Rosa Moreira\Music\Tiago Celebration Song (Reggae).mp3,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_ana-faria-clara-mp3_2026-09-10_1128\Tiago Celebration Song (Reggae).mp3,0.81,143.19,,,,,0,0,
+288,texto,cartao,812.551,814.551,2.0,,,,,,,,,,Em Portugal dos Pequeninos,,,
+289,video,foto,814.371,819.371,5.0,21-49-8.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-49-8.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-49-8.jpg,,,Zoom in,Crossfade,1.5,,766,805,Nao
+290,video,foto,817.871,822.871,5.0,21-49-10.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-49-10.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-49-10.jpg,,,Zoom in,Crossfade,1.5,,613,803,Nao
+291,video,foto,821.371,826.371,5.0,21-49-12.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-49-12.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-49-12.jpg,,,Zoom in,Crossfade,1.5,,2480,3508,Sim
+292,texto,cartao,823.043,825.043,2.0,,,,,,,,,,Adolescência,,,
+293,video,foto,824.871,829.871,5.0,21-49-13 - Cópia - Cópia.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-49-13 - Cópia - Cópia.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-49-13 - Cópia - Cópia.JPG,,,Nenhum,Crossfade,1.5,,3072,2304,Sim
+294,video,foto,828.371,833.371,5.0,21-49-15.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-49-15.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-49-15.JPG,,,Zoom in,Crossfade,1.5,,706,1091,Nao
+295,texto,cartao,830.131,832.131,2.0,,,,,,,,,,Adepto  do FCP,,,
+296,video,foto,831.871,836.871,5.0,21-49-18.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-49-18.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-49-18.JPG,,,Zoom in,Crossfade,1.5,,1028,1832,Nao
+297,texto,cartao,833.624,835.624,2.0,,,,,,,,,,Apreciador  de música,,,
+298,video,foto,835.371,840.371,5.0,21-49-21.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-49-21.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-49-21.JPG,,,Zoom in,Crossfade,1.5,,5184,3456,Sim
+299,video,foto,838.871,845.871,7.0,21-49-20.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-49-20.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-49-20.JPG,,,Zoom in,Crossfade,1.5,,5184,3456,Sim
+300,texto,cartao,840.553,844.548,3.996,,,,,,,,,,De café...  (No Majestic),,,
+301,video,foto,844.371,849.371,5.0,IMG_4601(7).jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\IMG_4601(7).jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\IMG_4601(7).jpg,,,Zoom in,Crossfade,1.5,,4608,3456,Sim
+302,texto,cartao,846.081,848.048,1.968,,,,,,,,,,... De cerveja,,,
+303,video,foto,847.871,855.371,7.5,21-49-16.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-49-16.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-49-16.JPG,,,Zoom in,Crossfade,1.5,,3380,3456,Sim
+304,texto,cartao,849.563,854.063,4.5,,,,,,,,,,É um rapaz ponderado e cedo  aprendeu a fazer contas à vida  (quis ser Economista)...,,,
+305,video,foto,853.871,859.871,6.0,21-49-19.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-49-19.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-49-19.JPG,,,Zoom in,Crossfade,1.5,,1280,718,Sim
+306,texto,cartao,855.624,858.624,3.0,,,,,,,,,,Mas é  o primeiro  a alinhar  nas brincadeiras,,,
+307,video,foto,858.371,863.371,5.0,Porto (10).JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\Porto (10).JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\Porto (10).JPG,,,Zoom in,Crossfade,1.5,,1280,1280,Sim
+308,video,foto,861.871,867.871,6.0,21-49-30.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-49-30.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-49-30.JPG,,,Zoom in,Crossfade,1.5,,719,1280,Nao
+309,texto,cartao,863.509,866.509,3.0,,,,,,,,,,Explicando  que o 1.º rei  de Portugal  não era  Afonso...,,,
+310,video,foto,866.371,872.371,6.0,21-49-31.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-49-31.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-49-31.JPG,,,Zoom in,Crossfade,1.5,,1280,719,Sim
+311,texto,cartao,868.067,871.067,3.0,,,,,,,,,,Vendo o mundo de pernas p'ró ar,,,
+312,video,foto,870.871,875.871,5.0,21-49-32.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-49-32.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-49-32.JPG,,,Zoom in,Crossfade,1.5,,1280,719,Sim
+313,video,foto,874.371,879.371,5.0,21-49-38.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-49-38.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-49-38.JPG,,,Zoom in,Crossfade,1.5,,720,1280,Nao
+314,video,foto,877.871,881.871,4.0,WP_20150912_18_28_43_Pro.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\WP_20150912_18_28_43_Pro.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\WP_20150912_18_28_43_Pro.jpg,,,Zoom in,Crossfade,1.5,,1077,1918,Nao
+315,video,foto,880.371,885.371,5.0,21-49-33.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-49-33.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-49-33.JPG,,,Zoom in,Crossfade,1.5,,1024,768,Nao
+316,video,foto,883.871,889.871,6.0,21-49-22.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-49-22.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-49-22.JPG,,,Zoom in,Crossfade,1.5,,1280,718,Sim
+317,texto,cartao,885.976,888.709,2.734,,,,,,,,,,Com o irmão na praxe do... pai.,,,
+318,video,foto,888.371,894.371,6.0,21-49-23.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-49-23.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-49-23.JPG,,,Zoom in,Crossfade,1.5,,1280,718,Sim
+319,texto,cartao,890.601,893.343,2.742,,,,,,,,,,Desejando boa sorte ao pai  Finalista,,,
+320,video,foto,892.871,897.871,5.0,21-49-24.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-49-24.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-49-24.JPG,,,Zoom in,Crossfade,1.5,,1280,718,Sim
+321,texto,cartao,894.976,896.976,2.0,,,,,,,,,,Numa noite de chuva,,,
+322,video,foto,896.371,903.371,7.0,21-49-26.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-49-26.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-49-26.JPG,,,Nenhum,Crossfade,1.5,,1280,853,Sim
+323,texto,cartao,898.533,902.033,3.5,,,,,,,,,,Com a família paterna,,,
+324,video,foto,901.871,906.871,5.0,21-49-27.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-49-27.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-49-27.JPG,,,Zoom in,Crossfade,1.5,,1280,853,Sim
+325,video,foto,905.371,910.371,5.0,21-49-28.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-49-28.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-49-28.JPG,,,Zoom in,Crossfade,1.5,,1280,853,Sim
+326,texto,cartao,907.421,909.421,2.0,,,,,,,,,,Com o Marco,,,
+327,video,foto,908.871,913.871,5.0,21-49-34.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-49-34.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-49-34.JPG,,,Zoom in,Crossfade,1.5,,850,1280,Nao
+328,texto,cartao,910.957,912.957,2.0,,,,,,,,,,No casamento  da mãe,,,
+329,video,foto,912.371,917.371,5.0,21-49-36.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-49-36.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-49-36.JPG,,,Zoom in,Crossfade,1.5,,853,1280,Nao
+330,texto,cartao,914.33,916.33,2.0,,,,,,,,,,"Com a  primeira  sobrinha,  Matilde.",,,
+331,video,foto,915.871,920.871,5.0,IMG_6240.jpeg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\IMG_6240.jpeg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\IMG_6240.jpeg,,,Zoom in,Crossfade,1.5,,192,256,Nao
+332,texto,cartao,918.049,920.048,1.999,,,,,,,,,,E com o  Miguel,,,
+333,video,foto,919.371,924.371,5.0,21-49-40.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-49-40.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-49-40.JPG,,,Zoom in,Crossfade,1.5,,1280,853,Sim
+334,texto,cartao,921.572,924.296,2.724,,,,,,,,,,Ensaiando uma coreografia  com o irmão,,,
+335,video,foto,922.871,927.871,5.0,21-49-41.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-49-41.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-49-41.JPG,,,Zoom in,Crossfade,1.5,,1280,853,Sim
+336,video,foto,926.371,931.371,5.0,21-49-42.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-49-42.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-49-42.JPG,,,Zoom in,Crossfade,1.5,,5184,3456,Sim
+337,video,foto,929.871,934.871,5.0,21-49-43.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-49-43.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-49-43.JPG,,,Zoom in,Crossfade,1.5,,5184,3456,Sim
+338,texto,cartao,932.101,934.101,2.0,,,,,,,,,,Na Assembleia da República,,,
+339,video,foto,933.371,938.371,5.0,IMG_0588.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\IMG_0588.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\IMG_0588.JPG,,,Zoom in,Crossfade,1.5,,3574,3888,Sim
+340,texto,cartao,935.555,937.548,1.994,,,,,,,,,,Um dos vários desportos que gosta de praticar,,,
+341,video,foto,936.871,941.871,5.0,21-49-45.jpeg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-49-45.jpeg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-49-45.jpeg,,,Zoom in,Crossfade,1.5,,830,1600,Nao
+342,texto,cartao,938.866,940.866,2.0,,,,,,,,,,O maratonista,,,
+343,video,foto,940.371,946.371,6.0,IMG-20260614-WA0013.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\IMG-20260614-WA0013.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\IMG-20260614-WA0013.jpg,,,Zoom in,Crossfade,1.5,,171,256,Nao
+344,video,foto,944.871,950.871,6.0,21-49-46.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-49-46.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-49-46.jpg,,,Zoom in,Crossfade,1.5,,5312,2988,Sim
+345,texto,cartao,946.991,949.734,2.743,,,,,,,,,,O canoísta,,,
+346,video,foto,949.371,954.371,5.0,21-49-47.jpeg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-49-47.jpeg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-49-47.jpeg,,,Zoom in,Crossfade,1.5,,3024,4032,Sim
+347,texto,cartao,951.434,953.434,2.0,,,,,,,,,,O pacifista,,,
+348,video,foto,952.871,957.871,5.0,21-49-44.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-49-44.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-49-44.JPG,,,Zoom in,Crossfade,1.5,,5184,3456,Sim
+349,musica,musica,953.38,1021.39,68.01,Berlin - Take My Breathe Away theme from Top Gun with Lyrics.mp3,C:\Users\Rosa Moreira\Music\Berlin - Take My Breathe Away theme from Top Gun with Lyrics.mp3,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_ana-faria-clara-mp3_2026-09-10_1128\Berlin - Take My Breathe Away theme from Top Gun with Lyrics.mp3,0.0,68.01,,,,,0,0,
+350,texto,cartao,954.9,956.9,2.0,,,,,,,,,,Look à Top Gun,,,
+351,video,foto,956.371,961.371,5.0,21-49-51.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-49-51.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-49-51.jpg,,,Zoom in,Crossfade,1.5,,1204,2089,Nao
+352,video,foto,959.871,964.871,5.0,21-49-29.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-49-29.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-49-29.JPG,,,Zoom in,Crossfade,1.5,,5184,3456,Sim
+353,texto,cartao,961.929,963.929,2.0,,,,,,,,,,Pilotando um helicóptero,,,
+354,video,foto,963.371,968.371,5.0,21-49-39.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-49-39.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-49-39.JPG,,,Nenhum,Crossfade,1.5,,3659,3456,Sim
+355,texto,cartao,965.565,967.565,2.0,,,,,,,,,,Pilotando um trenó,,,
+356,video,foto,966.871,971.871,5.0,20170521_162505.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\20170521_162505.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\20170521_162505.jpg,,,Zoom in,Crossfade,1.5,,4128,3096,Sim
+357,texto,cartao,968.976,970.807,1.832,,,,,,,,,,Na Régua,,,
+358,video,foto,970.371,975.371,5.0,IMG_3216.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\IMG_3216.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\IMG_3216.JPG,,,Zoom in,Crossfade,1.5,,2736,3648,Sim
+359,texto,cartao,972.361,974.686,2.325,,,,,,,,,,Em Nova York,,,
+360,video,foto,973.871,977.871,4.0,IMG_3461.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\IMG_3461.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\IMG_3461.JPG,,,Zoom in,Crossfade,1.5,,3648,2736,Sim
+361,video,foto,976.371,981.371,5.0,IMG_3540.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\IMG_3540.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\IMG_3540.JPG,,,Zoom in,Crossfade,1.5,,3648,2736,Sim
+362,texto,cartao,978.767,980.767,2.0,,,,,,,,,,Na Croácia  .,,,
+363,video,foto,979.871,984.871,5.0,IMG_3547.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\IMG_3547.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\IMG_3547.JPG,,,Zoom in,Crossfade,1.5,,3648,2736,Sim
+364,video,foto,983.371,988.371,5.0,IMG_3576.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\IMG_3576.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\IMG_3576.JPG,,,Nenhum,Crossfade,1.5,,256,192,Nao
+365,texto,cartao,985.682,989.15,3.467,,,,,,,,,,Captando o pôr-de-sol,,,
+366,video,foto,988.371,992.371,4.0,IMG_4517.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\IMG_4517.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\IMG_4517.JPG,,,Zoom in,,,,256,192,Nao
+367,video,foto,990.871,996.871,6.0,DSCN7849.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\DSCN7849.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\DSCN7849.JPG,,,Zoom in,Crossfade,1.5,,1280,960,Sim
+368,texto,cartao,993.401,996.401,3.0,,,,,,,,,,"Em Zagreb, no estádio Maksimir.  .",,,
+369,video,foto,995.371,1002.371,7.0,IMG_4541.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\IMG_4541.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\IMG_4541.JPG,,,Zoom in,Crossfade,1.5,,169,256,Nao
+370,texto,cartao,997.791,1001.791,4.0,,,,,,,,,,"Em  Londres, no Museu Madame Tussauds,  com Bolt.",,,
+371,video,foto,1000.871,1006.871,6.0,IMG_4542.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\IMG_4542.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\IMG_4542.JPG,,,Zoom in,Crossfade,1.5,,192,256,Nao
+372,texto,cartao,1003.598,1005.598,2.0,,,,,,,,,,E com  Ronaldo,,,
+373,video,foto,1005.371,1011.371,6.0,IMG_8450.jpeg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\IMG_8450.jpeg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\IMG_8450.jpeg,,,Zoom in,Crossfade,1.5,,3024,4032,Sim
+374,texto,cartao,1007.97,1010.97,3.0,,,,,,,,,,"Em  Buenos Aires, no  Bairro  La Boca.",,,
+375,video,foto,1009.871,1015.871,6.0,IMG_9648.jpeg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\IMG_9648.jpeg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\IMG_9648.jpeg,,,Zoom in,Crossfade,1.5,,4032,3024,Sim
+376,texto,cartao,1012.562,1015.262,2.7,,,,,,,,,,"Empurrando um glaciar (Perito Moreno, na Argentina)",,,
+377,video,foto,1014.371,1020.371,6.0,1200.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\1200.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\1200.jpg,,,Zoom in,Crossfade,1.5,,1536,1007,Sim
+378,texto,cartao,1017.199,1021.199,4.0,,,,,,,,,,Com o Henrique no Parque Guell,,,
+379,video,cartao,1020.371,1025.371,5.0,,,,,,,,,,,,,
+380,musica,musica,1021.355,1072.655,51.3,Sia - Unstoppable (Official Video - Live from the Nostalgic For The Present Tour).MP3,C:\Users\Rosa Moreira\Music\Sia - Unstoppable (Official Video - Live from the Nostalgic For The Present Tour).MP3,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_ana-faria-clara-mp3_2026-09-10_1128\Sia - Unstoppable (Official Video - Live from the Nostalgic For The Present Tour).MP3,0.0,51.3,,,,,0,0,
+381,texto,cartao,1021.371,1024.871,3.5,,,,,,,,,,Colegas de trabalho,,,
+382,video,foto,1023.871,1030.871,7.0,IMG-20250305-WA0113.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\IMG-20250305-WA0113.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\IMG-20250305-WA0113.jpg,,,Zoom in,Crossfade,1.5,,1600,1200,Sim
+383,video,foto,1029.371,1035.371,6.0,IMG-20260513-WA0016.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\IMG-20260513-WA0016.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\IMG-20260513-WA0016.jpg,,,Zoom in,Crossfade,1.5,,2040,1530,Sim
+384,video,foto,1033.871,1042.871,9.0,6-4.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\6-4.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\6-4.jpg,,,Nenhum,Crossfade,1.5,,848,1280,Nao
+385,video,foto,1041.371,1048.371,7.0,IMG-20221118-WA0013.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\IMG-20221118-WA0013.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\IMG-20221118-WA0013.jpg,,,Zoom in,Crossfade,1.5,,1024,768,Nao
+386,video,foto,1046.871,1053.871,7.0,21-49-52.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-49-52.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-49-52.JPG,,,Zoom in,Crossfade,1.5,,1280,960,Sim
+387,texto,cartao,1049.538,1053.238,3.7,,,,,,,,,,Com a mãe no cortejo da Queima das  Fitas,,,
+388,video,foto,1052.371,1057.371,5.0,21-49-53.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-49-53.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-49-53.jpg,,,Nenhum,Crossfade,1.5,,1920,1440,Sim
+389,texto,cartao,1055.246,1057.246,2.0,,,,,,,,,,Com a mãe e com a avó,,,
+390,video,foto,1055.871,1061.871,6.0,21-49-56.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-49-56.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-49-56.jpg,,,Zoom in,Crossfade,1.5,,2592,1944,Sim
+391,video,foto,1060.371,1065.371,5.0,21-49-54.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-49-54.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-49-54.jpg,,,Zoom in,Crossfade,1.5,,1920,1440,Sim
+392,texto,cartao,1063.012,1065.012,2.0,,,,,,,,,,E com a Sky,,,
+393,video,foto,1063.871,1068.871,5.0,21-49-55.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-49-55.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-49-55.jpg,,,Zoom in,Crossfade,1.5,,1920,1440,Sim
+394,video,foto,1067.371,1071.371,4.0,21-49-57.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-49-57.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-49-57.jpg,,,Zoom in,Crossfade,1.5,,1920,1440,Sim
+395,video,cartao,1071.371,1079.371,8.0,,,,,,,,,,,,,
+396,musica,musica,1072.578,1118.148,45.57,George Michael - Careless Whisper (Official Video).mp3,C:\Users\Rosa Moreira\Music\George Michael - Careless Whisper (Official Video).mp3,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_ana-faria-clara-mp3_2026-09-10_1128\George Michael - Careless Whisper (Official Video).mp3,0.0,45.57,,,,,0,0,
+397,texto,cartao,1072.805,1078.805,6.0,,,,,,,,,,Em 2011  a Clara e o Tiago  conheceram-se. E nunca mais  se largaram.,,,
+398,video,foto,1077.871,1082.871,5.0,A Happy Year (16).jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\A Happy Year (16).jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\A Happy Year (16).jpg,,,Nenhum,Crossfade,1.5,,2048,1536,Sim
+399,video,foto,1081.371,1088.371,7.0,21-50.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-50.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-50.JPG,,,Zoom in,Crossfade,1.5,,4320,3240,Sim
+400,texto,cartao,1084.257,1087.957,3.7,,,,,,,,,,"Na Escola Secundária, com 16 anos.",,,
+401,video,foto,1086.871,1091.871,5.0,185.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\185.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\185.JPG,,,Zoom in,Crossfade,1.5,,256,256,Nao
+402,video,foto,1090.371,1097.371,7.0,21-51.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-51.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-51.JPG,,,Zoom in,Crossfade,1.5,,1280,1174,Sim
+403,texto,cartao,1093.228,1097.207,3.978,,,,,,,,,,Na aula de Biologia,,,
+404,video,foto,1095.871,1102.871,7.0,21-52.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-52.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-52.JPG,,,Zoom in,Crossfade,1.5,,2206,2763,Sim
+405,texto,cartao,1098.843,1101.585,2.742,,,,,,,,,,Festa dos 17 anos da Clara,,,
+406,video,foto,1101.371,1108.371,7.0,21-53.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-53.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-53.JPG,,,Zoom in,Crossfade,1.5,,4000,3000,Sim
+407,video,foto,1106.871,1113.871,7.0,21-60.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-60.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-60.jpg,,,Zoom in,Crossfade,1.5,,642,715,Nao
+408,texto,cartao,1110.038,1113.038,3.0,,,,,,,,,,Com 20 anos,,,
+409,video,foto,1112.371,1119.371,7.0,21-49-58.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\21-49-58.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\21-49-58.JPG,,,Zoom in,Crossfade,1.5,,2248,4000,Sim
+410,texto,cartao,1115.343,1118.069,2.726,,,,,,,,,,L'amour,,,
+411,video,foto,1117.871,1122.871,5.0,22-2.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\22-2.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\22-2.JPG,,,Zoom in,Crossfade,1.5,,4000,2248,Sim
+412,musica,musica,1118.178,1230.078,111.9,Andy Williams   Where Do I Begin   Love Story   Lyrics Remi[1].mp3,C:\Users\Rosa Moreira\Music\Andy Williams   Where Do I Begin   Love Story   Lyrics Remi[1].mp3,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_ana-faria-clara-mp3_2026-09-10_1128\Andy Williams   Where Do I Begin   Love Story   Lyrics Remi[1].mp3,0.6,112.5,,,,,0,0,
+413,texto,cartao,1120.806,1122.606,1.8,,,,,,,,,,E le glamour,,,
+414,video,foto,1121.371,1126.371,5.0,22-5.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\22-5.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\22-5.JPG,,,Zoom in,Crossfade,1.5,,2048,1536,Sim
+415,video,foto,1124.871,1129.871,5.0,82-1.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\82-1.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\82-1.JPG,,,Zoom in,Crossfade,1.5,,3780,3240,Sim
+416,video,foto,1128.371,1133.371,5.0,20170805181124.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\20170805181124.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\20170805181124.jpg,,,Zoom in,Crossfade,1.5,,4608,3456,Sim
+417,video,foto,1131.871,1136.871,5.0,IMG_9283 (1).jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\IMG_9283 (1).jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\IMG_9283 (1).jpg,,,Zoom in,Crossfade,1.5,,2576,1932,Sim
+418,video,foto,1135.371,1140.371,5.0,DSC07594.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\DSC07594.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\DSC07594.JPG,,,Zoom in,Crossfade,1.5,,4000,2248,Sim
+419,video,foto,1138.871,1143.871,5.0,DSC00093.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\DSC00093.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\DSC00093.JPG,,,Zoom in,Crossfade,1.5,,1280,855,Sim
+420,video,foto,1142.371,1147.371,5.0,82-10.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\82-10.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\82-10.jpg,,,Zoom in,Crossfade,1.5,,1280,960,Sim
+421,texto,cartao,1145.233,1147.233,2.0,,,,,,,,,,Em Veneza,,,
+422,video,foto,1145.871,1150.871,5.0,82-2.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\82-2.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\82-2.jpg,,,Zoom in,Crossfade,1.5,,1280,964,Sim
+423,texto,cartao,1148.535,1150.535,2.0,,,,,,,,,,"Em Londres,  2018.",,,
+424,video,foto,1149.371,1154.371,5.0,82-37.jpeg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\82-37.jpeg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\82-37.jpeg,,,Zoom in,Crossfade,1.5,,1211,1280,Nao
+425,texto,cartao,1152.345,1154.345,2.0,,,,,,,,,,"Em Londres,  2025.",,,
+426,video,foto,1152.871,1157.871,5.0,82-3.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\82-3.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\82-3.JPG,,,Zoom in,Crossfade,1.5,,1280,960,Sim
+427,video,foto,1156.371,1163.371,7.0,82 - Cópia.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\82 - Cópia.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\82 - Cópia.jpg,,,Zoom in,Crossfade,1.5,,1019,1001,Nao
+428,texto,cartao,1159.309,1163.309,4.0,,,,,,,,,,Em Barcelona.  Escutando as explicações  sobre a obra de Gaudi.,,,
+429,video,foto,1161.871,1166.871,5.0,82-27.jpeg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\82-27.jpeg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\82-27.jpeg,,,Zoom in,Crossfade,1.5,,1016,1280,Nao
+430,video,foto,1165.371,1170.371,5.0,82-53.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\82-53.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\82-53.JPG,,,Zoom in,Crossfade,1.5,,1280,960,Sim
+431,video,foto,1168.871,1174.871,6.0,IMG_9097.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\IMG_9097.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\IMG_9097.JPG,,,Nenhum,Crossfade,1.5,,1280,960,Sim
+432,texto,cartao,1171.827,1173.827,2.0,,,,,,,,,,No Gerês,,,
+433,video,foto,1173.371,1178.371,5.0,IMG_8594.jpeg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\IMG_8594.jpeg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\IMG_8594.jpeg,,,Zoom in,Crossfade,1.5,,256,210,Nao
+434,texto,cartao,1175.978,1177.978,2.0,,,,,,,,,,Na Argentina. Junto às Cataratas do  Iguaçú;,,,
+435,video,foto,1176.871,1181.871,5.0,IMG_9062.jpeg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\IMG_9062.jpeg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\IMG_9062.jpeg,,,Zoom in,Crossfade,1.5,,226,256,Nao
+436,texto,cartao,1179.642,1181.61,1.968,,,,,,,,,,"Na Patagónia, junto  a uma colónia de pinguins.",,,
+437,video,foto,1180.371,1185.371,5.0,IMG_8848.jpeg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\IMG_8848.jpeg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\IMG_8848.jpeg,,,Zoom in,Crossfade,1.5,,256,207,Nao
+438,texto,cartao,1183.233,1184.977,1.744,,,,,,,,,,Em Ushuaia,,,
+439,video,foto,1183.871,1189.871,6.0,IMG_8145.jpeg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\IMG_8145.jpeg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\IMG_8145.jpeg,,,Zoom in,Crossfade,1.5,,256,192,Nao
+440,texto,cartao,1186.702,1189.701,2.999,,,,,,,,,,No estádio do Boca Juniors,,,
+441,video,foto,1188.371,1194.371,6.0,20170204_200730.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\20170204_200730.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\20170204_200730.jpg,,,Zoom in,Crossfade,1.5,,1280,960,Sim
+442,texto,cartao,1191.322,1193.922,2.6,,,,,,,,,,"Em comum, também tinham a  paixão pelo FCP.",,,
+443,video,foto,1192.871,1197.871,5.0,IMG_2523.jpeg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\IMG_2523.jpeg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\IMG_2523.jpeg,,,Zoom in,Crossfade,1.5,,960,1280,Nao
+444,video,foto,1196.371,1202.371,6.0,Scanner_20260606 (17).jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\Scanner_20260606 (17).jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\Scanner_20260606 (17).jpg,,,Zoom in,Crossfade,1.5,,1196,803,Nao
+445,texto,cartao,1199.205,1202.205,3.0,,,,,,,,,,E pelo futebol em geral,,,
+446,video,foto,1200.871,1205.871,5.0,82-4.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\82-4.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\82-4.jpg,,,Zoom in,Crossfade,1.5,,1280,1183,Sim
+447,video,foto,1204.371,1210.371,6.0,82-11.jpeg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\82-11.jpeg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\82-11.jpeg,,,Zoom in,Crossfade,1.5,,2316,3088,Sim
+448,texto,cartao,1207.345,1210.092,2.747,,,,,,,,,,E o fétiche por óculos...,,,
+449,video,foto,1208.871,1213.871,5.0,82-11-1.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\82-11-1.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\82-11-1.jpg,,,Zoom in,Crossfade,1.5,,368,1067,Nao
+450,video,foto,1212.371,1217.371,5.0,IMG_4073.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\IMG_4073.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\IMG_4073.JPG,,,Zoom in,Crossfade,1.5,,3264,2448,Sim
+451,video,foto,1217.371,1224.371,7.0,DSC_0041.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\DSC_0041.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\DSC_0041.JPG,,,Nenhum,,,,1280,854,Sim
+452,texto,cartao,1218.538,1224.016,5.478,,,,,,,,,,"Imposição de Insígnias. ""Tiago, não batas,  ela só fala na presença  do seu Advogado...""",,,
+453,video,foto,1222.871,1228.871,6.0,30Abril18_125.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\30Abril18_125.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\30Abril18_125.jpg,,,Zoom in,Crossfade,1.5,,2667,4000,Sim
+454,texto,cartao,1225.684,1229.153,3.469,,,,,,,,,,No Baile  de Finalistas,,,
+455,video,cartao,1228.871,1235.871,7.0,,,,,,,,,,,,,
+456,texto,cartao,1230.038,1235.533,5.495,,,,,,,,,,Cumplicidades,,,
+457,musica,musica,1230.138,1505.106,274.968,Papillon - ¡ N.M.N ! (feat. Bárbara Tinoco) [1].MP3,C:\Users\Rosa Moreira\Music\Papillon - ¡ N.M.N ! (feat. Bárbara Tinoco) [1].MP3,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_ana-faria-clara-mp3_2026-09-10_1128\Papillon - ¡ N.M.N ! (feat. Bárbara Tinoco) [1].MP3,0.0,274.968,,,,,0,0,
+458,video,foto,1234.371,1239.371,5.0,82-48.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\82-48.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\82-48.JPG,,,Zoom in,Crossfade,1.5,,3164,3888,Sim
+459,video,foto,1237.871,1242.871,5.0,82-46.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\82-46.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\82-46.JPG,,,Zoom in,Crossfade,1.5,,4889,3888,Sim
+460,video,foto,1241.371,1246.371,5.0,82-32.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\82-32.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\82-32.JPG,,,Zoom in,Crossfade,1.5,,1717,2736,Sim
+461,video,foto,1244.871,1250.871,6.0,82-9.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\82-9.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\82-9.jpg,,,Zoom in,Crossfade,1.5,,735,1155,Nao
+462,video,foto,1249.371,1254.371,5.0,82-31.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\82-31.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\82-31.JPG,,,Zoom in,Crossfade,1.5,,1280,960,Sim
+463,video,foto,1252.871,1257.871,5.0,82-41.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\82-41.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\82-41.JPG,,,Zoom in,Crossfade,1.5,,1173,1280,Nao
+464,video,foto,1256.371,1261.371,5.0,82-7.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\82-7.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\82-7.jpg,,,Zoom in,Crossfade,1.5,,1201,1280,Nao
+465,video,foto,1259.871,1264.871,5.0,182-73.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\182-73.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\182-73.JPG,,,Zoom in,Crossfade,1.5,,1237,1280,Nao
+466,video,foto,1263.371,1268.371,5.0,182-76.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\182-76.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\182-76.JPG,,,Zoom in,Crossfade,1.5,,1280,960,Sim
+467,video,foto,1266.871,1271.871,5.0,82-6.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\82-6.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\82-6.jpg,,,Zoom in,Crossfade,1.5,,1280,1253,Sim
+468,video,foto,1270.371,1275.371,5.0,IMG_4490 (3).jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\IMG_4490 (3).jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\IMG_4490 (3).jpg,,,Zoom in,Crossfade,1.5,,1280,960,Sim
+469,video,foto,1273.871,1278.871,5.0,IMG_4277 (3) (1).jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\IMG_4277 (3) (1).jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\IMG_4277 (3) (1).jpg,,,Zoom in,Crossfade,1.5,,1280,960,Sim
+470,video,foto,1277.371,1282.371,5.0,82-25- -2022.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\82-25- -2022.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\82-25- -2022.JPG,,,Zoom in,Crossfade,1.5,,954,1280,Nao
+471,video,foto,1280.871,1285.871,5.0,82-36.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\82-36.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\82-36.JPG,,,Zoom in,Crossfade,1.5,,1270,1280,Nao
+472,video,foto,1284.371,1289.371,5.0,82-43.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\82-43.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\82-43.JPG,,,Zoom in,Crossfade,1.5,,597,1280,Nao
+473,video,foto,1287.871,1292.871,5.0,82-59.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\82-59.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\82-59.JPG,,,Zoom in,Crossfade,1.5,,1280,1063,Sim
+474,video,foto,1291.371,1296.371,5.0,182-74.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\182-74.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\182-74.JPG,,,Zoom in,Crossfade,1.5,,1280,960,Sim
+475,video,foto,1294.871,1300.871,6.0,DSC00075.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\DSC00075.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\DSC00075.JPG,,,Zoom in,Crossfade,1.5,,1280,855,Sim
+476,video,foto,1299.371,1304.371,5.0,IMG_4490 (16).jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\IMG_4490 (16).jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\IMG_4490 (16).jpg,,,Zoom in,Crossfade,1.5,,1280,960,Sim
+477,video,foto,1302.871,1308.871,6.0,IMG_4425.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\IMG_4425.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\IMG_4425.JPG,,,Zoom in,Crossfade,1.5,,460,1272,Nao
+478,video,foto,1307.371,1315.371,8.0,82-50.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\82-50.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\82-50.JPG,,,Zoom in,Crossfade,1.5,,1280,1059,Sim
+479,texto,cartao,1310.231,1315.231,5.0,,,,,,,,,,"-És uma workaholic, não és? -Agora não posso responder,   tenho que mandar um e-mail de   trabalho!",,,
+480,video,foto,1313.871,1323.871,10.0,Fotos Joana (69).JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\Fotos Joana (69).JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\Fotos Joana (69).JPG,,,Zoom in,Crossfade,1.5,,2559,3240,Sim
+481,texto,cartao,1316.75,1322.75,6.0,,,,,,,,,,Festa  dos  18 anos  da  Clara,,,
+482,video,foto,1322.371,1331.371,9.0,DSC_7700.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\DSC_7700.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\DSC_7700.JPG,,,Nenhum,Crossfade,1.5,,1280,904,Sim
+483,texto,cartao,1325.189,1331.189,6.0,,,,,,,,,,Na festa dos 18 anos do Henrique,,,
+484,video,foto,1329.871,1339.871,10.0,1021.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\1021.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\1021.jpg,,,Zoom in,Crossfade,1.5,,1200,1145,Nao
+485,texto,cartao,1332.783,1340.783,8.0,,,,,,,,,,"Festa de aniversário da Clara, estava  a festa a decorrer e ela saiu porque  tinha de ir a Lisboa, em trabalho.",,,
+486,video,foto,1339.871,1348.871,9.0,1021-1.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\1021-1.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\1021-1.jpg,,,Zoom in,,,,663,728,Nao
+487,texto,cartao,1341.028,1349.028,8.0,,,,,,,,,,"Os lenços brancos da despedida, depois  de ter abandonado os convidados...",,,
+488,video,foto,1347.371,1353.371,6.0,IMG_6442.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\IMG_6442.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\IMG_6442.JPG,,,Zoom in,Crossfade,1.5,,1280,960,Sim
+489,texto,cartao,1350.249,1352.949,2.7,,,,,,,,,,"Com o Henrique, em Barcelona.",,,
+490,video,foto,1351.871,1357.871,6.0,20250608_224334 - Cópia.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\20250608_224334 - Cópia.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\20250608_224334 - Cópia.jpg,,,Zoom in,Crossfade,1.5,,1280,1135,Sim
+491,texto,cartao,1354.892,1357.611,2.719,,,,,,,,,,Jogo do Campeonato  da Europa,,,
+492,video,foto,1356.371,1365.371,9.0,1031.JPG,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\1031.JPG,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\1031.JPG,,,Zoom in,Crossfade,1.5,,1280,854,Sim
+493,texto,cartao,1359.267,1365.267,6.0,,,,,,,,,,No Santuário do Bom Jesus de Braga,,,
+494,video,foto,1363.871,1373.871,10.0,20260101_011410.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\20260101_011410.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\20260101_011410.jpg,,,Zoom in,Crossfade,1.5,,3000,4000,Sim
+495,texto,cartao,1366.74,1372.74,6.0,,,,,,,,,,"Primeiros minutos de 2026, quando foi  anunciado o noivado.",,,
+496,video,foto,1372.371,1379.371,7.0,20260101_011607.jpg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\20260101_011607.jpg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\20260101_011607.jpg,,,Zoom in,Crossfade,1.5,,1280,1099,Sim
+497,video,foto,1377.871,1381.871,4.0,IMG_2067.jpeg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\IMG_2067.jpeg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\IMG_2067.jpeg,,,Zoom in,Crossfade,1.5,,1057,1280,Nao
+498,video,foto,1380.371,1387.371,7.0,WhatsApp Image 2026-08-21 at 16.10.19.jpeg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\WhatsApp Image 2026-08-21 at 16.10.19.jpeg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\WhatsApp Image 2026-08-21 at 16.10.19.jpeg,,,Zoom in,Crossfade,1.5,,192,256,Nao
+499,texto,cartao,1383.388,1387.538,4.15,,,,,,,,,,"Voo de despedida de solteira, deixaram- na sonhar com uma condução a sério.",,,
+500,video,foto,1385.871,1390.871,5.0,WhatsApp Image 2026-08-22 at 11.12.02.jpeg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\WhatsApp Image 2026-08-22 at 11.12.02.jpeg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\wetransfer_fotos_2026-09-10_1110\WhatsApp Image 2026-08-22 at 11.12.02.jpeg,,,Zoom in,Crossfade,1.5,,144,256,Nao
+501,video,foto,1389.371,1401.871,12.5,WhatsApp Image 2026-03-01 at 13.30.02.jpeg,C:\Users\Rosa Moreira\Desktop\Casamento-Selecionadas\WhatsApp Image 2026-03-01 at 13.30.02.jpeg,Sim,C:\casamento-video-media\trabalho\00-ORIGINAL-MAE\Originals\WhatsApp Image 2026-03-01 at 13.30.02.jpeg,,,Nenhum,Crossfade,1.5,,1280,908,Sim
+502,video,cartao,1401.871,1408.871,7.0,,,,,,,,,,,,,
+503,texto,cartao,1403.871,1410.871,7.0,,,,,,,,,,The End (To be continued...),,,
