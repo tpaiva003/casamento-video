@@ -184,8 +184,23 @@ def desenhar(pronto, t_rel, duracao):
     return tela
 
 
-def musica_reancorada(clips):
-    """Coloca cada entrada musical dela sobre a MESMA foto, no tempo novo."""
+def musica_reancorada(clips, desvio, fim_corpo):
+    """Coloca cada entrada musical dela sobre a MESMA foto, no tempo novo.
+
+    TRES ERROS QUE ESTA VERSAO CORRIGE, e que juntos tornaram o primeiro teste
+    inaudivel. Ficam escritos porque nenhum deles dava erro nem aviso:
+
+    1. Faixas cuja foto de ancoragem cai fora do troco renderizado apanhavam o
+       valor por omissao 0.0 e iam todas para o segundo zero. Num teste de 98
+       segundos, treze musicas comecavam ao mesmo tempo. Agora sao DESCARTADAS.
+    2. O tempo era absoluto, mas o corpo do video comeca depois da fanfarra.
+       Toda a musica ficava adiantada 20,4 segundos. Agora desconta-se o desvio.
+    3. A ultima faixa tinha 60 segundos por omissao, entrando pelo fim fora.
+       Agora vai ate ao fim do corpo e nem um segundo alem.
+
+    No fim ha uma verificacao explicita de sobreposicoes. Se duas faixas se
+    pisarem, o script diz. Silencio nao e prova de que esta certo.
+    """
     with open(TIMELINE, encoding="utf-8-sig", newline="") as fh:
         linhas = list(csv.DictReader(fh))
     musica = sorted([r for r in linhas if r["faixa"] == "musica"],
@@ -193,30 +208,42 @@ def musica_reancorada(clips):
     video = sorted([r for r in linhas if r["faixa"] == "video"],
                    key=lambda r: float(r["inicio_s"]))
 
-    novo_inicio = {}
-    for c in clips:
-        novo_inicio[int(c["ordem"])] = float(c["inicio_s"])
+    novo_inicio = {int(c["ordem"]): float(c["inicio_s"]) - desvio for c in clips}
 
     entradas = []
     for m in musica:
         t = float(m["inicio_s"])
-        indice = 0
+        indice = None
         for i, v in enumerate(video):
-            if float(v["inicio_s"]) <= t:
+            if float(v["inicio_s"]) <= t + 0.001:
                 indice = i
             else:
                 break
-        quando = novo_inicio.get(indice + 1, 0.0)
+        if indice is None:
+            continue
+        ordem = indice + 1
+        if ordem not in novo_inicio:
+            continue                      # a foto dela nao esta neste troco
         entradas.append({
             "ficheiro": m["ficheiro"],
             "caminho": m["caminho_disco"],
-            "quando": quando,
+            "quando": max(0.0, novo_inicio[ordem]),
             "in_s": float(m["in_s"] or 0),
             "encontrado": m["encontrado"],
         })
+
+    entradas.sort(key=lambda e: e["quando"])
     for i, e in enumerate(entradas):
-        proximo = entradas[i + 1]["quando"] if i + 1 < len(entradas) else None
-        e["dura"] = (proximo - e["quando"]) if proximo else 60.0
+        fim = entradas[i + 1]["quando"] if i + 1 < len(entradas) else fim_corpo
+        e["dura"] = max(0.0, min(fim, fim_corpo) - e["quando"])
+
+    sobrepostas = [(entradas[i], entradas[i + 1]) for i in range(len(entradas) - 1)
+                   if entradas[i]["quando"] + entradas[i]["dura"]
+                   > entradas[i + 1]["quando"] + 0.05]
+    if sobrepostas:
+        print("  AVISO: %d sobreposicoes de musica" % len(sobrepostas))
+        for a, b in sobrepostas[:5]:
+            print("     %s pisa %s" % (a["ficheiro"][:34], b["ficheiro"][:34]))
     return entradas
 
 
@@ -385,7 +412,11 @@ def main():
     if not sem_som:
         print("  a construir o som")
         som = os.path.join(SAIDA, "_%s_som.m4a" % nome)
-        if not construir_som(ff, musica_reancorada(resto), fim, som):
+        entradas = musica_reancorada(resto, desvio, fim)
+        for e in entradas:
+            print("     %5.1f s  dura %5.1f s  %s"
+                  % (e["quando"], e["dura"], e["ficheiro"][:46]))
+        if not construir_som(ff, entradas, fim, som):
             som = None
 
     corpo_final = corpo
