@@ -73,9 +73,20 @@ def proteger_destino():
                  "Os originais nunca podem ser escritos.")
 
 
+# Abaixo desta proporcao a foto e mostrada a altura toda com fundo desfocado
+# (tratamento A, decisao 017) em vez de encher o ecra. Isso muda o alvo: uma
+# foto de 368x1067 precisava de 5,2x para encher os 1920 de largura, e precisa
+# so de 1,01x para ter os 1080 de altura. Tem de ser igual em upscale.py e em
+# upscale_ia.py, senao os dois produzem tamanhos diferentes para a mesma foto.
+LIMITE_FUNDO_DESFOCADO = 1.55
+
+
 def alvo(larg, alt):
-    """Dimensoes de saida: encher 1920x1080 vezes a folga, mantendo o aspeto."""
-    fator = max(LARGURA_ALVO / larg, ALTURA_ALVO / alt) * FOLGA
+    """Dimensoes de saida, conforme o modo como a foto vai ser mostrada."""
+    if larg / alt < LIMITE_FUNDO_DESFOCADO:
+        fator = (ALTURA_ALVO / alt) * FOLGA      # encaixada, so a altura conta
+    else:
+        fator = max(LARGURA_ALVO / larg, ALTURA_ALVO / alt) * FOLGA
     if fator <= 1.0:
         return None
     nl = int(round(larg * fator / 2)) * 2

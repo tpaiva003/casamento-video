@@ -119,6 +119,39 @@ Nenhuma versão pode apagar isto. Reordenar e aparar, sim. Apagar, não.
 
 ---
 
+## Quanto ampliar cada foto
+
+O alvo de ampliação depende de **como a foto vai aparecer**, não só do seu
+tamanho. Regra única, tem de ser igual em `scripts/upscale.py` e em
+`scripts/upscale_ia.py`:
+
+| Proporção da foto | Como aparece | Alvo |
+|---|---|---|
+| menos de 1,55 (vertical ou quadrada) | Encaixada, com fundo desfocado | Só a altura conta: `1080 / altura` |
+| 1,55 ou mais | Enche o ecrã | `max(1920 / largura, 1080 / altura)` |
+
+Em ambos os casos multiplica-se por 1,15 de folga para o pan e zoom não ficar
+a puxar pixéis do nada.
+
+Isto não é um pormenor. A `82-11-1.jpg`, de 368x1067, precisava de 5,2x para
+encher os 1920 de largura e precisa de 1,01x para ter os 1080 de altura.
+Aplicar a regra certa reduziu o lote de upscaling por rede neuronal de 170
+fotos para 109, e o lote urgente de 68 para 15.
+
+**Duas pastas de saída, e nenhuma delas é o original:**
+
+| Pasta | Técnica | Quando usar |
+|---|---|---|
+| `upscaled\` | Lanczos mais `cas`, rápido | Ampliações até cerca de 1,5x |
+| `upscaled-ia\` | Real-ESRGAN `realesrgan-x4plus`, 88 s por foto em CPU | Acima de 1,5x |
+
+Nunca usar `realesrgan-x4plus-anime` nem `realesr-animevideov3`: são para
+desenho animado e em fotografias de pessoas dão pele de plástico. Nunca usar
+restauro de rostos (GFPGAN, CodeFormer): esses não ampliam a cara,
+redesenham-na, e inventam um rosto plausível que não é o da pessoa.
+
+---
+
 ## Vocabulário de ritmo
 
 O ritmo é propriedade do bloco, não da foto. Coluna `ritmo` nos ficheiros de
