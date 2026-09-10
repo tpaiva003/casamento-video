@@ -256,6 +256,7 @@ def main():
     # entradas do inventario.
     ja_registadas = set()
     id_por_caminho = {}
+    ids_por_hash = defaultdict(list)
     proximo_id = 1
     if os.path.exists(OUT):
         with open(OUT, encoding="utf-8-sig", newline="") as fh:
@@ -263,10 +264,16 @@ def main():
                 ja_registadas.add(r["sha256"])
                 if r.get("id"):
                     id_por_caminho[(r["pasta"], r["ficheiro"])] = r["id"]
+                    ids_por_hash[r["sha256"]].append(r["id"])
                     try:
                         proximo_id = max(proximo_id, int(r["id"].lstrip("f")) + 1)
                     except ValueError:
                         pass
+    # Rede de seguranca para ficheiros que mudaram de pasta. Se o caminho ja
+    # nao existe mas o conteudo e o mesmo, o id acompanha o ficheiro. So vale
+    # para conteudos que eram unicos no inventario anterior: onde havia
+    # duplicados nao ha como saber qual dos id herdar, e inventar seria pior.
+    id_por_hash_unico = {h: v[0] for h, v in ids_por_hash.items() if len(v) == 1}
 
     linhas, erros = [], []
     por_hash = defaultdict(list)
@@ -380,15 +387,23 @@ def main():
                 })
 
     linhas.sort(key=lambda r: (r["pasta"], r["ficheiro"].lower()))
+    usados = set()
+    mudaram = []
     for r in linhas:
         chave = (r["pasta"], r["ficheiro"])
         existente = id_por_caminho.get(chave)
+        if not existente:
+            candidato = id_por_hash_unico.get(r["sha256"])
+            if candidato and candidato not in usados:
+                existente = candidato
+                mudaram.append((candidato, r["pasta"] + "/" + r["ficheiro"]))
         if existente:
             r["id"] = existente
         else:
             r["id"] = "f%04d" % proximo_id
-            id_por_caminho[chave] = r["id"]
             proximo_id += 1
+        usados.add(r["id"])
+        id_por_caminho[chave] = r["id"]
 
     # Anos indicados pelo Tiago. Entram depois dos id estarem atribuidos e so
     # onde nao ha data apurada por EXIF de camara, que e mais fiavel.
@@ -419,6 +434,10 @@ def main():
     print("Digitalizacoes detetadas: %d (%d traziam data EXIF enganosa)"
           % (scans, enganosas))
     print("Anos indicados pelo Tiago aplicados: %d" % aplicados)
+    if mudaram:
+        print("Ficheiros que mudaram de pasta e mantiveram o id: %d" % len(mudaram))
+        for i, onde in mudaram[:10]:
+            print("   %s  ->  %s" % (i, onde))
     novas_pasta = sum(1 for r in linhas if r["pasta"].startswith("01-NOVAS"))
     print("Fotos da pasta 01-NOVAS: %d" % novas_pasta)
     print("Duplicados confirmados por sha256: %d grupos" % len(dups))

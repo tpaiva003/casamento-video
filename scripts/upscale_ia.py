@@ -20,10 +20,18 @@ Garantias, as mesmas do upscale.py:
   3. Cada foto e reduzida no fim para o tamanho exato de que precisa. Ampliar
      4x e deixar assim so gastava disco sem ganhar nada no ecra.
 
-Uso:
+Uso, sempre a partir da pasta do repositorio:
+    cd C:\casamento-video
+    py -3.11 scripts/upscale_ia.py --todas       corrida da noite, ver abaixo
     py -3.11 scripts/upscale_ia.py --min 2.0     so as que precisam de 2x ou mais
-    py -3.11 scripts/upscale_ia.py --min 1.0     todas as que precisam de algo
     py -3.11 scripts/upscale_ia.py --listar      diz o que faria, sem fazer
+
+--todas usa o limiar 0,6 em vez de 2,0. Isso cobre tudo o que pode vir a
+precisar de pixeis, incluindo os planos fechados: uma foto a 0,6 cortada a 60
+por cento da largura fica a 1,0. Abaixo de 0,6 o original ja tem mais
+informacao do que o modelo consegue devolver, e nao se toca.
+
+Pode ser interrompido com Ctrl+C e retomado: salta tudo o que ja esta feito.
 """
 import csv
 import os
@@ -70,19 +78,24 @@ LIMITE_FUNDO_DESFOCADO = 1.55
 
 
 def alvo(larg, alt):
-    """Quanto e que esta foto precisa mesmo de ser ampliada.
+    """Tamanho de saida e fator de exibicao.
 
-    Depende de como vai ser mostrada. Se for encaixada com fundo desfocado,
-    basta ter altura. Se for para encher o ecra, precisa dos dois lados.
+    O fator diz quanto e que a foto precisa de crescer para o modo como vai
+    aparecer: encaixada com fundo desfocado, so a altura conta; a encher o
+    ecra, contam os dois lados.
+
+    O tamanho de saida NUNCA fica abaixo do original. Uma foto que ja tenha
+    pixeis a mais para o ecra pode continuar a precisar deles para um plano
+    fechado, e reduzi-la aqui deitava fora informacao que nao volta.
     """
     proporcao = larg / alt
     if proporcao < LIMITE_FUNDO_DESFOCADO:
-        f = (ALTURA_ALVO / alt) * FOLGA          # so a altura conta
+        f = (ALTURA_ALVO / alt) * FOLGA
     else:
         f = max(LARGURA_ALVO / larg, ALTURA_ALVO / alt) * FOLGA
-    if f <= 1.0:
-        return None
-    return max(1, round(larg * f)), max(1, round(alt * f)), f
+    nl = max(larg, round(larg * f))
+    na = max(alt, round(alt * f))
+    return nl, na, f
 
 
 def mmss(s):
@@ -95,18 +108,34 @@ def main():
         sys.exit("Nao encontrei o Real-ESRGAN em:\n  %s" % EXE)
 
     listar = "--listar" in sys.argv
-    minimo = 2.0
+    todas = "--todas" in sys.argv
+    # 0,6 cobre tudo o que pode vir a precisar de pixeis, incluindo os planos
+    # fechados: uma foto a 0,6 cortada a 60 por cento da largura fica a 1,0.
+    # Abaixo disso o original ja tem mais informacao do que o modelo consegue
+    # devolver, e passa-lo pela rede so alterava a textura sem ganho nenhum.
+    minimo = 0.6 if todas else 2.0
     if "--min" in sys.argv:
         minimo = float(sys.argv[sys.argv.index("--min") + 1])
 
     with open(INVENTARIO, encoding="utf-8-sig", newline="") as fh:
         linhas = list(csv.DictReader(fh))
 
-    trabalho = []
+    # Guarda de seguranca. Uma foto de 6016x4000 ampliada 4x da 385 megapixeis,
+    # o que em CPU sao dezenas de minutos e pode esgotar a memoria a meio de uma
+    # noite de processamento. Fotos assim nunca precisam de ampliacao nenhuma,
+    # por isso o corte nao tira nada de util.
+    MAX_MEGAPIXEIS = 16
+
+    trabalho, grandes = [], []
     for r in linhas:
-        dims = alvo(int(r["largura"]), int(r["altura"]))
-        if dims and dims[2] >= minimo:
-            trabalho.append((r, dims))
+        larg, alt = int(r["largura"]), int(r["altura"])
+        dims = alvo(larg, alt)
+        if dims[2] < minimo:
+            continue
+        if larg * alt > MAX_MEGAPIXEIS * 1_000_000:
+            grandes.append(r)
+            continue
+        trabalho.append((r, dims))
     trabalho.sort(key=lambda x: -x[1][2])
 
     os.makedirs(DESTINO, exist_ok=True)
@@ -121,6 +150,8 @@ def main():
     print("Criterio: fator de ampliacao >= %.2f" % minimo)
     print("Elegiveis: %d    Ja feitas: %d    Por fazer: %d"
           % (len(trabalho), len(trabalho) - len(por_fazer), len(por_fazer)))
+    if grandes:
+        print("Saltadas por serem grandes de mais para valer a pena: %d" % len(grandes))
     print("Destino: %s" % DESTINO)
     print("Originais em %s: nao sao tocados." % TRABALHO)
     if por_fazer:
