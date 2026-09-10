@@ -105,11 +105,16 @@ def nome_evento(legenda, ano, bloco_mae):
     return bloco_mae or "Por classificar"
 
 
-# Ancora no arranque de cada bloco dela, tirada dos cartoes que ela propria
-# escreveu. "Era uma vez uma menina que nasceu no ano da graca de 1995" abre o
-# bloco Clara, "um menino loiro que tambem nasceu em 1995" abre o do Tiago, e
-# "Em 2011 a Clara e o Tiago conheceram-se" abre o do encontro.
-SEMENTES = {"Clara": NASCIMENTO, "Tiago": NASCIMENTO, "O encontro": 2011}
+# Ancora no arranque de cada bloco dela, tirada dos cartoes que ela escreveu.
+# "Era uma vez uma menina que nasceu no ano da graca de 1995" abre o bloco
+# Clara, "um menino loiro que tambem nasceu em 1995" abre o do Tiago.
+#
+# ATENCAO ao terceiro: o cartao dela diz "Em 2011 a Clara e o Tiago
+# conheceram-se", e isso esta ERRADO. O briefing e o Tiago dizem que se
+# conheceram na Escola Secundaria de Valongo em 2009/2010 e que comecaram a
+# namorar a 20 de maio de 2012. A semente usa 2010, o facto, e nao 2011, o que
+# ela escreveu. Ver DECISOES.md, entrada 011.
+SEMENTES = {"Clara": NASCIMENTO, "Tiago": NASCIMENTO, "O encontro": 2010}
 
 
 def estimar_anos(linhas):

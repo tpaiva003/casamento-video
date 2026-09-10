@@ -269,6 +269,52 @@ contestar.
 
 ---
 
+### 2026-09-10 | 011 | O cartão dela sobre 2011 está factualmente errado
+
+**Decisão:** a cronologia do casal é a do briefing e a do Tiago: conheceram-se
+na Escola Secundária de Valongo em 2009/2010, e começaram a namorar a 20 de
+maio de 2012. O cartão da mãe da Clara que diz "Em 2011 a Clara e o Tiago
+conheceram-se" está errado e não se reproduz tal e qual em nenhuma versão.
+
+**Razão:** o Tiago confirmou explicitamente que não se conheceram em 2011 e
+que o namoro começou em 2012. A decisão 001 protege a assinatura dela, as
+fanfarras e as vinhetas, não protege um erro de facto sobre a vida deles. São
+coisas diferentes: preservar o gesto não é preservar a data errada.
+
+**Consequência:** a semente de interpolação de anos do bloco "O encontro"
+passou de 2011 para 2010 em `scripts/gerar_decisoes.py`. Na `v1_fiel`, que
+mantém os cartões dela, o texto deste cartão tem de ser reescrito com a data
+certa, ou reescrito sem data nenhuma. Fica por decidir qual, na montagem.
+
+**Quem:** Tiago.
+
+**Substitui:**
+
+---
+
+### 2026-09-10 | 012 | Sem Microsoft Office, nada de edição manual de CSV
+
+**Decisão:** o Tiago não tem Microsoft Office. Os CSV continuam a ser o
+formato de dados, porque é o que funciona no Git e no telemóvel, mas ele nunca
+os edita à mão. Toda a introdução de dados passa por páginas HTML geradas por
+mim, que abrem em qualquer browser, ou por instruções em linguagem natural que
+eu converto em alterações ao CSV.
+
+**Razão:** um CSV de 306 linhas no Notepad é inutilizável. E a fase 2 do
+briefing já previa instruções em linguagem natural, portanto isto não é um
+desvio, é uma confirmação do plano com uma restrição técnica a mais.
+
+**Consequência:** primeira ferramenta feita, `scripts/ferramenta_anos.py`, que
+gera `C:\casamento-video-media\ferramentas\anos.html` com as fotos embutidas
+em base64, portanto autónoma e sem dependências. Todas as ferramentas futuras
+seguem o mesmo padrão: HTML autónomo, grava um ficheiro pequeno que eu leio.
+
+**Quem:** Tiago.
+
+**Substitui:**
+
+---
+
 ## Em aberto
 
 Não assumir nenhuma destas sem decisão explícita do Tiago.
