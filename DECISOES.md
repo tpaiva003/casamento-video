@@ -315,6 +315,82 @@ seguem o mesmo padrão: HTML autónomo, grava um ficheiro pequeno que eu leio.
 
 ---
 
+### 2026-09-10 | 013 | Os anos indicados pelo Tiago são indicativos, não factos
+
+**Decisão:** os 95 anos que o Tiago preencheu ficam em `data/anos_tiago.csv` e
+entram no inventário, mas marcados como `fonte_ano = Tiago (indicativo)`. Não
+substituem uma data EXIF de máquina, que é mais fiável. Toda a interface os
+mostra com etiqueta própria, verde, com o aviso "por validar com a Clara" ao
+lado.
+
+**Razão:** o próprio Tiago disse que não são finais e que quer validar com a
+Clara. Um palpite dele vale muito mais do que nada, porque serve para ordenar
+uma foto na década certa, mas se ficar indistinguível de uma data apurada
+ninguém consegue mais tarde saber o que foi verificado e o que não foi.
+
+**Consequência:** a cobertura de ano subiu de 80 para 84 por cento. A hierarquia
+de fiabilidade, da mais forte para a mais fraca, é: EXIF de máquina, ano ou
+idade escritos por ela nas legendas, ano no nome dado pelo Tiago, indicação do
+Tiago na ferramenta, estimativa minha pela ordem da timeline dela.
+
+**Quem:** Tiago.
+
+**Substitui:**
+
+---
+
+### 2026-09-10 | 014 | Os id do inventário são estáveis e amarrados ao caminho
+
+**Decisão:** o `id` de cada imagem no `inventario.csv` nunca muda. É atribuído
+uma vez, guardado, e amarrado ao par pasta mais nome de ficheiro. Fotos novas
+recebem números a seguir ao maior já atribuído.
+
+**Razão:** as ferramentas HTML gravam por `id`. Quando entraram as 47 fotos
+novas, a numeração sequencial teria deslocado tudo e os 95 anos do Tiago
+passariam a apontar para as fotos erradas, em silêncio.
+
+Amarrar ao conteúdo, por sha256, foi tentado e está errado: `10-1.jpg` e
+`10-1 (2).jpg` são byte a byte iguais mas são duas entradas distintas do
+inventário, e partilhar o id fazia desaparecer uma delas. A chave certa é o
+caminho.
+
+**Consequência:** os 306 id originais foram verificados um a um contra a versão
+commitada e nenhum mudou de ficheiro. Renomear ou mover uma foto dentro de
+`trabalho\` quebra o vínculo, por isso não se renomeia nada depois de
+inventariado.
+
+**Quem:** decisão técnica, registada para o Tiago poder contestar.
+
+**Substitui:**
+
+---
+
+### 2026-09-10 | 015 | As 47 fotos novas trazem informação nos nomes e nas pastas
+
+**Decisão:** a organização que o Tiago deu à `01-NOVAS` é tratada como dado,
+não como arrumação. O nome da pasta define a coluna `pessoa`, o prefixo de ano
+no nome do ficheiro define o ano, e as instruções de edição que ele escreveu
+nos nomes são guardadas na coluna `nota`.
+
+**Razão:** ele escreveu coisas como "ficar apenas com a foto no canto superior
+esquerdo onde está o Tiago" e "há pessoas a cortar, talvez manter apenas a
+Sandra, remover o Miguel". Isso são decisões de enquadramento já tomadas, e
+perder-se-iam se eu tratasse os nomes como texto morto.
+
+**Consequência:** `pessoa` vinda da pasta do Tiago tem prioridade sobre a
+deduzida dos blocos da mãe da Clara, que é pouco fiável depois de 2012.
+
+As pastas `*_files`, resultantes de páginas web guardadas, são ignoradas por
+inteiro. São 57 imagens de interface e miniaturas de feed, não são fotos do
+casal. Os vídeos do Facebook que o Tiago tentou guardar não vieram no processo,
+ficou só o HTML.
+
+**Quem:** Tiago.
+
+**Substitui:**
+
+---
+
 ## Em aberto
 
 Não assumir nenhuma destas sem decisão explícita do Tiago.

@@ -33,17 +33,34 @@ def embutir(caminho):
         return "data:image/jpeg;base64," + base64.b64encode(fh.read()).decode("ascii")
 
 
-def cartao(r, estimado):
+# Cada origem de ano tem uma etiqueta propria e uma cor propria. O objetivo e
+# que nunca haja duvida sobre o que e facto e o que e palpite, sobretudo
+# depois de o Tiago ter dito que os anos dele sao para validar com a Clara.
+ETIQUETAS = {
+    "EXIF": ('<span class="et exif">data da m&aacute;quina</span>', ""),
+    "legenda (ano escrito)": ('<span class="et dela">ano escrito por ela</span>', ""),
+    "legenda (idade)": ('<span class="et dela">idade escrita por ela</span>', ""),
+    "nome dado pelo Tiago": ('<span class="et teu">ano no nome que deste</span>', ""),
+    "nome do ficheiro": ('<span class="et dela">data no nome do ficheiro</span>', ""),
+    "Tiago (indicativo)":
+        ('<span class="et teu">INDICADO POR TI</span>'
+         '<span class="et aviso">por validar com a Clara</span>', "teu"),
+    "estimado (ordem dela)":
+        ('<span class="et est">ESTIMADO POR MIM</span>'
+         '<span class="et aviso">pela ordem da timeline dela</span>', "est"),
+}
+
+
+def cartao(r, estimado=False):
     proxy = os.path.join(REPO, r["proxy"].replace("/", os.sep))
     img = embutir(proxy) if os.path.exists(proxy) else ""
     ano = html.escape(r["ano"] or "")
-    legenda = html.escape(r["legenda_mae"] or "")
-    bloco = html.escape(r["bloco_original"] or "nao usada por ela")
-    marca = ""
+    legenda = html.escape(r["legenda_mae"] or r.get("_nota", "") or "")
+    bloco = html.escape(r["bloco_original"] or r["pasta"])
+    etiqueta, _classe = ETIQUETAS.get(r.get("fonte_ano", ""), ("", ""))
+    marca = etiqueta
     if r["digitalizacao"] == "Sim":
         marca += '<span class="et scan">digitalizada</span>'
-    if estimado:
-        marca += '<span class="et est">estimado</span>'
     return """
 <div class="c" data-id="%s">
   <img src="%s" loading="lazy">
@@ -91,6 +108,12 @@ h2 span{color:#e8e8ea;text-transform:none;letter-spacing:0}
   margin-right:5px}
 .scan{background:#3a2d16;color:#e0b96a}
 .est{background:#2a2340;color:#b3a2e8}
+.teu{background:#123a2c;color:#6fd6a6;font-weight:700}
+.exif{background:#1b2b3a;color:#7fb4de}
+.dela{background:#2b2320;color:#d0a48a}
+.aviso{background:#3d1f22;color:#f0a0a4}
+.legenda-topo{padding:12px 20px;background:#141418;border-bottom:1px solid #26262c;
+  display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:12px;color:#8a8a94}
 input.ano{width:100%;padding:9px 10px;font-size:17px;font-weight:600;
   background:#0e0e10;color:#fff;border:1px solid #33333c;border-radius:7px;
   text-align:center}
@@ -110,6 +133,13 @@ button.p:hover{background:#4a7eb5}
   <span class="st" id="st"></span>
   <button class="p" id="grav">Gravar ficheiro</button>
 </header>
+<div class="legenda-topo">
+  De onde vem cada ano:
+  <span class="et exif">data da m&aacute;quina</span> fi&aacute;vel
+  <span class="et dela">escrito por ela</span> fi&aacute;vel
+  <span class="et teu">INDICADO POR TI</span> palpite teu, por validar com a Clara
+  <span class="et est">ESTIMADO POR MIM</span> deduzido, o menos fi&aacute;vel de todos
+</div>
 <p class="dica">
 Escreve o ano em que a foto foi <b>tirada</b>. Se nao souberes ao certo, um ano
 aproximado vale mais do que nada, porque serve para ordenar. Deixa em branco o
@@ -184,14 +214,18 @@ def main():
                 if r["ano"]:
                     anos_finais[r["id"]] = r["ano"]
 
-    sem, est = [], []
+    sem, teus, est = [], [], []
     for r in linhas:
         apurado = r["ano"]
         final = anos_finais.get(r["id"], "")
         r["ano"] = apurado or final
+        if not apurado and final:
+            r["fonte_ano"] = "estimado (ordem dela)"
         if not r["ano"]:
             sem.append(r)
-        elif not apurado and final:
+        elif r["fonte_ano"] == "Tiago (indicativo)":
+            teus.append(r)
+        elif r["fonte_ano"] == "estimado (ordem dela)":
             est.append(r)
 
     def ordem(r):
@@ -200,12 +234,18 @@ def main():
         return (1, r["ficheiro"].lower())
 
     sem.sort(key=ordem)
+    teus.sort(key=ordem)
     est.sort(key=ordem)
 
-    corpo = ['<h2>Sem ano nenhum <span>(%d)</span></h2>' % len(sem)]
-    corpo += [cartao(r, False) for r in sem]
-    corpo.append('<h2>Ano estimado, para confirmar <span>(%d)</span></h2>' % len(est))
-    corpo += [cartao(r, True) for r in est]
+    corpo = ['<h2>Ainda sem ano <span>(%d)</span></h2>' % len(sem)]
+    corpo += [cartao(r) for r in sem]
+    corpo.append('<h2>Indicados por ti, por validar com a Clara '
+                 '<span>(%d)</span></h2>' % len(teus))
+    corpo += [cartao(r) for r in teus]
+    if est:
+        corpo.append('<h2>Estimados por mim, para confirmares '
+                     '<span>(%d)</span></h2>' % len(est))
+        corpo += [cartao(r) for r in est]
 
     os.makedirs(SAIDA, exist_ok=True)
     destino = os.path.join(SAIDA, "anos.html")
@@ -214,7 +254,9 @@ def main():
 
     mb = os.path.getsize(destino) / 1048576
     print("Escrito: %s  (%.1f MB)" % (destino, mb))
-    print("Sem ano: %d    Estimados para confirmar: %d" % (len(sem), len(est)))
+    print("Ainda sem ano: %d" % len(sem))
+    print("Indicados por ti (por validar com a Clara): %d" % len(teus))
+    print("Estimados por mim: %d" % len(est))
 
 
 if __name__ == "__main__":

@@ -142,6 +142,71 @@ def ano_da_legenda(txt):
     return "", ""
 
 
+# Pastas tematicas da 01-NOVAS. O nome da pasta diz quem esta na foto, e e
+# informacao do proprio Tiago, portanto mais fiavel do que qualquer deducao.
+PASTA_PESSOA = {
+    "clara": "Clara",
+    "clara_familia": "Familia",
+    "clara_tiago": "Ambos",
+    "clara_tiago_e_amigos": "Ambos",
+    "amigos tiago": "Amigos",
+    "familia_tiago": "Familia",
+    "tiago_familia": "Familia",
+    "pedido_casamento": "Ambos",
+}
+
+
+def normalizar_pasta(nome):
+    import unicodedata
+    n = unicodedata.normalize("NFKD", nome)
+    return "".join(c for c in n if not unicodedata.combining(c)).lower().strip()
+
+
+def ler_anos_tiago():
+    """Anos indicados pelo Tiago na ferramenta HTML.
+
+    INDICATIVOS. Ele proprio disse que quer validar com a Clara e que nao sao
+    finais. Entram no inventario porque valem muito mais do que nada para
+    ordenar, mas vao sempre marcados como indicacao dele e nunca como facto.
+    Ver DECISOES.md, entrada 013.
+    """
+    caminho = os.path.join(REPO, "data", "anos_tiago.csv")
+    anos = {}
+    if not os.path.exists(caminho):
+        return anos
+    with open(caminho, encoding="utf-8-sig", newline="") as fh:
+        linhas = [l for l in fh if not l.lstrip().startswith("#")]
+    for r in csv.DictReader(linhas):
+        if r.get("id") and r.get("ano"):
+            anos[r["id"].strip()] = r["ano"].strip()
+    return anos
+
+
+def ler_nome_novas(nome, pasta):
+    """Le o que o Tiago codificou no nome do ficheiro e da pasta.
+
+    Ele nomeou as fotos novas com o ano a frente ("2014_Clara_e_Tiago...") e
+    meteu instrucoes de edicao no proprio nome ("ficar apenas com a foto no
+    canto superior esquerdo", "ha pessoas a cortar"). Nada disto se deita fora.
+    """
+    base = os.path.splitext(nome)[0]
+    ano = ""
+    m = re.match(r"^(19[5-9]\d|20[0-2]\d)[_\-\s]", base)
+    if m:
+        ano = m.group(1)
+
+    ultima = normalizar_pasta(pasta.split("/")[-1])
+    pessoa = PASTA_PESSOA.get(ultima, "")
+
+    nota = ""
+    chaves = ("cortar", "remover", "manter apenas", "ficar_ape", "ficar apenas",
+              "canto superior", "canto_superior", "talvez")
+    legivel = base.replace("_", " ")
+    if any(k in legivel.lower() for k in chaves):
+        nota = "instrucao do Tiago no nome: " + legivel
+    return ano, pessoa, nota
+
+
 def carregar_timeline():
     """Nome de ficheiro em minusculas -> primeira aparicao na timeline dela."""
     if not os.path.exists(TIMELINE):
@@ -171,13 +236,32 @@ def carregar_timeline():
 
 def main():
     timeline = carregar_timeline()
+    anos_tiago = ler_anos_tiago()
     os.makedirs(PROXIES, exist_ok=True)
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
 
+    # Os id tem de ser ESTAVEIS entre execucoes. O Tiago preenche anos em
+    # ferramentas que gravam por id, e se uma foto nova deslocar a numeracao,
+    # os dados dele passam a apontar para as fotos erradas.
+    #
+    # A chave e o CAMINHO (pasta + ficheiro), nao o sha256 do conteudo. Duas
+    # copias identicas em sitios diferentes sao duas linhas distintas e tem de
+    # ter id distintos, senao ficam ids repetidos e um deles desaparece. Por
+    # exemplo "10-1.jpg" e "10-1 (2).jpg" sao byte a byte iguais mas sao duas
+    # entradas do inventario.
     ja_registadas = set()
+    id_por_caminho = {}
+    proximo_id = 1
     if os.path.exists(OUT):
         with open(OUT, encoding="utf-8-sig", newline="") as fh:
-            ja_registadas = {r["sha256"] for r in csv.DictReader(fh)}
+            for r in csv.DictReader(fh):
+                ja_registadas.add(r["sha256"])
+                if r.get("id"):
+                    id_por_caminho[(r["pasta"], r["ficheiro"])] = r["id"]
+                    try:
+                        proximo_id = max(proximo_id, int(r["id"].lstrip("f")) + 1)
+                    except ValueError:
+                        pass
 
     linhas, erros = [], []
     por_hash = defaultdict(list)
@@ -185,7 +269,13 @@ def main():
     for etiqueta, raiz in PASTAS:
         if not os.path.isdir(raiz):
             continue
-        for base, _dirs, ficheiros in os.walk(raiz):
+        for base, dirs, ficheiros in os.walk(raiz):
+            # Paginas web guardadas trazem uma pasta "<nome>_files" com centenas
+            # de ficheiros de interface, avatares e miniaturas de feed. Nao sao
+            # fotos do casal. Ignorar o ramo inteiro.
+            dirs[:] = [d for d in dirs if not d.endswith("_files")]
+            if os.path.basename(base).endswith("_files"):
+                continue
             for nome in sorted(ficheiros):
                 if not nome.lower().endswith(EXT):
                     continue
@@ -221,9 +311,13 @@ def main():
                                      os.path.splitext(nome)[0].strip()))
                 scan = bool(SCANNERS.search(equip)) or (lote and not equip)
 
+                ano_nome, pessoa_pasta, nota_tiago = ler_nome_novas(nome, pasta)
+
                 ano, fonte = "", ""
                 if dexif and not scan:
                     ano, fonte = dexif[:4], "EXIF"
+                if not ano and ano_nome:
+                    ano, fonte = ano_nome, "nome dado pelo Tiago"
                 if not ano:
                     ano, fonte = ano_da_legenda(legenda)
                 if not ano:
@@ -239,6 +333,8 @@ def main():
                     orient = "quadrada"
 
                 nota = []
+                if nota_tiago:
+                    nota.append(nota_tiago)
                 if scan and dexif:
                     nota.append("EXIF %s e a data da digitalizacao, nao da foto" % dexif[:4])
                 if fator > 2.0:
@@ -269,8 +365,9 @@ def main():
                     "inicio_original_s": round(tl["inicio"], 1) if tl else "",
                     "duracao_original_s": round(tl["duracao"], 1) if tl else "",
                     "bloco_original": tl["bloco"] if tl else "",
-                    "pessoa": tl["pessoa"] if tl else "",
-                    "fonte_pessoa": "bloco da mae" if tl and tl["pessoa"] else "",
+                    "pessoa": pessoa_pasta or (tl["pessoa"] if tl else ""),
+                    "fonte_pessoa": ("pasta do Tiago" if pessoa_pasta
+                                     else ("bloco da mae" if tl and tl["pessoa"] else "")),
                     "legenda_mae": legenda,
                     "proxy": "proxies/" + h[:12] + ".jpg",
                     "caminho": caminho,
@@ -278,8 +375,25 @@ def main():
                 })
 
     linhas.sort(key=lambda r: (r["pasta"], r["ficheiro"].lower()))
-    for i, r in enumerate(linhas, 1):
-        r["id"] = "f%04d" % i
+    for r in linhas:
+        chave = (r["pasta"], r["ficheiro"])
+        existente = id_por_caminho.get(chave)
+        if existente:
+            r["id"] = existente
+        else:
+            r["id"] = "f%04d" % proximo_id
+            id_por_caminho[chave] = r["id"]
+            proximo_id += 1
+
+    # Anos indicados pelo Tiago. Entram depois dos id estarem atribuidos e so
+    # onde nao ha data apurada por EXIF de camara, que e mais fiavel.
+    aplicados = 0
+    for r in linhas:
+        indicado = anos_tiago.get(r["id"])
+        if indicado and r["fonte_ano"] != "EXIF":
+            r["ano"] = indicado
+            r["fonte_ano"] = "Tiago (indicativo)"
+            aplicados += 1
 
     with open(OUT, "w", encoding="utf-8-sig", newline="") as fh:
         escritor = csv.DictWriter(fh, fieldnames=COLUNAS)
@@ -299,6 +413,9 @@ def main():
                     if r["digitalizacao"] == "Sim" and r["data_exif"])
     print("Digitalizacoes detetadas: %d (%d traziam data EXIF enganosa)"
           % (scans, enganosas))
+    print("Anos indicados pelo Tiago aplicados: %d" % aplicados)
+    novas_pasta = sum(1 for r in linhas if r["pasta"].startswith("01-NOVAS"))
+    print("Fotos da pasta 01-NOVAS: %d" % novas_pasta)
     print("Duplicados confirmados por sha256: %d grupos" % len(dups))
     for h, v in list(dups.items())[:25]:
         print("   %s  ->  %s" % (h[:12], " | ".join(v)))
