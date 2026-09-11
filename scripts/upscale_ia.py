@@ -120,11 +120,18 @@ def main():
     with open(INVENTARIO, encoding="utf-8-sig", newline="") as fh:
         linhas = list(csv.DictReader(fh))
 
-    # Guarda de seguranca. Uma foto de 6016x4000 ampliada 4x da 385 megapixeis,
-    # o que em CPU sao dezenas de minutos e pode esgotar a memoria a meio de uma
-    # noite de processamento. Fotos assim nunca precisam de ampliacao nenhuma,
-    # por isso o corte nao tira nada de util.
-    MAX_MEGAPIXEIS = 16
+    # Guarda de memoria, e esta guarda foi aprendida a custa de uma noite.
+    #
+    # Com o limite a 16 MP, fotos de 1 a 2 MP produziam saidas de 18 a 30 MP e
+    # cada uma passou a demorar 17 minutos em vez de 90 segundos. A causa nao
+    # era o processador, que estava a 71 por cento, era a memoria: sobravam 2,4
+    # GB de 15,8 e o modelo estava a trocar para disco.
+    #
+    # A 3 MP de entrada, a saida fica em 48 MP no maximo, que e o que esta
+    # maquina aguenta sem trocar. E nao se perde nada de util: NENHUMA foto
+    # acima de 3 MP precisa de ser ampliada, porque acima disso ja tem pixeis
+    # a mais para o ecra, mesmo com plano fechado.
+    MAX_MEGAPIXEIS = 3
 
     trabalho, grandes = [], []
     for r in linhas:
