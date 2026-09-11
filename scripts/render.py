@@ -32,7 +32,7 @@ import os
 import subprocess
 import sys
 
-from PIL import Image, ImageDraw, ImageFont, ImageOps
+from PIL import Image, ImageDraw, ImageFilter, ImageFont, ImageOps
 
 sys.stdout.reconfigure(encoding="utf-8")
 
@@ -150,8 +150,24 @@ def cartao(texto):
     return base
 
 
+def cobrir(im, larg, alt):
+    """Enche larg x alt cortando o excesso, sem deformar."""
+    f = max(larg / im.width, alt / im.height)
+    novo = im.resize((max(1, round(im.width * f)), max(1, round(im.height * f))),
+                     Image.LANCZOS)
+    x = (novo.width - larg) // 2
+    y = (novo.height - alt) // 2
+    return novo.crop((x, y, x + larg, y + alt))
+
+
 def preparar(clip, inv_por_nome):
-    """Prepara o clip uma vez: sprite no tamanho maximo e legenda em camada."""
+    """Prepara o clip uma vez: sprite no tamanho maximo e legenda em camada.
+
+    A coluna `tratamento` da montagem escolhe o aspeto:
+      fiel    o da mae da Clara: encaixa com barras pretas e zoom lento
+      fundo   o fundo passa a ser a propria foto ampliada e desfocada
+      rajada  enche o ecra, sem movimento, para cortes secos
+    """
     texto = clip["texto_ecra"]
     if clip["tipo"] == "cartao":
         return {"tipo": "cartao", "base": cartao(texto), "capa": None}
@@ -163,18 +179,39 @@ def preparar(clip, inv_por_nome):
     if not caminho or not os.path.exists(caminho):
         return None
 
+    tratamento = (clip.get("tratamento") or "fiel").strip() or "fiel"
     im = ImageOps.exif_transpose(Image.open(caminho)).convert("RGB")
+
+    if tratamento == "rajada":
+        return {"tipo": "rajada", "base": cobrir(im, L, A),
+                "capa": faixa_texto(texto)}
+
     escala_max = 1.0 + ZOOM
     alvo = encaixar(im, int(L * escala_max), int(A * escala_max))
-    return {"tipo": "foto", "sprite": alvo, "capa": faixa_texto(texto)}
+    fundo = None
+    if tratamento == "fundo":
+        fundo = cobrir(im, L, A).filter(ImageFilter.GaussianBlur(46))
+        fundo = Image.blend(Image.new("RGB", (L, A), (0, 0, 0)), fundo, 0.55)
+    return {"tipo": "foto", "sprite": alvo, "fundo": fundo,
+            "capa": faixa_texto(texto)}
 
 
 def desenhar(pronto, t_rel, duracao):
     """Um fotograma do clip, no instante t_rel."""
-    tela = Image.new("RGB", (L, A), (0, 0, 0))
     if pronto["tipo"] == "cartao":
+        tela = Image.new("RGB", (L, A), (0, 0, 0))
         tela.paste(pronto["base"], (0, 0))
         return tela
+    if pronto["tipo"] == "rajada":
+        tela = pronto["base"].copy()
+        if pronto["capa"] is not None:
+            cor, mascara = pronto["capa"]
+            tela.paste(cor, (0, 0), mascara)
+        return tela
+    if pronto.get("fundo") is not None:
+        tela = pronto["fundo"].copy()
+    else:
+        tela = Image.new("RGB", (L, A), (0, 0, 0))
     p = t_rel / duracao if duracao else 0.0
     escala = (1.0 + ZOOM * p) / (1.0 + ZOOM)
     compor(tela, pronto["sprite"], L / 2.0, A / 2.0, escala)
