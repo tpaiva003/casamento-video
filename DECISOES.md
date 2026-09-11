@@ -456,6 +456,69 @@ rajada o tremor era deliberado e foi removido.
 
 ---
 
+### 2026-09-11 | 018 | A versão fiel desdobra-se em três degraus
+
+**Decisão:** a `v1_fiel` passa a ser três versões encadeadas, cada uma a
+acrescentar exatamente uma coisa à anterior:
+
+| | O que muda | Duração |
+|---|---|---|
+| `v1a` | Só durações e transições. Ordem, textos e cartões intactos. | 18:20 |
+| `v1b` | Mais fundo desfocado nas verticais e rajada nas corridas. | 15:00 |
+| `v1c` | Mais as correções narrativas de `docs/ENCADEAMENTOS.md`. | 15:56 |
+
+**Razão:** o Tiago quis poder ver o efeito de cada alteração isoladamente, em
+vez de receber uma versão nova e ter de adivinhar o que mudou. Cada degrau
+responde a uma pergunta: a v1a mostra o que se ganha só com ritmo, a v1b o que
+os tratamentos acrescentam, a v1c o que a narrativa muda.
+
+**Consequência:** a v1a ficou nos 18:20 e não nos 900 segundos do briefing,
+por decisão dele, depois de eu mostrar que não há crossfade nenhum que meta
+297 entradas em 900 segundos sem violar a regra dos 3 segundos. **A v1b
+resolve isso e cabe nos 900 exatos**, porque a rajada liberta 117 segundos.
+A v1c volta a passar, para 15:56, porque as 16 entradas novas acrescentam 57
+segundos. Fechar a v1c nos 900 obriga a rajada agressiva ou a largar uma das
+edições.
+
+**Quem:** Tiago.
+
+**Substitui:**
+
+---
+
+### 2026-09-11 | 019 | A rajada aplica-se a repetição temática, nunca a blocos de relação
+
+**Decisão:** só viram rajada as corridas onde a leitura é coletiva, ou seja
+onde ninguém precisa de ler cada foto: caminhadas, colegas de trabalho, poses
+do mesmo género. Nunca entram em rajada os blocos de relação.
+
+Certas, 23 fotos: Caminhadas pelo Parque das Serras do Porto, colegas de
+trabalho dela, "Vendo o mundo de pernas p'ró ar", colegas de trabalho dele.
+
+Nunca, 20 fotos: a corrida sem legenda de "Cumplicidades". São o casal junto e
+são o centro emocional do filme.
+
+Por decidir, 18 fotos: "Com o Henrique (o mano)", "Com o pai" e "E le
+glamour". São relação mas são repetitivas. Ficam marcadas na coluna `nota` do
+`v1b.csv` e entram com `--agressivo`.
+
+**Razão:** numa versão anterior deste cálculo eu classifiquei as 20 fotos de
+"Cumplicidades" como sendo do Baile de Finalistas, por um erro no detetor de
+corridas, e propus acelerá-las. O Tiago duvidou do número e tinha razão.
+Acelerar ali seria acelerar precisamente a parte que deve respirar.
+
+**Consequência:** com as 23 certas a v1b cabe nos 900 segundos, mas sobram só
+50 segundos para dar ênfase, portanto a ênfase que a mãe da Clara deu fica
+quase toda achatada. Com as 41 sobram 96 segundos e a ênfase máxima sobe de
+4,25 para 6,81 segundos. É essa a escolha.
+
+**Quem:** decisão técnica com o critério registado, para o Tiago poder
+contestar a fronteira.
+
+**Substitui:**
+
+---
+
 ## Em aberto
 
 Não assumir nenhuma destas sem decisão explícita do Tiago.
