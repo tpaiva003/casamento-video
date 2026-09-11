@@ -44,7 +44,38 @@ LAPLACIANO = ImageFilter.Kernel((3, 3), [0, -1, 0, -1, 4, -1, 0, -1, 0], scale=1
 
 
 def nitidez(im):
+    """Medida global. Guardada so para comparacao: engana em digitalizacoes."""
     return ImageStat.Stat(im.convert("L").filter(LAPLACIANO)).stddev[0]
+
+
+def nitidez_nos_contornos(im, lado=14):
+    """Nitidez medida SO onde ha contorno, ignorando as zonas lisas.
+
+    A medida global estava a enganar de forma sistematica. Em fotografias
+    digitalizadas, o grao do scanner espalha-se por toda a imagem e conta como
+    "nitidez". Quando o modelo limpa esse grao, a medida global desce e marca
+    como pior uma foto que a olho esta melhor. Aconteceu duas vezes, na
+    11.jpg e na 1 (2).jpg, e nas duas o recorte a 100 por cento contrariou o
+    numero: o tecido resolvia-se, as pestanas definiam-se, a pele ficava limpa.
+
+    Aqui so entram os blocos do quarto superior de contraste local, que e onde
+    vive o detalhe verdadeiro: arestas, texturas, olhos, letras. Limpar grao
+    numa parede nao mexe neste numero. Recuperar a trama de um casaco mexe.
+    """
+    g = im.convert("L")
+    g.thumbnail((900, 900), Image.LANCZOS)
+    lap = g.filter(LAPLACIANO)
+    blocos = []
+    for y in range(0, g.height - lado, lado):
+        for x in range(0, g.width - lado, lado):
+            caixa = (x, y, x + lado, y + lado)
+            blocos.append((ImageStat.Stat(g.crop(caixa)).stddev[0],
+                           ImageStat.Stat(lap.crop(caixa)).stddev[0]))
+    if not blocos:
+        return 0.0
+    blocos.sort(key=lambda b: -b[0])
+    contornos = blocos[:max(1, len(blocos) // 4)]
+    return sum(b[1] for b in contornos) / len(contornos)
 
 
 def agitacao_nos_lisos(im, lado=14):
@@ -120,8 +151,10 @@ def main():
                     "ficheiro": r["ficheiro"],
                     "origem": "%sx%s" % (r["largura"], r["altura"]),
                     "saida": "%dx%d" % alvo,
-                    "nit_base": nitidez(base),
-                    "nit_trat": nitidez(t),
+                    "nit_base": nitidez_nos_contornos(base),
+                    "nit_trat": nitidez_nos_contornos(t),
+                    "glob_base": nitidez(base),
+                    "glob_trat": nitidez(t),
                     "agit_base": agitacao_nos_lisos(base),
                     "agit_trat": agitacao_nos_lisos(t),
                     "caminho_base": r["caminho"],
@@ -133,9 +166,28 @@ def main():
     for x in resultados:
         x["d_nit"] = 100 * (x["nit_trat"] - x["nit_base"]) / max(0.01, x["nit_base"])
         x["d_agit"] = 100 * (x["agit_trat"] - x["agit_base"]) / max(0.01, x["agit_base"])
-        # Melhoria real: mais nitidez sem pagar em agitacao nos lisos.
+        x["d_glob"] = 100 * (x["glob_trat"] - x["glob_base"]) / max(0.01, x["glob_base"])
+        # CLASSIFICACAO, e a razao de ser assim esta escrita porque custou a
+        # chegar aqui. Tentei duas metricas de nitidez e as duas marcaram como
+        # piores fotos que a olho estavam claramente melhores: 11.jpg e
+        # 1 (2).jpg. A causa e que o laplaciano nao distingue grao de detalhe,
+        # e um contorno limpo tem MENOS energia do que o mesmo contorno cheio
+        # de grao de digitalizacao.
+        #
+        # Nenhum numero simples resolve isto. Por isso deixa de haver um
+        # veredicto unico e passam a existir quatro estados, sendo que um deles
+        # admite que a decisao e dos olhos:
+        #
+        #   reconstruiu  mais detalhe nos contornos e menos ruido: seguro
+        #   limpou       menos detalhe MAS muito menos ruido: quase sempre
+        #                melhor em digitalizacoes, confirmar no recorte
+        #   PIOR         perdeu contorno sem compensar em ruido, ou acrescentou
+        #                ruido: e aqui que se deve mesmo olhar
+        #   igual        nao mexeu o suficiente para se notar
         if x["d_nit"] > 3 and x["d_agit"] < 15:
-            x["veredicto"] = "melhor"
+            x["veredicto"] = "reconstruiu"
+        elif x["d_nit"] <= 3 and x["d_agit"] < -25:
+            x["veredicto"] = "limpou"
         elif x["d_nit"] < -3 or x["d_agit"] > 40:
             x["veredicto"] = "PIOR"
         else:
@@ -146,12 +198,12 @@ def main():
         if not grupo:
             continue
         print("== %s: %d ficheiros ==" % (etiqueta, len(grupo)))
-        for v in ("melhor", "igual", "PIOR"):
+        for v in ("reconstruiu", "limpou", "igual", "PIOR"):
             n = sum(1 for x in grupo if x["veredicto"] == v)
-            print("   %-8s %3d  (%.0f%%)" % (v, n, 100 * n / len(grupo)))
+            print("   %-12s %3d  (%.0f%%)" % (v, n, 100 * n / len(grupo)))
         nit = sorted(x["d_nit"] for x in grupo)
         agi = sorted(x["d_agit"] for x in grupo)
-        print("   nitidez:  mediana %+.0f%%   pior %+.0f%%   melhor %+.0f%%"
+        print("   detalhe nos contornos: mediana %+.0f%%   pior %+.0f%%   melhor %+.0f%%"
               % (nit[len(nit) // 2], nit[0], nit[-1]))
         print("   agitacao nos lisos: mediana %+.0f%%   pior %+.0f%%"
               % (agi[len(agi) // 2], agi[-1]))
