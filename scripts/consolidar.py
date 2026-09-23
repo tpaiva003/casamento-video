@@ -35,6 +35,7 @@ Uso:
     py -3.11 scripts/consolidar.py --listar        diz o que faria, sem copiar
 """
 import csv
+import io
 import os
 import shutil
 import sys
@@ -56,6 +57,68 @@ FONTES = [(r"C:\casamento-video-media\restauradas", "restaurada"),
 # demasiado alterada para entrar sem ser vista. 8 por cento e generoso para
 # uma ampliacao e apertado para uma invencao.
 LIMITE_ALTERACAO = 8.0
+
+
+LIMITE_FUNDO_DESFOCADO = 1.55
+LARGURA_ALVO, ALTURA_ALVO, FOLGA = 1920, 1080, 1.15
+
+
+# ABAIXO DE 1,5 VEZES, O LANCZOS. Decisao 052.
+#
+# O Tiago viu oito recortes lado a lado das duas versoes, nas ampliacoes onde o
+# lanczos mais perde, e escolheu: "gosto mais da lanczos". A rede neuronal amplia
+# sempre 4 vezes e so depois se reduz, portanto retoca a pele e os contornos mesmo
+# quando a foto so precisava de crescer um bocadinho; nas digitalizacoes antigas
+# chega a desenhar contornos escuros que nao existem. A partir de 1,5 vezes o
+# lanczos fica mole de mais, e ai continua a rede neuronal.
+LIMITE_LANCZOS = 1.5
+
+
+def fator_ampliacao(larg, alt):
+    """Quanto a foto tem de crescer, pela mesma regra do upscale.py."""
+    if larg / alt < LIMITE_FUNDO_DESFOCADO:
+        return (ALTURA_ALVO / alt) * FOLGA
+    return max(LARGURA_ALVO / larg, ALTURA_ALVO / alt) * FOLGA
+
+
+def precisa_crescer(larg, alt):
+    """A mesma regra do upscale.py e do upscale_ia.py. Tem de ser a mesma."""
+    if larg / alt < LIMITE_FUNDO_DESFOCADO:
+        fator = (ALTURA_ALVO / alt) * FOLGA
+    else:
+        fator = max(LARGURA_ALVO / larg, ALTURA_ALVO / alt) * FOLGA
+    return fator > 1.0
+
+
+def vinhetas_da_fita():
+    """Ficheiros que so aparecem como marca da linha do tempo, nunca inteiros.
+
+    Uma marca da fita e desenhada com 20 por cento da altura do ecra, cerca de
+    216 pixeis. Pedir-lhe a resolucao de quem vai encher 1080 e mandar a rede
+    neuronal trabalhar oito minutos para nada: a `gravuras_coa.jpg`, de 500x375,
+    dava fator 3,3 e ia ser vista a 287 pixeis de largura.
+
+    A lista nao esta escrita a mao, sai do proprio estado da Mesa, para nao
+    envelhecer. Um ficheiro que tambem seja usado como fotografia normal em
+    qualquer versao sai da lista e volta a ter de crescer.
+    """
+    import json
+    caminho = os.path.join(REPO, "data", "mesa_estado.json")
+    if not os.path.exists(caminho):
+        return set()
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import linha_tempo
+    estado = json.load(io.open(caminho, encoding="utf-8"))
+    marcas, fotos = set(), set()
+    for versao in estado.get("versoes", []):
+        for c in versao.get("clips", []):
+            if c.get("t") == "marcos":
+                for _d, _m, _r, _g, img in linha_tempo.ler_meses(c.get("x", ""))[1]:
+                    if img:
+                        marcas.add(img.lower())
+            elif c.get("f"):
+                fotos.add(c["f"].lower())
+    return marcas - fotos
 
 
 def proteger():
@@ -112,13 +175,43 @@ def main():
     resumo = {}
     demasiado, erros = [], []
     copiadas = 0
+    indice = []
+    antes = set()
+    if os.path.isdir(FINAIS):
+        antes = {n for n in os.listdir(FINAIS)
+                 if n.lower().endswith((".jpg", ".jpeg", ".png"))}
 
     for r in inv:
         ident = r["id"]
         disponiveis = tratados.get(ident, {})
         escolha, origem, mudou = r["caminho"], "original", 0.0
 
-        for etiqueta in ("restaurada", "IA", "lanczos"):
+        # SE A FOTO NAO PRECISA DE CRESCER, O ORIGINAL GANHA SEMPRE.
+        #
+        # Isto nao estava aqui e custou 21 fotos. A pasta upscaled\ tem
+        # ficheiros feitos com a regra antiga, que ampliava tudo ate encher
+        # 1920 de largura mesmo em fotos verticais que ja tinham pixeis a
+        # mais. Como a ordem de preferencia punha lanczos acima de original,
+        # a FINAIS ficou com versoes ampliadas sem necessidade, e uma foto
+        # ampliada sem necessidade e simplesmente mais mole do que ela propria.
+        #
+        # Nenhuma metrica apanhou isto porque nenhuma estava a comparar. A
+        # auditoria e que o encontrou, ao achar estranho que o lanczos medisse
+        # melhor do que a IA em tres fotos: media melhor porque era maior.
+        try:
+            if precisa_crescer(int(r["largura"]), int(r["altura"])) is False:
+                disponiveis = {k: v for k, v in disponiveis.items()
+                               if k == "restaurada"}
+        except Exception:
+            pass
+
+        preferencia = ("restaurada", "IA", "lanczos")
+        try:
+            if fator_ampliacao(int(r["largura"]), int(r["altura"])) < LIMITE_LANCZOS:
+                preferencia = ("restaurada", "lanczos", "IA")
+        except Exception:
+            pass
+        for etiqueta in preferencia:
             caminho = disponiveis.get(etiqueta)
             if not caminho:
                 continue
@@ -144,6 +237,9 @@ def main():
             nome_final = os.path.splitext(nome_final)[0] + ".jpg"
 
         resumo[origem] = resumo.get(origem, 0) + 1
+        indice.append({"id": ident, "ficheiro": r["ficheiro"],
+                       "final": nome_final, "origem": origem,
+                       "mudou_pct": "%.2f" % mudou})
         if listar:
             continue
         destino = os.path.join(FINAIS, nome_final)
@@ -157,6 +253,33 @@ def main():
         except Exception as e:
             erros.append((r["ficheiro"], str(e)))
 
+    # O INDICE, que e o que acaba com os palpites.
+    #
+    # Ate aqui cada consumidor adivinhava qual era o ficheiro certo. O render.py
+    # nem sequer olhava para a FINAIS: repetia a ordem de preferencia antiga e
+    # ficava com a versao IA mesmo em fotos que nao precisavam de crescer, que e
+    # precisamente o que o Tiago proibiu. Tres copias da mesma regra, e a que
+    # fazia o video era a que estava por corrigir.
+    #
+    # A partir daqui ha uma resposta so, escrita, e quem precisar le-a.
+    if not listar:
+        caminho_indice = os.path.join(REPO, "data", "finais.csv")
+        with open(caminho_indice, "w", encoding="utf-8", newline="") as fh:
+            w = csv.DictWriter(fh, fieldnames=["id", "ficheiro", "final",
+                                               "origem", "mudou_pct"])
+            w.writeheader()
+            for linha in indice:
+                w.writerow(linha)
+
+    # FICHEIROS QUE SOBRARAM DE CORRIDAS ANTIGAS.
+    #
+    # A regra mudou e com ela o nome de saida: uma foto que antes ia como
+    # "9-24-4.jpg" por ser lanczos vai hoje como "9-24-4.jpeg" por ser original.
+    # A antiga fica la, com 2208 pixeis de largura, e o consumidor seguinte pode
+    # apanha-la pelo nome. NAO SE APAGA NADA: a regra 3 do CLAUDE.md e clara.
+    # Reporta-se, e ele decide.
+    sobras = sorted(antes - {l["final"] for l in indice})
+
     print("Pasta final: %s" % FINAIS)
     print("Originais em %s: nao sao tocados." % TRABALHO)
     print()
@@ -167,7 +290,18 @@ def main():
     print("  %-12s %3d" % ("TOTAL", sum(resumo.values())))
     if not listar:
         print("  copiadas: %d" % copiadas)
+        print("  indice:   data/finais.csv")
     print()
+    if sobras:
+        print("SOBRAS DE CORRIDAS ANTIGAS, %d ficheiros" % len(sobras))
+        print("Nenhum destes foi escrito agora. Ficam onde estao, nao apago nada")
+        print("dentro da pasta de media, mas um consumidor distraido pode")
+        print("apanha-los pelo nome:")
+        for n in sobras[:12]:
+            print("   %s" % n)
+        if len(sobras) > 12:
+            print("   e mais %d" % (len(sobras) - 12))
+        print()
     if demasiado:
         print("EXCLUIDAS POR ALTERAREM DEMASIADO (limite %.0f%%)" % limite)
         print("Estas ficaram com o original. Ve os recortes antes de as aceitar.")

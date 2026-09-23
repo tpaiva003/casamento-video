@@ -56,7 +56,12 @@ CROSSFADE = 0.7
 PISO_DOMINANTE = 3.0
 PISO_CARTAO = 3.6
 TETO_DURACAO = 9.0
-DUR_RAJADA = 0.45          # 11 fotogramas a 25 fps
+# 11/09/2026: o Tiago viu a demo e disse "as fotos dos desportos estao a mudar
+# muito muito rapido, aumenta a velocidade em 25% para testar". Fotos a mudar
+# depressa de mais pedem MAIS tempo, portanto o que se aumenta e a duracao:
+# 0,45 -> 0,5625, ou seja 14 fotogramas em vez de 11. Fica dito de forma
+# explicita porque a frase, a letra, diz o contrario do efeito pretendido.
+DUR_RAJADA = 0.5625        # 14 fotogramas a 25 fps
 MIN_CORRIDA = 4
 
 # Corridas que viram rajada sem discussao, identificadas pela seccao e pelo

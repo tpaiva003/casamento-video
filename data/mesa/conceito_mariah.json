@@ -1,0 +1,175 @@
+{
+ "versao": {
+  "id": "conceito_mariah",
+  "nome": "conceito, o pedido com a Mariah",
+  "notas": "Conceito de 21/09, sem Homer nem vozes: a Mariah entra no anel aos 42 s do ficheiro, o abraço entra em corte seco na bateria (57,47 s), o brinde no compasso dos 63,87 s e o cartão no fim da frase, aos 70,27 s, onde o Lang Lang retoma onde parou.",
+  "clips": [
+   {
+    "c": 0,
+    "d": 20.8,
+    "f": "20th Century Fox Intro HD.mp4",
+    "i": "",
+    "r": "fiel",
+    "t": "video",
+    "x": ""
+   },
+   {
+    "t": "video",
+    "f": "intro_clara_tiago_5.mp4",
+    "d": 14.44,
+    "c": 0,
+    "r": "fiel",
+    "i": "",
+    "x": ""
+   },
+   {
+    "t": "contador",
+    "i": "",
+    "f": "",
+    "d": 9,
+    "c": 0.7,
+    "r": "fiel",
+    "x": "04/10/2026>25/12/2025|4 de outubro de 2026;25/12/2025=o pedido"
+   },
+   {
+    "t": "foto",
+    "i": "f0260",
+    "f": "IMG_2067.jpeg",
+    "x": "",
+    "d": 15.47,
+    "c": 0.7,
+    "r": "fundo",
+    "e": "aproxima",
+    "az": 3.5,
+    "m": {
+     "f": "Mariah Carey - All I Want for Christmas Is You (Make My Wish Come True Edition)",
+     "in": 42
+    }
+   },
+   {
+    "t": "foto",
+    "i": "f0052",
+    "f": "20260101_011410.jpg",
+    "x": "",
+    "d": 6.4,
+    "c": 0,
+    "r": "fundo",
+    "e": "aproxima",
+    "az": 2.0
+   },
+   {
+    "t": "foto",
+    "i": "f0053",
+    "f": "20260101_011607.jpg",
+    "x": "",
+    "d": 7.1,
+    "c": 0,
+    "r": "fundo"
+   },
+   {
+    "t": "cartao",
+    "i": "",
+    "f": "",
+    "x": "Mas como é que chegámos aqui?",
+    "d": 3.5,
+    "c": 0.7,
+    "r": "fiel",
+    "m": {
+     "f": "Lang Lang - Beauty and the Beast (From Lang Lang Plays Disney  Live)",
+     "in": 13.3
+    }
+   },
+   {
+    "t": "contador",
+    "i": "",
+    "f": "",
+    "d": 9,
+    "c": 0.7,
+    "r": "fiel",
+    "x": "2025>1995"
+   },
+   {
+    "c": 0,
+    "d": 15,
+    "f": "",
+    "i": "",
+    "r": "fiel",
+    "t": "marcos",
+    "x": "1995@0-0.674731|17/01 Terramoto em Kobe, Japão @kobe, japao.png;26/03 Abrem as fronteiras de Schengen @Schengen_Agreement_(1985)_signatures.jpg;24/08 Sai o Windows 95 @Windows95.jpeg;04/09 Nasce o SAPO, em Aveiro @sapo_42c89ed355959aa80b08ddd3b3b79ffc3555d337.jpg;*12/09 Nasce o Tiago;01/10 Guterres ganha as eleições @guterres.jpg;24/11 Salvam-se as gravuras do Côa @gravuras_coa.jpg;*24/11 Nasce a Clara"
+   },
+   {
+    "c": 0,
+    "d": 9,
+    "f": "",
+    "i": "",
+    "r": "fiel",
+    "t": "marcos",
+    "x": "1995@0.678731-0.696237c|17/01 Terramoto em Kobe, Japão @kobe, japao.png;26/03 Abrem as fronteiras de Schengen @Schengen_Agreement_(1985)_signatures.jpg;24/08 Sai o Windows 95 @Windows95.jpeg;04/09 Nasce o SAPO, em Aveiro @sapo_42c89ed355959aa80b08ddd3b3b79ffc3555d337.jpg;*12/09 Nasce o Tiago;01/10 Guterres ganha as eleições @guterres.jpg;24/11 Salvam-se as gravuras do Côa @gravuras_coa.jpg;*24/11 Nasce a Clara"
+   },
+   {
+    "c": 0.7,
+    "d": 3.6,
+    "f": "",
+    "i": "",
+    "r": "fiel",
+    "t": "cartao",
+    "x": "Nasce o segundo filho de Graça e Alberto"
+   },
+   {
+    "c": 0.7,
+    "d": 4,
+    "f": "21-46.jpg",
+    "i": "f0103",
+    "r": "fundo",
+    "t": "foto",
+    "x": "Tiago"
+   },
+   {
+    "c": 0.7,
+    "d": 4,
+    "f": "21-49.jpg",
+    "i": "f0153",
+    "r": "fundo",
+    "t": "foto",
+    "x": "Com o pai"
+   },
+   {
+    "c": 0.7,
+    "d": 4,
+    "f": "1996_tiago_e_irmao_mais_velho.jpg",
+    "i": "f0351",
+    "r": "fundo",
+    "t": "foto",
+    "x": "Agarradinho pelo seu irmão mais velho, mas a tentar fugir"
+   },
+   {
+    "c": 0.7,
+    "d": 4,
+    "f": "21-47.jpg",
+    "i": "f0104",
+    "r": "fundo",
+    "t": "foto",
+    "x": "E era amoroso"
+   },
+   {
+    "c": 0.7,
+    "d": 4,
+    "f": "21-48.jpg",
+    "i": "f0105",
+    "r": "fundo",
+    "t": "foto",
+    "x": "Com a mãe, o mano e as tias (que podiam ser primas pela idade)."
+   }
+  ]
+ },
+ "focos": {
+  "f0052": [
+   0.45,
+   0.38
+  ],
+  "f0260": [
+   0.393,
+   0.741
+  ]
+ }
+}

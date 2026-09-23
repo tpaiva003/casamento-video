@@ -93,6 +93,38 @@ def cobrir(im, larg, alt):
     return novo.crop((x, y, x + larg, y + alt))
 
 
+MARGEM = 2
+
+
+def com_margem(im, m=MARGEM):
+    """Margem transparente com a cor da fila de fora repetida. Ver render.py.
+
+    Mesmo defeito que estava no render.py e que o Tiago viu como tremor: a
+    amostragem de sub-pixel cai ligeiramente fora da imagem na fila de fora, e
+    a Pillow nao devolve ali uma mistura, corta de repente. Em RGBA isso da uma
+    borda que aparece e desaparece em vez de esbater.
+
+    A margem leva a COR da fila de fora, para o bicubico nao puxar cor nenhuma
+    de lado nenhum, e leva ALFA ZERO, que e o que faz a borda esbater como deve.
+    """
+    im = im.convert("RGBA")
+    n = Image.new("RGBA", (im.width + 2 * m, im.height + 2 * m), (0, 0, 0, 0))
+    n.paste(im, (m, m))
+    cor = im.convert("RGB")
+    esq = cor.crop((0, 0, 1, cor.height)).resize((m, cor.height))
+    dto = cor.crop((cor.width - 1, 0, cor.width, cor.height)).resize((m, cor.height))
+    vazio = Image.new("L", (m, cor.height), 0)
+    n.paste(Image.merge("RGBA", esq.split() + (vazio,)), (0, m))
+    n.paste(Image.merge("RGBA", dto.split() + (vazio,)), (cor.width + m, m))
+    faixa = n.crop((0, m, n.width, m + 1)).convert("RGB")
+    base = n.crop((0, cor.height + m - 1, n.width, cor.height + m)).convert("RGB")
+    vazio2 = Image.new("L", (n.width, m), 0)
+    n.paste(Image.merge("RGBA", faixa.resize((n.width, m)).split() + (vazio2,)), (0, 0))
+    n.paste(Image.merge("RGBA", base.resize((n.width, m)).split() + (vazio2,)),
+            (0, cor.height + m))
+    return n
+
+
 def compor(tela, sprite, cx, cy, escala, alfa=1.0):
     """Coloca `sprite` centrado em (cx, cy) com precisao de SUB-PIXEL.
 
@@ -105,21 +137,22 @@ def compor(tela, sprite, cx, cy, escala, alfa=1.0):
     `sprite` deve vir ja no tamanho maximo que vai ter e ja rodado, para que
     `escala` ande sempre perto de 1 e a reamostragem nao introduza fervilho.
     """
-    larg = sprite.width * escala
-    alt = sprite.height * escala
+    m = MARGEM if sprite.width > 2 * MARGEM else 0
+    larg = (sprite.width - 2 * m) * escala
+    alt = (sprite.height - 2 * m) * escala
     x0 = cx - larg / 2.0
     y0 = cy - alt / 2.0
     ix, iy = math.floor(x0), math.floor(y0)
     fx, fy = x0 - ix, y0 - iy
 
-    cx_dest = int(math.ceil(larg + fx)) + 1
-    cy_dest = int(math.ceil(alt + fy)) + 1
+    cx_dest = int(math.ceil(larg + fx)) + max(1, m)
+    cy_dest = int(math.ceil(alt + fy)) + max(1, m)
     if cx_dest < 1 or cy_dest < 1:
         return
     inv = 1.0 / escala
     peca = sprite.transform(
         (cx_dest, cy_dest), Image.AFFINE,
-        (inv, 0.0, -fx * inv, 0.0, inv, -fy * inv),
+        (inv, 0.0, -fx * inv + m, 0.0, inv, -fy * inv + m),
         resample=Image.BICUBIC)
 
     if alfa < 1.0:
@@ -189,7 +222,7 @@ def trat_fundo_desfocado(fotos, seg_por_foto=4.4, fade=0.8):
         # Preparada UMA VEZ no tamanho maximo. Depois so encolhe, nunca cresce.
         alt_max = int(round(ALTURA_BASE * (1 + ZOOM)))
         larg_max = max(1, round(im.width * alt_max / im.height))
-        frente = im.resize((larg_max, alt_max), Image.LANCZOS).convert("RGBA")
+        frente = com_margem(im.resize((larg_max, alt_max), Image.LANCZOS))
         preparadas.append((frente, fundo, alt_max))
 
     anterior = None
@@ -235,7 +268,7 @@ def trat_colagem(fotos, entrada=0.62, total_s=11.0):
         grande = im.resize((round(im.width * maxf), round(im.height * maxf)),
                            Image.LANCZOS).convert("RGBA")
         grande = grande.rotate(rot, resample=Image.BICUBIC, expand=True)
-        preparadas.append((grande, cx, cy, maxf))
+        preparadas.append((com_margem(grande), cx, cy, maxf))
 
     fundo = cobrir(abrir(fotos[0], 900), L, A)
     fundo = fundo.filter(ImageFilter.GaussianBlur(60))
@@ -289,7 +322,7 @@ def trat_pilha(fotos, cadencia=0.85, cauda_s=2.6):
                            Image.LANCZOS).convert("RGBA")
         grande = grande.rotate(angulos[i % len(angulos)],
                                resample=Image.BICUBIC, expand=True)
-        preparadas.append(grande)
+        preparadas.append(com_margem(grande))
 
     fundo = Image.new("RGB", (L, A), (10, 10, 12))
     for q in range(total):

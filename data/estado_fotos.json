@@ -1,0 +1,15 @@
+{
+ "build": "20260922-234133",
+ "gerado": "2026-09-22 23:41",
+ "total": 701,
+ "prontas": 701,
+ "espera": [],
+ "origens": {
+  "IA": 80,
+  "lanczos": 112,
+  "original": 508,
+  "restaurada": 1
+ },
+ "por_registar": 0,
+ "por_registar_lista": []
+}

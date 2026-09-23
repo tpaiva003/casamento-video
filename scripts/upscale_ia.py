@@ -98,6 +98,12 @@ def alvo(larg, alt):
     return nl, na, f
 
 
+def correr(exe, entrada, saida):
+    """Uma passagem pelo modelo. Devolve o processo, tenha corrido bem ou nao."""
+    return subprocess.run([exe, "-i", entrada, "-o", saida, "-n", MODELO, "-s", "4"],
+                          capture_output=True, text=True)
+
+
 def mmss(s):
     return "%d:%02d" % (int(s) // 60, int(s) % 60)
 
@@ -133,11 +139,23 @@ def main():
     # a mais para o ecra, mesmo com plano fechado.
     MAX_MEGAPIXEIS = 3
 
-    trabalho, grandes = [], []
+    # As vinhetas da linha do tempo aparecem com 20 por cento da altura do ecra,
+    # cerca de 216 pixeis, e nunca inteiras. A "gravuras_coa.jpg", de 500x375,
+    # dava fator 3,3 e ia ser vista a 287 de largura: seis minutos de rede
+    # neuronal para deitar fora o resultado. A lista sai do estado da Mesa, nao
+    # esta escrita a mao, e um ficheiro que tambem seja usado como fotografia
+    # normal deixa de ser vinheta e volta a entrar.
+    import consolidar
+    vinhetas = consolidar.vinhetas_da_fita()
+
+    trabalho, grandes, saltadas = [], [], []
     for r in linhas:
         larg, alt = int(r["largura"]), int(r["altura"])
         dims = alvo(larg, alt)
         if dims[2] < minimo:
+            continue
+        if r["ficheiro"].lower() in vinhetas:
+            saltadas.append(r["ficheiro"])
             continue
         if larg * alt > MAX_MEGAPIXEIS * 1_000_000:
             grandes.append(r)
@@ -157,6 +175,9 @@ def main():
     print("Criterio: fator de ampliacao >= %.2f" % minimo)
     print("Elegiveis: %d    Ja feitas: %d    Por fazer: %d"
           % (len(trabalho), len(trabalho) - len(por_fazer), len(por_fazer)))
+    if saltadas:
+        print("Vinhetas da fita, que aparecem pequenas e nao precisam: %d"
+              % len(saltadas))
     if grandes:
         print("Saltadas por serem grandes de mais para valer a pena: %d" % len(grandes))
     print("Destino: %s" % DESTINO)
@@ -177,9 +198,31 @@ def main():
     try:
         for n, (r, (nl, na, f), nome) in enumerate(por_fazer, 1):
             bruto = os.path.join(tmp, "%s.png" % r["id"])
-            cmd = [EXE, "-i", r["caminho"], "-o", bruto, "-n", MODELO, "-s", "4"]
-            proc = subprocess.run(cmd, capture_output=True, text=True)
-            if proc.returncode != 0 or not os.path.exists(bruto):
+            proc = correr(EXE, r["caminho"], bruto)
+
+            # SEGUNDA TENTATIVA, e a razao esta medida e nao suposta.
+            # Duas fotos falharam com "decode image failed": a 21-45-2.jpg, que
+            # e um JPEG PROGRESSIVO, e a 11-15.jpg. O descodificador embutido no
+            # Real-ESRGAN e o stb_image, que nao le JPEG progressivo. Nao e
+            # defeito da foto nem do GPU: a Pillow abre as duas sem se queixar.
+            # Entao reescreve-se a foto em PNG com a Pillow, sem perder nada,
+            # e volta-se a tentar.
+            if not os.path.exists(bruto):
+                ponte = os.path.join(tmp, "ponte_%s.png" % r["id"])
+                try:
+                    with Image.open(r["caminho"]) as im:
+                        im.convert("RGB").save(ponte, "PNG")
+                    proc = correr(EXE, ponte, bruto)
+                    if os.path.exists(bruto):
+                        print("  (reescrita em PNG para o modelo a conseguir ler: %s)"
+                              % r["ficheiro"][:40])
+                except Exception as e:
+                    print("  nem a Pillow a leu: %s: %s" % (r["ficheiro"][:34], e))
+                finally:
+                    if os.path.exists(ponte):
+                        os.remove(ponte)
+
+            if not os.path.exists(bruto):
                 falhadas += 1
                 print("  FALHOU %s  %s" % (r["ficheiro"][:40],
                                            (proc.stderr or "")[-160:]))

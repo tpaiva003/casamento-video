@@ -38,6 +38,8 @@ import csv
 import os
 import sys
 
+import excluidas
+
 sys.stdout.reconfigure(encoding="utf-8")
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -119,6 +121,10 @@ def main():
         cross = float(sys.argv[sys.argv.index("--cross") + 1])
 
     video = carregar()
+    video, cortadas = excluidas.filtrar(video)
+    if cortadas:
+        print("  fora por decisao do Tiago: %d (ver scripts/excluidas.py)"
+              % cortadas)
     with open(INVENTARIO, encoding="utf-8-sig", newline="") as fh:
         inv = list(csv.DictReader(fh))
     inv_por_nome = {r["ficheiro"].lower(): r for r in inv}

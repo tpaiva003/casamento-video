@@ -32,6 +32,8 @@ import re
 import subprocess
 import sys
 
+from PIL import Image
+
 sys.stdout.reconfigure(encoding="utf-8")
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -175,15 +177,34 @@ def main():
     print("Originais em %s: nao sao tocados." % TRABALHO)
     print()
 
-    feitas = saltadas = falhadas = 0
+    feitas = saltadas = falhadas = desatualizadas = 0
     piores = trabalho[:6]
 
     for r, (nl, na, fator) in trabalho:
         nome = "%s__%s.jpg" % (r["id"], nome_seguro(os.path.splitext(r["ficheiro"])[0]))
         saida = os.path.join(DESTINO, nome)
         if os.path.exists(saida) and not refazer:
-            saltadas += 1
-            continue
+            # SALTAR SO SE O QUE ESTA LA ESTIVER CERTO.
+            #
+            # A regra do alvo mudou a meio do projeto: passou a contar so a
+            # altura nas fotos verticais e quadradas. O script salta o que ja
+            # existe, portanto 123 dos 134 ficheiros ficaram com o tamanho da
+            # regra velha, todos forcados a 2208 de largura. Um deles ficou a
+            # 2208x4886 quando precisa de 562x1242, ou seja ampliado nove vezes
+            # mais do que precisa, o que so o deixa mole.
+            #
+            # Isto nao dava erro nenhum e so apareceu quando a auditoria da
+            # pasta FINAIS comparou lado a lado e deu resultados estranhos.
+            # Agora o ficheiro velho e reescrito, nao apagado.
+            try:
+                with Image.open(saida) as ja:
+                    certo = abs(ja.width - nl) <= 2 and abs(ja.height - na) <= 2
+            except Exception:
+                certo = False
+            if certo:
+                saltadas += 1
+                continue
+            desatualizadas += 1
         if simular:
             print("  [simulado] %s  %sx%s -> %dx%d  (%.2fx)"
                   % (r["ficheiro"][:44], r["largura"], r["altura"], nl, na, fator))
@@ -200,9 +221,11 @@ def main():
             print("  FALHOU %s  (%s)" % (r["ficheiro"], erro[:120]))
 
     print()
-    print("Ampliadas: %d   Ja existiam: %d   Falhadas: %d" % (feitas, saltadas, falhadas))
-    if not simular and feitas:
-        print("Comparacoes lado a lado das 6 piores em: %s" % COMPARACOES)
+    print("Ampliadas: %d   Ja existiam: %d   Falhadas: %d"
+          % (feitas, saltadas, falhadas))
+    if desatualizadas:
+        print("  das ampliadas, %d foram REFEITAS por estarem ao tamanho da"
+              " regra antiga" % desatualizadas)
 
 
 if __name__ == "__main__":

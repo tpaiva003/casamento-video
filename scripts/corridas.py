@@ -27,6 +27,8 @@ import csv
 import os
 import sys
 
+import excluidas
+
 sys.stdout.reconfigure(encoding="utf-8")
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -70,6 +72,9 @@ def carregar():
                 if ini <= float(t["inicio_s"]) < fim]
         r["_legenda"] = legs[0] if legs else ""
         r["_seccao"] = seccao(ini)
+    # As fotos que o Tiago mandou tirar saem aqui, uma vez so, para a v1b
+    # e a v1c herdarem a decisao sem ter de a repetir. Ver excluidas.py.
+    video = [r for r in video if excluidas.entra(r.get("ficheiro"))]
     return video
 
 

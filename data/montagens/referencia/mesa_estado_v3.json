@@ -1,0 +1,2390 @@
+{
+ "_origem": "Copia congelada do data/mesa_estado.json que fez a v3.csv e a v3.som.csv desta pasta (rev 242, quando 2026-09-16T23:31:51.000Z). So a versao demo_v3 e os pontos de foco, que e tudo o que o montar_da_mesa.py le. E daqui que o teste_v3_sem_vozes_igual_ao_byte monta, e nao do estado vivo, que o Tiago e o Claude mudam.",
+ "rev": 242,
+ "quando": "2026-09-16T23:31:51.000Z",
+ "focos": {
+  "f0019": [
+   0.475,
+   0.723
+  ]
+ },
+ "versoes": [
+  {
+   "clips": [
+    {
+     "c": 0,
+     "d": 20.8,
+     "f": "20th Century Fox Intro HD.mp4",
+     "i": "",
+     "r": "fiel",
+     "t": "video",
+     "x": ""
+    },
+    {
+     "c": 0,
+     "d": 13.4,
+     "f": "intro_clara_tiago.mp4",
+     "i": "",
+     "r": "fiel",
+     "t": "video",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 9,
+     "f": "",
+     "i": "",
+     "r": "fiel",
+     "t": "contador",
+     "x": "2026>1995|4 de outubro de 2026"
+    },
+    {
+     "c": 0.7,
+     "d": 15,
+     "f": "",
+     "i": "",
+     "r": "fiel",
+     "t": "marcos",
+     "x": "1995@0-0.674731|17/01 Terramoto em Kobe, Japão @kobe, japao.png;26/03 Abrem as fronteiras de Schengen @Schengen_Agreement_(1985)_signatures.jpg;24/08 Sai o Windows 95 @Windows95.jpeg;04/09 Nasce o SAPO, em Aveiro @sapo_42c89ed355959aa80b08ddd3b3b79ffc3555d337.jpg;*12/09 Nasce o Tiago;01/10 Guterres ganha as eleições @guterres.jpg;24/11 Salvam-se as gravuras do Côa @gravuras_coa.jpg;*24/11 Nasce a Clara"
+    },
+    {
+     "c": 0,
+     "d": 9,
+     "f": "",
+     "i": "",
+     "r": "fiel",
+     "t": "marcos",
+     "x": "1995@0.678731-0.696237c|17/01 Terramoto em Kobe, Japão @kobe, japao.png;26/03 Abrem as fronteiras de Schengen @Schengen_Agreement_(1985)_signatures.jpg;24/08 Sai o Windows 95 @Windows95.jpeg;04/09 Nasce o SAPO, em Aveiro @sapo_42c89ed355959aa80b08ddd3b3b79ffc3555d337.jpg;*12/09 Nasce o Tiago;01/10 Guterres ganha as eleições @guterres.jpg;24/11 Salvam-se as gravuras do Côa @gravuras_coa.jpg;*24/11 Nasce a Clara"
+    },
+    {
+     "c": 0.7,
+     "d": 3.6,
+     "f": "",
+     "i": "",
+     "r": "fiel",
+     "t": "cartao",
+     "x": "Nasce o segundo filho de Graça e Alberto"
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "21-46.jpg",
+     "i": "f0103",
+     "r": "fundo",
+     "t": "foto",
+     "x": "Tiago"
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "21-49.jpg",
+     "i": "f0153",
+     "r": "fundo",
+     "t": "foto",
+     "x": "Com o pai"
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "1996_tiago_e_irmao_mais_velho.jpg",
+     "i": "f0351",
+     "r": "fundo",
+     "t": "foto",
+     "x": "Agarradinho pelo seu irmão mais velho, mas a tentar fugir"
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "21-47.jpg",
+     "i": "f0104",
+     "r": "fundo",
+     "t": "foto",
+     "x": "E era amoroso"
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "21-48.jpg",
+     "i": "f0105",
+     "r": "fundo",
+     "t": "foto",
+     "x": "Com a mãe, o mano e as tias (que podiam ser primas pela idade)."
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "21-49-2.jpg",
+     "i": "f0115",
+     "r": "fundo",
+     "t": "foto",
+     "x": "Sempre pronto para o café com leite com a sua avó Orquídea"
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "21-49-3.jpg",
+     "i": "f0125",
+     "r": "fundo",
+     "t": "foto",
+     "x": "Primeiro aniversário. O pai faz anos no mesmo dia."
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "IMG_20260209_184044.jpg",
+     "i": "f0537",
+     "r": "fundo",
+     "t": "foto",
+     "x": "O estilo já lá estava"
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "digitalizar0003 (1).jpg",
+     "i": "f0562",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "21-49-4.jpg",
+     "i": "f0134",
+     "r": "rajada",
+     "t": "foto",
+     "x": "Segundo aniversário"
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "21-49-11.jpg",
+     "i": "f0107",
+     "r": "rajada",
+     "t": "foto",
+     "x": "Terceiro aniversário"
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "21-49-10.jpg",
+     "i": "f0106",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "21-49-6.jpg",
+     "i": "f0151",
+     "r": "fundo",
+     "t": "foto",
+     "x": "Em Portugal dos Pequeninos"
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "digitalizar0004 (1).jpg",
+     "i": "f0564",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "digitalizar0005 (3).jpg",
+     "i": "f0565",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "IMG_20260209_172732.jpg",
+     "i": "f0346",
+     "r": "fundo",
+     "t": "foto",
+     "x": "Com um família saída de um filme da Missão Impossível"
+    },
+    {
+     "c": 0.7,
+     "d": 14,
+     "f": "",
+     "i": "",
+     "r": "fiel",
+     "t": "marcos",
+     "x": "1995@0.700237-0.895161|17/01 Terramoto em Kobe, Japão @kobe, japao.png;26/03 Abrem as fronteiras de Schengen @Schengen_Agreement_(1985)_signatures.jpg;24/08 Sai o Windows 95 @Windows95.jpeg;04/09 Nasce o SAPO, em Aveiro @sapo_42c89ed355959aa80b08ddd3b3b79ffc3555d337.jpg;*12/09 Nasce o Tiago;01/10 Guterres ganha as eleições @guterres.jpg;24/11 Salvam-se as gravuras do Côa @gravuras_coa.jpg;*24/11 Nasce a Clara"
+    },
+    {
+     "c": 0.7,
+     "d": 3.6,
+     "f": "",
+     "i": "",
+     "r": "fiel",
+     "t": "cartao",
+     "x": "2 meses e 12 dias depois a poucos kms, nasce uma bebé "
+    },
+    {
+     "c": 0,
+     "d": 4,
+     "f": "1 (2).jpg",
+     "i": "f0012",
+     "r": "fundo",
+     "t": "foto",
+     "x": "A Clara que era branquinha como o nome que lhe foi vaticinado"
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "2.jpg",
+     "i": "f0041",
+     "r": "fundo",
+     "t": "foto",
+     "x": "Era muito bem disposta..."
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "5 (2).jpg",
+     "i": "f0169",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "6.jpg",
+     "i": "f0172",
+     "r": "fundo",
+     "t": "foto",
+     "x": "Muito curiosa..."
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "5-3.jpg",
+     "i": "f0170",
+     "r": "fundo",
+     "t": "foto",
+     "x": "Muito teimosa... (Dizia \"não se mexe\", e mexia...)"
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "7.jpg",
+     "i": "f0175",
+     "r": "fundo",
+     "t": "foto",
+     "x": "Muito irrequieta..."
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "8.jpg",
+     "i": "f0186",
+     "r": "fundo",
+     "t": "foto",
+     "x": "Era endiabrada, mas também encantadora."
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "Clara x3 (37).jpg",
+     "i": "f0450",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "Digitalizar0008.jpg",
+     "i": "f0452",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "11.jpg",
+     "i": "f0033",
+     "r": "fundo",
+     "t": "foto",
+     "x": "Com a mãe"
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "10-1 (2).jpg",
+     "i": "f0013",
+     "r": "fundo",
+     "t": "foto",
+     "x": "Com o pai. Era pequenina e já lhe dava ouras..."
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "10-4.jpg",
+     "i": "f0016",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "10-3.jpg",
+     "i": "f0003",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "11-14.jpg",
+     "i": "f0024",
+     "r": "fundo",
+     "t": "foto",
+     "x": "Com o mano e a mãe"
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "11-15.jpg",
+     "i": "f0025",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "11-5.jpg",
+     "i": "f0028",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "11-7.jpg",
+     "i": "f0030",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "11-8.jpg",
+     "i": "f0031",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "11-6.jpg",
+     "i": "f0029",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 3.6,
+     "f": "",
+     "i": "",
+     "r": "fiel",
+     "t": "cartao",
+     "x": "Como cresceram"
+    },
+    {
+     "c": 0.7,
+     "d": 3.6,
+     "f": "",
+     "i": "",
+     "r": "fiel",
+     "t": "cartao",
+     "x": "Clara"
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "19-1.JPG",
+     "i": "f0039",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "20.JPG",
+     "i": "f0046",
+     "r": "fundo",
+     "t": "foto",
+     "x": "Cena de filme à Marilyn Monroe"
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "10-5.JPG",
+     "i": "f0004",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "11-10.JPG",
+     "i": "f0021",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "11-4.JPG",
+     "i": "f0027",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "11-13.jpg",
+     "i": "f0023",
+     "r": "fundo",
+     "t": "foto",
+     "x": "- Clara, gostas dessa canção do Ed Sheeran? \n- Gosto! \n- Então não a estragues..."
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "11-9.jpg",
+     "i": "f0032",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "Clara_bebe_cerveja.jpg",
+     "i": "f0318",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "20220815_125148.jpg",
+     "i": "f0434",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "9-16.JPG",
+     "i": "f0218",
+     "r": "fundo",
+     "t": "foto",
+     "x": "Eterna fã do Harry Potter (Local de filmagens em Londres)..."
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "IMG_4492.JPG",
+     "i": "f0599",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "IMG-20220807-WA0105.jpg",
+     "i": "f0319",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 3.6,
+     "f": "",
+     "i": "",
+     "m": {
+      "f": "Gilbert O`Sullivan - CLAIR - ( The Sweetest `Clair ` video Ever !) - And Clair answers back !.mp3",
+      "in": 6.5
+     },
+     "r": "fiel",
+     "t": "cartao",
+     "x": "Já teve muitas fases, incluindo de penteados"
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "9.1.jpg",
+     "i": "f0236",
+     "r": "fundo",
+     "t": "foto",
+     "x": "à Emma Watson"
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "9-14.JPG",
+     "i": "f0213",
+     "r": "fundo",
+     "t": "foto",
+     "x": "à Ariel da Pequena Sereia"
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "9.4.JPG",
+     "i": "f0237",
+     "r": "fundo",
+     "t": "foto",
+     "x": "À Pipi das meias altas aos 16"
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "9-2.jpg",
+     "i": "f0221",
+     "r": "fundo",
+     "t": "foto",
+     "x": "À Capa da 'Bravo' nos seus 18"
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "9-5.JPG",
+     "i": "f0235",
+     "r": "fundo",
+     "t": "foto",
+     "x": "À Fotografia de Domingo"
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "21-6.jpg",
+     "i": "f0159",
+     "r": "fundo",
+     "t": "foto",
+     "x": "À Shrek no Pântano"
+    },
+    {
+     "c": 0.7,
+     "d": 4.5,
+     "f": "",
+     "i": "",
+     "m": {
+      "f": "Baha Men - Who Let The Dogs Out (Lyrics)",
+      "in": 0
+     },
+     "r": "fiel",
+     "t": "cartao",
+     "x": "Um deles sofre de uma patologia grave por animais. Advinham quem?"
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "9-25.jpg",
+     "i": "f0230",
+     "r": "fundo",
+     "t": "foto",
+     "x": "Gostava dos bichinhos todos"
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "Scanner_20260814.jpg",
+     "i": "f0298",
+     "r": "fundo",
+     "t": "foto",
+     "x": "É desde sempre apaixonada por cães"
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "9-26.JPG",
+     "i": "f0231",
+     "r": "fundo",
+     "t": "foto",
+     "x": "Pelos dela..."
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "17042011180.jpg",
+     "i": "f0378",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "9-27.JPG",
+     "i": "f0232",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "9-28.JPG",
+     "i": "f0233",
+     "r": "fundo",
+     "t": "foto",
+     "x": "... E pelos dos outros."
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "9-29.JPG",
+     "i": "f0234",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "Clara x3 (11).jpg",
+     "i": "f0449",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "DSC00644.JPG",
+     "i": "f0454",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "Fred.jpg",
+     "i": "f0460",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "20210214_104230.jpg",
+     "i": "f0404",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "2022_Clara_e_sky.jpg",
+     "i": "f0358",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "20-3.JPG",
+     "i": "f0044",
+     "m": {
+      "f": "Tokyo Drift - Teriyaki Boyz [ MUSIC VIDEO ] HD",
+      "in": 0
+     },
+     "r": "fundo",
+     "t": "foto",
+     "x": "Entretanto o gosto pela velocidade apareceu"
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "20-4.png",
+     "i": "f0045",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "9-15-4.jpg",
+     "i": "f0216",
+     "r": "rajada",
+     "t": "foto",
+     "x": "Orgulhosa do primeiro automóvel. "
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "IMG-20180917-WA0000.jpg",
+     "i": "f0473",
+     "r": "rajada",
+     "t": "foto",
+     "x": "Com ele iria ganhar... algumas multas por excesso de velocidade..."
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "IMG_4224.JPG",
+     "i": "f0270",
+     "r": "fundo",
+     "t": "foto",
+     "x": "O pai: -Clara, já vais outra vez em excesso de velocidade! \nO irmão: -Ela é uma Fora-da-Lei..."
+    },
+    {
+     "c": 0.7,
+     "d": 3.6,
+     "f": "",
+     "i": "",
+     "r": "fiel",
+     "t": "cartao",
+     "x": "Durante este periodo também o Tiago comprou o primeiro carro, mas antes teve outras experiências..."
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "IMG_0577.JPG",
+     "i": "f0592",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "21-49-39.JPG",
+     "i": "f0133",
+     "r": "fundo",
+     "t": "foto",
+     "x": "Pilotando um trenó"
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "IMG_0622.JPG",
+     "i": "f0593",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 3.6,
+     "f": "",
+     "i": "",
+     "r": "fiel",
+     "t": "cartao",
+     "x": "Carro"
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "21-49-13.JPG",
+     "i": "f0008",
+     "m": {
+      "f": "Tiago Celebration Song (Reggae)",
+      "in": 0
+     },
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "21-49-12.jpg",
+     "i": "f0108",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "TIAGO_IRMÃO_mae_2016.jpg",
+     "i": "f0353",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "21-49-42.JPG",
+     "i": "f0137",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "21-49-23.JPG",
+     "i": "f0119",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "21-49-22.JPG",
+     "i": "f0118",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "21-49-28.JPG",
+     "i": "f0123",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "HPIM0458.JPG",
+     "i": "f0586",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "IMG_3968.JPG",
+     "i": "f0596",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "21-49-36.JPG",
+     "i": "f0131",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "20240101_214757.jpg",
+     "i": "f0442",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "IMG_6240.jpeg",
+     "i": "f0282",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "IMG_4542.JPG",
+     "i": "f0279",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "21-49-34.JPG",
+     "i": "f0130",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "21-49-56.jpg",
+     "i": "f0148",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "21-49-27.JPG",
+     "i": "f0122",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "21-49-30.JPG",
+     "i": "f0126",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "WP_20150912_18_28_43_Pro.jpg",
+     "i": "f0306",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "DSC06386.JPG",
+     "i": "f0573",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "DSC08227.JPG",
+     "i": "f0577",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "20190622_113816.jpg",
+     "i": "f0382",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "IMG-20190622-WA0009.jpg",
+     "i": "f0490",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "20220518_120830.jpg",
+     "i": "f0421",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "20231217_180159.jpg",
+     "i": "f0438",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "IMG_20250624_140822.jpg",
+     "i": "f0536",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "IMG-20190622-WA0008.jpg",
+     "i": "f0489",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "IMG-20231225-WA0001.jpg",
+     "i": "f0519",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "21-49-47.jpeg",
+     "i": "f0142",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 3.6,
+     "f": "",
+     "i": "",
+     "m": {
+      "f": "Antonio variações - o corpo é que paga ( semi-original )",
+      "in": 0
+     },
+     "r": "fiel",
+     "t": "cartao",
+     "x": "Paixão pelo desporto"
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "21-49-46.jpg",
+     "i": "f0141",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "bc66e4257dc1a51eb676bfe0d263d5db.jpg",
+     "i": "f0447",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "2016_tIAGO_ANDEBOL_FACULDADE.jpg",
+     "i": "f0312",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "IMG_4541.JPG",
+     "i": "f0278",
+     "r": "fundo",
+     "t": "foto",
+     "x": "Sabia lá ele que ia acabar na mesma modalidade"
+    },
+    {
+     "c": 0.7,
+     "d": 9.4,
+     "f": "",
+     "fotos": [
+      "f0439",
+      "f0140",
+      "f0539",
+      "f0544",
+      "f0527",
+      "f0526",
+      "f0370",
+      "f0256"
+     ],
+     "i": "",
+     "orig": [
+      {
+       "c": 0.7,
+       "d": 4,
+       "f": "20231222_195654.jpg",
+       "i": "f0439",
+       "r": "fundo",
+       "t": "foto",
+       "x": ""
+      },
+      {
+       "c": 0.7,
+       "d": 4,
+       "f": "21-49-45.jpeg",
+       "i": "f0140",
+       "r": "fundo",
+       "t": "foto",
+       "x": ""
+      },
+      {
+       "c": 0.7,
+       "d": 4,
+       "f": "IMG_20260718_200954.jpg",
+       "i": "f0539",
+       "r": "fundo",
+       "t": "foto",
+       "x": ""
+      },
+      {
+       "c": 0.7,
+       "d": 4,
+       "f": "IMG_20260906_114847.jpg",
+       "i": "f0544",
+       "r": "fundo",
+       "t": "foto",
+       "x": ""
+      },
+      {
+       "c": 0.7,
+       "d": 4,
+       "f": "IMG-20240915-WA0007.jpeg",
+       "i": "f0527",
+       "r": "fundo",
+       "t": "foto",
+       "x": "Pausa para hidratação pós corrida"
+      },
+      {
+       "c": 0.7,
+       "d": 4,
+       "f": "IMG-20240616-WA0009.jpg",
+       "i": "f0526",
+       "r": "fundo",
+       "t": "foto",
+       "x": ""
+      },
+      {
+       "c": 0.7,
+       "d": 4,
+       "f": "465577778_18469984858036289_3599993957042226426_n.jpg",
+       "i": "f0370",
+       "r": "fundo",
+       "t": "foto",
+       "x": ""
+      },
+      {
+       "c": 0.7,
+       "d": 4,
+       "f": "IMG-20260614-WA0013.jpg",
+       "i": "f0256",
+       "r": "fundo",
+       "t": "foto",
+       "x": ""
+      }
+     ],
+     "r": "fiel",
+     "t": "pilha",
+     "vf": false,
+     "x": "Pausa para hidratação pós corrida",
+     "xf": [
+      "",
+      "",
+      "",
+      "",
+      "Pausa para hidratação pós corrida",
+      "",
+      "",
+      ""
+     ]
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "21-49-40.JPG",
+     "i": "f0135",
+     "r": "rajada",
+     "t": "foto",
+     "x": "Até dança com o irmão..."
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "21-49-41.JPG",
+     "i": "f0136",
+     "r": "rajada",
+     "t": "foto",
+     "x": "...parece prometedor o resultado"
+    },
+    {
+     "c": 0.7,
+     "d": 3.6,
+     "f": "",
+     "i": "",
+     "m": {
+      "f": "Inês Homem de Melo – Fome de Viagem (Music Video)",
+      "in": 0
+     },
+     "r": "fiel",
+     "t": "cartao",
+     "x": "Viagens "
+    },
+    {
+     "c": 0.7,
+     "d": 9.4,
+     "estilo": "leque",
+     "f": "",
+     "fotos": [
+      "f0058",
+      "f0059",
+      "f0065",
+      "f0061",
+      "f0073",
+      "f0076",
+      "f0212",
+      "f0082"
+     ],
+     "i": "",
+     "orig": [
+      {
+       "c": 0.7,
+       "d": 4,
+       "f": "21-11-2.JPG",
+       "i": "f0058",
+       "r": "fundo",
+       "t": "foto",
+       "x": "Em Sintra / Em Setúbal"
+      },
+      {
+       "c": 0.7,
+       "d": 4,
+       "f": "21-11-3.jpg",
+       "i": "f0059",
+       "r": "fundo",
+       "t": "foto",
+       "x": "Em Setúbal / Nos Açores"
+      },
+      {
+       "c": 0.7,
+       "d": 4,
+       "f": "21-17.JPG",
+       "i": "f0065",
+       "r": "fundo",
+       "t": "foto",
+       "x": "No Parlamento de Budapeste"
+      },
+      {
+       "c": 0.7,
+       "d": 4,
+       "f": "21-12.JPG",
+       "i": "f0061",
+       "r": "fundo",
+       "t": "foto",
+       "x": "Nos Açores"
+      },
+      {
+       "c": 0.7,
+       "d": 4,
+       "f": "21-25.JPG",
+       "i": "f0073",
+       "r": "fundo",
+       "t": "foto",
+       "x": "Em Roma, espelho de rua."
+      },
+      {
+       "c": 0.7,
+       "d": 4,
+       "f": "21-29.jpeg",
+       "i": "f0076",
+       "r": "fundo",
+       "t": "foto",
+       "x": ""
+      },
+      {
+       "c": 0.7,
+       "d": 4,
+       "f": "9-13.JPG",
+       "i": "f0212",
+       "r": "fundo",
+       "t": "foto",
+       "x": "Em barcelona"
+      },
+      {
+       "c": 0.7,
+       "d": 4,
+       "f": "21-39.jpg",
+       "i": "f0082",
+       "r": "fundo",
+       "t": "foto",
+       "x": ""
+      }
+     ],
+     "r": "fiel",
+     "t": "pilha",
+     "vf": true,
+     "vt": "fica",
+     "x": "",
+     "xf": [
+      "Em Sintra / Em Setúbal",
+      " Nos Açores",
+      "No Parlamento de Budapeste",
+      "Nos Açores",
+      "Em Roma, espelho de rua.",
+      "",
+      "Em barcelona",
+      ""
+     ]
+    },
+    {
+     "c": 0.7,
+     "d": 9.4,
+     "estilo": "leque",
+     "f": "",
+     "fotos": [
+      "f0217",
+      "f0066",
+      "f0040",
+      "f0070",
+      "f0068",
+      "f0069",
+      "f0085",
+      "f0272"
+     ],
+     "i": "",
+     "orig": [
+      {
+       "c": 0.7,
+       "d": 4,
+       "f": "9-15.JPG",
+       "i": "f0217",
+       "r": "fundo",
+       "t": "foto",
+       "x": "Com um vendedor de artesanato no vulcão Etna (Sicília). \"Chiara, siediti qui per una foto.\""
+      },
+      {
+       "c": 0.7,
+       "d": 4,
+       "f": "21-18.JPG",
+       "i": "f0066",
+       "r": "fundo",
+       "t": "foto",
+       "x": "Na Sicília. Siracusa; / Em Taormina"
+      },
+      {
+       "c": 0.7,
+       "d": 4,
+       "f": "19-2.JPG",
+       "i": "f0040",
+       "r": "fundo",
+       "t": "foto",
+       "x": ""
+      },
+      {
+       "c": 0.7,
+       "d": 4,
+       "f": "21-22.jpeg",
+       "i": "f0070",
+       "r": "fundo",
+       "t": "foto",
+       "x": "Em Schwangau, contemplando o Castelo de Neuschwanstein;"
+      },
+      {
+       "c": 0.7,
+       "d": 4,
+       "f": "21-20.JPG",
+       "i": "f0068",
+       "r": "fundo",
+       "t": "foto",
+       "x": "Na Alemanha. Em Dinkelsbuhl;"
+      },
+      {
+       "c": 0.7,
+       "d": 4,
+       "f": "21-21.JPG",
+       "i": "f0069",
+       "r": "fundo",
+       "t": "foto",
+       "x": "Em Bratislava"
+      },
+      {
+       "c": 0.7,
+       "d": 4,
+       "f": "21-41.JPG",
+       "i": "f0085",
+       "r": "fundo",
+       "t": "foto",
+       "x": ""
+      },
+      {
+       "c": 0.7,
+       "d": 4,
+       "f": "IMG_4362.JPG",
+       "i": "f0272",
+       "r": "fundo",
+       "t": "foto",
+       "x": "Em Frankfurt / Em Bratislava"
+      }
+     ],
+     "r": "fiel",
+     "t": "pilha",
+     "vf": true,
+     "vt": "fica",
+     "x": "Com um vendedor de artesanato no vulcão Etna (Sicília). \"Chiara, siediti qui per una foto.\"",
+     "xf": [
+      "No vulcão Etna (Sicília). ",
+      "Na Sicília. Siracusa.",
+      "",
+      "No Castelo de Neuschwanstein;",
+      "Na Alemanha. Em Dinkelsbuhl;",
+      "Em Bratislava",
+      "",
+      "Em Frankfurt / Em Bratislava"
+     ]
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "IMG_3835.jpg",
+     "i": "f0268",
+     "r": "fundo",
+     "t": "foto",
+     "x": "Em Lanzarote, com Pilar del Río."
+    },
+    {
+     "c": 0.7,
+     "d": 9,
+     "f": "",
+     "i": "",
+     "m": {
+      "f": "Já Sei Namorar - Tribalistas",
+      "in": 0
+     },
+     "r": "fiel",
+     "t": "contador",
+     "x": "1995>2011"
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "21-50.JPG",
+     "i": "f0155",
+     "r": "fundo",
+     "t": "foto",
+     "x": "Na Escola Secundária em 2011"
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "A Happy Year (16).jpg",
+     "i": "f0239",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "21-51.JPG",
+     "i": "f0156",
+     "r": "fundo",
+     "t": "foto",
+     "x": "Na aula de Biologia"
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "DSCN3008.JPG",
+     "i": "f0250",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "20170805175928.jpg",
+     "i": "f0556",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "Campanha AE (6).JPG",
+     "i": "f0560",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "20180910_194232.jpg",
+     "i": "f0380",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "2015_cLARA_E_TIAGO_30agosto.jpg",
+     "i": "f0327",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "DSCN8496.JPG",
+     "i": "f0584",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "2014_Clara_Tiago_Praia_Mia_cadela_clara.jpg",
+     "i": "f0354",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "20190628_152510.jpg",
+     "i": "f0387",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "20190630_160541.jpg",
+     "i": "f0389",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "20180910_194232.jpg",
+     "i": "f0380",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 5,
+     "f": "",
+     "fotos": [
+      "f0453",
+      "f0166"
+     ],
+     "i": "",
+     "lay": "2v",
+     "orig": [
+      {
+       "c": 0.7,
+       "d": 4,
+       "f": "DSC00187.JPG",
+       "i": "f0453",
+       "r": "fundo",
+       "t": "foto",
+       "x": ""
+      },
+      {
+       "c": 0.7,
+       "d": 4,
+       "f": "30Abril18_125.jpg",
+       "i": "f0166",
+       "r": "fundo",
+       "t": "foto",
+       "x": ""
+      }
+     ],
+     "r": "fiel",
+     "t": "lado",
+     "vf": true,
+     "x": "",
+     "xf": [
+      "Baile Finalistas 12ºano (2013)",
+      "Baile Finalistas FDUP (2018)"
+     ]
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "20220103_155031.jpg",
+     "i": "f0413",
+     "r": "fundo",
+     "t": "foto",
+     "x": "Logo após a compra da 1ª casa"
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "2018_cLARA_E_TIAGO_PASSEIO.jpg",
+     "i": "f0329",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "IMG_4277 (3) (1).jpg",
+     "i": "f0271",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "IMG_4490 (16).jpg",
+     "i": "f0275",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "IMG_4751.JPG",
+     "i": "f0281",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "IMG_8145.jpeg",
+     "i": "f0286",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "IMG_9062.jpeg",
+     "i": "f0291",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "Scanner_20260606 (17).jpg",
+     "i": "f0297",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 13,
+     "f": "",
+     "fotos": [
+      "f0328",
+      "f0481",
+      "f0480",
+      "f0482",
+      "f0494",
+      "f0412"
+     ],
+     "i": "",
+     "m": {
+      "f": "Steppenwolf - Born To Be Wild (Lyrics)",
+      "in": 0
+     },
+     "orig": [
+      {
+       "c": 0.7,
+       "d": 4,
+       "f": "2016_Clara_TIAGO_pRIMEIRA_VIAGEM_PENICHE.jpg",
+       "i": "f0328",
+       "m": {
+        "f": "Steppenwolf - Born To Be Wild (Lyrics)",
+        "in": 0
+       },
+       "r": "fundo",
+       "t": "foto",
+       "x": ""
+      },
+      {
+       "c": 0.7,
+       "d": 4,
+       "f": "IMG-20181006-WA0012.jpg",
+       "i": "f0481",
+       "r": "fundo",
+       "t": "foto",
+       "x": ""
+      },
+      {
+       "c": 0.7,
+       "d": 4,
+       "f": "IMG-20181006-WA0010.jpg",
+       "i": "f0480",
+       "r": "fundo",
+       "t": "foto",
+       "x": ""
+      },
+      {
+       "c": 0.7,
+       "d": 4,
+       "f": "IMG-20181006-WA0013.jpg",
+       "i": "f0482",
+       "r": "fundo",
+       "t": "foto",
+       "x": ""
+      },
+      {
+       "c": 0.7,
+       "d": 4,
+       "f": "IMG-20191116-WA0003.jpg",
+       "i": "f0494",
+       "r": "fundo",
+       "t": "foto",
+       "x": ""
+      },
+      {
+       "c": 0.7,
+       "d": 4,
+       "f": "20210730_145624.jpg",
+       "i": "f0412",
+       "r": "fundo",
+       "t": "foto",
+       "x": ""
+      }
+     ],
+     "r": "fiel",
+     "t": "pilha",
+     "vf": false,
+     "x": "",
+     "xf": [
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ]
+    },
+    {
+     "c": 0.7,
+     "d": 19,
+     "f": "",
+     "fotos": [
+      "f0430",
+      "f0416",
+      "f0427",
+      "f0431",
+      "f0443",
+      "f0330",
+      "f0515",
+      "f0331"
+     ],
+     "i": "",
+     "orig": [
+      {
+       "c": 0.7,
+       "d": 4,
+       "f": "20220521_130954.jpg",
+       "i": "f0430",
+       "r": "fundo",
+       "t": "foto",
+       "x": ""
+      },
+      {
+       "c": 0.7,
+       "d": 4,
+       "f": "20220515_184204.jpg",
+       "i": "f0416",
+       "r": "fundo",
+       "t": "foto",
+       "x": ""
+      },
+      {
+       "c": 0.7,
+       "d": 4,
+       "f": "20220520_135148.jpg",
+       "i": "f0427",
+       "r": "fundo",
+       "t": "foto",
+       "x": ""
+      },
+      {
+       "c": 0.7,
+       "d": 4,
+       "f": "20220521_185833.jpg",
+       "i": "f0431",
+       "r": "fundo",
+       "t": "foto",
+       "x": ""
+      },
+      {
+       "c": 0.7,
+       "d": 4,
+       "f": "20240728_194710.jpg",
+       "i": "f0443",
+       "r": "fundo",
+       "t": "foto",
+       "x": ""
+      },
+      {
+       "c": 0.7,
+       "d": 4,
+       "f": "20230726_131448_Nice_2023.jpg",
+       "i": "f0330",
+       "r": "fundo",
+       "t": "foto",
+       "x": ""
+      },
+      {
+       "c": 0.7,
+       "d": 4,
+       "f": "IMG-20230727-WA0003.jpg",
+       "i": "f0515",
+       "r": "fundo",
+       "t": "foto",
+       "x": ""
+      },
+      {
+       "c": 0.7,
+       "d": 4,
+       "f": "IMG_20250319_131901.jpg",
+       "i": "f0331",
+       "r": "fundo",
+       "t": "foto",
+       "x": ""
+      }
+     ],
+     "r": "fiel",
+     "t": "pilha",
+     "vf": false,
+     "x": "",
+     "xf": [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+     ]
+    },
+    {
+     "c": 0.7,
+     "d": 3.6,
+     "f": "",
+     "i": "",
+     "m": {
+      "f": "Queen - Friends Will Be Friends (Lyrics)",
+      "in": 28
+     },
+     "r": "fiel",
+     "t": "cartao",
+     "x": "Com os amigos"
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "2011_Tiago_e_clara_aniversario_CLARA_POUCO_ANTES_DE_COMEÇAR_A_NAMORAR.jpg",
+     "i": "f0332",
+     "r": "fundo",
+     "t": "foto",
+     "x": "Festa dos 17 anos da Clara"
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "185.JPG",
+     "i": "f0038",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "2013_Tiago_e_clara_aniversario_gabriel_amigos secundario.jpg",
+     "i": "f0334",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "2013_Tiago_Na_latada_da_Clara_amigos secundario.jpg",
+     "i": "f0335",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "2015_CLARA_TIAGO_AMIGOS_SECUNDARIO_3.jpg",
+     "i": "f0338",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "DSCN2158.JPG",
+     "i": "f0580",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "DSC02029.JPG",
+     "i": "f0568",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "2015_CLARA_TIAGO_AMIGOS_SECUNDARIO.jpg",
+     "i": "f0336",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "DSC00781.JPG",
+     "i": "f0344",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "2015_CLARA_TIAGO_AMIGOS_SECUNDARIO_2.jpg",
+     "i": "f0337",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "21-60.jpg",
+     "i": "f0160",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "IMG-20200818-WA0017.jpg",
+     "i": "f0506",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "DSCN2875.JPG",
+     "i": "f0583",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "IMG_8991.JPG",
+     "i": "f0546",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "21-49-29.JPG",
+     "i": "f0124",
+     "r": "fundo",
+     "t": "foto",
+     "x": "Vai ser para o fecho se usar o heli no fim ou para o conduzir"
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "DSC06226.JPG",
+     "i": "f0572",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 3.6,
+     "f": "",
+     "i": "",
+     "r": "fiel",
+     "t": "cartao",
+     "x": "Não incluindo ainda no sitio certo"
+    },
+    {
+     "c": 0.7,
+     "d": 5,
+     "f": "",
+     "fotos": [
+      "f0138",
+      "f0552"
+     ],
+     "i": "",
+     "lay": "2v",
+     "orig": [
+      {
+       "c": 0.7,
+       "d": 4,
+       "f": "21-49-43.JPG",
+       "i": "f0138",
+       "r": "fundo",
+       "t": "foto",
+       "x": ""
+      },
+      {
+       "c": 0.7,
+       "d": 4,
+       "f": "1 (416).JPG",
+       "i": "f0552",
+       "r": "fundo",
+       "t": "foto",
+       "x": ""
+      }
+     ],
+     "r": "fiel",
+     "t": "lado",
+     "vf": false,
+     "x": "",
+     "xf": [
+      "",
+      ""
+     ]
+    },
+    {
+     "c": 0.7,
+     "d": 5,
+     "f": "",
+     "fotos": [
+      "f0019",
+      "f0018"
+     ],
+     "i": "",
+     "lay": "2v",
+     "orig": [
+      {
+       "c": 0.7,
+       "d": 4,
+       "f": "1021.jpg",
+       "i": "f0019",
+       "r": "fundo",
+       "t": "foto",
+       "x": ""
+      },
+      {
+       "c": 0.7,
+       "d": 4,
+       "f": "1021-1.jpg",
+       "i": "f0018",
+       "r": "fundo",
+       "t": "foto",
+       "x": ""
+      }
+     ],
+     "r": "fiel",
+     "t": "lado",
+     "vf": false,
+     "x": "",
+     "xf": [
+      "",
+      ""
+     ]
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "200_ML_FestaNatal2022.jpg",
+     "i": "f0047",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "21-4.JPG",
+     "i": "f0083",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "21-49-15.JPG",
+     "i": "f0111",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "21-49-31.JPG",
+     "i": "f0127",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "21-49-38.JPG",
+     "i": "f0132",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "82-27.jpeg",
+     "i": "f0194",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "82-31.JPG",
+     "i": "f0196",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "82-37.jpeg",
+     "i": "f0199",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "9-24-4.jpeg",
+     "i": "f0225",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "9-24-7.JPG",
+     "i": "f0227",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "9-24-8.JPG",
+     "i": "f0228",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "DSC09844.JPG",
+     "i": "f0247",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "DSC_0041.JPG",
+     "i": "f0248",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "IMG-20221118-WA0013.jpg",
+     "i": "f0253",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "IMG-20250305-WA0113.jpg",
+     "i": "f0254",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "IMG-20260513-WA0016.jpg",
+     "i": "f0255",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "IMG_2067.jpeg",
+     "i": "f0260",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "IMG_2523.jpeg",
+     "i": "f0261",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "IMG_7790.JPG",
+     "i": "f0284",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "2016_Clara_impoe_insignias_tiago.jpg",
+     "i": "f0308",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "DSC02953.JPG",
+     "i": "f0457",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "DSCN5569.JPG",
+     "i": "f0459",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "IMG-20181102-WA0000.jpg",
+     "i": "f0487",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "2016_Familia_Tiago_imposicao_insignias.jpg",
+     "i": "f0357",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "IMG_4098.JPG",
+     "i": "f0598",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    },
+    {
+     "c": 0.7,
+     "d": 4,
+     "f": "21-8.jpg",
+     "i": "f0162",
+     "r": "fundo",
+     "t": "foto",
+     "x": ""
+    }
+   ],
+   "id": "demo_v3",
+   "nome": "demo v3, o flash-forward",
+   "notas": "Foguetes e Aleluia e depois Gostava que tivesse a múscia do Rei Leão no nascimento do Tiago. Na Clara quero que tenha foguetes no primeiro texto e depois passe para uma das músicas da Clarinha",
+   "origem": "gerada pelos scripts"
+  }
+ ]
+}

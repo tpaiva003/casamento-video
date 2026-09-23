@@ -30,9 +30,15 @@ OUT = os.path.join(REPO, "data", "inventario.csv")
 TIMELINE = os.path.join(REPO, "data", "original_mae.csv")
 PROXIES = os.path.join(REPO, "proxies")
 
-EXT = (".jpg", ".jpeg", ".png", ".heic", ".tif", ".tiff", ".bmp")
+# .webp entrou a 2026-09-14: o Tiago largou uma foto de 1438x1440 nesse formato,
+# e sem isto ficava de fora sem aviso nenhum.
+# .gif entrou a 2026-09-14: havia uma animacao do Google Fotos na 01-NOVAS desde
+# 10 de setembro que nunca tinha sido vista. Entra como fotografia, o primeiro
+# fotograma.
+EXT = (".jpg", ".jpeg", ".png", ".heic", ".tif", ".tiff", ".bmp", ".webp", ".gif")
 LARGURA_ALVO, ALTURA_ALVO = 1920, 1080
 LADO_PROXY = 400
+LADO_MINIMO_EM_FILES = 600
 NASCIMENTO = 1995  # Clara e Tiago nasceram ambos em 1995, dito nas legendas
 
 # Seccoes da timeline dela, em segundos, tiradas dos 12 cartoes de ecra inteiro.
@@ -64,6 +70,15 @@ def seccao(t):
         if ini <= t < fim:
             return nome, pessoa
     return "", ""
+
+
+def foto_a_serio(caminho):
+    """Dentro de uma pasta "_files", isto separa a fotografia do cromo."""
+    try:
+        with Image.open(caminho) as im:
+            return min(im.width, im.height) >= LADO_MINIMO_EM_FILES
+    except Exception:
+        return False
 
 
 def sha256(caminho):
@@ -283,15 +298,22 @@ def main():
             continue
         for base, dirs, ficheiros in os.walk(raiz):
             # Paginas web guardadas trazem uma pasta "<nome>_files" com centenas
-            # de ficheiros de interface, avatares e miniaturas de feed. Nao sao
-            # fotos do casal. Ignorar o ramo inteiro.
-            dirs[:] = [d for d in dirs if not d.endswith("_files")]
-            if os.path.basename(base).endswith("_files"):
-                continue
+            # de ficheiros de interface, avatares e miniaturas de feed. Durante
+            # muito tempo o ramo inteiro era ignorado, e isso deitava fora
+            # fotografias verdadeiras que so existem ai: a pagina guardada da
+            # maratona traz nove fotos em tamanho de camara, ate 3024x4032.
+            #
+            # O corte e pelo tamanho, porque a separacao e limpa: o maior avatar
+            # tem 206 px de lado, o menor retrato tem 805. Nao ha nada pelo meio.
+            # Qualquer coisa com menos de LADO_MINIMO_EM_FILES no lado menor e
+            # cromo de interface e fica de fora.
+            dentro_de_files = os.path.basename(base).endswith("_files")
             for nome in sorted(ficheiros):
                 if not nome.lower().endswith(EXT):
                     continue
                 caminho = os.path.join(base, nome)
+                if dentro_de_files and not foto_a_serio(caminho):
+                    continue
                 rel = os.path.relpath(base, raiz)
                 pasta = etiqueta if rel == "." else "%s/%s" % (
                     etiqueta, rel.replace("\\", "/"))
