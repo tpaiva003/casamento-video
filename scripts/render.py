@@ -334,6 +334,30 @@ ZOOM = 0.12          # o zoom lento dela, ao centro
 AFASTADA = 0.80      # enquadramento "afastada": a foto inteira a 80%, com margem
 AFASTADA_RESPIRA = 0.04
 
+# O CAMINHAR, 29 de setembro. O Tiago: "umas imagens que se movimentam (...) quase como
+# se caminhasse, pois se nao esta a ficar uma slideshow sem graca de fotos". Na v3, 192
+# dos 202 clips faziam o mesmo zoom de 12% ao centro, sempre para dentro, e ao fim de
+# meio minuto o olho deixa de o sentir como movimento.
+#
+# Nenhum destes movimentos inventa um pixel. Andam todos dentro dos 12% que a foto ja
+# tem a mais (o 1,15 de folga do upscale), com a mesma composicao de sub-pixel.
+#
+#   Anda    a camara caminha para a direita: a foto desliza da direita para a esquerda,
+#           a aproximar um pouco, e o fundo desfocado desliza tambem mas mais devagar,
+#           porque esta mais longe. E essa diferenca de velocidades que da a profundidade.
+#           Da direita para a esquerda porque e para ai que a fita do tempo foge.
+#   Afasta  o zoom dela ao contrario: a camara recua. Fecha um bloco.
+#   Sobe    a camara sobe pela foto, de baixo para cima (dos pes a cabeca).
+#   Desce   ao contrario.
+#
+# A continuidade e o que faz caminhar: a foto que sai continua a andar durante o
+# encadeado, na mesma direcao em que a seguinte ja entra a andar. Por isso nenhuma
+# direcao se inverte a meio de uma sequencia, ver caminho_da_camera().
+ANDA_PASSO = 0.08           # o que a foto anda, fracao da largura do ecra
+ANDA_FUNDO = 0.35           # o que o fundo anda, fracao do que anda a foto
+ANDA_ZOOM = (1.04, 1.10)    # a foto aproxima um pouco enquanto anda; o teto e 1 + ZOOM
+MOVIMENTOS_CAMINHAR = ("Anda", "Afasta", "Sobe", "Desce")
+
 # O ENQUADRAMENTO "APROXIMA", 18 de setembro. O Tiago, sobre a fotografia do anel:
 # "Podes cortar e aproximar, mas tens de comecar do plano amplo para verem a arvore de
 # natal". A alianca ocupa cerca de 2% da largura do ecra e a 15 metros nao se ve; a
@@ -3225,6 +3249,12 @@ def preparar(clip, inv_por_nome):
     mov = (clip.get("movimento") or "").strip()
     pronto = {"tipo": "foto", "sprite": com_margem(alvo, modo), "fundo": fundo,
               "capa": faixa_texto(texto), "mov": mov}
+    if mov == "Anda" and fundo is not None:
+        # O FUNDO DO ANDA E MAIS LARGO do que o ecra, para ter por onde deslizar. So se
+        # faz aqui: nos outros movimentos o fundo e o de sempre, pixel a pixel.
+        a_mais = int(math.ceil(ANDA_PASSO * L * ANDA_FUNDO)) + 2
+        largo = cobrir(im, L + a_mais, A).filter(ImageFilter.GaussianBlur(46))
+        pronto["fundo_largo"] = Image.blend(Image.new("RGB", largo.size, (0, 0, 0)), largo, 0.55)
     # O "aproxima" traz mais contas e mais um sprite, e por isso so se prepara quando e
     # pedido: sem ele o clip fica byte a byte o que era antes deste enquadramento existir.
     aproxima, az, aviso = ler_aproxima(mov)
@@ -3248,6 +3278,86 @@ def preparar(clip, inv_por_nome):
                   % (clip.get("ordem", "?"), max(0.0, dur - entra - sai), APROXIMA_MOVIMENTO_MIN))
         pronto["aproxima"] = ap
     return pronto
+
+
+def quadro_caminhar(mov, p, altura_sprite):
+    """Um fotograma dos movimentos do caminhar -> (escala, dx, dy, fundo_dx).
+
+    `p` e o progresso do clip, de 0 a 1, e anda a direito, como o zoom de sempre: e isso
+    que deixa a foto que sai continuar a andar a mesma velocidade durante o encadeado.
+    `altura_sprite` e a altura do sprite sem margem, a escala 1. dx e dy deslocam o centro
+    da foto; fundo_dx desloca o fundo desfocado, e so o Anda o mexe.
+    """
+    teto = 1.0 + ZOOM
+    if mov == "Anda":
+        z0, z1 = ANDA_ZOOM
+        passo = ANDA_PASSO * L
+        dx = passo * (0.5 - p)
+        return (z0 + (z1 - z0) * p) / teto, dx, 0.0, dx * ANDA_FUNDO
+    if mov == "Afasta":
+        return (1.0 + ZOOM * (1.0 - p)) / teto, 0.0, 0.0, 0.0
+    # SOBE E DESCE a escala 1, que e onde a foto tem mais altura do que o ecra. Uma foto
+    # larga de mais para isso nao tem por onde subir, e fica com o zoom de sempre.
+    folga = altura_sprite - A
+    if folga < 0.02 * A:
+        return (1.0 + ZOOM * p) / teto, 0.0, 0.0, 0.0
+    # Sobe: comeca a mostrar os pes, com a foto puxada para cima, e acaba na cabeca.
+    dy = folga * (p - 0.5) if mov == "Sobe" else folga * (0.5 - p)
+    return 1.0, 0.0, dy, 0.0
+
+
+def caminho_da_camera(clips):
+    """Da a cada foto um movimento do caminhar. So com --caminhar; devolve quantas mudou.
+
+    So toca no que estava na omissao: fotos em fiel ou fundo com "Zoom in" ou nada no
+    movimento. O que o Tiago escolheu na Mesa (parada, afastada, aproxima) fica como esta.
+
+    As fotos seguidas formam uma sequencia, que acaba num cartao, num contador, na fita
+    dos meses, num video, ou em qualquer foto que nao seja da omissao. Numa sequencia:
+
+      a primeira entra com o zoom de sempre, a camara entra no capitulo;
+      depois Anda, Anda, Zoom in, Anda, Anda, Zoom in... a andar sempre para o mesmo lado,
+      e o zoom para a frente de tres em tres, para o caminhar nao ficar ele proprio igual;
+      a ultima Afasta, a camara recua antes do cartao seguinte.
+
+    Uma sequencia de menos de tres fotos fica como estava: e o caso das fotos da abertura,
+    que foram afinadas uma a uma.
+    """
+    def elegivel(c):
+        return (c.get("tipo") == "foto"
+                and (c.get("tratamento") or "fiel").strip() in ("fiel", "fundo")
+                and (c.get("movimento") or "").strip() in ("", "Zoom in"))
+
+    sequencias, atual = [], []
+    for c in clips:
+        if elegivel(c):
+            atual.append(c)
+        elif c.get("tipo") == "foto" and (c.get("tratamento") or "").strip() == "rajada":
+            # Uma rajada no meio de uma sequencia nao a parte: sao cortes secos por cima
+            # do mesmo caminhar, e a camara continua do outro lado.
+            continue
+        else:
+            sequencias.append(atual)
+            atual = []
+    sequencias.append(atual)
+
+    mudadas = 0
+    for seq in sequencias:
+        if len(seq) < 3:
+            continue
+        for i, c in enumerate(seq):
+            if i == 0:
+                mov = "Zoom in"
+            elif i == len(seq) - 1:
+                mov = "Afasta"
+            elif i % 3 == 0:
+                mov = "Zoom in"
+            else:
+                mov = "Anda"
+            if mov != (c.get("movimento") or "").strip():
+                c["movimento"] = mov
+                mudadas += 1
+    return mudadas
 
 
 def desenhar(pronto, t_rel, duracao):
@@ -3347,6 +3457,19 @@ def desenhar(pronto, t_rel, duracao):
     # mostra-a inteira a 80% com a margem a volta; parada tira o zoom. Os outros
     # valores ("Zoom in", "Nenhum" das v1) continuam como sempre foram.
     mov = pronto.get("mov", "")
+    if mov in MOVIMENTOS_CAMINHAR:
+        escala, dx, dy, fundo_dx = quadro_caminhar(mov, p, pronto["sprite"].height - 2 * MARGEM)
+        if pronto.get("fundo_largo") is not None:
+            # O fundo largo e desfocado: um passo inteiro de pixel nele nao se ve, e poupa
+            # uma composicao de ecra inteiro por fotograma.
+            largo = pronto["fundo_largo"]
+            x = int(round((largo.width - L) / 2.0 - fundo_dx))
+            tela = largo.crop((x, 0, x + L, A))
+        compor(tela, pronto["sprite"], L / 2.0 + dx, A / 2.0 + dy, escala)
+        if pronto["capa"] is not None:
+            cor, mascara = pronto["capa"]
+            tela.paste(cor, (0, 0), mascara)
+        return tela
     if mov == "Parada":
         escala = 1.0 / (1.0 + ZOOM)
     elif mov == "Afastada":
@@ -3907,7 +4030,7 @@ def quadros_da_fatia(k, n, total):
     return range(k, total, n)
 
 
-def carregar_montagem(nome, ate):
+def carregar_montagem(nome, ate, caminhar=False):
     """Tudo o que o render conta antes de desenhar, numa funcao so, para o pai e para as fatias.
 
     Le a montagem e o inventario, poe em cada clip o ficheiro que o data/finais.csv manda
@@ -3946,6 +4069,9 @@ def carregar_montagem(nome, ate):
                     indice[linha["id"]] = p
 
     sem_indice = caminhos_pelo_indice(clips, indice, inv_por_id, inv_por_nome)
+    # O CAMINHAR, com --caminhar. Antes do --ate, para um troco dar a cada foto o mesmo
+    # movimento que ela tem no filme inteiro. Ver caminho_da_camera().
+    mudadas = caminho_da_camera(clips) if caminhar else 0
     # Antes de cortar no --ate: o ultimo clip de um render parcial que nao chega ao fim
     # do filme continua a contar com o encadeado do clip que o segue no filme.
     ligar_transicoes(clips, fim_do_filme=not ate)
@@ -3979,7 +4105,7 @@ def carregar_montagem(nome, ate):
             "inv_por_nome": inv_por_nome, "sem_indice": sem_indice,
             "desvio": desvio, "fim": fim, "ate": ate,
             "total_quadros": int(round(fim * FPS)),
-            "prontos": {}, "faltaram": []}
+            "prontos": {}, "faltaram": [], "caminhar": mudadas}
 
 
 def fotograma(q, estado):
@@ -4124,6 +4250,10 @@ def comando_da_fatia(nome, k, n, argv):
     for opcao in ("--ate", "--escala"):
         if opcao in argv:
             cmd += [opcao, argv[argv.index(opcao) + 1]]
+    # SEM ISTO AS FATIAS DESENHAVAM O FILME DE SEMPRE, e o pai o do caminhar: a mesma
+    # montagem com dois movimentos diferentes, fotograma sim, fotograma nao.
+    if "--caminhar" in argv:
+        cmd.append("--caminhar")
     return cmd
 
 
@@ -4248,7 +4378,7 @@ def main():
     if fatia is None:
         ff = ffmpeg()
         os.makedirs(SAIDA, exist_ok=True)
-    estado = carregar_montagem(nome, ate)
+    estado = carregar_montagem(nome, ate, "--caminhar" in sys.argv)
     if fatia is not None:
         correr_fatia(estado, fatia[0], fatia[1], canal)
         return
@@ -4263,6 +4393,8 @@ def main():
     desvio, fim, total_quadros = estado["desvio"], estado["fim"], estado["total_quadros"]
 
     print("Render de %s" % nome)
+    if "--caminhar" in sys.argv:
+        print("  caminhar: %d fotos com movimento novo" % estado["caminhar"])
     print("  clips: %d fotos e cartoes + %d fanfarra" % (len(resto), len(fanfarra)))
     print("  duracao da parte de fotos: %.0f s  (%d fotogramas)" % (fim, total_quadros))
     print()
@@ -4347,7 +4479,8 @@ def main():
     # --escala) diz que o e, para nunca se confundir com um filme inteiro.
     carimbo = datetime.datetime.now().strftime("%Y-%m-%d_%H%M")
     parcial = bool(ate) or L != 1920
-    base_nome = "%s_%s%s" % (nome, carimbo, "_parcial" if parcial else "")
+    base_nome = "%s%s_%s%s" % (nome, "_caminhar" if "--caminhar" in sys.argv else "",
+                               carimbo, "_parcial" if parcial else "")
     final = os.path.join(SAIDA, base_nome + ".mp4")
     k = 2
     while os.path.exists(final):

@@ -5650,6 +5650,58 @@ def teste_enquadramento_afastada_e_parada():
              "topo normal %d, afastada %d, parada imovel %s, movimento %s" % (normal, afastada, parada, movs))
 
 
+# ---------------------------------------------------------------- o caminhar, 29 de setembro
+def teste_caminhar():
+    """O caminhar da a camara um caminho, e so onde estava a omissao.
+
+    O DEFEITO QUE ISTO GUARDA: a primeira versao do --caminhar nao chegava as fatias. O
+    comando_da_fatia() so leva o --ate e o --escala, e com sete fatias o pai desenhava o
+    caminhar e as outras o zoom de sempre, fotograma sim, fotograma nao. E o resto e o que
+    o Tiago pediu: nada do que ele escolheu na Mesa muda, a foto anda da direita para a
+    esquerda, e o fundo anda menos do que ela.
+    """
+    import tempfile
+    import render
+    clips = [{"tipo": "cartao"}]
+    clips += [{"tipo": "foto", "tratamento": "fundo", "movimento": "Zoom in"} for _ in range(7)]
+    clips[4]["movimento"] = "Parada"
+    clips += [{"tipo": "cartao"}] + [{"tipo": "foto", "tratamento": "fundo", "movimento": "Zoom in"}] * 2
+    clips = [dict(c) for c in clips]
+    render.caminho_da_camera(clips)
+    movs = [c.get("movimento") for c in clips]
+    esperado = [None, "Zoom in", "Anda", "Afasta", "Parada", "Zoom in", "Anda", "Afasta",
+                None, "Zoom in", "Zoom in"]
+
+    pasta = tempfile.mkdtemp(prefix="teste_caminhar_")
+    foto = os.path.join(pasta, "risca.png")
+    im = Image.new("RGB", (1500, 1000), (40, 40, 40))
+    im.paste((250, 250, 250), (740, 0, 760, 1000))     # uma risca branca ao meio
+    im.save(foto)
+
+    def quadro(mov, t, tratamento="fiel"):
+        clip = {"tipo": "foto", "ficheiro": "risca.png", "id": "x", "texto_ecra": "",
+                "tratamento": tratamento, "fonte_imagem": "", "_caminho": foto,
+                "movimento": mov, "duracao_s": "4", "ordem": 1}
+        return render.desenhar(render.preparar(clip, {}), t, 4.0)
+
+    def risca(q):
+        linha = [q.getpixel((x, render.A // 2))[0] for x in range(render.L)]
+        brancos = [x for x, v in enumerate(linha) if v > 200]
+        return sum(brancos) / len(brancos)
+    antes, depois = risca(quadro("Anda", 0.0)), risca(quadro("Anda", 4.0))
+    anda = antes - depois
+    passo = render.ANDA_PASSO * render.L
+    # O fundo anda para o mesmo lado e menos do que a foto: e isso a profundidade.
+    _, dx, _, fundo_dx = render.quadro_caminhar("Anda", 0.0, render.A * 1.12)
+    fundo_mexe = 0 < fundo_dx < dx
+    quadro("Anda", 2.0, "fundo")      # o fundo largo tem de chegar para o passo todo
+    fatia = render.comando_da_fatia("v3", 0, 7, ["render.py", "v3", "--caminhar"])
+    verifica("caminhar: caminho, direcao e fatias",
+             movs == esperado and abs(anda - passo) < 3 and fundo_mexe and "--caminhar" in fatia,
+             "movimentos %s, a risca andou %.1f para a esquerda (esperado %.1f), fatia %s"
+             % (movs == esperado or movs, anda, passo, "--caminhar" in fatia))
+
+
 # ------------------------------------------- «aproxima ao ponto de foco», 18 de setembro
 # O Tiago, depois de ver o conceito da intro do pedido: "Podes cortar e aproximar, mas
 # tens de comecar do plano amplo para verem a arvore de natal." A foto do anel (IMG_2067)
@@ -11460,6 +11512,7 @@ def main():
     teste_legenda_guarda_as_falas()
     teste_fim_em_fade_a_preto()
     teste_enquadramento_afastada_e_parada()
+    teste_caminhar()
     teste_aproxima_comeca_igual_e_acaba_no_foco()
     teste_aproxima_entre_os_encadeados()
     teste_aproxima_nunca_descobre_borda()
