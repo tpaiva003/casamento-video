@@ -41,7 +41,7 @@ import subprocess
 import sys
 import time
 
-from PIL import Image, ImageDraw, ImageFilter, ImageFont, ImageOps
+from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageFont, ImageOps
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import linha_tempo
@@ -2777,6 +2777,169 @@ def desenhar_monte(pronto, t_rel, duracao, por_foto=False):
     return tela
 
 
+# ---------------------------------------------------------------- o mergulho na grelha
+# 30 de setembro. O Tiago mandou um tutorial de Premiere em que uma grelha de 3 por 3 da
+# lugar a uma so imagem: a camara mergulha numa das celulas ate ela encher o ecra. Aqui e
+# um terceiro estilo da colagem, "mergulho": as fotos aparecem uma a uma em grelha, a
+# grelha respira um pouco, e a camara mergulha na ULTIMA, que fica sozinha a encher o
+# ecra antes do encadeado de saida. O clip seguinte entra a partir de uma foto inteira.
+#
+# A FOTO DO MERGULHO NAO E AMPLIADA A PARTIR DA GRELHA. A grelha desenha-se uma vez ao
+# dobro do ecra e cada fotograma e uma so transformacao dela; a ultima foto e um sprite a
+# parte, ja no tamanho com que acaba o mergulho, e compoe-se por cima da sua celula com a
+# composicao de sub-pixel de sempre. No fim do mergulho e a foto verdadeira que esta no
+# ecra, e nao uma celula esticada quatro vezes.
+MERGULHO_ESTILO = "mergulho"
+MERGULHO_FOLGA = 8          # linha preta entre as fotos, a do lado a lado
+MERGULHO_ATRASO = 0.35      # a primeira espera que o encadeado de entrada acabe
+MERGULHO_ENTRA = 0.35       # segundos que cada foto leva a aparecer
+MERGULHO_ENTRE = 0.18       # atraso entre uma foto e a seguinte
+MERGULHO_ESPERA = 1.0       # a grelha inteira no ecra, antes de mergulhar
+MERGULHO_DESCE = 1.2        # o mergulho
+MERGULHO_FICA = 0.8         # a ultima sozinha, antes do encadeado de saida
+MERGULHO_RESPIRA = 0.03     # o que a grelha aproxima enquanto espera
+MERGULHO_FICA_ZOOM = 0.03   # o que a ultima aproxima depois do mergulho
+MERGULHO_DOBRO = 2          # a grelha desenha-se a esta escala do ecra
+
+
+def mergulho_grelha(n, larg, alt, folga=MERGULHO_FOLGA):
+    """As celulas da grelha de n fotos: [(x, y, w, h)] em pixeis, pela ordem das fotos.
+
+    Escolhe o numero de colunas com menos celulas vazias e, entre esses, a celula mais
+    perto de 3:2, que e o formato da maior parte das fotos. A ultima fila, se tiver menos
+    fotos, fica centrada: uma celula preta vazia num canto lia-se como uma foto em falta.
+    """
+    melhor = None
+    for cols in range(1, n + 1):
+        filas = int(math.ceil(n / float(cols)))
+        vazias = cols * filas - n
+        aspeto = (larg / float(cols)) / (alt / float(filas))
+        nota = (vazias, abs(math.log(aspeto / 1.5)))
+        if melhor is None or nota < melhor[0]:
+            melhor = (nota, cols, filas)
+    _, cols, filas = melhor
+    cw = (larg - folga * (cols + 1)) / float(cols)
+    ch = (alt - folga * (filas + 1)) / float(filas)
+    celulas = []
+    for k in range(n):
+        f, c = divmod(k, cols)
+        na_fila = min(cols, n - f * cols)
+        desvio = (cols - na_fila) * (cw + folga) / 2.0
+        celulas.append((folga + c * (cw + folga) + desvio, folga + f * (ch + folga), cw, ch))
+    return celulas
+
+
+def mergulho_tempos(n, duracao, entra=0.0, sai=0.0):
+    """(atraso, entra_foto, entre, espera, desce, fica) do mergulho, a caber na duracao.
+
+    Com tempo a mais, a sobra vai para a espera, com a grelha inteira no ecra. Com tempo a
+    menos, tudo encolhe por igual, e nada fica abaixo de 40% do que devia: um clip curto
+    de mais mergulha depressa, mas mergulha.
+    """
+    atraso = min(MERGULHO_ATRASO, max(entra, 0.0))
+    partes = [MERGULHO_ENTRA, MERGULHO_ENTRE * (n - 1), MERGULHO_ESPERA, MERGULHO_DESCE,
+              MERGULHO_FICA]
+    livre = max(0.0, duracao - atraso - max(sai, 0.0))
+    f = min(1.0, max(0.4, livre / sum(partes)))
+    entra_foto, entre, espera, desce, fica = (MERGULHO_ENTRA * f, MERGULHO_ENTRE * f,
+                                              MERGULHO_ESPERA * f, MERGULHO_DESCE * f,
+                                              MERGULHO_FICA * f)
+    espera += max(0.0, livre - (entra_foto + entre * (n - 1) + espera + desce + fica))
+    return atraso, entra_foto, entre, espera, desce, fica
+
+
+def preparar_mergulho(imagens, focos, texto, entra=0.0, sai=0.0, duracao=4.0):
+    """A colagem em grelha com mergulho na ultima foto. Ver MERGULHO_ESTILO."""
+    n = len(imagens)
+    focos = list(focos) + [None] * (n - len(focos))
+    d = MERGULHO_DOBRO
+    celulas = mergulho_grelha(n, L, A)
+    grande = Image.new("RGB", (L * d, A * d), (0, 0, 0))
+    pequenas = []
+    for (x, y, w, h), im, foco in zip(celulas, imagens, focos):
+        W, H = max(1, int(round(w * d))), max(1, int(round(h * d)))
+        cel = cobrir_foco(im, W, H, foco) or cobrir_alto(im, W, H)
+        grande.paste(cel, (int(round(x * d)), int(round(y * d))))
+        pequenas.append((cel.resize((max(1, int(round(w))), max(1, int(round(h)))), Image.LANCZOS),
+                         (int(round(x)), int(round(y)))))
+    # A ULTIMA, no tamanho com que acaba o mergulho: a celula a cobrir o ecra inteiro.
+    x, y, w, h = celulas[-1]
+    cobre = max(L / w, A / h)
+    Wf, Hf = int(math.ceil(w * cobre)), int(math.ceil(h * cobre))
+    alvo = cobrir_foco(imagens[-1], Wf, Hf, focos[-1]) or cobrir_alto(imagens[-1], Wf, Hf)
+    return {"tipo": "mergulho", "n": n, "celulas": celulas, "grande": grande,
+            "pequenas": pequenas, "alvo": com_margem(alvo, "preto"), "cobre": cobre,
+            "tempos": mergulho_tempos(n, duracao, entra, sai), "capa": faixa_texto(texto),
+            "_camada": None}
+
+
+def suave(p):
+    """Arranca e trava devagar, de 0 a 1."""
+    p = min(1.0, max(0.0, p))
+    return p * p * (3.0 - 2.0 * p)
+
+
+def mergulho_camara(pronto, t):
+    """(escala, cx, cy) da camara no instante t: a escala da grelha e onde fica o centro da ultima celula."""
+    atraso, entra_foto, entre, espera, desce, fica = pronto["tempos"]
+    n = pronto["n"]
+    x, y, w, h = pronto["celulas"][-1]
+    px, py = x + w / 2.0, y + h / 2.0
+    todas = atraso + entra_foto + entre * (n - 1)
+    comeca = todas + espera
+    respira = 1.0 + MERGULHO_RESPIRA * min(1.0, max(0.0, (t - todas) / espera)) if espera else 1.0
+    e = suave((t - comeca) / desce) if desce else float(t >= comeca)
+    fim = pronto["cobre"]
+    # Depois do mergulho a ultima continua a aproximar devagar, e a escala da grelha anda com ela.
+    depois = max(0.0, min(1.0, (t - comeca - desce) / fica)) if fica else 0.0
+    fim *= 1.0 + MERGULHO_FICA_ZOOM * depois
+    # Em escala geometrica: um zoom de 1 a 4 que anda em linha reta parece acelerar no fim.
+    s = respira * math.exp(e * math.log(fim / respira))
+    return s, px + (L / 2.0 - px) * e, py + (A / 2.0 - py) * e
+
+
+def desenhar_mergulho(pronto, t_rel, duracao):
+    """Um fotograma do mergulho."""
+    atraso, entra_foto, entre, espera, desce, fica = pronto["tempos"]
+    n = pronto["n"]
+    todas = atraso + entra_foto + entre * (n - 1)
+    if t_rel < todas:
+        # AS FOTOS A APARECER: a camara esta parada e a grelha e a de tamanho natural, por
+        # isso cola-se sem transformacao nenhuma. As que ja apareceram guardam-se numa camada.
+        prontas = 0
+        while prontas < n and t_rel >= atraso + prontas * entre + entra_foto:
+            prontas += 1
+        if pronto["_camada"] is None or pronto["_camada"][0] != prontas:
+            base = Image.new("RGB", (L, A), (0, 0, 0))
+            for cel, pos in pronto["pequenas"][:prontas]:
+                base.paste(cel, pos)
+            pronto["_camada"] = (prontas, base)
+        tela = pronto["_camada"][1].copy()
+        for k in range(prontas, n):
+            a = (t_rel - atraso - k * entre) / entra_foto if entra_foto else 1.0
+            if a <= 0:
+                break
+            cel, pos = pronto["pequenas"][k]
+            tela.paste(Image.blend(tela.crop((pos[0], pos[1], pos[0] + cel.width, pos[1] + cel.height)),
+                                   cel, min(1.0, a)), pos)
+    else:
+        s, cx, cy = mergulho_camara(pronto, t_rel)
+        x, y, w, h = pronto["celulas"][-1]
+        px, py = x + w / 2.0, y + h / 2.0
+        d = MERGULHO_DOBRO
+        # ponto do ecra (X, Y) -> ponto da grelha grande: d * (P + (X - C) / s)
+        tela = pronto["grande"].transform(
+            (L, A), Image.AFFINE,
+            (d / s, 0.0, d * (px - cx / s), 0.0, d / s, d * (py - cy / s)),
+            resample=Image.BICUBIC)
+        # A ultima por cima da sua celula, no sitio exato, a partir do sprite do fim.
+        compor(tela, pronto["alvo"], cx, cy, s / pronto["cobre"])
+    if pronto["capa"] is not None:
+        cor, mascara = pronto["capa"]
+        tela.paste(cor, (0, 0), mascara)
+    return tela
+
+
 def preparar_lado(lay, imagens, focos, texto, textos=None, opcoes=None, duracao=None):
     """O lado a lado, a partir das imagens ja abertas, uma por celula de lado_celulas(lay).
 
@@ -3427,6 +3590,11 @@ def preparar(clip, inv_por_nome):
         entra = float(clip.get("transicao_s") or 0.0) if entra in (None, "") else float(entra)
         sai = clip.get("_transicao_seguinte")
         sai = entra if sai in (None, "") else float(sai)
+        # O MERGULHO NA GRELHA e um estilo da colagem, mas desenha-se a parte: nao ha
+        # agenda de monte nem poses, ver preparar_mergulho().
+        if clip["tipo"] == "colagem" and (clip.get("tratamento") or "").strip() == MERGULHO_ESTILO:
+            return preparar_mergulho(imagens, focos, texto, entra, sai,
+                                     duracao_do_clip(clip) or 4.0)
         # O estilo vem na coluna tratamento, decisao 068. O "fiel" das montagens de antes
         # e qualquer valor desconhecido dao a omissao, ver estilo_monte().
         return preparar_monte(clip["tipo"], imagens, focos, texto, entra, sai,
@@ -3658,6 +3826,8 @@ def desenhar(pronto, t_rel, duracao):
             tela.paste(peca, (x + dx, y + dy))
         colar_legenda(tela, pronto, t_rel, duracao, [c["atraso"] for c in pronto["celulas"]])
         return tela
+    if pronto["tipo"] == "mergulho":
+        return desenhar_mergulho(pronto, t_rel, duracao)
     if pronto["tipo"] in LIMITES_MONTE:
         return desenhar_monte(pronto, t_rel, duracao)
     if pronto["tipo"] == "rajada":
@@ -4518,6 +4688,36 @@ def carregar_montagem(nome, ate, caminhar=False):
             "prontos": {}, "faltaram": [], "caminhar": mudadas}
 
 
+# O CLARAO DE LUZ, 30 de setembro, do video das transicoes de pelicula que o Tiago mandou:
+# a passagem de um clip ao seguinte com um clarao quente, como a luz que entra num rolo de
+# pelicula. Nao inventa nada na foto: e uma luz por cima do encadeado de sempre, que cresce
+# ate ao meio dele e desaparece no fim. Escolhe-se na Mesa, no campo Entrada do clip que
+# entra, e o montar_da_mesa.py escreve-o na coluna entrada.
+CLARAO = "clarao"
+CLARAO_COR = (255, 196, 128)    # quente, a luz de uma pelicula queimada
+CLARAO_FORCA = 0.85             # no meio do encadeado
+_CLARAO = {}
+
+
+def luz_do_clarao():
+    """A luz do clarao, feita uma vez por tamanho: forte de um lado do ecra e a apagar para o outro."""
+    if (L, A) not in _CLARAO:
+        rampa = Image.linear_gradient("L").rotate(90, expand=True).resize((L, A))
+        rampa = rampa.point(lambda v: int(40 + 215 * (v / 255.0) ** 0.7))
+        cor = Image.new("RGB", (L, A), CLARAO_COR)
+        _CLARAO[(L, A)] = Image.composite(cor, Image.new("RGB", (L, A), (0, 0, 0)), rampa)
+    return _CLARAO[(L, A)]
+
+
+def com_clarao(quadro, a):
+    """O fotograma do encadeado com o clarao por cima, `a` de 0 a 1 ao longo do encadeado."""
+    forca = CLARAO_FORCA * math.sin(math.pi * min(1.0, max(0.0, a)))
+    if forca <= 0.0:
+        return quadro
+    luz = Image.blend(Image.new("RGB", (L, A), (0, 0, 0)), luz_do_clarao(), forca)
+    return ImageChops.screen(quadro, luz)
+
+
 def fotograma(q, estado):
     """O fotograma q do corpo, como vai para o encoder, e os clips ativos nele.
 
@@ -4564,6 +4764,10 @@ def fotograma(q, estado):
         trans = float(c2["transicao_s"]) or 0.01
         a = min(1.0, max(0.0, (t - float(c2["inicio_s"])) / trans))
         quadro = Image.blend(img1, img2, a)
+        # O CLARAO so existe numa montagem que traga a coluna entrada, e so no clip que o
+        # pede: sem ela este fotograma e o de sempre, ao byte.
+        if (c2.get("entrada") or "").strip() == CLARAO:
+            quadro = com_clarao(quadro, a)
 
     # Fade a preto no fim do filme, so em render completo.
     return aplicar_fim(quadro, q, estado["fim"], estado["ate"]), ativos

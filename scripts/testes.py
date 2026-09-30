@@ -6162,6 +6162,77 @@ def teste_caminhar():
              % (movs == esperado or movs, anda, passo, "--caminhar" in fatia))
 
 
+def teste_mergulho_e_clarao():
+    """O mergulho acaba na ultima foto a encher o ecra, e o clarao so existe onde e pedido.
+
+    O PEDIDO, 30 de setembro: o Tiago mandou tutoriais com uma grelha em que a camara
+    mergulha numa das fotos, e transicoes de pelicula com um clarao de luz, e pediu-os como
+    opcoes na Mesa. O defeito que isto guarda e o que ja aconteceu com cada opcao nova: a
+    Mesa oferecer uma coisa que o montar nao escreve, ou o render desenhar outra coisa. Aqui
+    sai da Mesa, passa pelo montar e chega ao render: o estilo mergulho na coluna
+    tratamento, a entrada clarao numa coluna que so aparece com ele, e o fim do mergulho e
+    a ultima foto, a mesma cor em todo o ecra.
+    """
+    import contextlib
+    import io
+    import json
+    import tempfile
+    import montar_da_mesa
+    import render
+    problemas = []
+    cores = [(30 * k, 200 - 20 * k, 90) for k in range(8)] + [(230, 20, 20)]
+    ims = [Image.new("RGB", (600, 400), c) for c in cores]
+    p = render.preparar_mergulho(ims, [None] * 9, "", 0.7, 0.7, 6.0)
+    atraso, entra, entre, espera, desce, fica = p["tempos"]
+    todas = atraso + entra + entre * 8
+    grelha = render.desenhar_mergulho(p, todas + espera / 2.0, 6.0)
+    for k, (x, y, w, h) in enumerate(p["celulas"]):
+        # a grelha respira a volta da ultima celula, por isso mede-se perto do centro
+        px = grelha.getpixel((int(x + w / 2), int(y + h / 2)))
+        if max(abs(a - b) for a, b in zip(px, cores[k])) > 12:
+            problemas.append("a celula %d tem %s e devia ter %s" % (k + 1, px, cores[k]))
+    fim = render.desenhar_mergulho(p, 6.0 - 0.01, 6.0)
+    cantos = [fim.getpixel(q) for q in ((2, 2), (render.L - 3, 2), (2, render.A - 3),
+                                        (render.L - 3, render.A - 3), (render.L // 2, render.A // 2))]
+    if any(max(abs(a - b) for a, b in zip(c, cores[-1])) > 12 for c in cantos):
+        problemas.append("no fim o ecra nao e so a ultima foto: %s" % cantos)
+    meio = render.desenhar_mergulho(p, todas + espera + desce / 2.0, 6.0)
+    if max(abs(a - b) for a, b in zip(meio.getpixel((render.L // 2, render.A // 2)), cores[-1])) > 12:
+        problemas.append("a meio do mergulho o centro nao e a ultima foto")
+    # o clarao: nada nas pontas do encadeado, e mais luz no meio
+    base = Image.new("RGB", (render.L, render.A), (60, 60, 60))
+    if render.com_clarao(base, 0.0).tobytes() != base.tobytes():
+        problemas.append("o clarao mexe no fotograma antes de comecar")
+    if sum(render.com_clarao(base, 0.5).resize((1, 1)).getpixel((0, 0))) <= 180:
+        problemas.append("o clarao nao clareia o meio do encadeado")
+    # da Mesa ao CSV
+    pasta = tempfile.mkdtemp(prefix="teste_mergulho_")
+    ids = [r["id"] for r in csv.DictReader(open(os.path.join(REPO, "data", "inventario.csv"),
+                                                 encoding="utf-8-sig"))][:6]
+    estado = {"versoes": [{"id": "t", "nome": "t", "clips": [
+        {"t": "foto", "i": ids[0], "d": 4, "c": 0.7, "r": "fundo", "e": "anda"},
+        {"t": "colagem", "fotos": ids[1:5], "d": 6, "c": 0.7, "estilo": "mergulho"},
+        {"t": "foto", "i": ids[5], "d": 4, "c": 1.0, "r": "fundo", "en": "clarao"}]}]}
+    caminho = os.path.join(pasta, "estado.json")
+    json.dump(estado, open(caminho, "w", encoding="utf-8"))
+    guardado = (montar_da_mesa.ESTADO, montar_da_mesa.DESTINO, sys.argv)
+    montar_da_mesa.ESTADO, montar_da_mesa.DESTINO = caminho, pasta
+    sys.argv = ["montar_da_mesa.py", "t", "--nome", "t"]
+    try:
+        with contextlib.redirect_stdout(io.StringIO()):
+            montar_da_mesa.main()
+    finally:
+        montar_da_mesa.ESTADO, montar_da_mesa.DESTINO, sys.argv = guardado
+    linhas = list(csv.DictReader(open(os.path.join(pasta, "t.csv"), encoding="utf-8-sig")))
+    visto = [(l["tipo"], l["movimento"], l["tratamento"], l.get("entrada")) for l in linhas]
+    if [v[1] for v in visto][:1] != ["Anda"] or visto[1][2] != "mergulho" or \
+            [v[3] for v in visto] != ["", "", "clarao"]:
+        problemas.append("o montar escreveu %s" % visto)
+    verifica("mergulho e clarao, da Mesa ao render", not problemas,
+             "; ".join(problemas)[:240] if problemas else
+             "9 celulas, fim na ultima foto, clarao so no meio, CSV com Anda, mergulho e clarao")
+
+
 # ------------------------------------------- «aproxima ao ponto de foco», 18 de setembro
 # O Tiago, depois de ver o conceito da intro do pedido: "Podes cortar e aproximar, mas
 # tens de comecar do plano amplo para verem a arvore de natal." A foto do anel (IMG_2067)
@@ -11447,6 +11518,8 @@ CAMPOS_EXPORTADOS = {
     # os textos de cada foto e as suas opcoes saem ja tratados, nao em bruto
     "xf": "textos_fotos", "vf": "textos_opcoes", "vm": "textos_opcoes",
     "tt": "textos_opcoes", "vt": "textos_opcoes",
+    # o clarao de luz na entrada, 30 de setembro
+    "en": "entrada",
 }
 
 
@@ -11731,7 +11804,8 @@ process.stdout.write(JSON.stringify({
         fonte = open(montar_da_mesa.__file__, encoding="utf-8").read()
         m = re.search(r"ENQUADRAMENTOS = \{([^}]*)\}", fonte)
         conhecidos = set(re.findall(r'"([a-z]+)":', m.group(1))) if m else set()
-        if set(saida["opcoes"]) != {"", "afastada", "parada", "aproxima"} or \
+        if set(saida["opcoes"]) != {"", "afastada", "parada", "aproxima",
+                                    "anda", "afasta", "sobe", "desce"} or \
                 set(o for o in saida["opcoes"] if o) - conhecidos:
             problemas.append("a lista do Enquadramento tem %s e o montar conhece %s"
                              % (saida["opcoes"], sorted(conhecidos)))
@@ -12337,6 +12411,7 @@ def main():
     teste_fim_em_fade_a_preto()
     teste_enquadramento_afastada_e_parada()
     teste_caminhar()
+    teste_mergulho_e_clarao()
     teste_aproxima_comeca_igual_e_acaba_no_foco()
     teste_aproxima_entre_os_encadeados()
     teste_aproxima_nunca_descobre_borda()
