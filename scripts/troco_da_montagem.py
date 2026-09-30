@@ -88,4 +88,8 @@ def main():
     print("Escritos em", destino)
 
 
-main()
+# SO CORRE QUANDO E CHAMADO PELO NOME. Sem esta guarda, importar o modulo corria o
+# programa todo: o consolidar.py importa o auditar_caras para a guarda das caras e
+# arrancava uma auditoria de 719 fotografias sem ninguem pedir.
+if __name__ == "__main__":
+    main()

@@ -1035,9 +1035,14 @@ function tratamentoLado(v, c, lay){
    prende que os tres batem. O Tiago, 17 de setembro: "aumenta a quantidade das fotos
    possiveis nas diferentes opcoes no tratamento, em especial a colagem e a pilha". O lado a
    lado vai ate 6 pelo 6g; entre 4 e 6 nao ha disposicao para 5, ver layoutsPara(). */
+/* 28 de setembro, decisao 087: colagem ate 20 e pilha ate 40. O Tiago: "para a pilha mete
+   tambem o maximo que der, pois a pilha e um registo interessante". As medidas estao junto do
+   render.LIMITES_MONTE; os avisos do MUITAS ficam onde estavam, porque continuam verdade. */
 var GRUPOS = {lado: {min: 2, max: 6, nome: "lado a lado"},
-              colagem: {min: 2, max: 12, nome: "colagem"},
-              pilha: {min: 2, max: 20, nome: "pilha"}};
+              colagem: {min: 2, max: 20, nome: "colagem"},
+              pilha: {min: 2, max: 40, nome: "pilha"}};
+/* a pilha em leque so ate aqui, o render.PILHA_LEQUE_MAX: com mais o montar pe-la em monte */
+var PILHA_LEQUE_MAX = 24;
 /* Acima disto nao se impede nada, avisa-se: a 15 metros uma colagem de mais de 8 fica com
    fotos pequenas de mais, e numa pilha de mais de 12 as de baixo quase nao se veem.
    O PIOR CASO MEDIDO a 17 de setembro, em 176 disposicoes: numa colagem de 12 a foto mais
@@ -4522,12 +4527,25 @@ function pintaInspetor(){
         }).join("") +'</div>'+
         '<button class="bt pequeno" id="fMais" style="margin-top:7px">+ acontecimento</button>'+
         (function(){
-          /* A montagem procura "Tiago" e "Clara", com maiuscula, nas marcas grandes. */
+          /* A montagem procura "Tiago" e "Clara", com maiuscula, nas marcas grandes, OU a data de
+             cada nascimento: 12/09 e 24/11, decisao 088 (o NASCIMENTO_NA_FITA do montar_da_mesa.py).
+             Ate 28 de setembro so pelo nome, e a Mesa dizia ao Tiago que o marco "*12/09" dele nao
+             disparava foguetes, quando o montar os punha la (revisores, 28 de setembro). */
+          var NASCIMENTO_NA_FITA = {Tiago: [12, 9], Clara: [24, 11]};
+          function nascimentoDe(m){
+            var t = m.t || "";
+            if(t.indexOf("Tiago") >= 0) return "Tiago";
+            if(t.indexOf("Clara") >= 0) return "Clara";
+            for(var q in NASCIMENTO_NA_FITA)
+              if(+m.d === NASCIMENTO_NA_FITA[q][0] && +m.m === NASCIMENTO_NA_FITA[q][1]) return q;
+            return "";
+          }
           var ditos = o.marcas.filter(function(m){ return m.g; }).map(function(m){
-            var quem = (m.t || "").indexOf("Tiago") >= 0 ? "Tiago" : (m.t || "").indexOf("Clara") >= 0 ? "Clara" : "";
+            var quem = nascimentoDe(m);
+            var nome = (m.t || "").trim() || (m.d + "/" + m.m);
             return quem
-              ? '★ ' + esc(m.t) + ': quando acende rebentam os foguetes' + (quem === "Tiago" ? ', e acaba a música da abertura' : ', e a seguir entra a música da Clarinha')
-              : '<span class="somAviso">★ ' + esc(m.t) + ': marca grande sem "Tiago" nem "Clara" no texto, não dispara foguetes</span>';
+              ? '★ ' + esc(nome) + ': quando acende rebentam os foguetes' + (quem === "Tiago" ? ', e acaba a música da abertura' : ', e a seguir entra a música da Clarinha')
+              : '<span class="somAviso">★ ' + esc(nome) + ': marca grande sem "Tiago" nem "Clara" no texto nem a data de um nascimento, não dispara foguetes</span>';
           });
           return ditos.length ? '<div class="somNota" style="margin-top:8px">' + ditos.map(function(d){ return '<div>' + d + '</div>'; }).join("") + '</div>' : '';
         })()+
@@ -4550,7 +4568,9 @@ function pintaInspetor(){
           ? 'As fotos entram uma a uma, com moldura branca e ligeiramente tortas, e ficam. No fim o quadro inteiro respira (decisão 017). De ' + GRUPOS.colagem.min + ' a ' + GRUPOS.colagem.max + ' fotos. ' +
             (estiloDe(c) === "espalhada" ? '<b>Espalhada:</b> a primeira maior e as outras a descer de tamanho, como no ensaio.' : '<b>Em filas:</b> arrumadas em filas, com as fotos maiores.')
           : 'As fotos caem umas sobre as outras, tortas, e nada desaparece (decisão 017). De ' + GRUPOS.pilha.min + ' a ' + GRUPOS.pilha.max + ' fotos. ' +
-            (estiloDe(c) === "leque" ? '<b>Em leque:</b> abrem-se para as de baixo espreitarem sempre.' : '<b>Em monte:</b> como no ensaio, as de baixo ficam quase tapadas.')) +
+            (estiloDe(c) === "leque" ? '<b>Em leque:</b> abrem-se para as de baixo espreitarem sempre.' +
+              ((c.fotos || []).length > PILHA_LEQUE_MAX ? ' <b>Mas só até ' + PILHA_LEQUE_MAX + ' fotos:</b> esta tem ' + (c.fotos || []).length + ', e vai ao filme em monte.' : '')
+              : '<b>Em monte:</b> como no ensaio, as de baixo ficam quase tapadas.')) +
           ' Muda o estilo no Tratamento. Cada foto fica a sua vez e a última fica o dobro: aumentar a duração aumenta o tempo de todas.</div>' +
         (notaMuitas(c.t, (c.fotos || []).length) ? '<div class="focoAjuda" id="notaMuitas">' + esc(notaMuitas(c.t, (c.fotos || []).length)) + '</div>' : '') +
         (function(){

@@ -253,6 +253,29 @@ def teste_musicas_marcadas_encontram_ficheiro():
     verifica("musicas marcadas na Mesa encontram o ficheiro", not faltam,
              ("sem ficheiro: " + "; ".join(faltam)) if faltam else "%d marcas" % total)
 
+    # O FICHEIRO QUE GANHA UM SUFIXO, e o que se recusa a adivinhar. A 23 de setembro dois
+    # mp3 foram renomeados em disco com " - Caes" e " - Exercicio" no fim, os nomes na Mesa
+    # deixaram de bater certo e o filme perdia a mudanca de faixa em dois blocos, com o leito
+    # anterior a continuar por cima. O resolve_musica aceita agora o disco que comece pelo
+    # nome dele mais " - ", mas SO com um candidato: com dois nao ha maneira de saber qual e.
+    casos = {"A - Sufixo.mp3": "x", "B.mp3": "x", "B - Um.mp3": "x", "B - Dois.mp3": "x",
+             "C.mp3": "x"}
+    problemas = []
+    if montar_da_mesa.resolve_musica("A", casos) != "A - Sufixo.mp3":
+        problemas.append("nao achou o unico com sufixo")
+    if montar_da_mesa.resolve_musica("B", casos) != "B.mp3":
+        problemas.append("com o nome exacto em disco escolheu outro")
+    if montar_da_mesa.resolve_musica("C", casos) != "C.mp3":
+        problemas.append("nao achou o nome exacto sem extensao")
+    if montar_da_mesa.resolve_musica("Z", casos) is not None:
+        problemas.append("inventou um ficheiro para um nome que nao existe")
+    ambiguo = {"B - Um.mp3": "x", "B - Dois.mp3": "x"}
+    if montar_da_mesa.resolve_musica("B", ambiguo) is not None:
+        problemas.append("com dois candidatos adivinhou em vez de avisar")
+    verifica("musica renomeada com sufixo, e so quando nao ha duvida", not problemas,
+             "; ".join(problemas) if problemas else
+             "5 casos: sufixo unico, nome exacto ganha, sem extensao, inexistente, ambiguo")
+
 
 def teste_fita_continua_arranca_a_andar():
     """Um clip que continua a fita nao pode comecar parado.
@@ -326,6 +349,116 @@ def teste_regra_de_ampliacao_igual():
              "; ".join(piores) if piores else "10 casos")
 
 
+def teste_guarda_das_caras_recusa_cara_apagada():
+    """A guarda das caras (decisao 086) recusa uma versao com a cara apagada e aceita o original.
+
+    O DEFEITO QUE ISTO GUARDA: nenhum teste chamava a guarda. Com a fidelidade_da_cara() partida a
+    devolver sempre None, o consolidar dizia "nao recusou nenhuma versao", o indice ganhava nove
+    Lanczos a mais, e a suite passava (revisores, 28 de setembro). Aqui mede-se a sério numa foto
+    com quatro caras grandes: o original contra ele proprio da 1,00, e uma copia desfocada sai
+    abaixo do piso. E prende-se que o ciclo do consolidar continua a chama-la e a usar os dois
+    limites.
+    """
+    import tempfile
+    import consolidar
+    if not consolidar._VE_CARAS:
+        salta("guarda das caras recusa cara apagada", "sem opencv neste PC")
+        return
+    from PIL import ImageFilter, ImageOps
+    inv = {r["id"]: r for r in csv.DictReader(open(os.path.join(REPO, "data", "inventario.csv"),
+                                                   encoding="utf-8-sig"))}
+    r = inv.get("f0336")
+    if not r or not os.path.exists(r["caminho"]):
+        salta("guarda das caras recusa cara apagada", "sem a foto f0336")
+        return
+    pasta = tempfile.mkdtemp(prefix="teste_guarda_")
+    mole = os.path.join(pasta, "mole.png")
+    with Image.open(r["caminho"]) as im:
+        ImageOps.exif_transpose(im).convert("RGB").filter(ImageFilter.GaussianBlur(3)).save(mole)
+    igual = consolidar.fidelidade_da_cara(r["caminho"], r["caminho"], {}, "f0336")
+    apagada = consolidar.fidelidade_da_cara(r["caminho"], mole, {}, "f0336")
+    fonte = open(os.path.join(REPO, "scripts", "consolidar.py"), encoding="utf-8").read()
+    chama = re.search(r"fid = fidelidade_da_cara\(", fonte) and         re.search(r"not \(CARA_MINIMA <= fid <= CARA_MAXIMA\)", fonte)
+    certo = (igual is not None and abs(igual - 1.0) < 0.01 and apagada is not None
+             and apagada < consolidar.CARA_MINIMA and bool(chama))
+    verifica("guarda das caras recusa cara apagada", certo,
+             "original %s, desfocada %s, o consolidar %s a chama" % (
+                 "%.2f" % igual if igual is not None else None,
+                 "%.2f" % apagada if apagada is not None else None, "ainda" if chama else "JA NAO"))
+
+
+def teste_leque_grande_fica_em_monte():
+    """Uma pilha em leque com mais de render.PILHA_LEQUE_MAX fotos vai ao filme em monte, com aviso.
+
+    O PORQUE (decisao 087): desenhado a serio, o leque so deixa ver as fotos de baixo (20% de cada
+    uma) ate 24 fotos; a 25 ja ha uma com 17,8%. A pilha em si vai ate 40, em monte. Guarda as
+    duas pontas: 24 em leque fica leque, 25 fica monte e diz-se.
+    """
+    import contextlib
+    import io
+    import json
+    import tempfile
+    import montar_da_mesa
+    import render
+    oito = ["f0331", "f0327", "f0308", "f0334", "f0315", "f0336", "f0316", "f0328"]
+    inv = {r["id"] for r in csv.DictReader(open(os.path.join(REPO, "data", "inventario.csv"),
+                                                encoding="utf-8-sig"))}
+    if not all(i in inv for i in oito):
+        salta("leque grande fica em monte", "fotos do ensaio fora do inventario")
+        return
+    n = render.PILHA_LEQUE_MAX
+    estado = {"versoes": [{"id": "t", "nome": "t", "clips": [
+        {"t": "pilha", "fotos": (oito * 4)[:n], "estilo": "leque", "d": 30, "c": 0.7, "r": "fiel"},
+        {"t": "pilha", "fotos": (oito * 4)[:n + 1], "estilo": "leque", "d": 30, "c": 0.7, "r": "fiel"}]}]}
+    pasta = tempfile.mkdtemp(prefix="teste_leque_")
+    cam = os.path.join(pasta, "estado.json")
+    json.dump(estado, open(cam, "w", encoding="utf-8"), ensure_ascii=False)
+    guardado = (montar_da_mesa.ESTADO, montar_da_mesa.DESTINO, sys.argv)
+    montar_da_mesa.ESTADO, montar_da_mesa.DESTINO = cam, pasta
+    sys.argv = ["montar_da_mesa.py", "t", "--nome", "t"]
+    saida = io.StringIO()
+    try:
+        with contextlib.redirect_stdout(saida):
+            montar_da_mesa.main()
+    finally:
+        montar_da_mesa.ESTADO, montar_da_mesa.DESTINO, sys.argv = guardado
+    linhas = [l for l in csv.DictReader(open(os.path.join(pasta, "t.csv"), encoding="utf-8-sig"))
+              if l["tipo"] == "pilha"]
+    estilos = [l["tratamento"] for l in linhas]
+    certo = (estilos == ["leque", "monte"]
+             and ("pilha em leque com %d fotos" % (n + 1)) in saida.getvalue())
+    verifica("leque grande fica em monte", certo,
+             "estilos %s, aviso %s" % (estilos, "sim" if "pilha em leque com" in saida.getvalue() else "nao"))
+
+
+def teste_nenhuma_foto_vem_da_rede():
+    """Nenhuma fotografia do filme vem da rede neuronal nem da restauracao, decisao 090.
+
+    O DEFEITO QUE ISTO GUARDA: a rede desenhava olhos e bocas nas caras pequenas das fotos de
+    grupo (a 21-45-8, a equipa de andebol do clip 131), e a guarda das caras nao as via porque o
+    detector nao encontra caras abaixo de uns 60 pixeis. O Tiago: "Isso nao pode acontecer". Tres
+    coisas, cada uma apanha um regresso diferente: o consolidar so aceita o lanczos; o indice nao
+    tem nenhuma linha da rede nem da restaurada; e a atualizacao das fotos nao volta a correr o
+    upscale_ia.py, que so gastava horas.
+    """
+    import consolidar
+    problemas = []
+    if tuple(consolidar.VERSOES_PERMITIDAS) != ("lanczos",):
+        problemas.append("o consolidar aceita %s" % (consolidar.VERSOES_PERMITIDAS,))
+    caminho = os.path.join(REPO, "data", "finais.csv")
+    if os.path.exists(caminho):
+        da_rede = [r["ficheiro"] for r in csv.DictReader(open(caminho, encoding="utf-8-sig"))
+                   if r["origem"] not in ("lanczos", "original")]
+        if da_rede:
+            problemas.append("%d fotos do indice nao sao lanczos nem original: %s"
+                             % (len(da_rede), ", ".join(da_rede[:3])))
+    fonte = open(os.path.join(REPO, "scripts", "atualizar_fotos.py"), encoding="utf-8").read()
+    if re.search(r'passo\(\s*\d+\s*,\s*"upscale_ia\.py"', fonte):
+        problemas.append("o atualizar_fotos.py volta a correr o upscale_ia.py")
+    verifica("nenhuma foto vem da rede neuronal", not problemas,
+             "; ".join(problemas) if problemas else "so lanczos e original no indice e no consolidar")
+
+
 def teste_ampliacao_pequena_usa_lanczos(rapido=False):
     """Abaixo de 1,5 vezes a FINAIS usa o lanczos, decisao 052.
 
@@ -341,19 +474,37 @@ def teste_ampliacao_pequena_usa_lanczos(rapido=False):
     if not os.path.isdir(d) or not os.path.exists(caminho):
         return
     tem = {n.split("__")[0] for n in os.listdir(d)}
+    # o ficheiro lanczos de cada id, escolhido como o consolidar o escolhe: so imagens, e o
+    # ultimo que o listdir devolver ganha
+    lanczos = {}
+    for n in os.listdir(d):
+        if n.lower().endswith((".jpg", ".jpeg", ".png")):
+            lanczos[n.split("__")[0]] = os.path.join(d, n)
     indice = {r["id"]: r for r in csv.DictReader(open(caminho, encoding="utf-8-sig"))}
     inv = list(csv.DictReader(open(os.path.join(REPO, "data", "inventario.csv"), encoding="utf-8-sig")))
-    erradas, total = [], 0
+    erradas, total, pela_guarda = [], 0, []
     for r in inv:
         f = consolidar.fator_ampliacao(int(r["largura"]), int(r["altura"]))
         if 1.0 < f < consolidar.LIMITE_LANCZOS and r["id"] in tem:
             total += 1
             origem = indice.get(r["id"], {}).get("origem")
             if origem not in ("lanczos", "restaurada"):
+                # A GUARDA DAS CARAS PODE TER RECUSADO O LANCZOS (decisao 086). Desde 23 de
+                # setembro o consolidar mede a cara em todas as versoes, e o lanczos tambem
+                # alisa: seis fotografias ficaram com o original por isso. Nao se confia num
+                # registo: mede-se aqui outra vez, com a mesma funcao, e so passa se a
+                # recusa se repetir. Sem opencv nao ha guarda, e a regra antiga vale inteira.
+                cam = lanczos.get(r["id"])
+                fid = (consolidar.fidelidade_da_cara(r["caminho"], cam, {}, r["id"])
+                       if cam and consolidar._VE_CARAS else None)
+                if fid is not None and not (consolidar.CARA_MINIMA <= fid <= consolidar.CARA_MAXIMA):
+                    pela_guarda.append(r["ficheiro"])
+                    continue
                 erradas.append("%s (%s)" % (r["ficheiro"], origem))
     verifica("ampliacao abaixo de 1,5 usa lanczos", not erradas,
              ("%d fora da regra: %s" % (len(erradas), ", ".join(erradas[:3]))) if erradas
-             else "%d fotos" % total)
+             else "%d fotos, %d com o lanczos recusado pela guarda das caras"
+             % (total, len(pela_guarda)))
 
 
 def teste_finais_cobre_o_que_precisa(rapido=False):
@@ -564,14 +715,19 @@ def teste_foguetes_antes_das_fotos():
     desvio = float(corpo[0]["inicio_s"])
     fog = sorted([f for f in S if "Candidato" in f["ficheiro"]],
                  key=lambda x: float(x["quando_s"]))
-    for f, prox, quem in zip(fog, ("21-46.jpg", "1 (2).jpg"), ("Tiago", "Clara")):
-        fim = float(f["quando_s"]) + float(f["dura_s"])
-        for r in L:
-            if r["ficheiro"] == prox:
-                folga = (float(r["inicio_s"]) - desvio) - fim
-                verifica("foguetes do %s acabam antes da 1a foto" % quem, folga >= -0.2,
-                         "folga %+.1f s" % folga)
-                break
+    # A PRIMEIRA FOTO DEPOIS DOS FOGUETES, e nao a foto com um nome escrito aqui: se o Tiago
+    # tirasse a "21-46.jpg" ou a "1 (2).jpg" do filme, o teste deixava de verificar sem dizer
+    # nada (revisores, 28 de setembro). Conta tambem um grupo, que e fotos a entrar.
+    for f, quem in zip(fog, ("Tiago", "Clara")):
+        inicio, fim = float(f["quando_s"]), float(f["quando_s"]) + float(f["dura_s"])
+        prox = next((r for r in L if r["tipo"] in ("foto", "lado", "colagem", "pilha")
+                     and float(r["inicio_s"]) - desvio > inicio), None)
+        if prox is None:
+            verifica("foguetes do %s acabam antes da 1a foto" % quem, False, "sem foto depois deles")
+            continue
+        folga = (float(prox["inicio_s"]) - desvio) - fim
+        verifica("foguetes do %s acabam antes da 1a foto" % quem, folga >= -0.2,
+                 "folga %+.1f s, antes da %s" % (folga, (prox["ficheiro"] or prox["tipo"])[:30]))
 
 
 def teste_intro_sem_repetir(rapido=False):
@@ -907,8 +1063,15 @@ def teste_musica_da_abertura_retoma_na_fita_da_clara():
     import tempfile
     import montar_da_mesa
     import render  # antes do redirect: o render mexe no sys.stdout ao ser importado
-    caminho_estado = os.path.join(REPO, "data", "mesa_estado.json")
+    # O ESTADO CONGELADO, e nao o vivo (decisao 086). A 23 de setembro a noite o Tiago tirou
+    # os dois cartoes dos nascimentos e passou o texto para a primeira foto de cada um; o
+    # teste procurava o "nasce uma bebe" no data/mesa_estado.json e rebentava com
+    # StopIteration, parando a suite inteira. Um teste que falha por ele trabalhar nao diz
+    # nada sobre o codigo: e a mesma copia do teste do byte, rev 242, com os dois cartoes.
+    caminho_estado = os.path.join(REPO, "data", "montagens", "referencia", "mesa_estado_v3.json")
     if not os.path.exists(caminho_estado):
+        salta("musica da abertura retoma na fita antes da Clara",
+              "sem a copia congelada data/montagens/referencia/mesa_estado_v3.json")
         return
     est = json.load(open(caminho_estado, encoding="utf-8"))
     v = next((x for x in est.get("versoes", []) if x.get("id") == "demo_v3"), None)
@@ -978,15 +1141,276 @@ def teste_musica_da_abertura_retoma_na_fita_da_clara():
     if e:
         erros.append("abertura marcada: " + e)
     # Uma musica marcada numa foto do Tiago: a retoma e da abertura e acaba nos foguetes da Clara.
+    # A FOTO DO TIAGO E A PRIMEIRA DEPOIS DO CARTAO DO NASCIMENTO DELE, com a regra do
+    # e_nascimento() do montar. Procurava-se a primeira foto depois do primeiro cartao
+    # QUALQUER, que era o "Mas como e que chegamos aqui?". Depois o Tiago pos um cartao vazio
+    # a abrir a demo_v3, a procura parou nele, e a musica "do Tiago" foi parar a foto do
+    # pedido, antes do Lang Lang: o teste falhava sem o filme ter mudado (decisao 086).
     com_tiago = [dict(c) for c in base]
-    k = next(k for k, c in enumerate(com_tiago)
-             if c.get("t") == "foto" and k > next(j for j, x in enumerate(com_tiago) if x.get("t") == "cartao"))
+    nasce = next(j for j, x in enumerate(com_tiago) if x.get("t") == "cartao"
+                 and ("nasce" in (x.get("x") or "").lower() or "nascimento" in (x.get("x") or "").lower()))
+    k = next(k for k, c in enumerate(com_tiago) if c.get("t") == "foto" and k > nasce)
     com_tiago[k]["m"] = {"f": "Tiago Celebration Song (Reggae)", "in": 0}
     e = confere(*monta(com_tiago), esperada="Lang Lang")
     if e:
         erros.append("musica nas fotos do Tiago: " + e)
     verifica("musica da abertura retoma na fita antes da Clara", not erros,
              "; ".join(erros) if erros else "sem marcas, com a abertura marcada e com musica nas fotos do Tiago")
+
+
+def teste_marca_ganha_a_automatica_da_mesma_musica():
+    """Marcar o Rei Leao ou a Ana Faria no bloco onde o montar ja os poe da uma entrada so.
+
+    O DEFEITO (decisao 087): a 23 de setembro o Tiago marcou o Rei Leao na primeira foto do
+    Tiago e a Ana Faria na primeira da Clara. A automatica da mesma musica comecava 0,9 s depois
+    e cortava a marca, e o render cruzava as duas: o Rei Leao recomecava em eco e a Ana Faria
+    saltava 1,3 s. Uma entrada so, nas duas ordens. Com os cartoes, ou sem eles e com a fita
+    parada (decisao 089), a automatica ja toca quando a marca chega e continua. E a marca vem
+    ANTES da automatica quando ele poe um cartao seu, que nao e de nascimento, entre a fita e a
+    primeira foto, e marca a musica nele: ai a automatica sai (tirando o faixas.remove(), o
+    Rei Leao volta a recomecar do zero 0,9 s depois, e este caso apanha-o). E a MUTACAO que o
+    teste tambem guarda: a Ana Faria marcada no bloco do Tiago nao e a automatica dele, e a da
+    Clara tem de ficar. Monta-se do estado congelado, rev 242, que nao muda quando ele trabalha.
+    """
+    import contextlib
+    import io
+    import json
+    import tempfile
+    import montar_da_mesa
+    import render  # noqa: F401  (antes do redirect, como nos outros)
+    caminho = os.path.join(REPO, "data", "montagens", "referencia", "mesa_estado_v3.json")
+    if not os.path.exists(caminho):
+        salta("marca ganha a automatica da mesma musica",
+              "sem a copia congelada data/montagens/referencia/mesa_estado_v3.json")
+        return
+    est = json.load(open(caminho, encoding="utf-8"))
+    base = [dict(c) for c in est["versoes"][0]["clips"]]
+
+    def primeira_foto_depois(chave):
+        k = next(k for k, c in enumerate(base) if c.get("t") == "cartao"
+                 and chave in montar_da_mesa.sem_acentos(c.get("x")))
+        return next(j for j in range(k + 1, len(base)) if base[j].get("t") == "foto")
+
+    k_tiago, k_clara = primeira_foto_depois("segundo filho"), primeira_foto_depois("bebe")
+    cartoes = {k for k, c in enumerate(base) if c.get("t") == "cartao"
+               and ("segundo filho" in montar_da_mesa.sem_acentos(c.get("x"))
+                    or "bebe" in montar_da_mesa.sem_acentos(c.get("x")))}
+    rei, clara = "O Rei Leão (PT-PT) Ciclo Sem Fim", "Ana Faria - Clara"
+
+    def monta(marcas, sem_cartoes=False, cartao_dele=False):
+        clips = [dict(c) for c in base]
+        for k, f in marcas:
+            clips[k]["m"] = {"f": f, "in": 0}
+        if cartao_dele:
+            # um cartao dele, que nao e de nascimento, logo antes da primeira foto do Tiago, com
+            # a mesma musica que a automatica marcada nele
+            clips[k_tiago:k_tiago] = [{"t": "cartao", "x": "O Tiago", "d": 3, "c": 0.7, "r": "fiel",
+                                       "m": {"f": rei, "in": 0}}]
+        if sem_cartoes:
+            clips = [c for j, c in enumerate(clips) if not (c.get("t") == "cartao" and j in cartoes)]
+        pasta = tempfile.mkdtemp(prefix="teste_marca_ganha_")
+        cam = os.path.join(pasta, "estado.json")
+        json.dump(dict(est, versoes=[dict(est["versoes"][0], clips=clips)]),
+                  open(cam, "w", encoding="utf-8"), ensure_ascii=False)
+        guardado = (montar_da_mesa.ESTADO, montar_da_mesa.DESTINO, sys.argv)
+        montar_da_mesa.ESTADO, montar_da_mesa.DESTINO = cam, pasta
+        sys.argv = ["montar_da_mesa.py", "demo_v3", "--nome", "t"]
+        try:
+            with contextlib.redirect_stdout(io.StringIO()):
+                montar_da_mesa.main()
+        finally:
+            montar_da_mesa.ESTADO, montar_da_mesa.DESTINO, sys.argv = guardado
+        return list(csv.DictReader(open(os.path.join(pasta, "t.som.csv"), encoding="utf-8-sig")))
+
+    problemas = []
+    for sem_cartoes, quem_fica in ((True, ""), (False, "")):
+        som = monta([(k_tiago, rei), (k_clara, clara)], sem_cartoes)
+        caso = "sem cartoes" if sem_cartoes else "com cartoes"
+        for nome, prefixo in (("Rei Leao", "O Rei Le"), ("Ana Faria", "Ana Faria - Clara")):
+            entradas = [r for r in som if r["ficheiro"].startswith(prefixo)]
+            if len(entradas) != 1 or not entradas[0]["nota"].startswith(quem_fica):
+                problemas.append("%s, %s: %s" % (nome, caso, [(r["quando_s"], r["in_s"], r["nota"][:24])
+                                                             for r in entradas]))
+    # a marca antes da automatica: o cartao dele com o Rei Leao, sem os cartoes de nascimento
+    som = monta([], sem_cartoes=True, cartao_dele=True)
+    reis = [r for r in som if r["ficheiro"].startswith("O Rei Le")]
+    if len(reis) != 1 or not reis[0]["nota"].startswith("marcada na Mesa"):
+        problemas.append("Rei Leao marcado no cartao dele antes da automatica: %s"
+                         % [(r["quando_s"], r["in_s"], r["nota"][:24]) for r in reis])
+    # a mutacao: a Ana Faria no bloco do Tiago nao tira a automatica da Clara
+    som = monta([(k_tiago, clara)])
+    auto = [r for r in som if r["ficheiro"].startswith("Ana Faria - Clara")
+            and r["nota"].startswith("a musica da Clarinha")]
+    if len(auto) != 1:
+        problemas.append("com a Ana Faria no bloco do Tiago a automatica da Clara saiu")
+    verifica("marca ganha a automatica da mesma musica", not problemas,
+             "; ".join(problemas) if problemas else
+             "uma entrada de cada, com e sem os cartoes e com a marca antes da automatica; "
+             "a da Clara fica com a marca no Tiago")
+
+
+def teste_nascimento_pela_data_na_fita():
+    """Os foguetes caem no nascimento com o marco da fita so com a data, sem o nome.
+
+    O DEFEITO (decisao 088): na rev 800 o Tiago deixou o marco do nascimento como "*12/09",
+    sem texto. O _acende() so reconhecia o nome, e os foguetes do Tiago foram parar ao cartao
+    do primeiro carro, 259 s depois, sem Rei Leao nem retoma. Agora o marco grande na data de
+    nascimento (decisao 030) chega. A MUTACAO: na mesma data da Clara ha "24/11 Salvam-se as
+    gravuras do Coa", sem asterisco, e esse nao pode passar por nascimento: tirando o asterisco
+    ao da Clara, os foguetes dela deixam de cair na fita.
+    """
+    import contextlib
+    import io
+    import json
+    import re as _re
+    import tempfile
+    import montar_da_mesa
+    import render  # noqa: F401
+    caminho = os.path.join(REPO, "data", "montagens", "referencia", "mesa_estado_v3.json")
+    if not os.path.exists(caminho):
+        salta("nascimento pela data na fita",
+              "sem a copia congelada data/montagens/referencia/mesa_estado_v3.json")
+        return
+    est = json.load(open(caminho, encoding="utf-8"))
+
+    def foguetes(troca):
+        clips = [dict(c) for c in est["versoes"][0]["clips"]]
+        for c in clips:
+            if c.get("t") == "marcos":
+                c["x"] = troca(c.get("x") or "")
+        pasta = tempfile.mkdtemp(prefix="teste_data_")
+        cam = os.path.join(pasta, "estado.json")
+        json.dump(dict(est, versoes=[dict(est["versoes"][0], clips=clips)]),
+                  open(cam, "w", encoding="utf-8"), ensure_ascii=False)
+        guardado = (montar_da_mesa.ESTADO, montar_da_mesa.DESTINO, sys.argv)
+        montar_da_mesa.ESTADO, montar_da_mesa.DESTINO = cam, pasta
+        sys.argv = ["montar_da_mesa.py", "demo_v3", "--nome", "t"]
+        try:
+            with contextlib.redirect_stdout(io.StringIO()):
+                montar_da_mesa.main()
+        finally:
+            montar_da_mesa.ESTADO, montar_da_mesa.DESTINO, sys.argv = guardado
+        som = list(csv.DictReader(open(os.path.join(pasta, "t.som.csv"), encoding="utf-8-sig")))
+        return {("Tiago" if "Tiago" in r["nota"] else "Clara"): float(r["quando_s"])
+                for r in som if r["nota"].startswith("foguetes")}
+
+    com_nome = foguetes(lambda x: x)
+    sem_nome = foguetes(lambda x: _re.sub(r"\*(12/09|24/11) Nasce [^;@|]*", r"*\1 ", x))
+    sem_estrela = foguetes(lambda x: _re.sub(r"\*24/11 Nasce a Clara", "24/11 ", x))
+    problemas = []
+    for quem in ("Tiago", "Clara"):
+        if quem not in com_nome:
+            problemas.append("sem os foguetes do %s com o nome no marco" % quem)
+        elif abs(sem_nome.get(quem, -99) - com_nome[quem]) > 0.01:
+            problemas.append("%s: %.2f s com o nome, %s sem" % (quem, com_nome[quem], sem_nome.get(quem)))
+    if "Clara" in com_nome and abs(sem_estrela.get("Clara", -99) - com_nome["Clara"]) <= 0.01:
+        problemas.append("um 24/11 sem asterisco foi tomado pelo nascimento da Clara")
+    verifica("nascimento pela data na fita", not problemas,
+             "; ".join(problemas) if problemas else
+             "os foguetes caem no mesmo instante sem o nome; sem asterisco a data nao chega")
+
+
+def teste_fita_parada_quando_nao_ha_cartao():
+    """Sem o cartao do nascimento, a fita fica parada na data acesa ate os foguetes acabarem.
+
+    O PEDIDO (decisao 089): "os foguetes sao no contador e nao nas fotos". A 23 de setembro o
+    Tiago tirou os cartoes dos nascimentos, e o montar, que so sabia esticar o cartao, deixava
+    os foguetes 1,9 s por cima da foto do Tiago e 5,1 s por cima da da Clara. Guarda tres
+    coisas: (1) sem os cartoes, cada foto do bebe entra depois de os foguetes acabarem; (2) os
+    foguetes caem na parte da fita que ANDA, antes da paragem; (3) no render, a fita fica
+    parada ao byte desde o instante do "@" ate ao fim do clip, E COM A PALAVRA ACESA: o
+    fotograma parado tem de ter pelo menos 95% do brilho do fotograma mais aceso da paragem do
+    nascimento. A primeira versao so comparava bytes, e congelava o ultimo fotograma, onde a
+    palavra ja se tinha apagado: "Nasce a Clara" a 9% durante 5,45 s, e o teste passava
+    (revisores, 28 de setembro). E com os cartoes (o estado congelado tal e qual) nenhuma fita
+    e segurada, que e o que o teste do byte tambem prende.
+    """
+    import contextlib
+    import io
+    import json
+    import tempfile
+    import montar_da_mesa
+    import render
+    caminho = os.path.join(REPO, "data", "montagens", "referencia", "mesa_estado_v3.json")
+    if not os.path.exists(caminho):
+        salta("fita parada quando nao ha cartao",
+              "sem a copia congelada data/montagens/referencia/mesa_estado_v3.json")
+        return
+    est = json.load(open(caminho, encoding="utf-8"))
+    base = est["versoes"][0]["clips"]
+
+    def monta(clips):
+        pasta = tempfile.mkdtemp(prefix="teste_fita_parada_")
+        cam = os.path.join(pasta, "estado.json")
+        json.dump(dict(est, versoes=[dict(est["versoes"][0], clips=clips)]),
+                  open(cam, "w", encoding="utf-8"), ensure_ascii=False)
+        guardado = (montar_da_mesa.ESTADO, montar_da_mesa.DESTINO, sys.argv)
+        montar_da_mesa.ESTADO, montar_da_mesa.DESTINO = cam, pasta
+        sys.argv = ["montar_da_mesa.py", "demo_v3", "--nome", "t"]
+        try:
+            with contextlib.redirect_stdout(io.StringIO()):
+                montar_da_mesa.main()
+        finally:
+            montar_da_mesa.ESTADO, montar_da_mesa.DESTINO, sys.argv = guardado
+        return (list(csv.DictReader(open(os.path.join(pasta, "t.csv"), encoding="utf-8-sig"))),
+                list(csv.DictReader(open(os.path.join(pasta, "t.som.csv"), encoding="utf-8-sig"))))
+
+    problemas = []
+    linhas, _som = monta([dict(c) for c in base])
+    if any(l["tipo"] == "marcos" and linha_tempo.segura_de(l["texto_ecra"]) for l in linhas):
+        problemas.append("com os cartoes, uma fita foi segurada")
+    sem = [dict(c) for c in base if not (c.get("t") == "cartao" and (
+        "segundo filho" in montar_da_mesa.sem_acentos(c.get("x"))
+        or "bebe" in montar_da_mesa.sem_acentos(c.get("x"))))]
+    linhas, som = monta(sem)
+    desvio = next(float(l["inicio_s"]) for l in linhas if l["tipo"] != "video")
+    fog = sorted(float(r["quando_s"]) for r in som if r["nota"].startswith("foguetes"))
+    presas = [l for l in linhas if l["tipo"] == "marcos" and linha_tempo.segura_de(l["texto_ecra"])]
+    if len(fog) != 2 or not presas:
+        problemas.append("%d foguetes e %d fitas seguradas" % (len(fog), len(presas)))
+    for t in fog:
+        prox = next((float(l["inicio_s"]) - desvio for l in linhas
+                     if l["tipo"] in ("foto", "lado", "colagem", "pilha")
+                     and float(l["inicio_s"]) - desvio > t), None)
+        if prox is not None and prox < t + montar_da_mesa.VINHETA_DURA - 0.01:
+            problemas.append("foto aos %.2f s com os foguetes dos %.2f s ainda a tocar" % (prox, t))
+        dona = next((l for l in linhas if l["tipo"] == "marcos"
+                     and float(l["inicio_s"]) - desvio <= t < float(l["fim_s"]) - desvio), None)
+        if dona is not None:
+            para = float(dona["fim_s"]) - desvio - linha_tempo.segura_de(dona["texto_ecra"])
+            if t > para + 0.01:
+                problemas.append("foguetes aos %.2f s, ja na fita parada (desde %.2f s)" % (t, para))
+    def brilho(im):
+        """Pixeis claros (acima de 180): a palavra acesa e o que mais os faz subir."""
+        return sum(im.convert("L").histogram()[181:])
+    for l in presas:
+        pronto = render.preparar(dict(l), {})
+        dur = float(l["duracao_s"])
+        anda = dur - linha_tempo.segura_de(l["texto_ecra"])
+        congela = linha_tempo.congela_de(l["texto_ecra"])
+        if congela is None or not 0 < congela < anda:
+            problemas.append("fita segurada sem o instante de parar (%s)" % congela)
+            continue
+        inicio = float(l["inicio_s"]) - desvio
+        t_fog = next((t - inicio for t in fog if inicio <= t < inicio + anda), None)
+        a = render.desenhar(pronto, congela, dur)
+        b = render.desenhar(pronto, dur - 1.0 / render.FPS, dur)
+        c = render.desenhar(pronto, 0.3 * congela, dur)
+        if a.tobytes() != b.tobytes():
+            problemas.append("a fita mexe-se durante a paragem")
+        if a.tobytes() == c.tobytes():
+            problemas.append("a fita nao anda antes da paragem")
+        if t_fog is not None:
+            # o mais aceso da paragem do nascimento, desenhado SEM a paragem (a fita de sempre)
+            livre = dict(pronto, segura=0.0, congela=None)
+            passos = [t_fog + k * (anda - t_fog) / 30.0 for k in range(30)]
+            maximo = max(brilho(render.desenhar(livre, t, anda)) for t in passos)
+            if brilho(b) < 0.95 * maximo:
+                problemas.append("a fita fica parada com a palavra apagada (%d contra %d)"
+                                 % (brilho(b), maximo))
+    verifica("fita parada quando nao ha cartao", not problemas,
+             "; ".join(problemas) if problemas else
+             "sem cartoes as fotos esperam os foguetes, com a fita parada ao byte; com cartoes nada muda")
 
 
 def teste_cartao_da_bebe_com_acento():
@@ -1945,10 +2369,14 @@ def teste_juncao_com_dois_contadores():
     import json
     import tempfile
     import juntar_mesa
-    caminho_estado = os.path.join(REPO, "data", "mesa_estado.json")
+    # O ESTADO CONGELADO, e nao o vivo (decisao 086): a juncao precisa do cartao "nasce uma
+    # bebe" para saber onde vai a terceira parte da fita, e a 23 de setembro a noite o Tiago
+    # tirou esse cartao da demo_v3. O caso "sem as pecas" passou a parar, que e o que a juncao
+    # deve fazer sem ancora, e o teste falhava por ele trabalhar. E a copia do teste do byte.
+    caminho_estado = os.path.join(REPO, "data", "montagens", "referencia", "mesa_estado_v3.json")
     if not os.path.exists(caminho_estado):
         salta("juncao com dois contadores a recuar",
-              "sem o data/mesa_estado.json neste PC")
+              "sem a copia congelada data/montagens/referencia/mesa_estado_v3.json")
         return
     novos = [{"t": "contador", "i": "", "f": "",
               "x": "04/10/2026>25/12/2025|4 de outubro de 2026;25/12/2025=o pedido",
@@ -2125,7 +2553,7 @@ def teste_vozes_do_pedido_no_som():
         # O LEITO NAO E CORTADO, SO MARCADO. E a retoma da abertura tem de continuar certa.
         leitos = [r for r in som if not (r.get("voz") or "").strip()
                   and r["ficheiro"] not in montar_da_mesa.EFEITOS]
-        abertura = [r for r in leitos if r["nota"].startswith("do pedido")]
+        abertura = [r for r in leitos if r["nota"].startswith(("da abertura", "do pedido"))]
         retoma = [r for r in leitos if r["nota"].startswith("retoma")]
         if not abertura:
             problemas.append("sem a musica da abertura")
@@ -2146,7 +2574,7 @@ def teste_vozes_do_pedido_no_som():
         sem = [dict(c) for c in base]
         sem[1].pop("vz")
         _l2, som2, _s2 = _monta_em_pasta(sem, nome="t2")
-        a2 = [r for r in som2 if r["nota"].startswith("do pedido")]
+        a2 = [r for r in som2 if r["nota"].startswith(("da abertura", "do pedido"))]
         if a2 and abertura and (a2[0]["dura_s"] != abertura[0]["dura_s"]
                                 or a2[0]["in_s"] != abertura[0]["in_s"]):
             problemas.append("as vozes mexeram no leito: %s e %s"
@@ -2158,7 +2586,7 @@ def teste_vozes_do_pedido_no_som():
         parada = [dict(c) for c in base]
         parada[1] = dict(parada[1], vzm="parada")
         _l3, som3, _s3 = _monta_em_pasta(parada, nome="t3")
-        j3 = render.ler_abafar(next(r for r in som3 if r["nota"].startswith("do pedido"))
+        j3 = render.ler_abafar(next(r for r in som3 if r["nota"].startswith(("da abertura", "do pedido")))
                                .get("abafar"))
         if not j3 or j3[0][2] != 0.0:
             problemas.append("com «parada» o leito ficou em %s" % (j3,))
@@ -2396,14 +2824,23 @@ def _monta_v3_de(estado, comparar_com):
     pasta = tempfile.mkdtemp(prefix="teste_v3_byte_")
     copia = os.path.join(pasta, "estado.json")
     json.dump(estado, open(copia, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
-    guardado = (montar_da_mesa.ESTADO, montar_da_mesa.DESTINO, sys.argv)
+    # AS TABELAS DO SOM TAMBEM CONGELAM (decisao 100): o data/fins_de_frase.csv muda cada vez que
+    # a revisao da 096 mede uma troca outra vez, e o teste falhava sem nenhuma linha de codigo
+    # mudada. Com as copias da referencia, monta-se com as tabelas do dia em que ela foi feita.
+    referencia = os.path.join(REPO, "data", "montagens", "referencia")
+    guardado = (montar_da_mesa.ESTADO, montar_da_mesa.DESTINO, montar_da_mesa.FINS_DE_FRASE,
+                montar_da_mesa.ENTRADAS_ATAQUE, sys.argv)
     montar_da_mesa.ESTADO, montar_da_mesa.DESTINO = copia, pasta
+    for atributo, nome in (("FINS_DE_FRASE", "fins_de_frase.csv"), ("ENTRADAS_ATAQUE", "entradas_ataque.csv")):
+        if os.path.exists(os.path.join(referencia, nome)):
+            setattr(montar_da_mesa, atributo, os.path.join(referencia, nome))
     sys.argv = ["montar_da_mesa.py", "demo_v3", "--nome", "v3"]
     try:
         with contextlib.redirect_stdout(io.StringIO()):
             montar_da_mesa.main()
     finally:
-        montar_da_mesa.ESTADO, montar_da_mesa.DESTINO, sys.argv = guardado
+        (montar_da_mesa.ESTADO, montar_da_mesa.DESTINO, montar_da_mesa.FINS_DE_FRASE,
+         montar_da_mesa.ENTRADAS_ATAQUE, sys.argv) = guardado
 
     def md5(p):
         return hashlib.md5(open(p, "rb").read()).hexdigest() if os.path.exists(p) else None
@@ -2501,6 +2938,9 @@ def teste_v3_sem_vozes_igual_ao_byte():
         os.makedirs(referencia, exist_ok=True)
         for de, para in zip(atuais, alvos):
             shutil.copyfile(de, para)
+        for nome in ("fins_de_frase.csv", "entradas_ataque.csv"):
+            if os.path.exists(os.path.join(REPO, "data", nome)):
+                shutil.copyfile(os.path.join(REPO, "data", nome), os.path.join(referencia, nome))
         json.dump(estado_a_congelar, open(congelado, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
         print("  aviso  %-52s %s" % ("v3 sem vozes igual ao byte",
                                      "congelei a referencia de hoje em data/montagens/referencia"))
@@ -2519,12 +2959,18 @@ def teste_v3_sem_vozes_igual_ao_byte():
 # ------------------------------------------------------------ colagem e pilha
 # As oito primeiras sao as de sempre, e as assinaturas dependem delas. As outras doze sao de
 # 17 de setembro, para a colagem de 12 e a pilha de 20: cada foto com uma cor que nenhuma
-# outra, nem a moldura, nem o fundo escuro, tem.
+# outra, nem a moldura, nem o fundo escuro, tem. As ultimas vinte sao de 28 de setembro, para
+# a pilha de 40 (decisao 087); nenhuma repete uma de cima.
 CORES_MONTE = [(210, 40, 40), (40, 170, 60), (40, 70, 210), (220, 180, 30),
                (150, 50, 170), (30, 170, 170), (230, 110, 30), (120, 90, 60),
                (245, 160, 200), (100, 210, 100), (100, 140, 250), (250, 230, 120),
                (200, 120, 240), (120, 230, 230), (250, 190, 140), (180, 150, 110),
-               (60, 120, 60), (170, 40, 100), (40, 120, 140), (140, 140, 40)]
+               (60, 120, 60), (170, 40, 100), (40, 120, 140), (140, 140, 40),
+               (90, 30, 30), (30, 90, 30), (30, 30, 90), (160, 100, 20),
+               (100, 20, 160), (20, 130, 100), (200, 60, 120), (60, 200, 160),
+               (160, 200, 60), (80, 60, 200), (200, 200, 80), (80, 200, 220),
+               (220, 80, 80), (110, 170, 30), (30, 110, 170), (170, 30, 110),
+               (130, 60, 20), (20, 60, 130), (60, 130, 20), (230, 140, 90)]
 
 
 def _monte_de_cores(tipo, aspetos, texto="", focos=None, estilo=None):
@@ -2926,10 +3372,10 @@ def teste_mesa_escreve_colagem_e_pilha():
         {"t": "pilha", "i": "", "f": "", "fotos": oito, "x": "", "d": 9.4, "c": 0.6, "r": "fiel", "orig": []},
         {"t": "colagem", "fotos": ["f0331", "f9999"], "d": 6, "c": 0.7, "r": "fiel"},
         {"t": "pilha", "fotos": ["f0331"], "d": 5, "c": 0.7, "r": "fiel"},
-        {"t": "colagem", "fotos": (oito * 2)[:13], "d": 6, "c": 0.7, "r": "fiel"},
-        {"t": "colagem", "fotos": (oito * 2)[:12], "d": 12, "c": 0.7, "r": "fiel"},
-        {"t": "pilha", "fotos": (oito * 3)[:20], "d": 20, "c": 0.7, "r": "fiel"},
-        {"t": "pilha", "fotos": (oito * 3)[:21], "d": 20, "c": 0.7, "r": "fiel"},
+        {"t": "colagem", "fotos": (oito * 3)[:21], "d": 6, "c": 0.7, "r": "fiel"},
+        {"t": "colagem", "fotos": (oito * 3)[:20], "d": 14, "c": 0.7, "r": "fiel"},
+        {"t": "pilha", "fotos": (oito * 5)[:40], "d": 26, "c": 0.7, "r": "fiel"},
+        {"t": "pilha", "fotos": (oito * 6)[:41], "d": 26, "c": 0.7, "r": "fiel"},
         {"t": "lado", "fotos": oito[:6], "d": 11, "c": 0.7, "r": "fiel"},
         {"t": "lado", "fotos": oito[:5], "d": 9, "c": 0.7, "r": "fiel"},
         {"t": "lado", "fotos": oito[:3], "lay": "2v", "d": 6, "c": 0.7, "r": "fiel"}]}]}
@@ -2958,14 +3404,14 @@ def teste_mesa_escreve_colagem_e_pilha():
     verifica("Mesa escreve colagem e pilha com as fotos por id", certo,
              "%d linhas, %s, %d saltadas" % (len(linhas), [g["tipo"] for g in grupos], saltadas))
     lados = [l for l in linhas if l["tipo"] == "lado"]
-    certo = (len(grupos) == 4 and grupos[2]["tipo"] == "colagem" and len(grupos[2]["id"].split("|")) == 12
-             and grupos[3]["tipo"] == "pilha" and len(grupos[3]["id"].split("|")) == 20
-             and "colagem saltada, pede 2 a 12 fotos e tem 13" in texto
-             and "pilha saltada, pede 2 a 20 fotos e tem 21" in texto
+    certo = (len(grupos) == 4 and grupos[2]["tipo"] == "colagem" and len(grupos[2]["id"].split("|")) == 20
+             and grupos[3]["tipo"] == "pilha" and len(grupos[3]["id"].split("|")) == 40
+             and "colagem saltada, pede 2 a 20 fotos e tem 21" in texto
+             and "pilha saltada, pede 2 a 40 fotos e tem 41" in texto
              and [(l["tratamento"], len(l["id"].split("|"))) for l in lados] == [("6g", 6), ("3v", 3)]
              and "lado a lado saltado, tem 5 fotos" in texto
              and "lado a lado com a disposicao '2v' para 3 fotos, fica 3v" in texto)
-    verifica("Mesa: colagem ate 12, pilha ate 20 e lado a lado de 6, e salta o que passa com aviso", certo,
+    verifica("Mesa: colagem ate 20, pilha ate 40 e lado a lado de 6, e salta o que passa com aviso", certo,
              "grupos %s, lados %s, avisos %s" % ([(g["tipo"], len(g["id"].split("|"))) for g in grupos],
                                                 [(l["tratamento"], len(l["id"].split("|"))) for l in lados],
                                                 [l.strip() for l in texto.splitlines() if "salta" in l or "disposicao" in l]))
@@ -3152,9 +3598,13 @@ def teste_limites_dos_grupos_iguais():
     if m:
         for tipo, minimo, maximo in re.findall(r"(\w+)\s*:\s*\{\s*min\s*:\s*(\d+)\s*,\s*max\s*:\s*(\d+)", m.group(1)):
             grupos[tipo] = (int(minimo), int(maximo))
-    escritos = {"colagem": (2, 12), "pilha": (2, 20)}
+    escritos = {"colagem": (2, 20), "pilha": (2, 40)}
     na_mesa = {t: grupos.get(t) for t in escritos}
-    verifica("colagem ate 12 e pilha ate 20, iguais no render, no montar_da_mesa e na Mesa",
+    # e o leque, que so vai ate 24 (decisao 087), igual na Mesa e no render
+    m_leque = re.search(r"var PILHA_LEQUE_MAX\s*=\s*(\d+)", html)
+    if not m_leque or int(m_leque.group(1)) != render.PILHA_LEQUE_MAX or render.PILHA_LEQUE_MAX != 24:
+        na_mesa["leque"] = m_leque.group(1) if m_leque else None
+    verifica("colagem ate 20 e pilha ate 40, iguais no render, no montar_da_mesa e na Mesa",
              render.LIMITES_MONTE == escritos and montar_da_mesa.LIMITES_MONTE == escritos and na_mesa == escritos,
              "render %s, montar_da_mesa %s, Mesa %s" % (render.LIMITES_MONTE, montar_da_mesa.LIMITES_MONTE, na_mesa))
     lado_n = {}
@@ -3327,7 +3777,9 @@ def teste_colagem_e_pilha_com_muitas_fotos():
                         return "a foto %d entra %.1f px no miolo da %d" % (j + 1, math.hypot(d[0], d[1]) - 1.0, i + 1)
         return None
 
-    for n in range(6, 13):
+    # 16 e 20 desde 28 de setembro, decisao 087: o maximo novo da colagem e um do meio, que a
+    # espalhada de 20 leva seis segundos por disposicao e a suite nao precisa de todos.
+    for n in list(range(6, 13)) + [16, 20]:
         for forma, aspetos, legenda, estilos in [
                 (forma, aspetos, legenda, ("filas", "espalhada") if (legenda is None) == (n % 2 == 1) else ("filas",))
                 for forma, aspetos in (("deitadas", [4 / 3.0] * n), ("misturadas", _formas_monte(n)["misturadas"]))
@@ -3374,7 +3826,8 @@ def teste_colagem_e_pilha_com_muitas_fotos():
                  9: "54 45 333 3222 2322 2232 2223",
                  10: "55 433 343 334 3322 3232 3223 2332 2323 2233",
                  11: "65 56 443 434 344 3332 3323 3233 2333",
-                 12: "66 444 3333"}
+                 12: "66 444 3333",
+                 20: "5555"}
     for n, esperadas in sorted(particoes.items()):
         # a ordem conta: e ela que desempata quando duas particoes dao a mesma area. Uma fila
         # com mais de 9 fotos escreve-se com dois algarismos e nunca bate com nenhuma destas.
@@ -3398,10 +3851,12 @@ def teste_colagem_e_pilha_com_muitas_fotos():
                 if total < chao:
                     problemas.append("colagem em filas de %d %s%s: todas juntas com %.1f%% do ecra, o chao e %d%%"
                                      % (n, forma, " com legenda" if legenda else "", total, chao))
-    for n in range(9, 21):
+    for n in list(range(9, 21)) + [24, 30, 40]:
         for forma, aspetos in (("deitadas", [4 / 3.0] * n), ("misturadas", _formas_monte(n)["misturadas"])):
             legenda = livre if n % 2 == 0 else None
             for estilo in ("monte", "leque"):
+                if estilo == "leque" and n > render.PILHA_LEQUE_MAX:
+                    continue            # o montar poe-no em monte, decisao 087
                 casos += 1
                 nome = "pilha %s de %d %s%s" % (estilo, n, forma, " com legenda" if legenda else "")
                 fotos = (render.pilha_leque if estilo == "leque" else render.pilha_disposicao)(aspetos, legenda)
@@ -3419,13 +3874,18 @@ def teste_colagem_e_pilha_com_muitas_fotos():
 
     # DESENHADAS: o maximo de cada estilo, misturadas, com legenda, pelas cores.
     desenhadas = 0
-    for tipo, estilo, n in (("colagem", "filas", 12), ("colagem", "espalhada", 12), ("pilha", "monte", 20),
-                            ("pilha", "leque", 20)):
+    for tipo, estilo, n in (("colagem", "filas", render.LIMITES_MONTE["colagem"][1]),
+                            ("colagem", "espalhada", render.LIMITES_MONTE["colagem"][1]),
+                            ("pilha", "monte", render.LIMITES_MONTE["pilha"][1]),
+                            ("pilha", "leque", render.PILHA_LEQUE_MAX)):
         desenhadas += 1
         aspetos = _formas_monte(n)["misturadas"]
         pronto = _monte_de_cores(tipo, aspetos, texto_duas, estilo=estilo)
         nome = "%s %s de %d desenhada" % (tipo, estilo, n)
-        dur = 20.0
+        # A DURACAO QUE O RENDER PEDE PARA ESTE NUMERO, e nunca menos de 20 s: com a pilha a 40
+        # (decisao 087) os 20 s de sempre ficavam abaixo do minimo e o teste media uma agenda
+        # apertada que a Mesa nunca propoe.
+        dur = max(20.0, render.duracao_minima_monte(tipo, n) + 2.0)
         limite = pronto["capa"][1].getbbox()[1] - render.MONTE_LEGENDA_FOLGA * A
         fora = None
         for q in range(0, int(round(dur * render.FPS)), 2):
@@ -3654,13 +4114,13 @@ def teste_colagem_e_pilha_pelo_preparar():
         if preparar(clip(tipo, em_falta)) is not None:
             problemas.append("%s com uma foto em falta nao devolve None" % tipo)
         minimo, maximo = render.LIMITES_MONTE[tipo]
-        if preparar(clip(tipo, (ficheiros * 3)[:maximo + 1])) is not None:
+        if preparar(clip(tipo, (ficheiros * 6)[:maximo + 1])) is not None:
             problemas.append("%s com %d fotos nao devolve None" % (tipo, maximo + 1))
         # OS DOIS LIMITES ACEITES CHEGAM AO DESENHO. So se via o maximo mais um recusado: com o
         # `<=` do preparar() trocado por `<`, a colagem de 12 e a pilha de 20 que a Mesa e o
         # montar_da_mesa aceitam saiam do video sem aviso, e a suite inteira passava.
         for conta in (minimo, maximo):
-            aceite = preparar(clip(tipo, (ficheiros * 3)[:conta]))
+            aceite = preparar(clip(tipo, (ficheiros * 6)[:conta]))
             if not aceite or aceite.get("tipo") != tipo or len(aceite.get("fotos", [])) != conta:
                 problemas.append("%s de %d fotos, dentro dos limites, nao chega ao desenho" % (tipo, conta))
         if preparar(clip(tipo, ficheiros[:minimo - 1])) is not None:
@@ -9319,7 +9779,7 @@ def teste_som_do_video_no_meio():
             if render.ler_abafar(s.get("abafar")):
                 problemas.append("o som do video ficou marcado para baixar por baixo dele proprio")
         # 3. O LEITO BAIXA POR BAIXO DELE, e nao e cortado.
-        abertura = [r for r in som if r["nota"].startswith("do pedido")]
+        abertura = [r for r in som if r["nota"].startswith(("da abertura", "do pedido"))]
         if not abertura:
             problemas.append("sem a musica da abertura")
         else:
@@ -9334,7 +9794,7 @@ def teste_som_do_video_no_meio():
         parada[3] = dict(parada[3], vzm="parada")
         _l2, som2, _s2 = _monta_em_pasta(parada, nome="t2")
         j2 = render.ler_abafar(next(r for r in som2
-                                    if r["nota"].startswith("do pedido")).get("abafar"))
+                                    if r["nota"].startswith(("da abertura", "do pedido"))).get("abafar"))
         if not j2 or j2[0][2] != 0.0:
             problemas.append("com «parada» o leito ficou em %s" % (j2,))
         # 4. UMA MUSICA MARCADA NO CLIP SEGUINTE NAO CORTA O SOM DO VIDEO.
@@ -9786,7 +10246,7 @@ def teste_video_mudo_nao_cala_o_filme():
         if abs(float(linhas[3]["duracao_s"]) - 2.0) > 0.06:
             problemas.append("a imagem do video mudo mudou de duracao: %s" % linhas[3]["duracao_s"])
         # E nao fica janela nenhuma a baixar o leito por baixo de um clip que nao faz som.
-        abertura = [r for r in som if r["nota"].startswith("do pedido")]
+        abertura = [r for r in som if r["nota"].startswith(("da abertura", "do pedido"))]
         if abertura and render.ler_abafar(abertura[0].get("abafar")):
             problemas.append("o leito baixou por baixo de um video mudo")
         # 2. O MESMO SITIO COM UM VIDEO QUE TEM SOM leva faixa: o aviso e do ficheiro e nao
@@ -10952,7 +11412,10 @@ def teste_mesa_exporta_os_campos_do_montar():
     problemas = []
     fonte = open(os.path.join(REPO, "scripts", "montar_da_mesa.py"), encoding="utf-8").read()
     html = open(os.path.join(REPO, "scripts", "editor_base.html"), encoding="utf-8").read()
-    lidos = set(re.findall(r'\bc\.get\("([A-Za-z_]+)"', fonte))
+    # OS CAMPOS COM "_" A FRENTE NAO VEM DA MESA: e o proprio montar que os escreve no clip entre
+    # as duas passagens (a fita parada, _segura e _congela, decisao 089), e nunca chegam ao
+    # estado dele. Um campo que venha da Mesa nao comeca por "_", e esses continuam todos aqui.
+    lidos = {x for x in re.findall(r'\bc\.get\("([A-Za-z_]+)"', fonte) if not x.startswith("_")}
     novos = lidos - set(CAMPOS_EXPORTADOS)
     if novos:
         problemas.append("o montar le campos que a tabela nao conhece: %s; poe-os no "
@@ -11422,6 +11885,364 @@ process.stdout.write(JSON.stringify({
              "sai preto com aviso, e a Mesa le o tipo como o Python")
 
 
+# ------------------------------------------------------------------ decisoes 092 a 099 (30 de setembro)
+
+def _montar_referencia(mexe=None, fins=None):
+    """Monta a copia congelada da Mesa (data/montagens/referencia/mesa_estado_v3.json) numa pasta
+    temporaria, com os clips mexidos por `mexe` e, se dado, outro data/fins_de_frase.csv."""
+    import contextlib
+    import io
+    import json
+    import tempfile
+    import montar_da_mesa
+    import render  # noqa: F401  (antes do redirect: ao importar, o render reconfigura o stdout)
+    caminho = os.path.join(REPO, "data", "montagens", "referencia", "mesa_estado_v3.json")
+    if not os.path.exists(caminho):
+        return None
+    est = json.load(open(caminho, encoding="utf-8"))
+    clips = [dict(c) for c in est["versoes"][0]["clips"]]
+    if mexe:
+        clips = mexe(clips)
+    pasta = tempfile.mkdtemp(prefix="teste_construcao_")
+    cam = os.path.join(pasta, "estado.json")
+    json.dump(dict(est, versoes=[dict(est["versoes"][0], clips=clips)]),
+              open(cam, "w", encoding="utf-8"), ensure_ascii=False)
+    guardado = (montar_da_mesa.ESTADO, montar_da_mesa.DESTINO, montar_da_mesa.FINS_DE_FRASE, sys.argv)
+    montar_da_mesa.ESTADO, montar_da_mesa.DESTINO = cam, pasta
+    if fins is not None:
+        cf = os.path.join(pasta, "fins.csv")
+        with open(cf, "w", encoding="utf-8", newline="") as fh:
+            w = csv.DictWriter(fh, fieldnames=["sai", "entra", "no_corte", "entra_in", "sai_s", "cauda",
+                                               "subida_entra", "confianca", "id"])
+            w.writeheader()
+            w.writerows(fins)
+        montar_da_mesa.FINS_DE_FRASE = cf
+    sys.argv = ["montar_da_mesa.py", "demo_v3", "--nome", "t"]
+    saida = io.StringIO()
+    try:
+        with contextlib.redirect_stdout(saida):
+            montar_da_mesa.main()
+    finally:
+        montar_da_mesa.ESTADO, montar_da_mesa.DESTINO, montar_da_mesa.FINS_DE_FRASE, sys.argv = guardado
+    return (list(csv.DictReader(open(os.path.join(pasta, "t.csv"), encoding="utf-8-sig"))),
+            list(csv.DictReader(open(os.path.join(pasta, "t.som.csv"), encoding="utf-8-sig"))),
+            saida.getvalue())
+
+
+
+def teste_nome_composto_como_a_previa():
+    """O nome do bebe fica inteiro por cima da foto a subir, como na previa aprovada (092).
+
+    O DEFEITO (revisores, 30 de setembro): como encadeado normal de dois clips, o nome comecava a
+    apagar-se no primeiro fotograma da foto e ficava inteiro 0,7 s em vez de 1,1 s. Guarda: com a
+    montagem de hoje, o nome tem o mesmo brilho 1,0 s depois de nascer (no preto) e 1,8 s depois
+    (com a foto ja a subir); aos 2,5 s esta quase apagado; e aos 1,8 s ja se ve a foto por baixo."""
+    import render
+    cam = os.path.join(REPO, "data", "montagens", "v3.csv")
+    if not os.path.exists(cam):
+        salta("nome composto como a previa", "sem a montagem v3 neste PC")
+        return
+    est = render.carregar_montagem("v3", None)
+    nomes = [c for c in est["resto"] if c["tipo"] == "nome"]
+    if not nomes:
+        salta("nome composto como a previa", "a montagem de hoje nao tem o nome do bebe")
+        return
+    ini = float(nomes[0]["inicio_s"]) - est["desvio"]
+
+    def quadro(dt):
+        return render.fotograma(int(round((ini + dt) * render.FPS)), est)[0].convert("RGB")
+
+    def letras(im):
+        # a faixa das letras, ao centro: pixeis quase brancos (o letreiro sobe para branco quente)
+        return im.crop((0, 480, render.L, 600)).convert("L").histogram()[235:]
+
+    def fora(im):
+        # longe das letras, o brilho medio: o que la esta e a foto a subir (aos 1,8 s vai a 10%)
+        from PIL import ImageStat
+        return ImageStat.Stat(im.crop((0, 700, render.L, 1080)).convert("L")).mean[0]
+    a, b, c, d = quadro(1.0), quadro(1.8), quadro(2.5), quadro(3.2)
+    la, lb, lc, ld = sum(letras(a)), sum(letras(b)), sum(letras(c)), sum(letras(d))
+    problemas = []
+    if la == 0 or lb < 0.8 * la:
+        problemas.append("o nome ja se apaga com a foto a subir (%d pixeis claros contra %d)" % (lb, la))
+    if lc - ld > 0.5 * la:
+        # aos 3,2 s ja so ha a foto: o que sobra aos 2,5 s acima disso e o nome
+        problemas.append("aos 2,5 s o nome ainda esta quase inteiro (%d a mais do que a foto, contra %d)" % (lc - ld, la))
+    if fora(b) <= fora(a) + 1.0:
+        problemas.append("aos 1,8 s nao se ve a foto por baixo")
+    verifica("nome composto como a previa", not problemas,
+             "; ".join(problemas) if problemas else
+             "inteiro aos 1,0 s (%d) e aos 1,8 s com a foto a subir (%d), quase apagado aos 2,5 s (%d)" % (la, lb, lc))
+
+
+def teste_som_dos_nascimentos_e_da_mesa():
+    """O Rei Leao entra sem rampa, a Ana Faria sobe como sempre (so com a curva nova, 093), os
+    foguetes nao levam curva, a data do nascimento tem 58 px, e a Mesa nao prende nenhuma faixa ao
+    clip do nome, que ela nao tem (revisores, 30 de setembro)."""
+    import render
+    import som_para_mesa
+    cam = os.path.join(REPO, "data", "montagens", "v3.som.csv")
+    if not os.path.exists(cam):
+        salta("som dos nascimentos e da Mesa", "sem a montagem v3 neste PC")
+        return
+    est = render.carregar_montagem("v3", None)
+    ent = render.som_do_ficheiro("v3", est["fim"])
+    rei = [e for e in ent if e["ficheiro"].startswith("O Rei Le")]
+    ana = [e for e in ent if e["ficheiro"].startswith("Ana Faria")]
+    fog = [e for e in ent if e["ficheiro"].startswith("Candidato")]
+    problemas = []
+    if not rei or rei[0].get("subida") != render.SUBIDA_NUM_INICIO or rei[0].get("curva") != "qsin":
+        problemas.append("Rei Leao: %s" % [(e.get("subida"), e.get("curva")) for e in rei])
+    if not ana or ana[0].get("subida") not in (None,) or ana[0].get("curva") != "qsin":
+        problemas.append("Ana Faria: %s" % [(e.get("subida"), e.get("curva")) for e in ana])
+    if any(e.get("curva") for e in fog):
+        problemas.append("os foguetes levam curva")
+    if linha_tempo.NASC_DATA_CORPO < 58:
+        problemas.append("a data do nascimento a %d px" % linha_tempo.NASC_DATA_CORPO)
+    mesa = som_para_mesa.som_para_mesa()
+    presas = [f["f"][:20] for f in (mesa or {}).get("faixas", []) if f["clip"].startswith("nome:")]
+    if presas:
+        problemas.append("faixas presas ao clip do nome na Mesa: %s" % presas)
+    verifica("som dos nascimentos e da Mesa", not problemas,
+             "; ".join(problemas) if problemas else
+             "Rei Leao sem rampa, Ana Faria como sempre com qsin, foguetes sem curva, data a %d px, "
+             "nenhuma faixa no clip do nome" % linha_tempo.NASC_DATA_CORPO)
+
+
+def _sem_cartoes_de_nascimento(clips):
+    import montar_da_mesa
+    return [c for c in clips if not (c.get("t") == "cartao" and (
+        "segundo filho" in montar_da_mesa.sem_acentos(c.get("x"))
+        or "bebe" in montar_da_mesa.sem_acentos(c.get("x"))))]
+
+
+def teste_nome_do_bebe_nasce_no_preto():
+    """O nome do bebe nasce no preto no ultimo segundo dos foguetes, e a foto vem 1,6 s depois.
+
+    O PEDIDO (decisoes 092 e 093): "eu quero dizer na primeira foto que aparece da crianca 'O
+    Tiago'". Guarda: sem cartao de nascimento, ha um clip "nome" ("O TIAGO", "A CLARA") logo a
+    seguir a fita de cada nascimento e logo antes da foto; nasce no ultimo segundo dos foguetes
+    (a 0,05 s); a foto entra NOME_ATE_A_FOTO s depois dele, com os foguetes ja acabados, e sobe
+    em NOME_FOTO_SOBE s. COM o cartao pelo meio (a copia congelada tal e qual) nao ha nome: o
+    cartao continua a ser dele.
+    """
+    import montar_da_mesa as M
+    r = _montar_referencia(_sem_cartoes_de_nascimento)
+    if r is None:
+        salta("nome do bebe nasce no preto", "sem a copia congelada da Mesa")
+        return
+    linhas, som, _txt = r
+    desvio = next(float(l["inicio_s"]) for l in linhas if l["tipo"] != "video")
+    fog = sorted(float(x["quando_s"]) for x in som if x["nota"].startswith("foguetes"))
+    nomes = [(k, l) for k, l in enumerate(linhas) if l["tipo"] == "nome"]
+    problemas = []
+    if [l["texto_ecra"] for _k, l in nomes] != ["O TIAGO", "A CLARA"] or len(fog) != 2:
+        problemas.append("nomes %s, foguetes %s" % ([l["texto_ecra"] for _k, l in nomes], fog))
+    for (k, l), t in zip(nomes, fog):
+        antes, depois = linhas[k - 1], linhas[k + 1]
+        ini = float(l["inicio_s"]) - desvio
+        foto = float(depois["inicio_s"]) - desvio
+        if antes["tipo"] != "marcos" or depois["tipo"] not in ("foto", "lado", "colagem", "pilha"):
+            problemas.append("%s entre %s e %s" % (l["texto_ecra"], antes["tipo"], depois["tipo"]))
+        if abs(ini - (t + M.VINHETA_DURA - M.NOME_ANTES_DO_FIM_DOS_FOGUETES)) > 0.05:
+            problemas.append("%s nasce aos %.2f, os foguetes acabam aos %.2f" % (l["texto_ecra"], ini, t + M.VINHETA_DURA))
+        if abs(foto - ini - M.NOME_ATE_A_FOTO) > 0.05 or foto < t + M.VINHETA_DURA:
+            problemas.append("a foto depois de %s entra aos %.2f (nome aos %.2f)" % (l["texto_ecra"], foto, ini))
+        if abs(float(depois["transicao_s"]) - M.NOME_FOTO_SOBE) > 0.01:
+            problemas.append("a foto sobe em %s s" % depois["transicao_s"])
+    com = _montar_referencia()
+    if com is not None and any(l["tipo"] == "nome" for l in com[0]):
+        problemas.append("com o cartao do nascimento pelo meio apareceu o nome")
+    verifica("nome do bebe nasce no preto", not problemas,
+             "; ".join(problemas) if problemas else
+             "O TIAGO e A CLARA no ultimo segundo dos foguetes, a foto 1,6 s depois; com o cartao dele, nao")
+
+
+def teste_marcos_dos_nascimentos_quentes():
+    """Na fita, so o marco grande do nascimento muda: a cor quente (092, 093). A MUTACAO: um marco
+    pequeno aceso tem de continuar rosa, e o texto do grande quente."""
+    import render
+
+    from PIL import ImageStat
+
+    def cor_acesa(texto):
+        """A cor media dos pixeis claros no fotograma em que ha mais deles (a palavra acesa)."""
+        pronto = render.preparar({"tipo": "marcos", "texto_ecra": texto, "ficheiro": "", "id": "",
+                                  "duracao_s": "8", "transicao_s": "0", "tratamento": "fiel",
+                                  "movimento": "Nenhum", "fonte_imagem": ""}, {})
+        dur = 8.0
+        melhor = (0, None)
+        for k in range(1, 40):
+            # so os pixeis claros COM COR: o ano (que no inicio esta grande ao centro) e branco
+            # neutro, e a frase do marco e rosa ou quente
+            im = render.desenhar(pronto, dur * k / 40.0, dur).convert("RGB")
+            claro = im.convert("L").point(lambda v: 255 if v > 150 else 0)
+            com_cor = im.convert("HSV").split()[1].point(lambda v: 255 if v > 20 else 0)
+            from PIL import ImageChops
+            mascara = ImageChops.multiply(claro, com_cor)
+            n = mascara.histogram()[255]
+            if n > melhor[0]:
+                melhor = (n, tuple(ImageStat.Stat(im, mascara).mean))
+        return melhor[1]
+    grande = cor_acesa("1995@0-1|*12/09 Nasce o segundo")
+    pequeno = cor_acesa("1995@0-1|17/01 Terramoto em Kobe")
+    ok = (grande is not None and pequeno is not None
+          and grande[2] < 0.85 * grande[0] and pequeno[2] >= 0.85 * pequeno[0])
+    verifica("marco do nascimento na cor quente, os outros como antes", ok,
+             "nascimento %s, pequeno %s" % (tuple(round(v) for v in grande) if grande else None,
+                                            tuple(round(v) for v in pequeno) if pequeno else None))
+
+
+def teste_cartao_com_o_letreiro():
+    """Os cartoes com texto levam o letreiro (098): acendem a partir do preto, aproximam-se, e uma
+    frase parte-se nas mesmas linhas do cartao de sempre. O vazio continua preto."""
+    import render
+    from PIL import ImageDraw, ImageFont
+    base = {"ficheiro": "", "id": "", "duracao_s": "3.6", "transicao_s": "0.7", "tratamento": "fiel",
+            "movimento": "Nenhum", "fonte_imagem": ""}
+    curto = render.preparar(dict(base, tipo="cartao", texto_ecra="O trabalho"), {})
+    frase_txt = "Um deles sofre de uma patologia grave por animais. Advinham quem?"
+    frase = render.preparar(dict(base, tipo="cartao", texto_ecra=frase_txt), {})
+    vazio = render.preparar(dict(base, tipo="cartao", texto_ecra=""), {})
+
+    def claros(im):
+        return sum(im.convert("L").histogram()[120:])
+    a0 = claros(render.desenhar(curto, 0.0, 3.6))
+    a1, a2 = render.desenhar(curto, 1.0, 3.6), render.desenhar(curto, 2.0, 3.6)
+    d = ImageDraw.Draw(Image.new("RGB", (8, 8)))
+    linhas_render = render.quebrar_paragrafos(frase_txt, ImageFont.truetype(render.FONTE_TEXTO, 78), render.L - 360, d)
+    # a frase tem tantas faixas de texto quantas linhas do cartao de sempre
+    im = render.desenhar(frase, 2.0, 3.6).convert("L")
+    filas = [sum(1 for x in range(0, render.L, 8) if im.getpixel((x, y)) > 170) for y in range(render.A)]
+    faixas, dentro = 0, False
+    for n in filas:
+        if n > 0 and not dentro:
+            faixas += 1
+        dentro = n > 0
+    problemas = []
+    if a0 > 0:
+        problemas.append("o cartao nao comeca preto (%d pixeis claros)" % a0)
+    if claros(a1) == 0 or a1.tobytes() == a2.tobytes():
+        problemas.append("as letras nao aparecem ou nao se aproximam")
+    if "let" not in curto or "let" not in frase or vazio.get("let") is not None:
+        problemas.append("letreiro onde nao devia, ou em falta")
+    if faixas != len(linhas_render):
+        problemas.append("a frase tem %d faixas de texto, o cartao de sempre %d linhas" % (faixas, len(linhas_render)))
+    if claros(render.desenhar(vazio, 1.0, 3.6)) > 0:
+        problemas.append("o cartao vazio deixou de ser preto")
+    verifica("cartao com o letreiro, a acender do preto", not problemas,
+             "; ".join(problemas) if problemas else
+             "preto no inicio, letras a aproximar-se, %d linhas como o de sempre, vazio preto" % faixas)
+
+
+def teste_som_subidas_descidas_e_fins_de_frase():
+    """O render le a subida, o fim de frase e a cauda do som.csv e poe as curvas (094, 096).
+
+    Guarda: a musica com sai_s acaba em sai_s - in + cauda, desce na cauda e nao cruza; a que
+    entra leva a subida escrita; os leitos levam curve=qsin no comando do ffmpeg e os efeitos nao
+    (ficam com a omissao, tri); e sem colunas nenhuma, a musica que entra a meio e cruza sobe no
+    tempo em que a outra desce."""
+    import render
+    import tempfile
+    som_real = list(csv.DictReader(open(os.path.join(REPO, "data", "montagens", "v3.som.csv"), encoding="utf-8-sig")))
+    musica = next((r for r in som_real if r["ficheiro"].startswith("Queen")), None)
+    outra = next((r for r in som_real if r["ficheiro"].startswith("Bachman")), None)
+    fog = next((r for r in som_real if r["ficheiro"].startswith("Candidato")), None)
+    if not (musica and outra and fog) or not os.path.exists(musica["caminho"]):
+        salta("som: subidas, descidas e fins de frase", "sem as musicas em disco")
+        return
+    pasta = tempfile.mkdtemp(prefix="teste_som_096_")
+
+    def escreve(extra_a, extra_b):
+        cols = ["ficheiro", "caminho", "quando_s", "in_s", "dura_s", "ganho", "nota", "subida", "sai_s", "cauda"]
+        with open(os.path.join(pasta, "t.som.csv"), "w", encoding="utf-8-sig", newline="") as fh:
+            w = csv.DictWriter(fh, fieldnames=cols)
+            w.writeheader()
+            w.writerow(dict({"ficheiro": musica["ficheiro"], "caminho": musica["caminho"], "quando_s": "0",
+                             "in_s": "28.0", "dura_s": "20", "ganho": "1", "nota": "a"}, **extra_a))
+            w.writerow(dict({"ficheiro": outra["ficheiro"], "caminho": outra["caminho"], "quando_s": "20",
+                             "in_s": "60.8", "dura_s": "10", "ganho": "1", "nota": "b"}, **extra_b))
+            w.writerow({"ficheiro": fog["ficheiro"], "caminho": fog["caminho"], "quando_s": "25",
+                        "in_s": "173.7", "dura_s": "3", "ganho": "2", "nota": "foguetes"})
+    guardado = render.MONTAGENS
+    render.MONTAGENS = pasta
+    try:
+        escreve({"sai_s": "47.5", "cauda": "0.5"}, {"subida": "0.5"})
+        com = render.som_do_ficheiro("t", 30.0)
+        escreve({}, {})
+        sem = render.som_do_ficheiro("t", 30.0)
+    finally:
+        render.MONTAGENS = guardado
+    a, b, f = com[0], com[1], com[2]
+    problemas = []
+    if abs(a["dura"] - (47.5 - 28.0 + 0.5)) > 0.01 or a.get("descida") != 0.5 or a["cruza"] != 0.0:
+        problemas.append("a que sai: dura %.2f, descida %s, cruza %s" % (a["dura"], a.get("descida"), a["cruza"]))
+    if b.get("subida") != 0.5:
+        problemas.append("a que entra sobe em %s" % b.get("subida"))
+    if a.get("curva") != "qsin" or b.get("curva") != "qsin" or f.get("curva"):
+        problemas.append("curvas %s %s %s" % (a.get("curva"), b.get("curva"), f.get("curva")))
+    if sem[0]["cruza"] != render.CRUZAMENTO or sem[1].get("subida") != render.CRUZAMENTO:
+        problemas.append("sem colunas: cruza %s, sobe em %s" % (sem[0]["cruza"], sem[1].get("subida")))
+    # o comando do ffmpeg
+    comandos = []
+    guardado_run = render.subprocess.run
+
+    class _R:
+        returncode, stderr, stdout = 0, "", b""
+
+    def falso(cmd, *a_, **k_):
+        if "-filter_complex" in cmd:          # so o comando final; as medidas correm a serio
+            comandos.append(cmd)
+            return _R()
+        return guardado_run(cmd, *a_, **k_)
+    render.subprocess.run = falso
+    try:
+        render.construir_som(render.ffmpeg(), [dict(e, encontrado="Sim") for e in com], 30.0,
+                             os.path.join(pasta, "x.m4a"), 0.0)
+    finally:
+        render.subprocess.run = guardado_run
+    filtro = next((c[c.index("-filter_complex") + 1] for c in comandos if "-filter_complex" in c), "")
+    if filtro.count("curve=qsin") != 4 or "curve=tri" not in filtro:
+        problemas.append("no comando: %d qsin e %s tri" % (filtro.count("curve=qsin"), filtro.count("curve=tri")))
+    verifica("som: subidas, descidas e fins de frase", not problemas,
+             "; ".join(problemas) if problemas else
+             "fim de frase na que sai, subida escrita na que entra, qsin nos leitos, efeitos como antes")
+
+
+def teste_fins_de_frase_avisam_quando_a_musica_muda_de_sitio():
+    """O montar poe o fim de frase so quando a musica chega ao corte no sitio em que foi medida, e
+    avisa quando nao (096: "este fluxo tera de ser revisto antes de fazer o render final ou com
+    novas fotos"). E as entradas num ataque (095, 097) levam a subida curta."""
+    r = _montar_referencia()
+    if r is None:
+        salta("fins de frase avisam quando a musica muda de sitio", "sem a copia congelada da Mesa")
+        return
+    _l, som, _t = r
+    leitos = [x for x in som if not x["ficheiro"].startswith(("Candidato", "rebobinar"))
+              and not (x.get("voz") or x.get("video"))]
+    leitos.sort(key=lambda x: float(x["quando_s"]))
+    a, b = next((p, q) for p, q in zip(leitos, leitos[1:]) if p["ficheiro"] != q["ficheiro"])
+    no_corte = float(a["in_s"]) + float(b["quando_s"]) - float(a["quando_s"])
+    linha = {"sai": a["ficheiro"], "entra": b["ficheiro"], "no_corte": "%.2f" % no_corte,
+             "entra_in": "%.2f" % float(b["in_s"]), "sai_s": "%.2f" % (no_corte - 0.5), "cauda": "0.30",
+             "subida_entra": "0.40", "confianca": "alta", "id": "teste"}
+    certo = _montar_referencia(fins=[linha])
+    mudou = _montar_referencia(fins=[dict(linha, no_corte="%.2f" % (no_corte + 0.3))])
+    problemas = []
+    ca = next(x for x in certo[1] if x["ficheiro"] == a["ficheiro"] and x["quando_s"] == a["quando_s"])
+    cb = next(x for x in certo[1] if x["ficheiro"] == b["ficheiro"] and x["quando_s"] == b["quando_s"])
+    if ca.get("sai_s") != linha["sai_s"] or cb.get("subida") != "0.40":
+        problemas.append("no sitio certo: sai_s %s, subida %s" % (ca.get("sai_s"), cb.get("subida")))
+    if "fim de frase por medir outra vez" not in mudou[2] or any(x.get("sai_s") for x in mudou[1]):
+        problemas.append("noutro sitio nao avisou, ou pos o fim de frase na mesma")
+    lang = [x for x in som if x["ficheiro"].startswith("Lang Lang") and abs(float(x["quando_s"])) < 0.05]
+    if not lang or abs(float(lang[0]["in_s"]) - 5.45) > 0.01 or lang[0].get("subida") != "0.03":
+        problemas.append("o Lang Lang da abertura: %s" % [(x["in_s"], x.get("subida")) for x in lang])
+    verifica("fins de frase avisam quando a musica muda de sitio", not problemas,
+             "; ".join(problemas) if problemas else
+             "no sitio medido entra, a 0,3 s dali avisa; o piano da abertura no acorde, sem rampa")
+
+
 def main():
     rapido = "--rapido" in sys.argv
     print("TESTES DE REGRESSAO")
@@ -11456,6 +12277,9 @@ def main():
     teste_v3_sem_vozes_igual_ao_byte()
     teste_musica_marcada_sem_silencio_a_abrir()
     teste_musica_da_abertura_retoma_na_fita_da_clara()
+    teste_marca_ganha_a_automatica_da_mesma_musica()
+    teste_nascimento_pela_data_na_fita()
+    teste_fita_parada_quando_nao_ha_cartao()
     teste_cartao_da_bebe_com_acento()
     teste_legenda_guarda_as_falas()
     teste_fim_em_fade_a_preto()
@@ -11472,6 +12296,9 @@ def main():
     print("imagens")
     teste_regra_de_ampliacao_igual()
     teste_finais_cobre_o_que_precisa(rapido)
+    teste_nenhuma_foto_vem_da_rede()
+    teste_leque_grande_fica_em_monte()
+    teste_guarda_das_caras_recusa_cara_apagada()
     teste_ampliacao_pequena_usa_lanczos(rapido)
     print("montagens")
     teste_render_usa_o_indice(rapido)
@@ -11551,6 +12378,14 @@ def main():
     teste_fatia_fala_so_pelo_stderr()
     teste_fatias_pelo_main_dao_o_mesmo_ficheiro()
     teste_fatia_que_morre_nao_deixa_ficheiro()
+    print("decisoes 092 a 099")
+    teste_nome_do_bebe_nasce_no_preto()
+    teste_marcos_dos_nascimentos_quentes()
+    teste_cartao_com_o_letreiro()
+    teste_som_subidas_descidas_e_fins_de_frase()
+    teste_fins_de_frase_avisam_quando_a_musica_muda_de_sitio()
+    teste_nome_composto_como_a_previa()
+    teste_som_dos_nascimentos_e_da_mesa()
     print()
     print("%d passaram, %d falharam%s"
           % (len(PASSOU), len(FALHAS),

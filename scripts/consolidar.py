@@ -44,6 +44,17 @@ from PIL import Image, ImageChops, ImageOps, ImageStat
 
 sys.stdout.reconfigure(encoding="utf-8")
 
+# A GUARDA DAS CARAS PRECISA DO OPENCV, e se ele nao estiver este script continua a fazer o
+# resto: uma consolidacao sem a guarda e pior do que com ela, mas e muito melhor do que uma
+# consolidacao que nao corre. Quem for instalar: py -3.11 -m pip install "opencv-python==4.10.0.84"
+_VE_CARAS = True
+try:
+    import cv2
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import auditar_caras
+except Exception:
+    _VE_CARAS = False
+
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 INVENTARIO = os.path.join(REPO, "data", "inventario.csv")
 TRABALHO = os.path.normcase(os.path.abspath(r"C:\casamento-video-media\trabalho"))
@@ -57,6 +68,26 @@ FONTES = [(r"C:\casamento-video-media\restauradas", "restaurada"),
 # demasiado alterada para entrar sem ser vista. 8 por cento e generoso para
 # uma ampliacao e apertado para uma invencao.
 LIMITE_ALTERACAO = 8.0
+
+# E A GUARDA DAS CARAS, decisao 086, que e a que faltava.
+#
+# O Tiago, 23 de setembro: "algumas imagens que estao incluidas na minha mesa parece que
+# perderam qualidade. Houve ate pelo menos uma que acho que os modelos foram para la editar
+# os olhos e ficou estranho". Tinha razao, e a medicao de cima nao dava por nada: ela compara
+# a fotografia INTEIRA, e uma cara e uma fraccao pequena do quadro. A foto onde a rede
+# desenhou olhos abertos por cima de duas manchas moles mudou 1,64 por cento no total, muito
+# abaixo dos 8 do limite.
+#
+# Medido no acervo, cara a cara, com o detector a dizer onde elas estao: o caminho lanczos
+# devolve 90 por cento da textura do original na mediana e 77 no pior caso; a rede devolve 73
+# na mediana e 17 no pior. Por isso o piso fica em 0,80: deixa passar o lanczos inteiro e
+# trava a rede onde ela alisa a serio.
+#
+# E HA UM TECTO, que e a parte contra-intuitiva. Uma cara com MAIS detalhe do que o original
+# tem nao esta melhor: tem detalhe que ninguem fotografou. E assim que uma mancha mole vira um
+# olho aberto. Acima de 1,25 a versao e recusada, venha de onde vier.
+CARA_MINIMA = 0.80
+CARA_MAXIMA = 1.25
 
 
 LIMITE_FUNDO_DESFOCADO = 1.55
@@ -72,6 +103,24 @@ LARGURA_ALVO, ALTURA_ALVO, FOLGA = 1920, 1080, 1.15
 # chega a desenhar contornos escuros que nao existem. A partir de 1,5 vezes o
 # lanczos fica mole de mais, e ai continua a rede neuronal.
 LIMITE_LANCZOS = 1.5
+
+# A REDE NEURONAL SAIU DO FILME, decisao 090. So o lanczos pode entrar, e o original.
+#
+# O Tiago, 28 de setembro, com a 21-45-8 no ecra: "Precisamos tambem de assegurar que nao
+# invencoes. [...] Ha muito olhos que ficaram todos defeituosos. Isso nao pode acontecer." A
+# guarda das caras (decisao 086) so mede as caras que o detector encontra, e o detector nao
+# encontra caras abaixo de uns 60 pixeis: nas fotos de grupo elas tem 25 a 45 no original, e
+# e precisamente ai que a rede, sem informacao, desenha olhos e bocas plausiveis. Na 21-45-8
+# as doze caras passaram sem ser medidas, com olhos fechados, desalinhados e desfeitos; no
+# clip 131, a equipa de andebol, dezasseis. Nenhuma guarda que dependa de encontrar as caras
+# garante zero invencoes, e zero e o que ele pediu. O lanczos so interpola pixeis e nao
+# consegue desenhar um olho; tem o mesmo tamanho que a versao da rede, portanto nada estica
+# mais, so fica mais macio. A restaurada sai pela mesma razao: redesenha.
+#
+# A LIMITE_LANCZOS fica, porque o estado_fotos e os testes ainda a leem para saber quanto
+# cada foto cresce; ja nao escolhe entre duas versoes. As pastas upscaled-ia e restauradas
+# continuam em disco e no FONTES, so para o indice e as auditorias dizerem o que existe.
+VERSOES_PERMITIDAS = ("lanczos",)
 
 
 def fator_ampliacao(larg, alt):
@@ -144,9 +193,62 @@ def alteracao(original, tratado, lado=700):
     return 100.0 * media / 255.0
 
 
+def caras_do_original(caminho, cache, ident):
+    """Onde estao as caras no ORIGINAL, uma vez por fotografia. [] quando nao ha detector."""
+    if ident in cache:
+        return cache[ident]
+    cache[ident] = []
+    if not _VE_CARAS:
+        return cache[ident]
+    try:
+        img = auditar_caras.ler(caminho)
+        if img is not None:
+            cinza = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            cache[ident] = auditar_caras.caras_de(cinza)
+    except Exception:
+        pass
+    return cache[ident]
+
+
+def fidelidade_da_cara(caminho_original, caminho_versao, cache, ident):
+    """Quanta textura da cara sobra nesta versao, face ao original. None quando nao se mede.
+
+    Devolve o PIOR valor de todas as caras: numa fotografia de grupo basta uma cara
+    destruida para a versao nao servir.
+    """
+    if not _VE_CARAS:
+        return None
+    caixas = caras_do_original(caminho_original, cache, ident)
+    if not caixas:
+        return None
+    try:
+        o = auditar_caras.ler(caminho_original)
+        v = auditar_caras.ler(caminho_versao)
+        if o is None or v is None:
+            return None
+        if (v.shape[1], v.shape[0]) != (o.shape[1], o.shape[0]):
+            v = cv2.resize(v, (o.shape[1], o.shape[0]), interpolation=cv2.INTER_AREA)
+        go = cv2.cvtColor(o, cv2.COLOR_BGR2GRAY)
+        gv = cv2.cvtColor(v, cv2.COLOR_BGR2GRAY)
+        piores = []
+        for (x, y, w, h) in caixas:
+            a, b = go[y:y + h, x:x + w], gv[y:y + h, x:x + w]
+            if min(a.shape) < 32:
+                continue
+            da = auditar_caras.detalhe(a)
+            piores.append(auditar_caras.detalhe(b) / max(0.01, da))
+        if not piores:
+            return None
+        # o mais longe de 1,00 para qualquer dos lados: apagar e inventar sao os dois maus
+        return min(piores, key=lambda f: -abs(f - 1.0))
+    except Exception:
+        return None
+
+
 def main():
     proteger()
     listar = "--listar" in sys.argv
+    caras_por_id, caras_recusadas = {}, []
     limite = LIMITE_ALTERACAO
     if "--limite" in sys.argv:
         limite = float(sys.argv[sys.argv.index("--limite") + 1])
@@ -205,13 +307,12 @@ def main():
         except Exception:
             pass
 
-        preferencia = ("restaurada", "IA", "lanczos")
-        try:
-            if fator_ampliacao(int(r["largura"]), int(r["altura"])) < LIMITE_LANCZOS:
-                preferencia = ("restaurada", "lanczos", "IA")
-        except Exception:
-            pass
-        for etiqueta in preferencia:
+        # AS VERSOES RECUSADAS, E PORQUE, vao para o indice (coluna recusadas). Sem isto quem
+        # le o indice so via "ficou o original" e concluia que faltava escolher a versao: a 27
+        # de setembro o estado_fotos.py pos 48 fotos "a espera" na Mesa, todas elas com a versao
+        # da regra recusada de proposito pela guarda das caras (decisao 086).
+        recusas = []
+        for etiqueta in VERSOES_PERMITIDAS:
             caminho = disponiveis.get(etiqueta)
             if not caminho:
                 continue
@@ -224,6 +325,15 @@ def main():
                 continue
             if etiqueta == "IA" and mudou > limite:
                 demasiado.append((r["id"], r["ficheiro"], mudou))
+                recusas.append("%s:alteracao %.1f" % (etiqueta, mudou))
+                continue
+            # A GUARDA DAS CARAS, e vale para TODAS as fontes e nao so para a rede: a unica
+            # restaurada do acervo deixava a cara com 62 por cento da textura e tambem nao
+            # passa. So o original esta sempre isento, porque e ele a referencia.
+            fid = fidelidade_da_cara(r["caminho"], caminho, caras_por_id, ident)
+            if fid is not None and not (CARA_MINIMA <= fid <= CARA_MAXIMA):
+                caras_recusadas.append((ident, r["ficheiro"], etiqueta, fid))
+                recusas.append("%s:cara %.2f" % (etiqueta, fid))
                 continue
             escolha, origem = caminho, etiqueta
             break
@@ -239,7 +349,7 @@ def main():
         resumo[origem] = resumo.get(origem, 0) + 1
         indice.append({"id": ident, "ficheiro": r["ficheiro"],
                        "final": nome_final, "origem": origem,
-                       "mudou_pct": "%.2f" % mudou})
+                       "mudou_pct": "%.2f" % mudou, "recusadas": ";".join(recusas)})
         if listar:
             continue
         destino = os.path.join(FINAIS, nome_final)
@@ -266,7 +376,7 @@ def main():
         caminho_indice = os.path.join(REPO, "data", "finais.csv")
         with open(caminho_indice, "w", encoding="utf-8", newline="") as fh:
             w = csv.DictWriter(fh, fieldnames=["id", "ficheiro", "final",
-                                               "origem", "mudou_pct"])
+                                               "origem", "mudou_pct", "recusadas"])
             w.writeheader()
             for linha in indice:
                 w.writerow(linha)
@@ -309,8 +419,33 @@ def main():
             print("  %-7s %-42s alterou %.1f%%" % (ident, ficheiro[:42], m))
         print()
     else:
-        print("Nenhuma foto passou o limite de alteracao. Nenhuma feicao foi")
-        print("refeita: o modelo usado amplia, nao redesenha rostos.")
+        print("Nenhuma foto passou o limite de alteracao da imagem inteira.")
+        print()
+
+    # O QUE A GUARDA DAS CARAS FEZ, E PORQUE E QUE ISTO SE DIZ SEMPRE.
+    #
+    # Ate 23 de setembro este sitio dizia "Nenhuma feicao foi refeita: o modelo usado amplia,
+    # nao redesenha rostos". Era uma promessa que a medicao nao sustentava: media a imagem
+    # inteira, e a foto onde a rede desenhou olhos abertos por cima de duas manchas moles
+    # passou com 1,64 por cento. A frase foi-se abaixo no dia em que o Tiago olhou para o
+    # ecra. Agora nao se promete nada: diz-se o que foi medido e o que foi recusado.
+    if not _VE_CARAS:
+        print("SEM A GUARDA DAS CARAS: o opencv nao esta instalado neste PC, e por isso")
+        print("ninguem verificou o que os modelos fizeram aos rostos. Instala com")
+        print('  py -3.11 -m pip install "opencv-python==4.10.0.84" scikit-image')
+        print()
+    elif caras_recusadas:
+        print("RECUSADAS PELA GUARDA DAS CARAS: %d versoes" % len(caras_recusadas))
+        print("A cara tem de ficar entre %.0f%% e %.0f%% da textura do original. Abaixo, o"
+              % (CARA_MINIMA * 100, CARA_MAXIMA * 100))
+        print("modelo apagou a cara; acima, desenhou detalhe que ninguem fotografou.")
+        for ident, ficheiro, etiqueta, fid in sorted(caras_recusadas, key=lambda x: x[3])[:15]:
+            print("  %-7s %-38s %-11s cara a %.0f%%" % (ident, ficheiro[:38], etiqueta, fid * 100))
+        if len(caras_recusadas) > 15:
+            print("  e mais %d" % (len(caras_recusadas) - 15))
+        print()
+    else:
+        print("A guarda das caras nao recusou nenhuma versao.")
         print()
     if erros:
         print("ERROS: %d" % len(erros))

@@ -2704,11 +2704,835 @@ do ficheiro**, nunca à posição (`refs_fixas.py`, com a ordem original das 15)
 fotos verdadeiras dele medem 0,87 entre si e as dela 0,78, portanto 0,94 é bom e 0,91 é perda real.
 O `v33` fica no disco, mas está ultrapassado pelo `v34`.
 
-**Por decidir:** qual fica, o `v34 esboco mais` ou o `v35 sorriso dele`. E continuam em aberto os
-ajustes antigos: grão e nitidez da zona nova iguais ao resto da foto, e o nariz dele com mais volume.
+**Ficou a v35** (*"pode ficar a v35"*, e a v34 *"também boa"*), **mas com o tom da pele do nariz
+para baixo a denunciar-se.** Medido, e era mesmo: na faixa do nariz a v35 tinha luminância 132 onde
+a v34 e a v32 A têm 82, mais 30 na faixa da boca, mais 17 no queixo, e mais amarela. É a luz do
+pavilhão da foto de origem, que entrou com `--cor-por nenhum` porque acertar pela testa estraga (a
+testa da fonte ao sol, a boca à sombra), e o Poisson só prende a costura, não o interior.
 
-**Quem:** o Tiago escolheu o sorriso dela, pediu o dele e forneceu as fotos de andebol; Claude fez a
-escada, encontrou a troca das referências e mediu.
+**Duas maneiras erradas de corrigir, antes da que serve.** Média e desvio de Lab linha a linha
+acerta os números e estraga a imagem: a barba e a asa do nariz ficam de fora do cálculo da pele,
+levam o mesmo empurrão e saem escuras e azuladas. E um desvio de cor igual para todos os pixéis
+azula a barba, porque num pixel escuro pesa muito mais. **O que serve:** corrigir só a parte suave,
+que é onde o erro está. A razão entre a luminância muito desfocada da v34 e a da v35 dá um mapa de
+ganho macio e multiplicativo, que não esmaga os escuros, e o desvio de cor vai pesado pela
+luminância, para a barba quase não o sentir. O detalhe fino fica intacto.
+
+**E a ordem importa:** corrigir o tom **depois** da rede baixa a semelhança dele de 0,94 para 0,92,
+porque a rede também lê o tom geral da cara. Corrigir a base e **voltar a passar a rede** devolve
+0,94 com o tom certo, e ainda repõe a faixa da testa que a correção sozinha escurecia de mais. É a
+**v37**, a entregue. A v36 (corrigida depois da rede) fica no disco como o passo do meio. Outra
+armadilha apanhada aqui: calcular a correção a partir do JPEG da v35 espalhava o ruído da compressão
+dela pela foto toda, incluindo a cara dela; compõe-se sempre a partir da v32 A e só se troca o
+retângulo dele.
+
+**Ficou a v37** (*"a v37 é o melhor"*), e daí saiu a entrega: `foto sem mascara FINAL para rever.jpg`,
+ao tamanho do original, e `foto sem mascara FINAL antes e depois.jpg` para eles verem o que mudou.
+**A v33 foi apagada a pedido dele**, por estar ultrapassada; é a primeira vez que se apaga alguma
+coisa em `casamento-video-media`, foi pedido em palavras diretas e ficou cópia na pasta da sessão.
+A folha `antes_e_depois v33.jpg` ficou, por não ter sido nomeada.
+
+**E o fluxo passou a estar em sítio permanente**, na pasta `sd_mascara`, com nomes novos e sem tocar
+nos antigos: `referencias.py` (as 15 presas ao nome do ficheiro), `identidade.py` (a identidade média
+e o controlo que lhe dá escala), `marcas106_livre.py` (os 106 pontos de qualquer foto nova),
+`base_real_livre.py`, `compor_sorriso.py` (a rede, e a garantia de que só volta o retângulo da
+pessoa), `acertar_tom.py` e `fazer_versao.py`, que faz os seis passos num comando. O `LEIA-ME.md`
+diz a ordem, as armadilhas e quais os cinco scripts antigos que não devem ser corridos como estão.
+**Prova de que a receita está certa:** correr o `fazer_versao.py` do princípio devolveu um ficheiro
+com o mesmo MD5 da v37 entregue, `d20bbd648bd54cfb69255f9ffef8d0d4`. Para isso foi preciso fixar duas
+escalas de deteção de propósito: 640 para a identidade e para a composição, 1024 só para marcar fotos
+novas, onde a cara pode ser pequena; misturá-las muda o resultado uns quatro níveis de cor.
+
+**As bochechas e o nariz dele, a pedido do Tiago (*"estão grandes"*), e com as fotos novas como
+referência.** Primeiro medir, no referencial dos olhos (olhos na horizontal, distância entre olhos
+igual a um), contra a forma média de catorze fotos verdadeiras dele: o nariz da v37 estava 4,5 por
+cento mais largo do que a média dele e a bochecha esquerda 4,2 por cento mais para fora. Pouco, mas
+real, e herdado da foto de origem, em que ele ri de boca aberta e o sorriso arredonda a bochecha.
+
+**Duas maneiras de o corrigir à força, ambas más.** Apertar a geometria antes da rede não pega: a
+rede volta a desenhar a cara à maneira dela e dos 4,5 por cento só ficaram corrigidos 1,1. Apertar
+depois da rede pega pouco (4,5 passa a 2,8, porque o detetor também não segue o empurrão) e custa
+semelhança: 0,93 no aperto medido e 0,89 num aperto maior. A cara tem 52 pixéis entre os olhos, e
+4,5 por cento do nariz são 1,8 pixéis; não é aí que se ganha.
+
+**O que resolveu foi trocar a fotografia de origem.** As fotos que o Tiago deixou a 23 de setembro
+entraram todas no crivo da identidade (semelhança maior que 0,6, pelo menos 30 px entre os olhos,
+cabeça até 15 graus de lado): cinco passaram e a identidade dele passou a ser de onze fotos em vez
+de seis, com o mesmo controlo de 0,87. E uma delas, a `495380377`, é a melhor referência que apareceu:
+de frente, 97 px entre os olhos contra 52 da foto do casamento, semelhança 0,89, barba cheia e um
+sorriso aberto verdadeiro. O nariz dela mede 0,676 contra 0,714 da que deu a v37.
+
+**A v40**, feita dessa foto, com dois ciclos de acerto de tom e rede (o primeiro deixava as bochechas
+quentes de mais, a 144,7 e 131,7 em a e b contra 141 e 125 do tom aceite): nariz a 1,7 por cento
+abaixo da média verdadeira dele, contra 4,5 acima na v37; bochecha a 2,7 por cento contra 4,2;
+semelhança 0,94 nele e 0,94 nela, medidas já contra a identidade alargada. Fora do retângulo dele é
+igual à v37 pixel a pixel, portanto a cara dela continua a ser a v32 A.
+
+**Ferramenta nova:** `afinar_forma.py`, que aperta nariz e bochechas pela forma média, fica no disco
+com a conclusão escrita no cabeçalho de que a rede a desfaz. Serve para medir, não para corrigir.
+
+**E a v40 saiu com a boca torta** (*"agora ele parece que tem a boca torta"*). Medido: o desnível
+entre os cantos da boca, no referencial dos olhos, era 0,045 na v40, contra 0,005 de média nas fotos
+verdadeiras dele com desvio de 0,018, ou seja a dois desvios e meio do natural. A v37 estava em
+0,001. A causa está na fotografia de origem: ampliada, a `495380377` tem mesmo o sorriso torto, com
+o lado direito puxado para cima, e o processo acentuou-o; a `649886673`, que deu a v37, tem o
+sorriso simétrico.
+
+**Nivelar a boca depois da rede pega pouco** (0,045 passa a 0,029) e não corrige o que não é
+inclinação: na v40 o lado esquerdo está mais fechado do que o direito, e isso é forma, não ângulo.
+`nivelar_boca.py` fica no disco, com esta conclusão no cabeçalho.
+
+**O que resolveu foi juntar as duas bases.** As bases das duas fotografias são deformadas para a
+MESMA geometria do alvo, portanto estão alinhadas pixel a pixel e a boca de uma entra na outra sem
+deslocamento: o corpo da cara vem da `495380377`, que dá o nariz e as bochechas, e a boca vem da
+`649886673`, que dá o sorriso simétrico. A costura cai no meio da barba e do bigode e o que sobra
+dela desaparece nos dois passos seguintes, o acerto de tom e a rede a reescrever a cara inteira.
+`juntar_bases.py`.
+
+**A v43** (duas passagens de tom e rede, porque a primeira deixa sempre as bochechas quentes):
+nariz a 0,4 por cento da média verdadeira dele, contra 4,5 acima na v37; bochecha a 2,9 contra 4,2;
+boca a 0,024, dentro do desvio natural dele; semelhança 0,94 nele e 0,94 nela. Fora do retângulo
+dele é igual à v37 pixel a pixel.
+
+**A bochecha já estava na média, e foi preciso medir a dispersão para o saber.** Entre as treze
+fotos verdadeiras dele, a largura da bochecha varia com desvio de 5,7 por cento; os 2,9 por cento da
+v43 são portanto **meio desvio**, ou seja a média dele. Quem está fora é a bochecha do lado direito,
+a 1,7 desvios para dentro, e isso é a cabeça estar virada seis graus na foto, não defeito da
+reconstrução. Apertar mais punha-o mais magro do que ele é, e por isso não se apertou.
+
+**A boca ficou a meio caminho**, como o Tiago pediu (*"entre o que está na v37 e na v43 está ok"*):
+desnível 0,014, contra 0,001 na v37 e 0,024 na v43. Consegue-se com o `nivelar_boca.py` a rodar a
+boca 1,6 graus sobre a v43, sem custo nenhum de semelhança. Medida em desvios do natural dele, a
+**v44** fica com o nariz a 0,1, a bochecha a 0,4 e a boca a 0,5, tudo dentro de um desvio, e 0,94
+nele e 0,94 nela.
+
+**Testado e posto de lado: devolver o relevo verdadeiro.** A rede alisa a pele (o detalhe fino da
+cara final tem desvio 5,0 contra 13,8 na cara-base, que é a fotografia dele deformada), e devolver
+parte dele dá textura e modelado às bochechas. Mas custa semelhança, 0,94 passa a 0,91 a 35 por
+cento e 0,89 a 60, e deixa a zona nova mais nítida do que o resto da foto, que é o contrário do que
+falta. `passar_grao.py` fica no disco, com os números no cabeçalho, para o dia em que se tratar do
+grão a sério: aí o caminho é igualar para baixo, não para cima.
+
+**Ficou a v44** (*"v44 sim avança"*). A entrega são dois ficheiros novos em `gerados/sem_mascara/`:
+`foto sem mascara FINAL v44 para rever.jpg`, ao tamanho do original, e
+`foto sem mascara FINAL v44 antes e depois.jpg`. Os dois anteriores, feitos da v37, ficam no disco
+e estão ultrapassados.
+
+**O resumo do que a v44 é:** a cara dela é a v32 A, intacta desde o dia 22 e confirmada a cada
+gravação. A cara dele vem de duas fotografias verdadeiras juntas, a `495380377` para o nariz e as
+bochechas e a `649886673` para o sorriso, com a rede de identidade a reescrever a cara inteira, dois
+ciclos de acerto de tom e um ajuste final de 1,6 graus na boca. Semelhança 0,94 nos dois, contra
+0,87 que duas fotografias verdadeiras dele dão uma à outra. Nariz, bochecha e boca ficam todos
+dentro de um desvio do que é natural nele.
+
+**A versão final com o mínimo de perda.** Todas as versões até aqui vinham da v32 A, que já era um
+JPEG gravado a partir do original, e por isso 99 por cento da foto (o fundo, a rua, a menina, os
+vestidos) levava uma segunda geração de compressão sem necessidade nenhuma, porque nunca foi tocada.
+Medido: só 39,5 por cento dos pixéis da v44 eram idênticos ao original. A entrega passa a ser
+composta ao contrário: parte-se do ficheiro original e só se troca o que foi de facto reconstruído,
+que são duas manchas, a cara dele e a dela, 2,65 por cento da foto contando a borda esbatida.
+Resultado: **83,3 por cento dos pixéis idênticos ao original**, e a semelhança mantém-se em 0,94 nos
+dois. Ficam dois ficheiros: `foto sem mascara FINAL v44 mestre.png`, sem perda nenhuma, para
+arquivo e impressão, e `foto sem mascara FINAL v44 alta qualidade.jpg`, qualidade 98 e sem
+subamostragem de cor, para enviar.
+
+**Nota de método:** a diferença entre o original e a reconstrução mostrou três manchas, não duas. A
+terceira, de 1455 pixéis num arbusto com flores ao pé da carrinha, não é alteração nenhuma: é ruído
+de compressão numa zona de muito contraste, igual em todas as versões. Verificar isto antes de
+concluir é o que distingue uma mancha suspeita de um erro verdadeiro.
+
+**Continuam em aberto** os ajustes antigos: grão e nitidez da zona nova iguais ao resto da foto, e o
+nariz dele com mais volume, este talvez já resolvido por o nariz da v37 vir de uma fotografia
+verdadeira e não do modelo, mas por verificar. E a verificação final ao tamanho real com avaliadores
+independentes, que nunca chegou a ser feita sobre a v37.
+
+**Quem:** o Tiago escolheu os dois sorrisos, deu pelo tom da pele e forneceu as fotos de andebol;
+Claude fez a escada, encontrou a troca das referências, corrigiu o tom e mediu tudo.
+
+---
+### 2026-09-23 | 086 | A guarda das caras no consolidar, e o zoom do clip que a regra de ampliação esquecia
+
+**O que ele pediu:** *"Preciso que faças uma revisão completa das imagens que estão no final. Nessa
+revisão é importante que as fotos respeitem a realidade e que tenham boa qualidade. Revê também as
+que têm zoom, pois é importante não ficar tudo pixelizado. Não vou avançar com mais passos até
+resolvermos isso."* E depois de ver os números: *"AVANÇA e diz-me quais são os zooms que têm de ser
+ajustados e para que valor."*
+
+**Porque é que a garantia antiga não viu o que ele viu.** O travão dos 8 por cento media a
+diferença média por pixel na fotografia **inteira**. Uma cara é uma fração pequena do quadro, e um
+olho redesenhado mexe pouco nessa média: a foto onde a rede desenhou olhos abertos por cima de duas
+manchas moles passou com 1,64 por cento. A frase que o `consolidar.py` imprimia, «Nenhuma feição foi
+refeita», era uma promessa que a medição não sustentava, e saiu.
+
+**A medida nova é feita dentro das caras**, com o detector Haar do opencv (de frente e de perfil) e
+duas contas por cara: a SSIM contra o original à mesma escala, e o detalhe fino que sobra,
+`|x − desfocado(σ 1,2)|`, dividido pelo do original. Medido no acervo, como controlo:
+
+| Versão | Detalhe na cara, mediana | Pior caso |
+|---|---|---|
+| Original | 1,00 | 1,00 |
+| Lanczos | 0,90 | 0,77 |
+| Rede (Real-ESRGAN) | 0,73 | 0,17 |
+
+**A fidelidade é a distância a 1,00, para os dois lados.** Abaixo de 1 o modelo apagou a cara;
+acima, desenhou detalhe que ninguém fotografou. A primeira versão da regra premiava o valor mais alto
+e chegou a propor trocar um original por uma versão da rede com 1,10, ou seja trocar a verdade por
+uma cara inventada. Apanhei isso antes de lhe mostrar números. A guarda aceita de **0,80 a 1,25**,
+vale para todas as fontes (a única restaurada do acervo também não passava, com 0,62) e o original
+está sempre isento, porque é a referência.
+
+**O resultado, na FINAIS inteira:** 49 fotografias mudaram de versão, 24 delas no filme.
+
+| Troca | Fotografias |
+|---|---|
+| Rede → Lanczos | 39 |
+| Rede → original | 3 |
+| Lanczos → original | 6 |
+| Restaurada → original | 1 |
+
+Ficam 39 da rede, 147 Lanczos e 533 originais. Nas 160 fotografias do filme com cara, o pior
+detalhe passou de 0,17 para 0,80 e a pior SSIM de 0,79 para 0,94; a guarda, que apanhava 8, apanha
+0. O índice anterior ficou guardado fora do repositório, em `finais_antes.csv` no scratchpad da
+sessão.
+
+**O zoom do clip, que a regra de ampliação esquecia.** A regra do CLAUDE.md prepara cada foto para
+o tamanho a que aparece **parada**. Um clip com zoom mostra um recorte: «Aproxima N» precisa de N
+vezes mais pixéis, e «Zoom in» ou «Zoom out» de 1 + `render.ZOOM`, 1,12. O `scripts/auditar_nitidez.py`
+faz essa conta para cada lugar do filme. **Não se aplicou nada na Mesa dele.** Os zooms são dele.
+
+**A primeira tabela que lhe dei estava errada, e ele deu por isso na Mesa** (27 de setembro:
+*"cheguei ao clip 133 e é um pilha, não vejo o zoom que falas"*). Os números eram os do render das
+18:08 de 23 de setembro, com 225 clips, e ele tinha acrescentado 12 depois. E a geometria do
+script era uma cópia inventada, não a do render, errada em quatro sítios: o "fiel" encaixa com
+barras e não enche; a rajada não tem zoom nenhum; o lado a lado 2v tem células de 956x1080 e a
+pilha põe cada foto no tamanho que a disposição lhe dá, não 960x540; e só o "Parada" tira o zoom,
+o "Nenhum" que eu lhe disse continuava com os 12 por cento. Além disso propunha 1,17 num
+aproxima cujo mínimo é 1,2. O `auditar_nitidez.py` foi reescrito com as expressões do
+`render.desenhar()` e, nos grupos, com o próprio `render.preparar()`; o `escolher_melhor.py`
+deixou de ter a sua cópia e lê a largura no ecrã medida por ele.
+
+**A tabela certa, sobre a montagem dele na rev 764 (237 clips), com os nomes da Mesa**, tolerância
+1,05: aproxima 2,2 para 1,2 nos clips 24, 25 e 131; aproxima 4,0 para 1,6 no 125; aproxima 2,2
+para 2,1 no 109; «parada, sem zoom» no 60; «afastada» no 62 e no 138. Três fotos (clips 20, 30 e
+37) nem paradas chegam, porque a rede lhes apagava a cara (0,17, 0,29 e 0,45) e ficou o original;
+o melhor para elas é «afastada», que as deixa a 1,14. Duas em rajada (21 e 85) só melhoram com
+outra foto ou fora da rajada. **Nos grupos, nenhuma foto estica**: a pior fica a 0,90.
+
+**E a Mesa ia dizer 48 fotos "à espera".** O `estado_fotos.py` tinha a regra antiga, abaixo de 1,5
+Lanczos e acima a rede, e uma foto com essa versão recusada pela guarda contava como "falta
+escolher a versão final". O `consolidar.py` passou a escrever as recusas no índice, coluna
+`recusadas`, e o `estado_fotos.py` lê-as de lá: 719 prontas, 48 delas com a versão da regra
+recusada pela guarda. A Mesa foi publicada assim, versão 38, com as miniaturas refeitas da FINAIS
+corrigida, e o `montagem/publicacao` passou à versão 7.
+
+**Mais dois testes que liam a montagem dele ao vivo** (27 de setembro). A 23 à noite, na rev 764,
+o Tiago tirou os dois cartões dos nascimentos e passou o texto para a primeira foto de cada um. O
+`musica da abertura retoma na fita antes da Clara` rebentava com StopIteration a procurar o "nasce
+uma bebé" e parava a suite inteira; o `juncao com dois contadores a recuar` falhava porque a
+junção, sem esse cartão, para no caso "sem as peças", que é o que deve fazer sem âncora. Os dois
+passaram a montar da cópia congelada do teste do byte, rev 242. Ficam a ler o estado vivo, de
+propósito, os quatro que verificam os dados dele e não o código: marcas com imagem, fita
+percorrível, músicas marcadas e o emoji no validador.
+
+**E a edição dele tem consequências no som, por decidir com ele.** Sem o cartão, o montar deixa
+de ter onde esticar para cumprir a regra dele, *"antes de elas começarem a aparecer dá tempo para
+os foguetes terminarem"*: os foguetes do Tiago pisam 1,9 s da primeira foto e os da Clara 5 s, e
+o montar não avisa. E as marcas novas dele nessas fotos são as mesmas músicas que o montar já lá
+põe, o Rei Leão e a Ana Faria: o Rei Leão recomeça do início 0,9 s depois da marca, e a Ana Faria
+salta 1,3 s. Nada disto foi mexido.
+
+**Ferramentas novas**, todas só de leitura sobre a media: `scripts/auditar_caras.py` (escreve
+`data/auditoria_caras.csv`), `scripts/auditar_nitidez.py` (`data/auditoria_nitidez.json`) e
+`scripts/escolher_melhor.py` (`data/escolha_proposta.json`, propõe e não escreve). Instalados com
+autorização dele: `opencv-python==4.10.0.84`, preso a essa versão porque a 5 já não traz os
+classificadores, e `scikit-image`. Sem opencv, o `consolidar.py` diz em voz alta que não houve
+guarda, em vez de prometer.
+
+**Três testes caíram com isto, e nenhum era defeito do filme.** Corrigidos a 25 de setembro, e
+ficam registados porque cada um ensinou uma coisa.
+
+1. `ampliacao abaixo de 1,5 usa lanczos`: seis fotografias ficaram com o original porque a guarda
+   recusou o Lanczos delas. O teste passou a medir a cara outra vez com a mesma função do
+   `consolidar.py` e só aceita o original quando a recusa se repete. Não se guardou um registo das
+   recusas, mede-se.
+2. `musica da abertura retoma na fita antes da Clara`: o teste procurava a «foto do Tiago» como a
+   primeira depois do primeiro cartão qualquer. O Tiago pôs um cartão vazio a abrir a demo_v3, a
+   procura parou nele e a música foi parar à foto do pedido. Com o estado de antes das edições dele
+   o teste passava com o código de hoje. Passou a procurar depois do cartão do nascimento, com a
+   regra do `e_nascimento()` do montar. No filme verdadeiro confirmou-se à parte: na fita que volta
+   (ordem 28, 124 s do corpo) o Lang Lang retoma aos 42,8 s, onde parou, e acaba aos 135,52 s, nos
+   foguetes da Clara.
+3. `v3 sem vozes igual ao byte`: montado do estado congelado (rev 242), o `v3.csv` sai igual ao
+   byte e o `v3.som.csv` difere em duas linhas, só no nome do ficheiro, porque o Baha Men e o
+   António Variações ganharam um sufixo no disco (« - Cães», « - Exercicio») e o
+   `resolve_musica()` passou a encontrá-los. Mesmo instante, mesma entrada, mesmo ganho. **A
+   referência foi refeita de propósito, e só o `v3.som.csv`**, a partir do mesmo estado de rev 242,
+   para os três ficheiros continuarem do mesmo instante. A cópia antiga ficou no scratchpad.
+
+**O que fica à espera dele:** os zooms na Mesa; se o limite da colagem sobe de 12 para 20 (o
+desenho já aguenta 4 filas de 6, o 12 é só regra); se o teto da guarda desce de 1,25 para 1,10, por
+causa de uma foto de amigos de 2015 que está a 1,17, do lado da invenção; e o render com as imagens
+novas, que não foi feito.
+
+**Quem:** o Tiago deu pelo problema a olhar para o ecrã e mandou avançar; Claude mediu, construiu
+a guarda e as auditorias, e corrigiu a própria primeira regra, que premiava a invenção.
+
+---
+### 2026-09-28 | 087 | A marca dele ganha à música automática, o nível de cada leito, e colagem até 20 e pilha até 40
+
+**O que ele decidiu**, às propostas da véspera: *"2. Sim"* (a marca ganha), *"3. Para já ficam
+como estão, ajusto no fim"* (os textos marcados), *"Resolvi as sugestões do 4 ao 6"* (os
+enquadramentos, na Mesa) e *"Sim, faz o que disseste sobre o Rei Leão e o Lang. Sobe o limite
+para 20 e para a pilha mete também o máximo que der, pois a pilha é um registo interessante"*.
+
+**A marca dele ganha à automática da mesma música.** Ao tirar os cartões dos nascimentos, a 23 à
+noite, ele marcou o Rei Leão na primeira foto do Tiago e a Ana Faria na primeira da Clara, que são
+as músicas que o `montar_da_mesa.py` já lá põe sozinho. Nenhuma cedia: a automática cortava a
+marca 0,9 s depois e o render cruzava as duas, com o Rei Leão a recomeçar em eco e a Ana Faria a
+saltar 1,3 s. A regra é uma entrada só, nas duas ordens: se a marca vem antes, a automática sai;
+se a automática já está a tocar quando a marca chega (é o caso com os cartões no sítio), a marca
+não a recomeça. Vale só para a mesma música dentro do bloco da automática, e com a mutação
+guardada: a Ana Faria marcada no bloco do Tiago não tira a da Clara. Teste novo,
+`teste_marca_ganha_a_automatica_da_mesma_musica`, e a referência congelada sai igual ao byte.
+
+**O nível de cada leito.** A causa dos -25,5 do Rei Leão e dos -25,9 da retoma do Lang Lang não
+era o alcance dinâmico nem a duração: o loudnorm de uma passagem decide com os primeiros três
+segundos, e as músicas que arrancam muito acima do resto do troço (Rei Leão +6,0 dB, Lang Lang
++3,4, Fome de Viagem +5,6, esta sem ninguém ter dado por ela) ficavam todas em baixo. A Mariah, com
+LRA 13,2, sai certa. O `render.py` mede agora a saída do loudnorm em cada troço e, se estiver a
+mais de 1 dB do alvo (-22,44 à saída, que o alimiter leva a -21,9), multiplica o ganho da faixa
+pela diferença. O loudnorm fica igual, e por isso os leitos certos não mudam. Duas passagens com
+`linear=true` foram medidas e rejeitadas, por mexerem na Mariah, na Clara e nos Queen. Medido no
+som do corpo, sem desenhar fotogramas: Rei Leão de -25,4 para -22,3, Fome de Viagem de -25,0 para
+-22,5, o resto igual, o corpo a -21,7 e o pico a -4,7 dBFS. Falta confirmar num render inteiro.
+
+**Colagem até 20 e pilha até 40**, nos três sítios (`render.LIMITES_MONTE`,
+`montar_da_mesa.LIMITES_MONTE` e o `GRUPOS` da Mesa). Medido antes: 270 colagens de 13 a 20 sem
+nenhuma foto fora do ecrã nem miolo pisado, a mais pequena a cerca de 0,8% do ecrã; na pilha o
+monte não parte com nenhum número, o leque encolhe as fotos a partir de 20 e a 40 ainda deixa 23%
+de cada uma à vista, a 60 fica no limite e a 80 parte. O que custa é memória: uma pilha de 40
+pede cerca de 850 MB por fatia, 6 GB com as sete, e o render avisa antes de começar e sugere
+`--fatias 4`. Os testes deixaram de ter 12 e 20 escritos à mão.
+
+**Encontrado pelo caminho, e por decidir com ele:** na rev 800 o marco do Tiago na fita de 1995
+passou de «12/09 Nasce o Tiago» a «12/09», sem texto. Os foguetes do Tiago disparam quando o nome
+acende na fita; sem nome, o montar cai no primeiro cartão que diga «Tiago», que é o do primeiro
+carro, aos 326 s do corpo. Sem Rei Leão automático e sem retoma do Lang Lang. Resolvido na decisão 088.
+
+**Quem:** o Tiago decidiu; três leitores em paralelo mediram e fizeram os protótipos; Claude
+reviu, corrigiu o caso da ordem inversa que o protótipo não cobria, e aplicou.
+
+---
+### 2026-09-28 | 088 | O nascimento reconhece-se na fita pela data, e o texto do marco é dele
+
+**O que ele decidiu:** *"Eu ensino o montar a reconhecer o nascimento pela data, 12/09, que é fixa.
+Assim o texto do marco pode ser o que quiseres."* (escolhida entre repor o nome no marco e isto).
+
+**O que muda.** O `_acende()` do `montar_da_mesa.py` reconhece o nascimento num marco grande (com
+asterisco) da fita de 1995 pelo nome, como antes, **ou pela data**: 12/09 o Tiago e 24/11 a Clara,
+as datas da decisão 030, em `NASCIMENTO_NA_FITA`. Aplicado aos dois, para a Clara não cair no
+mesmo buraco. A data sozinha sem asterisco não chega: o «24/11 Salvam-se as gravuras do Côa» está
+na mesma data e não é nascimento, e o `teste_nascimento_pela_data_na_fita` guarda as duas coisas
+(com a regra desligada, os foguetes do Tiago saltam dos 26 s para os 299 s e o teste falha). A
+explicação na Mesa passou de «quando acende "Nasce o Tiago"» a «quando acende o marco de 12/09».
+
+**Na montagem dele, rev 800:** os foguetes do Tiago voltaram aos 67,37 s; o Rei Leão marcado vai
+dos 72,97 s até a fita voltar, uma entrada só (decisão 087); o Lang Lang retoma aos 42,8 s da
+música e acaba nos foguetes da Clara aos 131,02 s; a Ana Faria marcada entra uma vez; e o Tokyo
+Drift toca inteiro, sem os 15 s de silêncio que o engano deixava.
+
+**Continua por decidir:** os foguetes por cima das primeiras fotos dos dois bebés (resolvido na
+decisão 089); a rede neuronal saiu do filme na decisão 090.
+
+---
+### 2026-09-28 | 089 | Sem cartão do nascimento, a fita fica parada na data acesa até os foguetes acabarem
+
+**O que ele decidiu:** *"Os foguetes são no contador e não nas fotos."* A regra de sempre, dele,
+*"antes de elas começarem a aparecer dá tempo para os foguetes terminarem"*, continua; o que muda é
+onde se espera.
+
+**O que muda.** Com o cartão do nascimento no sítio, o `montar_da_mesa.py` estica o cartão, como
+antes. Sem cartão, segura a própria fita de 1995 parada no último fotograma, com a data acesa,
+pelo tempo que falta para os foguetes acabarem, e só então entra a foto do bebé. O tempo vai no
+CSV no fim do texto do clip da fita, `~5.45`: o render desenha a fita na duração de sempre e fica
+parado o resto (`linha_tempo.segura_de()`); o `ler_meses()` tira-o antes de ler os marcos, e o
+instante dos foguetes conta só a parte que anda, por isso a paragem não os empurra. Só existe no
+CSV, nunca na Mesa: a Mesa mostra no "Som do render" a duração que o render usa.
+
+**Na montagem dele, rev 800:** a fita do Tiago fica 2,3 s parada (9,0 → 11,3 s) e a da Clara 5,45 s
+(14,0 → 19,45 s); as duas fotos entram 0,4 s depois de os foguetes acabarem, e o
+`teste_foguetes_antes_das_fotos` voltou a passar. O filme fica 7,75 s mais longo. Com a foto a
+entrar depois, a automática da mesma música já está a tocar quando a marca dele chega, e continua
+sem recomeçar (decisão 087): o Rei Leão entra uma vez aos 73,87 s e a Ana Faria uma vez aos
+139,82 s, desde o segundo 6 dela, como a automática sempre entrou.
+
+**Teste novo,** `teste_fita_parada_quando_nao_ha_cartao`: sem os cartões as fotos esperam os
+foguetes, os foguetes caem na parte da fita que anda, e o último fotograma da parte que anda é
+igual ao byte ao último do clip; com os cartões nenhuma fita é segurada. Com o render a ignorar a
+paragem, o teste falha.
+
+---
+### 2026-09-28 | 090 | A rede neuronal sai do filme: só Lanczos e original
+
+**O que ele disse**, com a 21-45-8 no ecrã: *"Precisamos também de assegurar que não [há]
+invenções. Eu ainda tive a perceção que podem existir. Olhos estranhos, por exemplo nesta foto
+21-45-8. Há muitos olhos que ficaram todos defeituosos. Isso não pode acontecer."* Depois de ver a
+comparação e a proposta: *"Avança."*
+
+**Porque é que a guarda da decisão 086 não chegou.** Ela mede as caras que o detector encontra, e
+o detector só encontra caras a partir de uns 60 pixéis. Na 21-45-8 (691x571) as doze caras têm 26
+a 37 px no original: a guarda viu uma "cara" de 88 px que nem o era e deixou passar a versão da
+rede, onde as mesmas caras têm 64 a 80 px, dois terços desenhados por ela. A comparação cara a
+cara mostrou olhos fechados, desalinhados e desfeitos, e bocas tortas. O clip 131, a equipa de
+andebol, estava igual, com dezasseis caras de 31 a 43 px. Das 39 fotos com a rede, 31 tinham caras
+e 11 estavam no filme, 9 delas com caras; a 2.jpg, um bebé no filme, nem cara detetada tinha.
+Nenhuma guarda que dependa de encontrar as caras garante zero invenções.
+
+**O que mudou.** O `consolidar.py` só aceita o Lanczos (`VERSOES_PERMITIDAS`); a rede e a
+restauração saem da escolha, porque as duas redesenham. O `estado_fotos.py` deixou de esperar a
+versão da rede acima de 1,5x. O `atualizar_fotos.py` já não corre o `upscale_ia.py`, que podia
+levar horas. As pastas `upscaled-ia\` e `restauradas\` ficam em disco, intactas.
+
+**O resultado.** A FINAIS passou a ter 186 Lanczos e 533 originais, nenhuma da rede; as 39 tinham
+todas versão Lanczos pronta. Em 9 a guarda recusou também o Lanczos (cara entre 77 e 80 por cento)
+e ficou o original, o que não se distingue no ecrã, porque o render faz a mesma interpolação. A
+nitidez no ecrã não mudou (3 fotos de 1,5 a 2x, 2 de 1,05 a 1,5x, 228 até 1,05), porque o Lanczos
+tem o mesmo tamanho que a versão da rede: as 11 do filme ficam mais macias e verdadeiras. A
+pergunta do teto de 1,10 caiu, a foto do 1,17 também saiu da rede. A Mesa foi publicada assim,
+versão 42, e o `montagem/publicacao` passou à versão 9.
+
+**O que o prende:** `teste_nenhuma_foto_vem_da_rede` (o consolidar, o índice e o
+`atualizar_fotos.py`), e a regra escrita no CLAUDE.md para não se voltar a ligar a rede sem ele o
+pedir com a comparação à frente.
+
+**Quem:** o Tiago deu pelo problema, duas vezes, a olhar para o ecrã, e decidiu; Claude mostrou a
+comparação e aplicou.
+
+---
+### 2026-09-28 | 091 | O que três revisores apanharam nas decisões 087 a 089, e as correções
+
+Depois das decisões 087 a 089, três revisores independentes leram as mudanças com ordem de as
+partir, com prova. Encontraram treze defeitos; todos corrigidos, cada um com o seu teste.
+
+**Os que se viam no filme ou na Mesa:**
+- **A fita parava com a palavra apagada.** Congelava-se o último fotograma, e a paragem apaga a
+  palavra nos últimos 18%, para o corte: "Nasce a Clara" a 9% durante 5,45 s, "12 de setembro" a
+  3,5%. O montar escreve agora `~segundos@instante`, com o instante no **meio da paragem do
+  nascimento** (`linha_tempo.meio_da_paragem()`), e o render para aí. O teste mede o brilho do
+  fotograma parado contra o mais aceso da paragem; com o congelamento antigo, falha.
+- **A Mesa perdia as duas fitas paradas e cinco faixas do som**, porque o `~` entrava na chave do
+  clip. A chave do `som_para_mesa.py` tira-o; a Mesa mostra 11,3 s e 19,45 s, como o render.
+- **A Mesa dizia que o marco "*12/09" não disparava foguetes.** Passou a reconhecer a data, como o
+  montar (decisão 088).
+- **O leque não aguenta 40.** A geometria dizia 23% de cada foto à vista; desenhado a sério, a 40
+  fica em 16,6%. Medido foto a foto: cumpre os 20% até 24 em todas as formas e falha a partir de
+  25. A pilha continua até 40, **em monte**; em leque só até 24 (`render.PILHA_LEQUE_MAX`, e a
+  Mesa), e o montar põe em monte um leque maior, com aviso.
+
+**Os que enganavam:**
+- A marca dele da mesma música era absorvida mesmo quando era um pedido (outro `in`, ou a meio do
+  bloco), sem aviso, e o aviso do silêncio saltado saía para marcas que não ficavam. Agora só é
+  eco com `in` 0 e a menos de 3 s da entrada automática (`MARCA_ECO_S`), e diz-se quando absorve.
+- O teste da decisão 087 ficou vermelho com a 089 e deixou de guardar a regra; passou a ter o
+  caso da marca antes da automática, num cartão dele, e apanha o eco se a regra sair.
+- Um render parcial (`--ate`) media o nível sobre a faixa cortada e tocava o Rei Leão 2 dB abaixo
+  do filme; mede-se agora sobre a faixa inteira, como no filme.
+- A cópia do telemóvel calculava o débito sem os vídeos de abertura (4% acima do alvo), e o
+  registo de renders contava 57 clips em vez de 225 por uma variável reutilizada.
+- O teste dos foguetes procurava as fotos dos bebés pelo nome.
+
+**Os latentes:** o cartão a esticar passou a ser o que está entre os foguetes e a foto, pela
+posição, e não o primeiro cartão "nasce" do filme; a fita que volta antes da Clara tem de ter
+fotos antes dela, e uma continuação colada à do nascimento já não rouba o bloco ao Rei Leão; e a
+guarda das caras ganhou um teste (original 1,00, cópia desfocada 0,38).
+
+**Fica por fazer, menor:** com OUTRA música marcada na primeira foto do bebé, a automática ainda
+toca 1,4 s antes dela, e cruza. Não acontece na montagem dele de hoje.
+
+---
+### 2026-09-28 | 092 | O nascimento do Tiago: a frase na fita, "O TIAGO" no preto, e o Rei Leão com o nome
+
+**O que ele decidiu**, depois de quatro prévias (hoje contra futuro, desenhadas pelo próprio render
+e com o som dele): *"sim fechamos"*. Pelo caminho: *"na fita gostaria do texto tipo 'Nasce o 2º
+filho da Graça e do Alberto'"*; *"a frase está com as letras muito grandes e gordas"* (escolheu a C);
+*"a música do Rei Leão deve começar com as letras do Tiago a aparecer e não antes"*; *"há um
+segundinho de pausa entre os foguetes e a música"*; e *"pensava que íamos alterar apenas o 'Nasce o
+2º filho' e o '12 de setembro'"*, porque a primeira versão da C mudava a cor de todos os marcos.
+
+**Fica assim, por construir** (só depois de fechados os cinco pontos da discussão):
+- **Na fita, só nos marcos de nascimento (os grandes, com asterisco):** a frase em Arial Bold 66, cor
+  quente (236,204,168), em vez de 96 em rosa-branco; a data ("12 de setembro") na mesma cor, a 58 px
+  em vez de 40 (que não se lê a 15 m) e 18 px mais abaixo, para não tocar nos meses. Os outros
+  marcos ficam iguais ao byte (conferido com o do Kobe). Arial normal foi medido e posto de parte:
+  o traço fino precisa de 90 px para se ler a 15 m.
+- **O texto do marco é dele**, na Mesa: "Nasce o 2º filho da Graça e do Alberto" no 12/09 das três
+  partes da fita. Cabe numa linha, e o nascimento continua a ser reconhecido pela data (088).
+- **"O TIAGO" nasce no preto** no último segundo dos foguetes, com o letreiro quente (Arial Bold
+  maiúsculas espaçadas, brilho quente, a aproximar-se devagar); a foto do Tiago sobe por trás 1,6 s
+  depois e o nome apaga-se; a foto já não leva a legenda.
+- **O Rei Leão entra com o nome**, no último segundo dos foguetes, a cruzar com eles, e sem rampa (a
+  canção começa num ataque). Medido na prévia: a pausa de antes descia a -56 LUFS aos 75,2 s; agora
+  o ponto mais baixo fica a -22, dentro da variação da música.
+- A foto do Tiago entra só 0,2 s mais tarde do que hoje.
+
+**Quem:** o Tiago decidiu a cada volta; Claude fez as prévias e as medidas.
+
+---
+### 2026-09-28 | 093 | O nascimento da Clara, igual ao do Tiago, e as duas frases escritas na Mesa
+
+**O que ele decidiu**, depois da prévia de hoje contra futuro: *"Troca a frase no timeline para
+Nasce a 1ª filha de Rosa e Jorge. De resto sim aprovo."*
+
+**Fica assim, por construir** (com o resto dos cinco pontos): tudo o que a 092 diz do Tiago vale
+para a Clara. O marco grande do 24/11 na letra quente mais pequena, com a data "24 de novembro" a
+58 px; o marco do Côa, na mesma data, fica como está, e a coincidência lê-se sozinha; "A CLARA"
+nasce no preto no último segundo dos foguetes e a foto sobe por trás. **A legenda dele na primeira
+foto fica** ("A Clara que era branquinha como o nome que lhe foi vaticinado"): não é o anúncio do
+nascimento, e lê-se como continuação do nome. **O som não muda**: a Ana Faria já entra no último
+segundo dos foguetes. Custa 0,2 s.
+
+**As duas frases foram escritas na Mesa a pedido dele** ("troca a frase"), nos três troços da
+fita da demo_v3: "*12/09 Nasce o 2º filho da Graça e do Alberto" (a do Tiago estava vazia desde a
+rev 800, e é a do ponto 1) e "*24/11 Nasce a 1ª filha de Rosa e Jorge". Lida a rev 902, escrita
+presa à versão 902 com rev 903 e `quando` da hora da escrita.
+
+---
+### 2026-09-29 | 094 | Ponto 3.1: a regra geral de subida e descida das músicas
+
+**O que ele decidiu**, depois de ouvir quatro trocas de hoje contra futuro: *"sim avança"*.
+
+**Porque.** Medido nas 14 trocas entre músicas (análise de 28 de setembro): a que entra sobe sempre
+1 s em linha recta, mesmo quando começa num ataque (9 das 14: o grito do Who Let The Dogs Out, o riff
+do Born To Be Wild, o Rei Leão, ...), e o ataque perde-se; e a subida (1 s) e a descida (2,2 s) têm
+tempos diferentes, com curvas lineares, o que deixa uma quebra a meio.
+
+**Fica assim, por construir** (no `render.construir_som`, com o resto dos cinco pontos):
+- a música que entra num início (in no zero, ou quase silêncio nos 0,4 s antes do in e som logo a
+  seguir) entra sem rampa, 0,03 s;
+- a que entra a meio e cruza com a que sai sobe no mesmo tempo em que a outra desce, 2,2 s;
+- as duas descidas e subidas dos leitos com curva de potência igual (`afade curve=qsin`);
+- os efeitos (foguetes, rebobinar), as vozes e o som dos vídeos ficam como estão.
+Nas prévias (`scratchpad/ideias/previews/musica31.py`, a regra feita em memória, sem tocar no
+render): o grito chega logo com força (-19 LUFS no primeiro meio segundo, contra -24 hoje) e o
+riff também; nos cruzamentos a meio a diferença é pequena. Não resolve os cortes a meio de frase,
+que são o ponto 3.3.
+
+---
+### 2026-09-29 | 095 | Ponto 3.2: os pontos de entrada das músicas, e um acrescento à 094
+
+**O que ele decidiu**, depois de ouvir os sete pares de hoje contra futuro (já os dois com a regra
+da 094): *"Aprovo todas"*.
+
+**Porque.** Algumas músicas não entravam num início: entravam em barulho, num buraco, ou a repetir
+o que já se tinha ouvido. Os pontos novos saíram da análise de 28 de setembro (batidas, fronteiras
+de frase e vales de cada ficheiro).
+
+| Música | Entrava | Entra | Porquê |
+|---|---|---|---|
+| Fome de Viagem | 0 s | 2,7 s | salta o barulho do arranque do videoclip, uns 7 dB acima da música |
+| Já Sei Namorar | 31,16 s | 34,9 s | hoje caía num troço quase mudo aos 33,4 s antes da voz; agora entra com a voz |
+| Lang Lang, a retoma | 13,3 s | 14,6 s | continua onde o Lang Lang da abertura parou, em vez de repetir 1,3 s |
+| Tiago Celebration | 0 s | 0,81 s | a primeira batida, onde a mãe da Clara a fazia entrar |
+| Taking Care of Business | 62 s | 60,8 s | o início da frase musical (fronteira aos 60,875 s) |
+| Born To Be Wild | 0 s | 0,55 s | a primeira batida |
+| Filhos do Dragão | 4 s | 7 s | o início da frase seguinte |
+
+**O acrescento à 094.** A regra da 094 só trata como início o zero do ficheiro ou uma entrada logo
+depois de silêncio. As entradas novas da Fome de Viagem, do Já Sei Namorar, do Celebration e do
+Born To Be Wild caem num ataque (a voz ou a primeira batida) e, com a regra à letra, subiam em
+2,2 s, o que apagava o ataque que as escolhe. **Uma entrada posta num ataque conta como início e
+entra sem rampa (0,03 s).** As três outras (a retoma, o Taking Care of Business e os Filhos do
+Dragão) entram a meio e cruzam em 2,2 s, como a 094 diz. Nas prévias os quatro ataques foram
+marcados à mão (`scratchpad/ideias/previews/musica32.py`); como o render passa a sabê-lo decide-se
+na construção, e tem de dar o mesmo resultado nestes quatro.
+
+**Fica assim, por construir** (com o resto dos cinco pontos): os sete números vão para as marcas
+dele na Mesa, escritos por Claude na construção, como lhe foi dito antes de ele aprovar. **A retoma do Lang
+Lang anda com o ponto 3.4:** a retoma continua exatamente onde o Lang Lang da abertura parou, e
+isso é uma regra e não um número: a entrada dele mais o que ele toca até à música seguinte (hoje
+5,0 + 9,6 = 14,6). *Corrigido a 29 de setembro:* esta linha dizia que, com a entrada a 5,45 s, a
+retoma passava a 15,05 s. Está errado, porque a proposta do 3.4 também encurta o primeiro Lang Lang
+(de 9,6 para cerca de 8,3 s, sem o cartão vazio), e a retoma fica em cerca de 13,75 s. Apanhado por
+um revisor; o `scripts/discussao/comum.py` faz a conta sozinho.
+
+**Quem:** o Tiago decidiu; Claude fez a análise, as prévias e as medidas.
+
+---
+### 2026-09-29 | 096 | Ponto 3.3: a música que sai acaba no fim da frase, e a revisão antes do render final
+
+**O que ele decidiu**, depois de ouvir as 14 trocas de hoje contra futuro, as duas já com a 094 e a
+095: *"Sim, aprovo, mas não te esqueças que este fluxo terá de ser revisto antes de fazer o render
+final ou com novas fotos e assim."*
+
+**Porque.** A música que sai descia sempre 2,2 s a partir do corte, estivesse onde estivesse, e quase
+sempre apanhava o começo da frase seguinte: ouviam-se duas vozes ao mesmo tempo, ou uma linha nova a
+morrer por baixo da outra música. Medido em 14 trocas a 29 de setembro. Em cada troca um agente mediu
+batidas, frases e vales, e um verificador independente tentou refutar. A do Born To Be Wild para
+Filhos do Dragão foi medida só por Claude, porque o filtro de conteúdo bloqueou os agentes duas vezes,
+e tem confiança baixa. Tudo o que devolveram está em `data/discussao/ponto3_3_analise.json`.
+
+**Fica assim, por construir** (com o resto dos cinco pontos). Em cada troca, a música que sai começa
+a descer num fim de frase (sai_s, em segundos do ficheiro dela) e cala-se numa cauda curta:
+
+| Troca | No corte (ficheiro) | Desce aos | Cauda (s) | Subida da que entra |
+|---|---|---|---|---|
+| Lang Lang para Mariah | 14,60 | 13,50 | 0,95 | a de hoje |
+| Mariah para a retoma marcada do Lang Lang | 70,27 | 69,60 | 0,5 | 0,5 s |
+| Rei Leão para o Lang Lang automático | 47,90 | 47,55 | 0,3 | 1 s |
+| Ana Faria para Clair | 112,60 | 112,15 | 0,4 | a de hoje |
+| Clair para Who Let The Dogs Out | 29,20 | 28,62 | 0,4 | a de hoje |
+| Who Let The Dogs Out para Tokyo Drift | 45,09 | 45,86 | 0,2 | a de hoje |
+| Tokyo Drift para Tiago Celebration | 32,44 | 32,30 | 0,4 | a de hoje |
+| Tiago Celebration para O corpo é que paga | 86,61 | 85,30 | 1 | a de hoje |
+| O corpo é que paga para Fome de Viagem | 46,14 | 47,28 | 0,3 | a de hoje |
+| Fome de Viagem para Já Sei Namorar | 28,50 | 28,20 | 0,6 | a de hoje |
+| Já Sei Namorar para Born To Be Wild | 108,50 | 108,87 | 0,2 | a de hoje |
+| Born To Be Wild para Filhos do Dragão | 41,05 | 40,78 | 0,12 | 0,3 s |
+| Filhos do Dragão para Queen | 36,30 | 37,24 | 0,8 | a de hoje |
+| Queen para Taking Care of Business | 97,50 | 97,50 | 0,5 | 0,5 s |
+
+Nenhuma troca muda o corte nem uma entrada aprovada. A música que sai acaba entre 1,3 s antes e
+1,1 s depois do corte.
+
+**Duas coisas que mudam decisões anteriores, aprovadas com esta:**
+- **Quando a música que sai desce depressa, a que entra também sobe depressa.** Uma subida de 2,2 s
+  contra uma descida curta abria uma quebra de volume de meio segundo a um segundo, medida em três
+  trocas. Por isso a retoma marcada do Lang Lang, o Filhos do Dragão e o Taking Care of Business
+  passam a subir no tempo da cauda da anterior (0,5, 0,3 e 0,5 s), e não nos 2,2 s da 094 e da 095. É
+  o mesmo princípio da 094, a subida igual à descida, com a descida nova.
+- **A Mariah acaba a linha 0,67 s antes do cartão "Mas como é que chegámos aqui?"**, em vez de descer
+  2,2 s em cima dele como dizia a 079. O cartão não sai do sítio.
+
+**A revisão, a pedido dele.** Um fim de frase é um sítio da música. Tudo o que mude o sítio da música
+no instante do corte muda o fim de frase certo: fotos novas, outra ordem, outras durações, outra
+entrada. Por isso:
+1. **Antes do render final, e sempre que a montagem mudar** (fotos novas, ordem, durações), corre-se
+   `py -3.11 scripts/discussao/ponto3_3_frases.py`. Ele compara cada troca com o segundo do ficheiro em
+   que a análise foi feita, e as que mudaram aparecem como "MEDIR OUTRA VEZ".
+2. **As que mudaram medem-se outra vez** pelo mesmo método (um agente analisa e outro verifica, com o
+   `scripts/discussao/medir_troca.py`, que encontra a troca pelo nome e já leva o que está aprovado; o
+   `rascunhos/ponto3_3_mix33.py` era o de 29 de setembro), e mostram-se ao Tiago antes do render.
+3. **Na construção, o `montar_da_mesa.py` avisa** quando uma troca com fim de frase chega ao corte
+   noutro sítio do ficheiro, e diz qual (avisa, nunca corrige, 083). Sem isso, uma mudança na Mesa
+   punha a música a descer num sítio qualquer, sem ninguém saber.
+
+**Dependências:** a primeira troca (Lang Lang para Mariah) tem de ser medida outra vez se o ponto 3.4
+mudar a abertura. A do Born To Be Wild tem confiança baixa: se ele ouvir alguma coisa estranha, é a
+primeira a rever.
+
+**Quem:** o Tiago decidiu; Claude e os agentes mediram, os verificadores tentaram refutar, e Claude
+fez as prévias.
+
+---
+### 2026-09-29 | 097 | Ponto 3.4: da intro da Marvel ao contador sem preto nem cartão vazio
+
+**O que ele decidiu**, depois de ver a prévia de hoje contra futuro (o fim da intro cortado do
+próprio ficheiro, e o começo do corpo desenhado pelo render): *"Gostei da opção do futuro."* A
+pergunta dizia-lhe que a pausa que ele pediu na 079 fica mais curta.
+
+**Porque.** Medido na prévia:
+- **Hoje:** a intro fica 1,24 s em preto depois de o letreiro se apagar, e o corpo abre com um cartão
+  vazio de 2 s. O contador só acende 1,3 s depois de o corpo começar. O ecrã fica quase preto 2,8 s,
+  e o som fica abaixo de -40 dB 3,6 s, com 1 s de silêncio total. Numa sala, parece que o vídeo
+  acabou ou encravou.
+- **No futuro:** o ecrã fica quase preto só 0,8 s, e o som fica abaixo de -40 dB 2,2 s, que é a própria
+  intro a desvanecer. O piano entra com o contador.
+
+**Fica assim, por construir** (com o resto dos cinco pontos):
+- **A intro acaba no último fotograma com imagem,** aos 13,20 s do ficheiro, em vez dos 14,44. Sai
+  num ficheiro de nome novo (o `intro_flipbook.py` recusa escrever por cima), passa pelo
+  `igualar_abertura.py` com ganho direto (084) e troca-se no clip de vídeo da Mesa, com o procedimento
+  de escrita. A duração é medida pelo ffprobe.
+- **Sai o cartão vazio que abria o corpo,** e o contador passa a ser o primeiro clip.
+- **O primeiro Lang Lang entra no primeiro fotograma do contador, no acorde:** `LANG_LANG_IN` do
+  `montar_da_mesa.py` passa de 5,0 para 5,45, sem rampa (conta como ataque, 095).
+- **A retoma marcada** continua onde o primeiro Lang Lang parou, pela regra da 095: com a abertura
+  nova, 5,45 + 8,30 = 13,75 s.
+- **O filme fica 2,5 s mais curto.**
+
+**Isto mexe em duas decisões anteriores, e ele sabia-o ao aprovar:**
+- **079:** o cartão vazio era a "pequena pausa" que ele pediu. A pausa passa a ser o letreiro a
+  apagar-se em silêncio, com cerca de 2 s em vez de 3,6.
+- **096:** a primeira troca do 3.3 (Lang Lang para Mariah) tem de ser medida outra vez, porque o piano
+  chega ao anel noutro sítio do ficheiro: aos 13,75 s em vez dos 14,6.
+
+**Prévia:** `py -3.11 scripts/discussao/ponto3_4_abertura.py`.
+
+**Quem:** o Tiago decidiu; Claude fez a proposta, a prévia e as medidas.
+
+---
+### 2026-09-29 | 098 | Ponto 4: os separadores com o letreiro quente, e o champanhe em vez do branco
+
+**O que ele decidiu**, depois de ver os 13 cartões de hoje contra futuro, cada um no sítio dele do
+filme e com o som: *"Sim, aprovo com o champanhe."*
+
+**Porque.** Os cartões pareciam amadores: letra branca apertada, fundo preto chapado e nada a mexer
+(estão marcados com zoom, mas o render desenha os cartões parados). A proposta vem do título do filme
+Oppenheimer, e não do fogo por dentro da letra do tutorial que ele mandou.
+
+**Fica assim, por construir** (com o resto dos cinco pontos), no desenho do cartão do render:
+- **Textos de 1 a 3 palavras:** maiúsculas bem espaçadas (0,30 em), Arial Bold 100, em linhas que
+  caibam na largura útil (a do cartão de hoje, L - 360). Hoje são 6: Carro, Gosto pelo desporto,
+  Viagens, Com os amigos, O trabalho e A faculdade. Conta-se na montagem do momento.
+- **Frases:** a quebra, as minúsculas e o corpo 78 de hoje (o `render.cartao`). Hoje são 7.
+- **Os dois:** cor champanhe quente, a subir para um branco quente, com brilho quente fraco (o
+  `letreiro` de `scripts/discussao/comum.py`, o mesmo dos nomes dos bebés da 092), sobre preto. As
+  letras acendem a partir do preto em 0,6 s, aproximam-se 2,5 % por segundo e dissolvem-se na foto
+  seguinte no encadeado de saída, como hoje.
+- **Sem grão de filme:** fazia o ficheiro 6 vezes maior, e a 15 m não se vê.
+- **Os textos são dele,** e não se lhes toca.
+
+**Corrigido antes de ele aprovar:** a proposta de 28 de setembro apagava as letras 0,5 s antes da
+foto seguinte. Medido na prévia, isso tirava 0,4 s de leitura a todos os cartões (1,8 s de letras
+inteiras contra 2,2 s hoje), e as frases já passam depressa (082). Ficou sem esse meio segundo: as
+letras ficam inteiras 2,3 s.
+
+**Muda uma regra do `CLAUDE.md`:** "texto grande (...) alto contraste, branco sobre escuro". Nos
+cartões e nos nomes dos bebés passa a ser champanhe quente sobre escuro. O contraste desce de 15,2:1
+para 13,3:1, muito acima do que é preciso para ler, e a regra ficou atualizada.
+
+**Prévia:** `py -3.11 scripts/discussao/ponto4_separadores.py`.
+
+**Quem:** o Tiago decidiu; Claude fez a proposta, a prévia e as medidas.
+
+---
+### 2026-09-29 | 099 | Sai o pedido da abertura, a pedido da Clara: de 4 de outubro de 2026 direto a 1995
+
+**O que ele disse:** *"A Clara pediu-me para retirar a parte do pedido do início do vídeo, portanto
+não percas muito tempo com o contador a ir para o pedido e depois a ir para as fotos, mais vale ir do
+4 de Outubro para o Jan de 1995."*
+
+**Reabre, por informação nova, o conceito da abertura das 075, 077, 078 e 079:** o contador até ao
+dia do pedido (25/12/2025), a foto do anel com a Mariah, as duas fotos do anúncio, o cartão "Mas como
+é que chegámos aqui?" e o segundo contador até 1995.
+
+**Fica assim** (a mudança é na Mesa dele):
+- **Saem:** o contador "04/10/2026>25/12/2025" (e o cartão vazio antes dele, que a 097 já tirava),
+  as três fotos do pedido (IMG_2067, 20260101_011410 e 20260101_011607) e o cartão "Mas como é que
+  chegámos aqui?". A marca da Mariah vai com a foto do anel, e a retoma marcada do Lang Lang vai com
+  o cartão.
+- **Um só contador:** "2026>1995|4 de outubro de 2026", o formato de anos que a abertura tinha antes
+  do pedido. Recua do dia do casamento a 1995, e a fita começa em janeiro de 1995.
+- **O Lang Lang da abertura toca direto,** do primeiro fotograma do contador (097) até aos foguetes do
+  Tiago, e volta onde parou na fita antes da Clara, que o `montar_da_mesa.py` já faz sozinho.
+- **O filme fica cerca de 40 s mais curto.**
+
+**O que isto faz às decisões desta discussão:**
+- **097 continua:** da intro ao contador sem preto nem cartão vazio, com o piano no primeiro fotograma
+  do contador.
+- **095:** a linha da retoma marcada do Lang Lang deixa de ter onde se aplicar.
+- **096:** as trocas "Lang Lang para Mariah" e "Mariah para a retoma" deixam de existir, e a medição
+  delas com a abertura nova foi parada a meio. A troca "Rei Leão para o Lang Lang automático" muda,
+  porque o Lang Lang passa a voltar noutro sítio do ficheiro. Depois da mudança na Mesa, o
+  `ponto3_3_frases.py` diz quais medir outra vez.
+- **Ponto 5:** com 40 s a menos, os cerca de 68 s de créditos deixam o filme perto dos 860 s, abaixo
+  dos 900 do alvo.
+
+**Feito na Mesa a pedido dele** (*"Faz tu."*): lida a versão 903 (rev 903, 211 clips), escrita presa à
+903 com rev 904 e `quando` da hora da escrita, relida para `saida/leitura_mesa_42` igual ao que se
+escreveu. Saíram seis clips seguidos, cada um encontrado pelo conteúdo: o cartão vazio, o contador do
+pedido, as três fotos do pedido e o cartão "Mas como é que chegámos aqui?". O contador "2025>1995"
+passou a "2026>1995|4 de outubro de 2026". Juntar: nada. Montagem refeita: 205 clips, o filme passa
+de 833 s para 789 s, e o Lang Lang da abertura toca até aos foguetes do Tiago (26,7 s do corpo) e
+volta na fita antes da Clara. Das 14 trocas do 3.3, 11 continuam certas, 2 já não existem e a do
+Rei Leão para o Lang Lang mede-se outra vez. A página publicada da Mesa ainda mostra o som da
+publicação anterior, até à próxima publicação.
+
+**Quem:** a Clara pediu, o Tiago transmitiu e pediu que Claude fizesse a mudança na Mesa; Claude registou o que muda.
+
+---
+### 2026-09-30 | 100 | A construção das decisões 092 a 099, e o render de ensaio
+
+**O que ele pediu:** *"Executa os 5 pontos do após discussão"*: a construção, a Mesa, o render de
+ensaio, a revisão antes do render final e o render final. O render final fica à espera dos créditos
+(ponto 5, que precisa das fotos que ele vai marcar e da lista de convidados) e da resposta dele sobre os
+textos marcados (082). Um render final sem os créditos não é o final.
+
+**Construído** (nenhum commit, porque ele não pediu):
+- **`linha_tempo.py` (092, 093):** só os marcos grandes mudam. A frase fica em Arial Bold 66 na cor quente
+  `NASC_COR` (236,204,168), e a data a 58 px, 18 px mais abaixo.
+- **`render.py` (092, 093, 098):**
+  - o letreiro (Arial Bold, champanhe a subir para branco quente, brilho quente);
+  - os cartões com texto: curtos espaçados a 100, frases com a quebra e o corpo 78 de sempre; acendem
+    do preto em 0,6 s e aproximam-se 2,5 % por segundo;
+  - o clip "nome" ("O TIAGO", "A CLARA"), que acende em 0,9 s;
+  - o cartão vazio continua preto.
+- **`render.py`, o som (094, 096):**
+  - cada faixa pode trazer a subida, o fim de frase (`sai_s`) e a cauda, que o `som.csv` traz;
+  - os leitos levam `curve=qsin`;
+  - sem subida escrita, entra sem rampa num início, e a meio sobe no tempo em que a anterior desce;
+  - os efeitos, as vozes e o som dos vídeos ficam como estavam.
+- **`montar_da_mesa.py`:**
+  - o clip do nome entre a fita do nascimento e a primeira foto, que sobe em 1 s por trás dele. Nasce
+    no último segundo dos foguetes, e a foto vem 1,6 s depois (092, 093). Com um cartão pelo meio, não
+    se põe;
+  - `LANG_LANG_IN` passa a 5,45 (097);
+  - as entradas num ataque, em `data/entradas_ataque.csv`, levam subida 0,03 (095, 097);
+  - os fins de frase, em `data/fins_de_frase.csv`, aplicam-se quando a música chega ao corte no sítio
+    medido. Senão, a montagem avisa "fim de frase por medir outra vez" (096);
+  - as colunas novas do `som.csv` só aparecem quando há o que escrever.
+- **A intro sem preto (097):** `gerados/intro_marvel/intro_clara_tiago_5 sem preto.mp4`, cortada aos
+  13,20 s, e igualada pelo `igualar_abertura.py`. Mediu -49,91 LUFS, levou +28,01 dB e ficou a -22,14.
+- **Na Mesa, a pedido dele (rev 905, escrita presa à 904, relida igual):**
+  - os seis pontos de entrada da 095 (Fome 2,7, Já Sei 34,9, Celebration 0,81, Taking Care 60,8, Born
+    0,55, Filhos 7,0);
+  - a intro nova no clip de vídeo;
+  - a legenda da primeira foto do Tiago, tirada (092).
+- **Publicada a Mesa** (versão 44), só a página, porque as 45 folhas de prévias são as mesmas. A
+  `montagem/publicacao` foi escrita (build 20260930-005208), e o `estado2` continua na 905.
+
+**Medido outra vez, porque a construção mudou o sítio de duas trocas.** O nome no preto acrescenta
+0,2 s depois de cada nascimento. Cada troca teve um agente a analisar e um verificador:
+- **Rei Leão para o Lang Lang:** o Rei Leão desce aos 47,55 com cauda 0,3, como aprovado. O piano
+  passa a subir em 0,3 s em vez de 1,0, porque com 1,0 abria uma quebra de 0,65 s.
+- **Ana Faria para Clair:** a Ana Faria desce aos 112,28 com cauda 0,3, e não aos 112,15 com 0,4.
+  Assim cala-se exatamente no ataque da linha seguinte, e a pausa até à Clair fica em 0,37 s.
+
+Mudam números aprovados, e **mostram-se-lhe no render de ensaio** (096).
+
+**Testes:**
+- 175 passaram e 2 falharam, os dois de propósito:
+  - o `v3.som.csv` contra a referência congelada;
+  - a assinatura do corpo sintético, que tem cartões e marcos de nascimento.
+
+  As fatias continuam iguais ao sequencial, e as assinaturas dos grupos não mudaram.
+- 5 testes novos:
+  - o nome no preto e o tempo da foto;
+  - a cor quente só nos marcos de nascimento;
+  - o cartão com o letreiro;
+  - o som com subida, fim de frase e curvas;
+  - os fins de frase a avisar quando mudam.
+- As duas referências congelam-se (`--congelar-referencia` e a assinatura) depois de ele ver e ouvir
+  o render de ensaio.
+
+**Revisão da construção, antes do render de ensaio.** Três revisores independentes (render, montagem
+e o texto das decisões) encontraram 30 problemas. O render de ensaio foi parado, e corrigiu-se:
+- **O nome do bebé compõe-se como na prévia aprovada.** Fica por cima em modo ecrã, inteiro até 0,4 s
+  depois de a foto começar a subir, e apaga-se em 0,6 s; a fita escurece e a foto sobe com curva
+  suave. Antes era um encadeado de dois clips, e ficava inteiro 0,7 s em vez de 1,1 s.
+- **O som:**
+  - o loudnorm mede o troço que toca de facto (a Clair ficava 1 dB abaixo);
+  - um fim de frase a mais de 3 s do corte é ignorado, com aviso (um erro de escrita calava um bloco);
+  - uma célula mal escrita não mata o render;
+  - as subidas contam-se antes do fim de frase.
+- **A montagem:**
+  - o nome entra uma vez por bebé, a seguir à fita do nascimento que acende por último;
+  - avisa quando o nome não pode entrar, ou quando nasce depois dos foguetes;
+  - os números de clip dos avisos são os da Mesa (o CSV tem os nomes a mais);
+  - avisa uma entrada num ataque que deixou de bater, e um fim de frase repetido;
+  - a nota dos foguetes da Clara ficou a da 088.
+- **A Mesa:** o `som_para_mesa.py` já não prende o Rei Leão e a Ana Faria ao clip do nome, que a
+  Mesa não tem. Publicada outra vez (versão 45), com a `publicacao` escrita (build 20260930-012509).
+- **A revisão da 096** (`ponto3_3_frases.py`) lê o `data/fins_de_frase.csv`, a mesma fonte da
+  montagem. As 12 trocas dão certas.
+- **O teste ao byte** passa a congelar também as duas tabelas do som.
+- **Dois testes novos:** o nome composto como a prévia, e o som dos nascimentos com a Mesa.
+
+**Uma mudança de desenho, que fica dita:** a 3.1 dizia que o ataque de uma entrada viria de um campo
+novo na marca da Mesa. Ficou no `data/entradas_ataque.csv`, pela música e pelo segundo, com aviso
+quando deixa de bater. Não precisou de mexer na Mesa, e faz o mesmo.
+
+**Quem:** o Tiago pediu; Claude construiu, os agentes mediram e verificaram as duas trocas.
 
 ---
 

@@ -8,8 +8,8 @@ faz a atualizacao. Um comando so, pela ordem certa, para nunca ficar um passo
 esquecido pelo meio:
 
   1  inventario.py            regista o que ele largou na 01-NOVAS
-  2  upscale.py               versao lanczos, usada abaixo de 1,5x (decisao 052)
-  3  upscale_ia.py --min 1.5  rede neuronal so onde vai ser usada (decisao 052)
+  2  upscale.py               versao lanczos, a unica melhorada que entra (decisao 090)
+  3  (upscale_ia.py)          ja nao corre: a rede neuronal saiu do filme (decisao 090)
   4  consolidar.py            escolhe a versao de cada foto e escreve o indice
   5  gerar_editor.py          miniaturas da Mesa, a partir da FINAIS
   6  gerar_montagens_editor.py
@@ -17,9 +17,9 @@ esquecido pelo meio:
   8  gerar_previas.py         a foto em grande, para o botao de ampliar da Mesa
   9  gerar_mesa.py            cola tudo em saida/mesa.html
 
-A rede neuronal pode demorar horas. Com --sem-ia salta o passo 3: as fotos que
-precisam dele ficam marcadas "a espera" no botao da Mesa, em vez de ficarem
-escondidas.
+A rede neuronal podia demorar horas, e o --sem-ia saltava-a. Desde 28 de setembro nao corre
+nunca: desenhava olhos e bocas nas caras pequenas das fotos de grupo, e o consolidar.py ja nao
+escolhe a versao dela. O --sem-ia continua a ser aceite e nao faz nada.
 
 Depois disto faltam dois passos que so o Claude faz, com a ferramenta Artifact:
 publicar saida/mesa.html no link da Mesa, com as folhas saida/previas/folha_NN.jpg
@@ -61,14 +61,10 @@ def passo(n, nome, *args):
 
 
 def main():
-    sem_ia = "--sem-ia" in sys.argv
     passo(1, "inventario.py")
     passo(2, "upscale.py")
-    if sem_ia:
-        print()
-        print("[3] upscale_ia.py saltado (--sem-ia): essas fotos ficam a espera")
-    else:
-        passo(3, "upscale_ia.py", "--min", "1.5")
+    print()
+    print("[3] upscale_ia.py: nao corre, a rede neuronal saiu do filme (decisao 090)")
     passo(4, "consolidar.py")
     passo(5, "gerar_editor.py")
     passo(6, "gerar_montagens_editor.py")

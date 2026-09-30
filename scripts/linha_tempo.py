@@ -33,6 +33,7 @@ nenhum marco levar mais do que uma linha curta de texto.
 """
 import datetime
 import math
+import re
 
 from PIL import Image, ImageDraw, ImageFont
 
@@ -48,6 +49,15 @@ ANO_LONGE = (108, 96, 104)
 ANO_PERTO = (246, 240, 244)
 MARCO = (200, 62, 86)
 MARCO_TEXTO = (255, 226, 232)
+# OS MARCOS DOS NASCIMENTOS (decisoes 092 e 093), e so eles: os grandes, com asterisco. O Tiago achou
+# a frase dele ("Nasce o 2o filho da Graca e do Alberto") com as letras "muito grandes e gordas" a 96,
+# e a data a 40 nao se le a 15 m. Ficou a letra C das quatro que viu: Arial Bold 66 na cor quente, e
+# a data a 58 na mesma cor, 18 px mais abaixo para nao tocar nos meses. Os outros marcos ficam iguais
+# ao byte ("pensava que iamos alterar apenas o 'Nasce o 2o filho' e o '12 de setembro'").
+NASC_COR = (236, 204, 168)
+NASC_CORPO = 66
+NASC_DATA_CORPO = 58
+NASC_DATA_DESCE = 18
 
 # ------------------------------------------------- os dois contadores sao a MESMA fita
 # Ate 18 de setembro nao eram, e media-se: o algarismo grande tinha 131 px no contador de
@@ -168,6 +178,18 @@ def inicio_da_paragem(k, n, fracao_parada=0.62, parar_no_primeiro=True):
     if parar_no_primeiro:
         return k * (t_parado + t_viagem)
     return k * t_viagem + max(0, k - 1) * t_parado + (t_parado if k > 0 else 0.0) * 0
+
+
+def meio_da_paragem(k, n, fracao_parada=0.62, parar_no_primeiro=True):
+    """Em que fracao do clip fica o MEIO da paragem k, de n: a palavra esta acesa a 100%.
+
+    A palavra acende nos primeiros 18% da paragem e apaga nos ultimos 18%; o meio e o unico
+    sitio seguro para a fita ficar parada com ela acesa (decisao 089).
+    """
+    if n <= 0:
+        return 0.0
+    quantas_param = n if parar_no_primeiro else max(1, n - 1)
+    return inicio_da_paragem(k, n, fracao_parada, parar_no_primeiro) + 0.5 * fracao_parada / quantas_param
 
 
 def posicao_com_paragens(p, paragens, fracao_parada=0.62, parar_no_primeiro=True):
@@ -747,8 +769,9 @@ def meses(L, A, ano, marcas, t_rel, duracao, troco=(0.0, 1.0), abre=True):
     # que la estava. A 42 ja encostava mais.
     f_mes = ImageFont.truetype(FONTE, 38)
     f_data = ImageFont.truetype(FONTE, 40)
+    f_data_nasc = ImageFont.truetype(FONTE, NASC_DATA_CORPO)
     f_txt = ImageFont.truetype(FONTE, 58)
-    f_gr = ImageFont.truetype(FONTE, 96)
+    f_gr = ImageFont.truetype(FONTE, NASC_CORPO)
 
     # O ano comeca grande, no sitio onde estava na fita dos anos, e encolhe
     # para o alto enquanto os meses se abrem. E isso que costura as duas fitas.
@@ -788,7 +811,7 @@ def meses(L, A, ano, marcas, t_rel, duracao, troco=(0.0, 1.0), abre=True):
         x = desvio + fracao(dia, mes) * largura_ano
         alto = 64 if grande else 34
         fonte = f_gr if grande else f_txt
-        claro = tuple(int(MARCO_TEXTO[k] * aceso) for k in range(3))
+        claro = tuple(int((NASC_COR if grande else MARCO_TEXTO)[k] * aceso) for k in range(3))
         y_txt = y_linha - alto - (86 if grande else 46)
         if img:
             # 0,20 e nao 0,24: a 0,24 a imagem encostava ao "1995" do topo.
@@ -807,8 +830,8 @@ def meses(L, A, ano, marcas, t_rel, duracao, troco=(0.0, 1.0), abre=True):
         _texto(d, "%d de %s" % (dia, ["janeiro", "fevereiro", "março", "abril", "maio",
                                       "junho", "julho", "agosto", "setembro", "outubro",
                                       "novembro", "dezembro"][mes - 1]),
-               f_data, x, y_linha + 64,
-               tuple(int(c * aceso) for c in (214, 182, 196)))
+               (f_data_nasc if grande else f_data), x, y_linha + 64 + (NASC_DATA_DESCE if grande else 0),
+               tuple(int(c * aceso) for c in (NASC_COR if grande else (214, 182, 196))))
     return tela
 
 
@@ -921,14 +944,45 @@ def ano_de_chegada(texto):
     return para if tipo == "anos" else para.year
 
 
+# A FITA PARADA NO FIM, decisao 089. O Tiago, a 28 de setembro: "os foguetes sao no contador
+# e nao nas fotos". Sem o cartao do nascimento nao ha onde os foguetes acabarem antes da foto
+# do bebe, e o montar_da_mesa.py segura entao a propria fita parada na data acesa. Escreve-o no
+# CSV no fim do texto do clip, "...;*24/11 Nasce a Clara~5.45@12.34": a fita anda no tempo de
+# sempre (duracao menos os 5,45 s) e, a partir dos 12,34 s do clip, fica parada nesse fotograma
+# ate ao fim. O instante e o MEIO DA PARAGEM DO NASCIMENTO, que o montar calcula porque e ele que
+# sabe qual e: ai a palavra esta acesa a 100%. A primeira versao congelava o ultimo fotograma, e
+# nesse fotograma a palavra ja se tinha apagado (a paragem apaga nos ultimos 18%, para o corte):
+# a Clara ficava a 9% de brilho durante os 5,45 s dos foguetes (revisores, 28 de setembro). Sem o
+# "@" congela no ultimo fotograma, como antes. So existe no CSV da montagem, nunca na Mesa, e o
+# ler_meses() tira-o antes de ler os marcos.
+_SEGURA = re.compile(r"~(\d+(?:\.\d+)?)(?:@(\d+(?:\.\d+)?))?\s*$")
+
+
+def segura_de(texto):
+    """Segundos em que a fita fica parada no fim do clip; 0.0 quando nao ha."""
+    m = _SEGURA.search(texto or "")
+    return float(m.group(1)) if m else 0.0
+
+
+def congela_de(texto):
+    """Segundo do clip a partir do qual a fita fica parada; None quando nao foi dito."""
+    m = _SEGURA.search(texto or "")
+    return float(m.group(2)) if m and m.group(2) else None
+
+
+def sem_segura(texto):
+    return _SEGURA.sub("", texto or "")
+
+
 def ler_meses(texto):
     """"1995|17/01 Kobe;*12/09 Nasce o Tiago" -> (ano, marcas, troco).
 
     O asterisco marca os grandes, que sao os dois nascimentos. O cabecalho pode
     levar o troco do ano a percorrer: "1995@0-0.70|..." faz a fita parar em
-    setembro, para o clip seguinte poder ser a fotografia do bebe.
+    setembro, para o clip seguinte poder ser a fotografia do bebe. O "~segundos" do
+    fim, a fita parada, nao e um marco e sai antes, ver segura_de().
     """
-    corpo, _, resto = (texto or "").partition("|")
+    corpo, _, resto = sem_segura(texto).partition("|")
     troco, abre = (0.0, 1.0), True
     if "@" in corpo:
         corpo, _, faixa = corpo.partition("@")

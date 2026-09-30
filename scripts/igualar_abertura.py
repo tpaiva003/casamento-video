@@ -35,7 +35,9 @@ DESTINO = r"C:\casamento-video-media\gerados\som_igualado"
 # O NIVEL DA MUSICA MEDIDO A SAIDA DO RENDER, e nao os -23 do loudnorm: a opcao `level` do
 # alimiter multiplica a saida por 1/0,94, que sao mais 0,54 dB (render.py, construir_som).
 ALVO = -21.9
-NOMES = ["20th Century Fox Intro HD.mp4", "intro_clara_tiago_5.mp4"]
+NOMES = ["20th Century Fox Intro HD.mp4", "intro_clara_tiago_5.mp4",
+         # a intro sem o 1,24 s de preto do fim (decisao 097), cortada aos 13,20 s do _5
+         "intro_clara_tiago_5 sem preto.mp4"]
 SUFIXO = " igualado"
 
 
@@ -86,4 +88,8 @@ def main():
         print("  escrito:", saida)
 
 
-main()
+# SO CORRE QUANDO E CHAMADO PELO NOME. Sem esta guarda, importar o modulo corria o
+# programa todo: o consolidar.py importa o auditar_caras para a guarda das caras e
+# arrancava uma auditoria de 719 fotografias sem ninguem pedir.
+if __name__ == "__main__":
+    main()

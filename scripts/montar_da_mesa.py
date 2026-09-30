@@ -20,6 +20,7 @@ Uso:
 """
 import csv
 import json
+import re
 import math
 import os
 import sys
@@ -56,7 +57,9 @@ VINHETA = "Candidato a vereador.mp3"       # os foguetes
 VINHETA_IN = 173.7
 VINHETA_DURA = 7.5
 LANG_LANG = "Lang Lang - Beauty and the Beast (From Lang Lang Plays Disney  Live).mp3"
-LANG_LANG_IN = 5.0
+# NO ACORDE, decisao 097: o primeiro acorde do Lang Lang cai no primeiro fotograma do contador, e
+# entra sem rampa (esta em data/entradas_ataque.csv). Era 5,0 ate 29 de setembro.
+LANG_LANG_IN = 5.45
 # Trocado a 2026-09-14 pelo Tiago pela versao portuguesa. A antiga ja nao esta
 # em disco. Entra do principio: o ficheiro nao tem silencio a abrir e o canto
 # de abertura e a parte que toda a gente reconhece.
@@ -98,7 +101,35 @@ EXT_MUSICA = (".mp3", ".wav", ".m4a", ".wma", ".flac", ".ogg")
 # Quantas fotos cada tratamento de varias fotos aceita. Os mesmos limites que o
 # render.py, que recusa o clip fora deles, e que o GRUPOS da Mesa: o Tiago pediu a 17 de
 # setembro mais fotos na colagem e na pilha, e o teste_limites_dos_grupos_iguais le os tres.
-LIMITES_MONTE = {"colagem": (2, 12), "pilha": (2, 20)}
+# A 28 de setembro subiram a 20 e 40, decisao 087; as medidas estao no render.py.
+LIMITES_MONTE = {"colagem": (2, 20), "pilha": (2, 40)}
+
+# O DIA DE CADA NASCIMENTO NA FITA DE 1995, (dia, mes). Sao as duas datas confirmadas pelo
+# Tiago na decisao 030, e sao a unica coisa do marco que nao muda: o texto e dele, e pode
+# ser o que quiser (decisao 088). O _acende() reconhece o nascimento pelo nome ou por isto.
+NASCIMENTO_NA_FITA = {"Tiago": (12, 9), "Clara": (24, 11)}
+
+# O NOME DO BEBE NASCE NO PRETO, decisoes 092 e 093. O Tiago, a 28 de setembro: "eu quero dizer na
+# primeira foto que aparece da crianca 'O Tiago'". Ficou assim, depois de quatro previas: no ultimo
+# segundo dos foguetes a fita escurece e o nome nasce no preto com o letreiro quente (o dos cartoes,
+# 098); NOME_ATE_A_FOTO s depois a foto sobe por tras e o nome dissolve-se nela. E um clip "nome"
+# que so existe aqui e no render: a Mesa nao o tem, e o montar poe-no entre a fita do nascimento e a
+# primeira foto (ou grupo de fotos) que vem logo a seguir. Com um cartao pelo meio nao se poe.
+NOME_DO_BEBE = {"Tiago": "O TIAGO", "Clara": "A CLARA"}
+NOME_ANTES_DO_FIM_DOS_FOGUETES = 1.0   # o nome nasce no ultimo segundo dos foguetes
+NOME_ATE_A_FOTO = 1.6                  # e a foto comeca a subir 1,6 s depois
+NOME_ENCADEADO = 0.7                   # a fita escurece para o nome em 0,7 s
+NOME_FOTO_SOBE = 1.0                   # e a foto sobe em 1 s, com o nome a dissolver-se nela
+
+# OS FINS DE FRASE (096) E AS ENTRADAS NUM ATAQUE (095, 097), medidos e aprovados. Ver os
+# comentarios em escrever_fins_de_frase() e em ataque().
+FINS_DE_FRASE = os.path.join(REPO, "data", "fins_de_frase.csv")
+ENTRADAS_ATAQUE = os.path.join(REPO, "data", "entradas_ataque.csv")
+
+# UMA MARCA QUE CAI ATE AQUI DEPOIS DA ENTRADA AUTOMATICA DA MESMA MUSICA E UM ECO (decisao
+# 087): com o cartao ou a fita parada, a automatica entra 1,4 a 2 s antes da primeira foto.
+# Mais longe do que isto, ou com outro "in", e um pedido dele e vale.
+MARCA_ECO_S = 3.0
 
 # As disposicoes do lado a lado e quantas fotos leva cada uma, as do render.LAYOUTS_LADO. A
 # de 6, duas filas de tres, e de 17 de setembro; com 5 fotos nao ha disposicao nenhuma.
@@ -367,6 +398,20 @@ def resolve_musica(nome, mus):
         kn = unicodedata.normalize("NFC", k).lower()
         if os.path.splitext(kn)[0] == alvo:
             return k
+
+    # E O FICHEIRO QUE GANHOU UM SUFIXO. A 23 de setembro duas musicas marcadas por ele
+    # deixaram de ser encontradas e o filme perdia a mudanca de faixa em dois blocos, com o
+    # leito anterior a continuar por cima: "Baha Men - Who Let The Dogs Out (Lyrics)" passou
+    # a ter " - Caes.mp3" no fim e "Antonio variacoes - o corpo e que paga ( semi-original )"
+    # a ter " - Exercicio.mp3". O nome dele continua a ser o nome da musica; o que mudou foi
+    # o ficheiro. Aceita-se o disco que COMECE pelo nome dele seguido de " - ", e SO quando ha
+    # um unico candidato: com dois, nao se adivinha e cai no aviso de sempre. Medido nas 57
+    # musicas em disco: nenhum nome e prefixo de outro, portanto nao ha aqui nada a mascarar.
+    candidatos = [k for k in mus
+                  if os.path.splitext(unicodedata.normalize("NFC", k).lower())[0]
+                  .startswith(alvo + " - ")]
+    if len(candidatos) == 1:
+        return candidatos[0]
     return None
 
 
@@ -563,6 +608,81 @@ def escreve_abafar(janelas):
     duas colunas ja nao dava.
     """
     return ";".join("%.2f-%.2fx%.3f" % (a, b, k) for a, b, k in janelas)
+
+
+def quem_nasce_na_fita(texto):
+    """"Tiago" ou "Clara" se esta fita acende o marco grande do nascimento dentro do troco que
+    percorre (pela data ou pelo nome, decisao 088), ou None. A mesma conta do _acende."""
+    import linha_tempo
+    try:
+        _ano, marcas, troco, _abre = linha_tempo.ler_meses(texto or "")
+    except (ValueError, AttributeError):
+        return None
+
+    def fr(m):
+        return ((m[1] - 1) + (m[0] - 1) / 31.0) / 12.0
+    # SE O TROCO TIVER OS DOIS NASCIMENTOS, conta o que acende por ultimo: e o dos foguetes que o
+    # nome fecha e o da paragem em que a fita fica segura.
+    achados = []
+    for quem, data in NASCIMENTO_NA_FITA.items():
+        for m in marcas:
+            if (m[3] and (quem in m[2] or (m[0], m[1]) == data)
+                    and troco[0] - 1e-4 <= fr(m) <= troco[1] + 1e-4):
+                achados.append((fr(m), quem))
+    return max(achados)[1] if achados else None
+
+
+def ler_dados_csv(caminho):
+    if not os.path.exists(caminho):
+        return []
+    with open(caminho, encoding="utf-8-sig", newline="") as fh:
+        return list(csv.DictReader(fh))
+
+
+def ataque(faixa):
+    """AS ENTRADAS NUM ATAQUE ENTRAM SEM RAMPA (095, 097). A regra medida da 094 (silencio antes e
+    som logo a seguir) nao reconhece nenhuma das quatro entradas que o Tiago aprovou na 095 (a voz ou
+    a primeira batida), nem o acorde do Lang Lang da 097: estao em data/entradas_ataque.csv, pela
+    musica e pelo segundo de entrada. Se ele mudar a entrada na Mesa, deixa de bater e fica a regra."""
+    for r in ler_dados_csv(ENTRADAS_ATAQUE):
+        if (faixa["ficheiro"].startswith(r["musica"]) and faixa["in_s"] is not None
+                and abs(float(faixa["in_s"]) - float(r["in_s"])) < 0.02):
+            return True
+    return False
+
+
+def escrever_fins_de_frase(faixas, avisos):
+    """A MUSICA QUE SAI ACABA NO FIM DA FRASE (096). Para cada troca entre dois leitos seguidos que
+    esteja em data/fins_de_frase.csv (pelos nomes das duas musicas), e em que a que sai chega ao corte
+    no MESMO segundo do ficheiro em que foi medida, a que sai leva sai_s e cauda e a que entra leva a
+    subida medida. Se as musicas forem as mesmas mas o sitio mudou (fotos novas, outra ordem, outras
+    duracoes, outra entrada), avisa: o fim de frase e um sitio da musica, e tem de ser medido outra
+    vez (o Tiago, ao aprovar: "este fluxo tera de ser revisto antes de fazer o render final ou com
+    novas fotos"). Avisa, nunca corrige (083)."""
+    medidos = ler_dados_csv(FINS_DE_FRASE)
+    if not medidos:
+        return
+    leitos = sorted([fx for fx in faixas if e_leito(fx)], key=lambda fx: fx["quando_s"])
+    for a, b in zip(leitos, leitos[1:]):
+        iguais = [r for r in medidos if r["sai"] == a["ficheiro"] and r["entra"] == b["ficheiro"]]
+        if not iguais:
+            continue
+        no_corte = float(a["in_s"] or 0.0) + b["quando_s"] - a["quando_s"]
+        certo = [r for r in iguais if abs(no_corte - float(r["no_corte"])) < 0.05
+                 and abs(float(b["in_s"] or 0.0) - float(r["entra_in"])) < 0.05]
+        if not certo:
+            avisos.append("fim de frase por medir outra vez (096): %s para %s chega ao corte aos %.2f s "
+                          "do ficheiro, e foi medida aos %s; desce no corte, como antes"
+                          % (a["ficheiro"][:30], b["ficheiro"][:30], no_corte,
+                             " ou ".join(r["no_corte"] for r in iguais)))
+            continue
+        if len(certo) > 1:
+            avisos.append("fim de frase repetido em data/fins_de_frase.csv para %s para %s: fica a ultima linha"
+                          % (a["ficheiro"][:30], b["ficheiro"][:30]))
+        r = certo[-1]
+        a["sai_s"], a["cauda"] = r["sai_s"], r["cauda"]
+        if r["subida_entra"]:
+            b["subida"] = r["subida_entra"]
 
 
 def e_leito(fx):
@@ -825,10 +945,11 @@ def main():
 
     import linha_tempo
 
-    def _acende(linhas, desvio0, quem):
+    def _acende(linhas, desvio0, quem, com_linha=False):
         """Instante, no corpo, em que o nascimento de `quem` e anunciado.
 
-        Na fita e a palavra a acender; sem fita, e o cartao que ele escreveu.
+        Na fita e a palavra a acender; sem fita, e o cartao que ele escreveu. Com
+        com_linha devolve tambem a linha da fita onde acende (None se veio do cartao).
         """
         for l in linhas:
             if l["tipo"] != "marcos":
@@ -847,16 +968,29 @@ def main():
             if not dentro or abs(fr(dentro[-1]) - troco[1]) > 1e-4:
                 passos.append(None)
             for i, m in enumerate(passos):
-                if m and m[3] and quem in m[2]:
-                    return (l["inicio_s"] - desvio0
-                            + linha_tempo.inicio_da_paragem(
-                                i, len(passos), 0.70, parar_no_primeiro=abre)
-                            * l["duracao_s"])
+                # PELO NOME OU PELA DATA (decisao 088). Ate 28 de setembro so pelo nome: na rev
+                # 800 o Tiago deixou o marco do nascimento como "*12/09", sem texto, e os
+                # foguetes foram parar ao primeiro cartao que dizia "Tiago", o do primeiro carro,
+                # 259 s depois, sem Rei Leao nem retoma. O Tiago: "ensina o montar a reconhecer
+                # o nascimento pela data, 12/09, que e fixa. Assim o texto do marco pode ser o
+                # que quiseres." O marco grande (asterisco) nessa data e o nascimento.
+                if m and m[3] and (quem in m[2] or (m[0], m[1]) == NASCIMENTO_NA_FITA.get(quem)):
+                    # A fita anda na duracao MENOS a paragem do fim (decisao 089): e nessa
+                    # parte que a palavra acende, e segurar a fita nao a pode empurrar.
+                    anda = l["duracao_s"] - linha_tempo.segura_de(l["texto_ecra"])
+                    t = (l["inicio_s"] - desvio0
+                         + linha_tempo.inicio_da_paragem(
+                             i, len(passos), 0.70, parar_no_primeiro=abre) * anda)
+                    # e o MEIO da paragem, em segundos do clip: e ai que a fita fica parada
+                    # quando tem de esperar pelos foguetes, com a palavra acesa (decisao 089)
+                    meio = linha_tempo.meio_da_paragem(
+                        i, len(passos), 0.70, parar_no_primeiro=abre) * anda
+                    return (t, l, meio) if com_linha else t
         chave = "bebe" if quem == "Clara" else quem
         for l in linhas:
             if l["tipo"] == "cartao" and sem_acentos(chave) in sem_acentos(l["texto_ecra"]):
-                return l["inicio_s"] - desvio0
-        return None
+                return (l["inicio_s"] - desvio0, None, None) if com_linha else l["inicio_s"] - desvio0
+        return (None, None, None) if com_linha else None
 
     linhas, cursor, avisos, esticados = [], 0.0, [], []
 
@@ -934,7 +1068,7 @@ def main():
             "duracao_s": round(dur, 2), "transicao_s": round(t, 2),
             "inicio_s": round(inicio, 2), "fim_s": round(fim, 2),
             "dominante_s": round(dur - t, 2), "solo_s": round(dur - 2 * t, 2),
-            "movimento": ("Nenhum" if tipo in ("contador", "marcos", "video")
+            "movimento": ("Nenhum" if tipo in ("contador", "marcos", "video", "nome")
                           else (mov or "Zoom in")),
             "texto_ecra": texto, "tratamento": trat,
             "duracao_original_s": "", "variacao_pct": "",
@@ -969,9 +1103,10 @@ def main():
     avisos_passagens = []
     for _passagem in (1, 2):
       linhas, cursor, avisos = [], 0.0, []
+      nomes_postos = set()
       avisos_passagens.append(avisos)
       musicas_marcadas, vozes_marcadas, videos_marcados = [], [], []
-      for c in clips:
+      for k_clip, c in enumerate(clips):
         tipo = c.get("t", "foto")
         if tipo == "fanfarra":
             continue            # a abertura ja entrou acima
@@ -1097,6 +1232,14 @@ def main():
             if pedido and pedido not in estilos:
                 avisos.append("%s com estilo %r desconhecido, fica %s (clip %d): os estilos sao %s"
                               % (tipo, pedido, estilo, len(linhas) + 1, " e ".join(estilos)))
+            # O LEQUE SO ATE render.PILHA_LEQUE_MAX FOTOS (decisao 087): com mais, as de baixo
+            # deixam de se ver no ecra. Fica em monte, que e o que vai ao filme, e diz-se.
+            import render
+            if tipo == "pilha" and estilo == "leque" and len(fotos) > render.PILHA_LEQUE_MAX:
+                avisos.append("pilha em leque com %d fotos (clip %d): o leque so deixa ver as de "
+                              "baixo ate %d; fica em monte" % (len(fotos), len(linhas) + 1,
+                                                               render.PILHA_LEQUE_MAX))
+                estilo = "monte"
             c = dict(c, r=estilo)
         if tipo == "foto":
             # POR ID PRIMEIRO. Ha nomes repetidos em pastas diferentes, e o ID
@@ -1141,11 +1284,38 @@ def main():
                               "os dois numeros sobrepostos"
                               % (len(linhas), len(linhas) + 1, segundos(trans)))
             trans = 0.0
-        junta_clip(tipo, ficheiro, ident, float(c.get("d", 4.0)),
-                   c.get("x", ""), c.get("r", "fiel"), trans, foco_txt,
+        # A FITA PARADA NO FIM (decisao 089), so num clip da fita que a conta dos foguetes
+        # segurou: a duracao cresce e o texto leva "~segundos", que o render le. Sem
+        # paragem a linha sai como sempre, ao byte.
+        # O NOME DO BEBE (092, 093) entra entre a fita do nascimento e a primeira foto, e a foto
+        # sobe por tras dele em NOME_FOTO_SOBE s, seja qual for o encadeado que ela tinha.
+        # UMA SO VEZ POR BEBE, na primeira fita do nascimento, que e a dos foguetes (_acende): um
+        # "*12/09" de aniversario numa fita de outro ano nao e o nascimento.
+        e_fotos_agora = tipo in ("foto", "lado") or tipo in LIMITES_MONTE
+        if linhas and linhas[-1]["tipo"] == "marcos" and tipo != "marcos":
+            quem_nasce = quem_nasce_na_fita(linhas[-1]["texto_ecra"])
+            if quem_nasce and quem_nasce not in nomes_postos:
+                nomes_postos.add(quem_nasce)
+                if e_fotos_agora:
+                    junta_clip("nome", "", "", NOME_ATE_A_FOTO + NOME_FOTO_SOBE, NOME_DO_BEBE[quem_nasce],
+                               "fiel", NOME_ENCADEADO)
+                    trans = NOME_FOTO_SOBE
+                else:
+                    avisos.append("o nome \"%s\" no preto nao entra: a seguir a fita do nascimento vem um "
+                                  "clip do tipo %s, e nao uma foto (clip %d)"
+                                  % (NOME_DO_BEBE[quem_nasce], tipo, len(linhas) + 1))
+        segura = float(c.get("_segura") or 0.0) if tipo == "marcos" else 0.0
+        texto_clip = c.get("x", "")
+        if segura > 0:
+            texto_clip = "%s~%s" % (texto_clip, numero(segura))
+            if c.get("_congela") is not None:
+                texto_clip += "@%s" % numero(c["_congela"])
+        junta_clip(tipo, ficheiro, ident, float(c.get("d", 4.0)) + segura,
+                   texto_clip, c.get("r", "fiel"), trans, foco_txt,
                    enquadramento_de(c, len(linhas) + 1, foco_txt) if tipo == "foto" else "",
                    textos_txt,
                    opcoes_txt, dentro=troco),
+        linhas[-1]["_k"] = k_clip
         # O SOM DE UM VIDEO DO CORPO E UMA FAIXA COMO AS OUTRAS. A fanfarra leva o seu som
         # colado com a imagem, pelo concat; um video do meio nao passa por ai, e sem isto
         # saia mudo. O `vzm` diz o que a musica por baixo faz, como nas vozes do pedido.
@@ -1192,6 +1362,17 @@ def main():
           # Uma colagem, pilha ou lado a lado logo a seguir ao cartao tambem sao fotos
           # a entrar. Contar so as soltas deixava-as rebentar por baixo dos foguetes.
           e_fotos = l["tipo"] in ("foto", "lado") or l["tipo"] in LIMITES_MONTE
+          if l["tipo"] == "nome" and (l["inicio_s"] - desvio0) > t:
+            # COM O NOME DO BEBE (092, 093) e ele que espera: nasce no ultimo segundo dos
+            # foguetes, e a foto vem NOME_ATE_A_FOTO s depois dele, ja com os foguetes acabados.
+            prox = l["inicio_s"] - desvio0
+            fim_fog = t + VINHETA_DURA - NOME_ANTES_DO_FIM_DOS_FOGUETES
+            if prox > fim_fog + 0.05 and _passagem == 2:
+                # A fita continua depois do nascimento, e o nome chega tarde: a musica do bebe
+                # entra no ultimo segundo dos foguetes, antes dele (092: "deve comecar com as letras").
+                avisos.append("o nome \"%s\" nasce %.1f s depois do ultimo segundo dos foguetes, e a musica "
+                              "dele entra antes: a fita continua depois do nascimento" % (l["texto_ecra"], prox - fim_fog))
+            break
           if e_fotos and (l["inicio_s"] - desvio0) > t:
             prox = l["inicio_s"] - desvio0
             break
@@ -1201,17 +1382,53 @@ def main():
         # A MESMA CHAVE QUE O _acende USA. O cartao da Clara que ele escreveu
         # diz "nasce uma bebe" e nao contem a palavra "Clara": procurar pelo
         # nome nao encontrava nada e o esticamento nunca acontecia.
-        chave_c = "bebe" if quem == "Clara" else quem.lower()
-        for c in clips:
-          if e_nascimento(c) and chave_c in sem_acentos(c.get("x")):
-            antes = float(c.get("d", 0))
-            c["d"] = round(antes + falta, 2)
-            esticados.append((c.get("x", "")[:44], antes, c["d"]))
+        # O CARTAO A ESTICAR E O QUE ESTA ENTRE OS FOGUETES E A FOTO DO BEBE, pela posicao. Ate 28
+        # de setembro era o primeiro cartao de nascimento com o nome em todo o filme: um "Nasce a
+        # bebe da Rita" no clip 170 era esticado em vez da fita da Clara, e a foto dela entrava
+        # com os foguetes a tocar (revisores). Pela posicao, o nome deixa de ser preciso.
+        cartao = None
+        for l in linhas:
+            if l["tipo"] != "cartao" or l.get("_k") is None:
+                continue
+            ini = l["inicio_s"] - desvio0
+            if t - 0.01 <= ini <= prox + 0.01 and e_nascimento(clips[l["_k"]]):
+                cartao = clips[l["_k"]]
+                break
+        if cartao is not None:
+            antes = float(cartao.get("d", 0))
+            cartao["d"] = round(antes + falta, 2)
+            esticados.append((cartao.get("x", "")[:44], antes, cartao["d"]))
             faltou = True
-            break
+        else:
+            # SEM CARTAO, A FITA FICA PARADA NA DATA ACESA (decisao 089). O Tiago, a 28 de
+            # setembro: "os foguetes sao no contador e nao nas fotos". A 23 ele tirou os
+            # cartoes dos nascimentos e os foguetes passaram a tocar 1,9 s por cima da foto do
+            # Tiago e 5,1 s por cima da da Clara. Segura-se a propria fita onde a palavra
+            # acendeu, pelo tempo que falta, e a foto entra quando eles acabam.
+            _t, l_fita, meio = _acende(linhas, desvio0, quem, com_linha=True)
+            if l_fita is not None and l_fita.get("_k") is not None:
+                fita = clips[l_fita["_k"]]
+                antes = float(fita.get("d", 0)) + float(fita.get("_segura") or 0.0)
+                fita["_segura"] = round(float(fita.get("_segura") or 0.0) + falta, 2)
+                fita["_congela"] = round(meio, 2)
+                esticados.append(("fita de 1995, nascimento %s %s" % ("da" if quem == "Clara" else "do", quem),
+                                  antes, round(float(fita.get("d", 0)) + fita["_segura"], 2)))
+                faltou = True
       if not faltou:
         break
 
+    # OS AVISOS FALAM DOS CLIPS DA MESA. O CSV ganhou uma linha por nome do bebe e a numeracao dele
+    # deixou de bater com a da Mesa, que e por onde o Tiago procura: "(clip 83)" era o 81 da Mesa.
+    na_mesa = {l["ordem"]: l["_k"] + 1 for l in linhas if l.get("_k") is not None}
+
+    def numera(aviso):
+        def um(m):
+            n = int(m.group(2))
+            return "%s%d" % (m.group(1), na_mesa.get(n, n))
+        aviso = re.sub(r"(\bclips? )(\d+)", um, aviso)
+        return re.sub(r"(\bclips \d+ e )(\d+)", um, aviso)
+    for lista in avisos_passagens:
+        lista[:] = [numera(a) for a in lista]
     antes = [a for lista in avisos_passagens[:-1] for a in lista if a not in avisos]
     avisos = [a for k, a in enumerate(antes) if a not in antes[:k]] + avisos
 
@@ -1307,7 +1524,7 @@ def main():
     faixas = []
 
     def junta_som(ficheiro, quando, dura, ganho, nota, dentro=0.0, caminho=None, voz=False,
-                  video=False):
+                  video=False, bloco=None):
         if quando is None or dura <= 0.4:
             return
         # As vozes trazem o caminho consigo, da pasta do pedido; as musicas continuam a
@@ -1321,10 +1538,14 @@ def main():
                        "dura_s": round(dura, 2), "ganho": ganho, "nota": nota,
                        "voz": "1" if voz else "", "abafar": "",
                        "video": "1" if video else ""})
+        # O BLOCO DE UMA AUTOMATICA, (inicio, fim) no relogio do corpo: e ai que uma marca da
+        # mesma musica a substitui. Nao vai para o CSV, o DictWriter ignora a chave.
+        if bloco:
+            faixas[-1]["bloco"] = bloco
 
     if t_tiago is not None:
         junta_som(LANG_LANG, 0.0, t_tiago, 1.0,
-                  "do pedido ate ao nascimento do Tiago", LANG_LANG_IN)
+                  "da abertura ate ao nascimento do Tiago", LANG_LANG_IN)
 
     # O REBOBINAR E DE CADA CONTADOR QUE RECUA, e nao do primeiro contador que aparecer.
     #
@@ -1362,15 +1583,17 @@ def main():
         junta_som(VINHETA, t_tiago, VINHETA_DURA, 2.0,
                   "foguetes, nascimento do Tiago", VINHETA_IN)
         fim_tiago = t_clara if t_clara is not None else fim_corpo
-        junta_som(REI_LEAO, t_tiago + VINHETA_DURA - 1.0,
-                  fim_tiago - (t_tiago + VINHETA_DURA - 1.0), 1.05,
-                  "Rei Leao, do nascimento do Tiago ate ao da Clara")
+        junta_som(REI_LEAO, t_tiago + VINHETA_DURA - NOME_ANTES_DO_FIM_DOS_FOGUETES,
+                  fim_tiago - (t_tiago + VINHETA_DURA - NOME_ANTES_DO_FIM_DOS_FOGUETES), 1.05,
+                  "Rei Leao, do nascimento do Tiago ate ao da Clara",
+                  bloco=(t_tiago, fim_tiago))
     if t_clara is not None:
         junta_som(VINHETA, t_clara, VINHETA_DURA, 2.0,
-                  "foguetes, no primeiro texto da Clara", VINHETA_IN)
-        junta_som(CLARINHA, t_clara + VINHETA_DURA - 1.0,
-                  fim_corpo - (t_clara + VINHETA_DURA - 1.0), 1.0,
-                  "a musica da Clarinha que a mae dela pos", CLARINHA_IN)
+                  "foguetes, nascimento da Clara", VINHETA_IN)
+        junta_som(CLARINHA, t_clara + VINHETA_DURA - NOME_ANTES_DO_FIM_DOS_FOGUETES,
+                  fim_corpo - (t_clara + VINHETA_DURA - NOME_ANTES_DO_FIM_DOS_FOGUETES), 1.0,
+                  "a musica da Clarinha que a mae dela pos", CLARINHA_IN,
+                  bloco=(t_clara, fim_corpo))
 
     # ------------------------------------------------------- as vozes do pedido
     #
@@ -1556,28 +1779,68 @@ def main():
         real = resolve_musica(f, mus)
         if real:
             calado = silencio_no_inicio(mus[real], dentro)
-            if calado:
-                avisos.append("musica marcada %s: saltei %.2f s de silencio no inicio, "
-                              "entra aos %.2f s do ficheiro" % (real[:40], calado, dentro + calado))
-            marcas_t.append((t_marca, real, round(dentro + calado, 2)))
+            # O AVISO DO SILENCIO VAI COM A MARCA e so se diz se ela ficar: uma marca absorvida
+            # pela automatica da mesma musica nao entra no ficheiro onde o aviso dizia.
+            aviso = ("musica marcada %s: saltei %.2f s de silencio no inicio, entra aos %.2f s "
+                     "do ficheiro" % (real[:40], calado, dentro + calado)) if calado else ""
+            marcas_t.append((t_marca, real, round(dentro + calado, 2), aviso, dentro))
         else:
             avisos.append("MUSICA MARCADA NA MESA NAO ENCONTRADA, continua a anterior: "
                           "%s (clip das %.1f s)" % (f, t_marca))
-    marcas_t.sort()
-    for k, (t, f, dentro) in enumerate(marcas_t):
+    marcas_t.sort(key=lambda m: m[0])
+    for k, (t, f, dentro, aviso_silencio, pedido_in) in enumerate(marcas_t):
         # UMA MARCA NO PRIMEIRO CLIP DO CORPO, OU NUM VIDEO, CAI EM t <= 0. O corte era
         # estrito (quando < t) e o leito que comeca no zero nunca era cortado: a musica
         # marcada e o Lang Lang tocavam as duas ao mesmo tempo na abertura.
         t = max(0.0, t)
+        # E SE A AUTOMATICA DA MESMA MUSICA JA ESTA A TOCAR, a marca nao a recomeca (decisao
+        # 087). E o outro lado da regra de baixo: com o cartao do nascimento no sitio, os
+        # foguetes acabam antes da primeira foto e o Rei Leao automatico entra um segundo antes
+        # de eles acabarem, ou seja ANTES da marca na foto. Cortar e recomecar dava o mesmo eco
+        # 2 s depois. A musica e a que ele escolheu e ja esta a tocar do principio: continua.
+        # SO QUANDO E MESMO UM ECO: a marca pede a musica do principio (in 0) e cai a menos de
+        # MARCA_ECO_S da entrada da automatica. Uma marca com outro "in", ou mais adiante no
+        # bloco, e um pedido dele e vale como qualquer marca (revisores, 28 de setembro: o Rei
+        # Leao marcado com in 30, ou a meio do bloco, era deitado fora sem aviso). E quando
+        # absorve, diz-se.
+        eco = next((fx for fx in faixas if e_leito(fx) and fx.get("bloco") and fx["ficheiro"] == f
+                    and fx["bloco"][0] <= t < fx["bloco"][1]
+                    and fx["quando_s"] - 0.05 <= t < fx["quando_s"] + fx["dura_s"]
+                    and t - fx["quando_s"] <= MARCA_ECO_S and pedido_in < 0.05), None)
+        if eco is not None:
+            avisos.append("musica marcada %s no clip das %.1f s: ja esta a tocar desde os %.1f s, "
+                          "na entrada do nascimento; fica uma entrada so, sem recomecar"
+                          % (f[:40], t, eco["quando_s"]))
+            continue
+        if aviso_silencio:
+            avisos.append(aviso_silencio)
         for fx in faixas:
             if not e_leito(fx):
                 continue
             if fx["quando_s"] - 0.05 <= t < fx["quando_s"] + fx["dura_s"]:
                 fx["dura_s"] = round(max(0.0, t - fx["quando_s"]), 2)
         fim = marcas_t[k + 1][0] if k + 1 < len(marcas_t) else fim_corpo
-        for fx in faixas:
-            if e_leito(fx) and t < fx["quando_s"] < fim:
-                fim = fx["quando_s"]
+        # A MARCA DELE GANHA A AUTOMATICA DA MESMA MUSICA (decisao 087). A 23 de setembro o
+        # Tiago tirou os cartoes dos nascimentos e marcou o Rei Leao na primeira foto do Tiago e
+        # a Ana Faria na primeira da Clara, que sao exatamente as musicas que o montar ja poe
+        # ali sozinho. A automatica comecava 0,9 s depois da marca e cortava-a, e o render
+        # cruzava as duas durante 2,2 s: o Rei Leao recomecava em eco e a Ana Faria saltava
+        # 1,3 s. Agora, se o leito que ia cortar a marca e a automatica da mesma musica e a
+        # marca esta dentro do bloco dela (os dois nascimentos, o `bloco` de junta_som), a
+        # automatica sai e a marca continua como qualquer marca. Sem marca repetida o fim e o
+        # mesmo de antes: o minimo sai do mesmo conjunto, e a referencia congelada fica igual
+        # ao byte.
+        while True:
+            seguinte = min((fx for fx in faixas if e_leito(fx) and t < fx["quando_s"] < fim),
+                           key=lambda fx: fx["quando_s"], default=None)
+            if seguinte is None:
+                break
+            bloco = seguinte.get("bloco")
+            if bloco and seguinte["ficheiro"] == f and bloco[0] <= t < bloco[1]:
+                faixas.remove(seguinte)
+                continue
+            fim = seguinte["quando_s"]
+            break
         # E PARA NOS FOGUETES DE UM NASCIMENTO, como o Lang Lang automatico para no do
         # Tiago. Os foguetes nao sao leito, por isso nao cortavam nada: a 21 de setembro o
         # Lang Lang marcado no cartao "Mas como e que chegamos aqui?" tocava a volume de
@@ -1603,8 +1866,17 @@ def main():
     # retoma-se no segundo do ficheiro onde parou. Vai da primeira fita depois do
     # nascimento do Tiago ate onde ia o leito que ela interrompe.
     if t_tiago is not None and t_clara is not None:
-        t_volta = next((l["inicio_s"] - desvio for l in linhas
-                        if l["tipo"] == "marcos" and t_tiago < l["inicio_s"] - desvio < t_clara), None)
+        # A FITA QUE VOLTA TEM FOTOS ANTES DELA, depois do nascimento do Tiago. Uma continuacao
+        # colada a fita do nascimento (com "c", sem nada pelo meio) nao volta a lado nenhum; e
+        # com a fita parada (decisao 089) podia comecar depois da entrada do Rei Leao e roubar-lhe
+        # o bloco inteiro, com o Lang Lang a tocar por cima das fotos do Tiago (revisores, 28 de
+        # setembro). No estado congelado a fita que volta e a mesma de antes.
+        def volta(l):
+            ini = l["inicio_s"] - desvio
+            return (l["tipo"] == "marcos" and t_tiago < ini < t_clara
+                    and any((x["tipo"] in ("foto", "lado") or x["tipo"] in LIMITES_MONTE)
+                            and t_tiago < x["inicio_s"] - desvio < ini for x in linhas))
+        t_volta = next((l["inicio_s"] - desvio for l in linhas if volta(l)), None)
         antes = [fx for fx in faixas if e_leito(fx)
                  and fx["quando_s"] < t_tiago - 0.1 < fx["quando_s"] + fx["dura_s"]]
         depois = [fx for fx in faixas if e_leito(fx) and t_volta is not None
@@ -1656,12 +1928,24 @@ def main():
                 fx["abafar"] = ((fx["abafar"] + ";") if fx["abafar"] else "") \
                     + escreve_abafar([(t0_v, t1_v, alvo)])
     faixas.sort(key=lambda fx: fx["quando_s"])
+    for fx in faixas:
+        if e_leito(fx) and ataque(fx):
+            fx["subida"] = "0.03"
+    # UMA ENTRADA NUM ATAQUE QUE DEIXOU DE BATER AVISA, como o fim de frase: se ele acertar a entrada
+    # na Mesa, o render mede "a meio" (a regra da 094 nao reconhece estes ataques) e volta a rampa.
+    for r in ler_dados_csv(ENTRADAS_ATAQUE):
+        desta = [fx for fx in faixas if e_leito(fx) and fx["ficheiro"].startswith(r["musica"])]
+        if desta and not any(fx.get("subida") for fx in desta):
+            avisos.append("entrada num ataque por medir outra vez (095): %s entra aos %s s do ficheiro, e o "
+                          "ataque medido e aos %s; sobe em rampa" % (r["musica"], ", ".join(
+                              numero(float(fx["in_s"] or 0)) for fx in desta), r["in_s"]))
+    escrever_fins_de_frase(faixas, avisos)
 
     # AS COLUNAS NOVAS SO ENTRAM QUANDO HA O QUE ESCREVER NELAS. Sem vozes e sem videos no
     # corpo o ficheiro e o mesmo de sempre, byte a byte, e o teste_v3_sem_vozes_igual_ao_byte
     # falha se deixar de ser. A ordem e sempre esta, para uma coluna nova nunca mexer nas
     # anteriores.
-    extra = [c for c in ("voz", "abafar", "video") if any(fx.get(c) for fx in faixas)]
+    extra = [c for c in ("voz", "abafar", "video", "subida", "sai_s", "cauda") if any(fx.get(c) for fx in faixas)]
     with open(os.path.join(DESTINO, nome + ".som.csv"), "w",
               encoding="utf-8-sig", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=COLUNAS_SOM + extra, extrasaction="ignore")
@@ -1687,7 +1971,8 @@ def main():
         print()
         print("  ESTICADO POR MIM, para os foguetes acabarem antes das fotos:")
         for txt, antes, depois in esticados:
-            print("   cartao %-46s %.1f s -> %.1f s" % ('"' + txt + '"', antes, depois))
+            nome = txt if txt.startswith("fita de 1995") else "cartao " + '"' + txt + '"'
+            print("   %-53s %.1f s -> %.1f s" % (nome, antes, depois))
     if avisos:
         print()
         print("  AVISOS")

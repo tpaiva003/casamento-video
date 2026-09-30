@@ -54,7 +54,8 @@ impõe restrições que não são estéticas, são funcionais:
 
 - Planos fechados. Uma foto de grupo tirada de longe não se lê a 15 metros.
   Se uma foto importante estiver distante, corta e aproxima.
-- Texto grande, poucas palavras, alto contraste. Branco sobre escuro.
+- Texto grande, poucas palavras, alto contraste. Claro sobre escuro; nos cartões e nos nomes dos
+  bebés, champanhe quente com brilho em vez de branco (decisão 098, 13,3:1).
 - Nenhuma narração falada. A acústica mata a palavra. A música carrega tudo.
 - Fim inequívoco, com fade a preto, para as pessoas saberem que podem aplaudir
   e o serviço retomar.

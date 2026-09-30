@@ -34,7 +34,14 @@ def chave_base(linha):
         return tipo + ":" + (linha["id"] or "")
     if tipo == "video":
         return "video:" + (linha["ficheiro"] or "").strip()
-    return tipo + ":" + " ".join((linha["texto_ecra"] or "").split())
+    # A FITA PARADA NAO E OUTRA FITA (decisao 089). O montar escreve "~segundos@instante" no
+    # fim do texto de uma fita que segurou, e a Mesa nao tem isso no "x" dela: com o sufixo a
+    # chave deixava de bater, e a Mesa perdia a fita, a duracao do render e cinco faixas do som.
+    texto = linha["texto_ecra"] or ""
+    if tipo == "marcos":
+        import linha_tempo
+        texto = linha_tempo.sem_segura(texto)
+    return tipo + ":" + " ".join(texto.split())
 
 
 def origem(nota):
@@ -46,12 +53,12 @@ def origem(nota):
 # As notas do montar_da_mesa.py sao para mim e estao sem acentos. Na Mesa quem as le e
 # o Tiago: cada regra diz o que faz e de que decisao vem.
 EXPLICACOES = (
-    ("do pedido ate ao nascimento do Tiago", "música da abertura, até aos foguetes do nascimento do Tiago"),
+    ("da abertura ate ao nascimento do Tiago", "música da abertura, até aos foguetes do nascimento do Tiago"),
     ("fita a rebobinar", "som da fita a rebobinar enquanto o contador recua"),
-    ("foguetes, nascimento do Tiago", "foguetes e aleluia quando acende «Nasce o Tiago» (decisões 027 e 072)"),
+    ("foguetes, nascimento do Tiago", "foguetes e aleluia quando acende o marco de 12/09 na fita (decisões 027, 072 e 088)"),
     ("Rei Leao", "Rei Leão, dos foguetes do Tiago até a fita voltar antes da Clara (decisões 057 e 060)"),
     ("retoma a musica da abertura", "a música da abertura volta onde tinha parado, na fita antes da Clara (decisão 060)"),
-    ("foguetes, no primeiro texto da Clara", "foguetes no primeiro texto da Clara (decisão 027)"),
+    ("foguetes, nascimento da Clara", "foguetes e aleluia quando acende o marco de 24/11 na fita (decisões 027, 072 e 088)"),
     ("a musica da Clarinha", "a música da Clarinha que a mãe da Clara pôs no bloco dela"),
     ("voz do pedido", "voz gravada no dia do pedido, por cima das fotos do pedido (decisão 075)"),
     ("som do video", "o som do próprio vídeo, que toca enquanto ele passa no meio do filme"),
@@ -140,7 +147,9 @@ def som_para_mesa(nome="v3", versao="demo_v3"):
 
     def clip_em(t_corpo):
         t = t_corpo + desvio
-        dentro = [c for c in corpo if c["inicio"] - 0.001 <= t < c["fim"]]
+        # O CLIP DO NOME DO BEBE (092, 093) so existe no montar e no render: a Mesa nao o tem, e uma
+        # faixa presa a ele aparecia la como "um clip que mudou desde a montagem".
+        dentro = [c for c in corpo if c["tipo"] != "nome" and c["inicio"] - 0.001 <= t < c["fim"]]
         return (dentro[-1] if dentro else (corpo[-1] if corpo else None)), t
 
     por_cima = {}
