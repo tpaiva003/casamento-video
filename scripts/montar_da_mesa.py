@@ -139,7 +139,7 @@ LADO_OMISSAO = {2: "2v", 3: "3v", 4: "4q", 6: "6g"}
 # Os estilos de cada um, decisao 068, os mesmos do render.py. O primeiro e a omissao, e
 # vai escrito quando a Mesa nao traz estilo ou traz um que o render nao conhece.
 ESTILOS_MONTE = {"colagem": ("filas", "espalhada"), "pilha": ("monte", "leque")}
-# O MERGULHO NA GRELHA, 30 de setembro, e um terceiro estilo da colagem, mas o render
+# O MERGULHO NA GRELHA, decisao 101, e um terceiro estilo da colagem, mas o render
 # desenha-o a parte (render.MERGULHO_ESTILO) e nao entra no ESTILOS_MONTE dele, que os
 # testes das disposicoes percorrem todos. Aceita-se aqui ao lado.
 ESTILOS_EXTRA = {"colagem": ("mergulho",)}
@@ -1012,8 +1012,7 @@ def main():
             return ""
 
     # O enquadramento que a Mesa guarda em "e" vai na coluna movimento, que o render le.
-    ENQUADRAMENTOS = {"afastada": "Afastada", "parada": "Parada", "aproxima": "Aproxima",
-                      "anda": "Anda", "afasta": "Afasta", "sobe": "Sobe", "desce": "Desce"}
+    ENQUADRAMENTOS = {"afastada": "Afastada", "parada": "Parada", "aproxima": "Aproxima"}
 
     def enquadramento_de(c, ordem, foco_txt):
         """A celula da coluna movimento de uma foto. No "aproxima" leva o zoom do fim.
@@ -1321,15 +1320,6 @@ def main():
                    textos_txt,
                    opcoes_txt, dentro=troco),
         linhas[-1]["_k"] = k_clip
-        # O CLARAO DE LUZ, campo `en` da Mesa, vai na coluna entrada. E uma luz por cima do
-        # encadeado, e sem encadeado nao tem onde aparecer: diz-se, em vez de sumir calado.
-        if str(c.get("en") or "").strip() == "clarao":
-            if linhas[-1]["transicao_s"] > 0:
-                linhas[-1]["entrada"] = "clarao"
-            else:
-                avisos.append("clip %d com clarao de luz e corte seco: o clarao aparece durante o "
-                              "encadeado, e sem encadeado nao se ve; poe um cross de 0,7 s ou mais"
-                              % len(linhas))
         # O SOM DE UM VIDEO DO CORPO E UMA FAIXA COMO AS OUTRAS. A fanfarra leva o seu som
         # colado com a imagem, pelo concat; um video do meio nao passa por ai, e sem isto
         # saia mudo. O `vzm` diz o que a musica por baixo faz, como nas vozes do pedido.
@@ -1497,10 +1487,6 @@ def main():
     colunas = list(COLUNAS)
     if any(l["in_s"] != "" for l in linhas):
         colunas[colunas.index("duracao_s") + 1:colunas.index("duracao_s") + 1] = COLUNAS_TROCO
-    # A COLUNA ENTRADA SO APARECE QUANDO HA UM CLARAO, pela regra das colunas novas: sem
-    # ela o CSV sai igual ao byte ao de antes.
-    if any(l.get("entrada") for l in linhas):
-        colunas.append("entrada")
     with open(caminho, "w", encoding="utf-8-sig", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=colunas, extrasaction="ignore")
         w.writeheader()

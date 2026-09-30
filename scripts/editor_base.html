@@ -2370,11 +2370,7 @@ var APROXIMA_SOBRA = 3;
 /* As opcoes do Enquadramento de uma foto, pela ordem da lista. O teste da Mesa confere que
    cada valor e um que o montar_da_mesa.py sabe escrever (ENQUADRAMENTOS). */
 var OPCOES_ENQUADRAMENTO = [["", "a encher, com zoom lento"], ["afastada", "afastada, inteira com margem à volta"],
-  ["parada", "parada, sem zoom"], ["aproxima", "aproxima ao ponto de foco"],
-  ["anda", "a caminhar, desliza para a esquerda"], ["afasta", "a recuar, o zoom ao contrário"],
-  ["sobe", "sobe pela foto, dos pés à cabeça"], ["desce", "desce pela foto, da cabeça aos pés"]];
-/* As opcoes da Entrada de um clip. O montar_da_mesa.py so conhece o "clarao". */
-var OPCOES_ENTRADA = [["", "encadeado"], ["clarao", "clarão de luz quente"]];
+  ["parada", "parada, sem zoom"], ["aproxima", "aproxima ao ponto de foco"]];
 /* O ZOOM ESCREVE-SE SEMPRE DA MESMA MANEIRA, com uma casa decimal pelo menos e a segunda so
    quando existe: "4,0", "2,2", "2,65". O campo guarda ate as centesimas (poeAz), e o s1()
    arredondava a decima e tirava o zero: a lista dizia "aproxima 4x", o campo "4" e a ajuda
@@ -4435,14 +4431,6 @@ function pintaInspetor(){
     partes.push('<div class="linha2c">'+
       '<div class="campo"><label>Duração (s)</label><input type="number" step="0.1" min="0.2" id="cDur" value="'+c.d+'"></div>'+
       '<div class="campo"><label>Cross (s)</label><input type="number" step="0.1" min="0" id="cCross" value="'+c.c+'"></div></div>');
-    /* A ENTRADA, 30 de setembro: o encadeado de sempre ou um clarao de luz quente por cima
-       dele, como a luz que entra num rolo de pelicula. O montar_da_mesa.py escreve-o na
-       coluna entrada; com corte seco nao ha encadeado e o clarao nao aparece. */
-    partes.push('<div class="campo"><label>Entrada</label><select id="cEntrada">' +
-      OPCOES_ENTRADA.map(function(o){
-        return '<option value="' + o[0] + '"' + ((c.en || "") === o[0] ? " selected" : "") + '>' + o[1] + '</option>'; }).join("") +
-      '</select><div style="font-size:11px;color:var(--tenue);margin-top:4px">O clarão aparece durante o cross deste clip: ' +
-      'fica melhor com 1 s ou mais, e a mudar de bloco. Usado poucas vezes, marca; em todas, cansa.</div></div>');
     /* na colagem e na pilha a duracao reparte-se pelas fotos (agendaMonte): diz-se quanto
        fica cada uma, e a nota acompanha o que ele escreve na Duracao e no Cross */
     if(c.t === "colagem" || c.t === "pilha")
@@ -4490,9 +4478,7 @@ function pintaInspetor(){
           return '<option value="' + o[0] + '"' + ((c.e || "") === o[0] ? " selected" : "") + '>' + o[1] + '</option>'; }).join("") +
         '</select><div style="font-size:11px;color:var(--tenue);margin-top:4px">Afastada serve para planos apertados que parecem ' +
         'demasiado perto: a foto fica a 80% do ecrã, com o fundo à volta. Aproxima começa com a foto inteira, ' +
-        'como ela começa hoje, e depois de entrar vai fechando até ao ponto de foco, onde fica enquanto a seguinte entra. ' +
-        'A caminhar: a foto desliza da direita para a esquerda e o fundo desfocado desliza mais devagar, o que dá profundidade; ' +
-        'várias seguidas parecem uma câmara a andar. A recuar fecha bem um bloco. Sobe e desce servem para fotos ao alto.</div>' +
+        'como ela começa hoje, e depois de entrar vai fechando até ao ponto de foco, onde fica enquanto a seguinte entra.</div>' +
         (c.e === "aproxima" ? blocoAproxima(c, f) : '') + '</div>');
     if(eGrupo(c))
       partes.push('<div class="campo"><label>Tratamento</label><select id="cTrat">' + opcoesDeGrupo(c) + '</select></div>');
@@ -4754,12 +4740,6 @@ function ligaInspetor(){
        aberto, o que esta certo; as etiquetas dos vizinhos acompanham pelo pintaClips(), que
        ja estava nos dois. */
     liga("cDur","input",function(e){ c.d = Math.max(.2, parseFloat(e.target.value)||c.d); atualizaNotasTempo(c); atualizaPorFoto(c); atualizaAvisoDenso(c); espelhaDuracaoDoVideo(c); atualizaNotasDoVideo(c); pintaClips(); marcar(); });
-    liga("cEntrada","change",function(e){
-      guardaDesfazerCampos("mudar a entrada", c, ["en"]);
-      if(e.target.value) c.en = e.target.value; else delete c.en;
-      pintaClips(); marcar();
-      if(c.en && !(+c.c > 0)) avisar("Com corte seco o clarão não aparece: põe um cross de 1 s.");
-    });
     liga("cCross","input",function(e){ c.c = Math.max(0, parseFloat(e.target.value)||0); atualizaNotasTempo(c); atualizaPorFoto(c); atualizaAvisoDenso(c); pintaClips(); marcar(); });
     liga("cTrat","change",function(e){
       var val = e.target.value;
@@ -6107,8 +6087,6 @@ function ordemDoClip(v, c, i){
           /* um aproxima esquecido numa foto que passou a rajada nao vai ao filme, e nao sai */
           enquadramento: (c.e === "aproxima" && !aproximaAtivo(c)) ? undefined : c.e,
           estilo:c.estilo, musica:c.m,
-          /* o clarao de luz na entrada, a unica entrada que nao e o encadeado */
-          entrada:c.en,
           /* so no aproxima: o zoom no fim, com a omissao ja resolvida, para quem ler
              isto nao ter de saber que 2,2 e o normal */
           zoom_final: aproximaAtivo(c) ? azDe(c) : undefined,

@@ -3534,39 +3534,31 @@ quando deixa de bater. Não precisou de mexer na Mesa, e faz o mesmo.
 
 **Quem:** o Tiago pediu; Claude construiu, os agentes mediram e verificaram as duas trocas.
 
-### 2026-09-30 | 101 | Movimento de câmara: o caminhar, o mergulho na grelha e o clarão de luz, como opções da Mesa
+### 2026-09-30 | 101 | O mergulho na grelha, como estilo da colagem
 
 **O que ele pediu:** *"umas imagens que se movimentam (...) quase como se caminhasse, pois se não está
-a ficar uma slideshow sem graça de fotos"*, e depois de ver o troço e seis vídeos de referência:
-*"avança com o mergulho na grelha e com outras ideias que aches interessantes como opções para eu
-selecionar na mesa"*.
+a ficar uma slideshow sem graça de fotos"*. Viu um troço com a câmara a caminhar, seis vídeos de
+referência e uma demo com cinco efeitos (a caminhar, a recuar, sobe e desce, clarão de luz e grelha
+com mergulho). A escolha dele: *"O único que gostei foi o efeito que vem depois do clarão de luz"*,
+ou seja a grelha com mergulho.
 
-**Porquê:** na v3, 192 dos 202 clips faziam o mesmo zoom de 12% ao centro, sempre para dentro. O
-problema não era falta de vídeo, era um movimento só.
+**Decisão:** entra só o mergulho, como terceiro estilo da colagem: na Mesa, Tratamento «em grelha, e
+mergulha na última». As fotos aparecem uma a uma numa grelha sem molduras, a grelha respira, e a
+câmara mergulha na última até ela encher o ecrã; o clip seguinte entra a partir dessa foto inteira.
+O `montar_da_mesa.py` escreve `mergulho` na coluna tratamento e o render desenha-o à parte
+(`preparar_mergulho`), com a grelha ao dobro do ecrã e a última foto como sprite próprio, para o fim
+do mergulho ser a foto verdadeira e não uma célula esticada.
 
-**Decisão:** entram como opções, nenhuma muda sozinha o que já está montado.
+**O que saiu:** o caminhar, o recuar, o sobe e desce e o clarão de luz. Foram feitos e mostrados e
+ele não os quis, por isso não ficam no código nem na Mesa. Também ficaram de fora, sem chegarem a
+ser feitos: parallax com recorte e IA a animar caras (inventam pixéis e gestos, pela regra do
+restauro de rostos), narração (as colunas do DJ) e notificações de telemóvel ou Instagram (não
+passam o filtro de tom).
 
-| Onde na Mesa | Opção | No render |
-|---|---|---|
-| Enquadramento de uma foto | a caminhar | `Anda`: desliza da direita para a esquerda a aproximar, e o fundo desfocado desliza mais devagar |
-| Enquadramento de uma foto | a recuar | `Afasta`: o zoom de sempre ao contrário |
-| Enquadramento de uma foto | sobe, desce | `Sobe`, `Desce`: percorre a foto na vertical, dentro dos 12% |
-| Tratamento de uma colagem | em grelha, e mergulha na última | estilo `mergulho`: grelha, a câmara mergulha na última até ela encher o ecrã |
-| Entrada de um clip | clarão de luz quente | coluna `entrada` = `clarao`: uma luz quente por cima do encadeado |
+**Garantias:** as montagens sem o estilo saem iguais ao byte. Os textos de cada foto não entram
+neste estilo, só a legenda do clip. Teste novo: `teste_mergulho_na_grelha`.
 
-E o `render.py --caminhar` dá automaticamente um caminho a cada sequência de fotos que esteja na
-omissão: entra com zoom, Anda, Anda, zoom, e Afasta antes do cartão seguinte. O que ele escolher na
-Mesa fica como está.
-
-**O que não entra, e porquê:** parallax com recorte e IA a animar caras (inventam pixéis e gestos,
-pela mesma regra do restauro de rostos), narração (as colunas do DJ), notificações de telemóvel e
-Instagram (não passam o filtro de tom).
-
-**Garantias:** nada inventa pixéis. A coluna `entrada` só aparece quando há um clarão, e sem as
-opções o CSV e o render saem iguais ao byte. Testes novos: `teste_caminhar` e
-`teste_mergulho_e_clarao`.
-
-**Quem:** o Tiago pediu e escolheu; Claude construiu.
+**Quem:** o Tiago escolheu; Claude construiu.
 
 ---
 
