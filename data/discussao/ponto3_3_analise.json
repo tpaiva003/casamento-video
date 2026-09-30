@@ -1,0 +1,976 @@
+{
+ "quando": "2026-09-29",
+ "workflow": "wf_ca7737f0-f7b",
+ "nota": "Analise do ponto 3.3 na montagem de 29/09 (rev 903), com a 094 e a 095 aplicadas. Os tempos de corpo sao desta montagem; os tempos de ficheiro (sai_s, fins de frase) valem para qualquer ordem.",
+ "trocas": [
+  {
+   "id": "t009_langlang_mariah",
+   "analise": {
+    "id": "t009_langlang_mariah",
+    "corte_corpo": 9.6,
+    "a_meio_da_frase": true,
+    "o_que_se_ouve_no_corte": "piano a meio do motivo: o Fá agudo da frase foi tocado 0,11 s antes do corte (14,49 no ficheiro) e a frase só acaba 1,3 a 1,6 s depois, já por baixo da primeira linha cantada da Mariah",
+    "fins_de_frase": [
+     {
+      "t_ficheiro": 9.35,
+      "t_corpo": 4.35,
+      "evidencia": "fim do 1.º motivo (Mi Ré Mi Fá Ré Si): a melodia cala-se de 8,8 a 9,35 e só soa o baixo Mi às 9,12; a banda da voz cai 7 dB (de -31,3 para -38,3); picos4 em 9,375; linha nova às 9,39. É uma meia cadência, 5,3 s antes do corte: longe demais para a opção A"
+     },
+     {
+      "t_ficheiro": 13.15,
+      "t_corpo": 8.15,
+      "evidencia": "cadência na tónica (Lá menor, baixo Lá2) no fim da corrida de 11,7 a 13,1, com o ataque medido aos 13,15; a banda da voz cai 7 dB em 0,25 s e fica 6 dB abaixo durante 0,2 s; picos4 em 13,125; fecha a primeira metade do período (dois motivos de cerca de 3,8 s). A grelha do ficheiros.json (0,53 s) não bate com a melodia: as notas vêm de 0,63 em 0,63 s, 6 por motivo, o que aponta para 3/4 com cerca de 95 bpm. É esta a escolhida, 1,45 s antes do corte"
+     },
+     {
+      "t_ficheiro": 16.2,
+      "t_corpo": 11.2,
+      "evidencia": "fim do 3.º motivo: a melodia pousa no Si às 15,9 e cala-se de 16,2 a 16,7, só com o baixo Mi às 16,26; a banda da voz cai 5 a 8 dB; picos4 em 16,375; linha nova às 16,72. É uma meia cadência 1,6 s depois do corte, por cima da voz da Mariah, que ataca no corpo 10,05"
+     }
+    ],
+    "bpm": 95,
+    "opcao": "A",
+    "mods_mix33": "[{\"ficheiro\":\"Lang Lang\",\"quando\":0.0,\"sai_s\":13.5,\"cauda\":0.95}]",
+    "resumo": "O primeiro Lang Lang deixa de ser cortado no Fá agudo a meio do motivo. Passa a acabar na cadência em Lá menor aos 13,15 do ficheiro (corpo 8,15), logo depois de o contador parar na data do pedido, e desce até ficar mudo aos 14,45, antes do Fá. A Mariah e o corte ficam iguais. A retoma da decisão 095 fica nos 14,6: o primeiro cala-se aos 14,45 e a retoma continua 0,15 s depois, sem repetir nem saltar nada.",
+    "beneficio": "o piano acaba numa cadência verdadeira e a Mariah entra sozinha com o anel, sem duas melodias ao mesmo tempo nem o Fá do piano contra a voz dela",
+    "conflitos": [
+     "Depende do ponto 3.4. Se a entrada do primeiro Lang Lang passar de 5,0 para 5,45, a cadência cai no corpo 7,70 e o buraco antes da Mariah sobe para 1,3 s (medido com in_s 5,45). Nesse caso esta troca tem de ser refeita, por exemplo com cauda 1,4 s (buraco de 0,9 s, com o Fá a ouvir-se muito baixo no fim)."
+    ],
+    "medida": "Hoje: mínimo à volta do corte de -30,8 dBFS e nenhum buraco, mas o piano fica entre -31 e -33 dBFS por baixo da primeira linha cantada da Mariah (-25 dBFS) durante 1,2 s (corpo 10,0 a 11,2), e às 10,05 a 10,2 ainda soa o Fá natural contra ela. Proposta: o piano acaba na cadência (8,15) e está mudo às 9,45. O maior buraco abaixo de -40 dBFS tem 0,8 s (9,25 a 10,0), no limite aceite, com mínimo de -63 dBFS às 9,6 durante o encadeado do contador para a foto do anel. Piano e Mariah já não se sobrepõem (0 s). Da Mariah para a frente fica igual a hoje (-25,5 dBFS às 10,4). Alternativa: buraco de 0,6 s, mas o Fá seguinte entra a -42 dBFS no fim da descida.",
+    "alternativa": "A com descida mais longa: sai_s 13,3 e cauda 1,4, mudo aos 14,7 do ficheiro. O buraco abaixo de -40 dBFS desce para 0,6 s (9,45 a 10,0), mas o Fá agudo da frase seguinte entra a -42 dBFS mesmo no fim da descida (corpo 9,5). Mods: [{\"ficheiro\":\"Lang Lang\",\"quando\":0.0,\"sai_s\":13.3,\"cauda\":1.4}]",
+    "confianca": "media"
+   },
+   "verificacao": {
+    "id": "t009_langlang_mariah",
+    "veredicto": "confirmado",
+    "razoes": "Medi tudo de novo em verif/ (a_langlang, e_notas, f_vales, c_mix e d_ler), sem usar os números dele.\n1) Hoje o corte está mesmo a meio da frase, portanto a_meio_da_frase = true confirma-se. O corte (14,60 no ficheiro) cai 0,15 s depois do ataque do Fá agudo (14,45). Esse Fá é a terceira nota do motivo que começa aos 13,10 e que só pousa na dominante (baixo Mi) por volta dos 16,5, com linha nova aos 16,72.\n2) O fim de frase escolhido é real, mas vê-se pela melodia e pela harmonia, não pela energia. Cada motivo, de cerca de 3,8 s, abre com Mi6 sobre Lá (5,51; 9,32; 13,10; 16,72) e fecha na dominante. Aos 13,10 o segundo motivo resolve na tónica e começa o terceiro.\n3) A queda de 7 dB na banda da voz que ele cita não se reproduz. Com o método do frases.py (janelas de 50 ms, mediana de 3 s), o vale antes dos 13,10 fica só 2,4 dB abaixo da mediana. Neste piano com pedal não há nenhum vale de 6 dB entre os 5,5 e os 20 s, nem aos 9,35 nem aos 16,2.\n4) Com as mods dele, o acorde da tónica ouve-se inteiro (corpo 8,10) e o Fá fica calado (-47 dBFS aos 9,4, -56 aos 9,5). A segunda nota do motivo novo (Ré, 13,82 no ficheiro, corpo 8,82) ainda se ouve, uns 2 dB abaixo. Não dá para a tirar sem o buraco passar de 1,3 s.\n5) O buraco abaixo de -40 dBFS tem 0,80 s (9,25 a 10,05) em RMS de 400 ms, com mínimo de -63,9 dBFS aos 9,55. Em RMS de 100 ms são 0,95 s. Fica no limite sem o passar.\n6) Nenhuma descida que cale o Fá encurta o buraco: 13,7/0,75, 13,6/0,85 e 13,4/1,1 dão todas 0,75 a 0,80 s. A razão está na própria Mariah: dos 42,0 aos 42,45 do ficheiro é a cauda da nota anterior, a -54 a -63 dBFS na mistura, e o primeiro ataque só chega aos 42,45 (corpo 10,05). A alternativa dele (13,3/1,4) baixa o buraco para 0,60 s, mas deixa entrar o Fá.\n7) Sobreposição: hoje o piano fica entre -30 e -35 dBFS por baixo da voz da Mariah durante 1,2 s (10,05 a 11,25). Com a proposta a sobreposição é zero.\n8) O Lang Lang antes da descida fica igual: -27,31 dB de média de 2 a 7,5 nas duas versões, porque o loudnorm não muda.\n9) As outras opções não servem. B e D ficam de fora: a entrada do primeiro Lang Lang está desenhada (e o ponto 3.4 está em aberto) e a Mariah está presa ao anel. C obrigava a prolongar 1,6 a 2,1 s, até ao fim do motivo aos 16,2 a 16,7, e isso cai em cima da voz. Não há opção claramente melhor.",
+    "a_meio_da_frase": true,
+    "opcao_final": "A",
+    "mods_mix33_final": "[{\"ficheiro\":\"Lang Lang\",\"quando\":0.0,\"sai_s\":13.5,\"cauda\":0.95}]",
+    "resumo_final": "O primeiro Lang Lang deixa de ser cortado no Fá agudo, a meio do motivo. Passa a acabar no acorde de Lá menor que fecha o segundo motivo (13,10 do ficheiro, corpo 8,1) e desce a partir dos 13,5 até ficar calado aos 14,45, antes do Fá. O corte, a entrada da Mariah aos 42 e a retoma dos 14,6 ficam como estão.",
+    "beneficio_final": "O piano acaba numa resolução e a Mariah entra sozinha com o anel. A melodia do piano deixa de tocar por baixo da primeira linha cantada, onde hoje fica 1,2 s.",
+    "conflitos_final": [
+     "Ponto 3.4: medido com in_s 5,45, a mesma mod deixa um buraco de 1,25 s (8,80 a 10,05) e não serve. Com cauda 1,4 o buraco fica em 0,85 s (e não 0,9), mas o Fá entra a uns -37 dBFS a meio da descida, só 6 dB abaixo do piano, o que não é 'muito baixo'. Se o 3.4 mudar, esta troca tem de ser refeita.",
+     "Retoma (095): fica nos 14,6, ou nos 15,05 se o 3.4 mudar. O primeiro Lang Lang cala-se aos 14,45 e nada se repete. Há uma diferença que se deve dizer ao Tiago: o ataque do Fá do terceiro motivo, que hoje se ouve por baixo da Mariah, deixa de se ouvir nas duas passagens do Lang Lang.",
+     "Subida da Mariah (094): o mix33 mantém-lhe os 2,2 s porque os calcula antes de aplicar as mods. Com a proposta já não há nada com que cruzar. Se a construção lhe der a subida por omissão (1,0 s), o buraco passa a 0,75 s e a primeira linha cantada chega uns 5 dB mais forte entre os 10,1 e os 10,4 (-26,8, -23,9, -21,9 e -20,8 dBFS, contra -32,4, -29,3, -27,0 e -25,5). As duas passam, mas a escolha tem de ficar decidida na construção.",
+     "Nenhuma entrada aprovada ou desenhada muda, nem a regra dos blocos: o corte fica nos 9,6, a Mariah nos 42 e o Lang Lang nos 5,0."
+    ],
+    "medida_final": "Hoje: sem buraco, mínimo de -31,0 dBFS perto do corte. O piano fica entre -30 e -35 dBFS por baixo da voz da Mariah durante 1,2 s (10,05 a 11,25). Proposta: buraco abaixo de -40 dBFS de 0,80 s (9,25 a 10,05, RMS de 400 ms), ou 0,95 s em RMS de 100 ms, com mínimo de -63,9 dBFS aos 9,55. Sobreposição zero e Fá calado. O Lang Lang fica igual até à descida (-27,31 dB de média de 2 a 7,5) e a Mariah igual a hoje (-25,0 dBFS aos 10,45). Variantes medidas: 13,7/0,75 e 13,6/0,85 dão 0,80 s; 13,4/1,1 dá 0,75 s; 13,3/1,4 dá 0,60 s mas deixa entrar o Fá; com in_s 5,45 dá 1,25 s.",
+    "confianca": "media"
+   },
+   "troca": {
+    "corte_corpo": 9.6,
+    "sai": "Lang Lang - Beauty and the Beast (From Lang Lang Plays Disney  Live).mp3",
+    "sai_in": 5.0,
+    "sai_quando": 0.0,
+    "sai_no_ficheiro_ao_corte": 14.6,
+    "entra": "Mariah Carey - All I Want for Christmas Is You (Make My Wish Come True Edition).mp3",
+    "entra_in": 42.0
+   }
+  },
+  {
+   "id": "t038_mariah_retoma",
+   "analise": {
+    "id": "t038_mariah_retoma",
+    "corte_corpo": 37.87,
+    "a_meio_da_frase": true,
+    "o_que_se_ouve_no_corte": "a voz a começar uma linha nova (anacruse a subir desde 69,95 s do ficheiro), no tempo 1 do compasso 9 e com mudança de acorde; a linha anterior acabou 0,65 s antes do corte",
+    "fins_de_frase": [
+     {
+      "t_ficheiro": 63.05,
+      "t_corpo": 30.65,
+      "evidencia": "fim da linha dos compassos 3 e 4 (compasso 1 = 57,45 s, 150 bpm, compasso de 1,60 s): a energia melódica 450 a 2500 Hz cai de -1 dB (62,65) para -24 a -32 dB entre 63,25 e 63,65; a linha nova entra no tempo 1 do compasso 5 (63,85), onde entra o brinde"
+     },
+     {
+      "t_ficheiro": 66.05,
+      "t_corpo": 33.65,
+      "evidencia": "fim da linha dos compassos 5 e 6: a energia melódica cai de -5,5 para -13 a -20 dB durante 0,8 s (66,05 a 66,85); a linha nova entra no compasso 7 (67,05)"
+     },
+     {
+      "t_ficheiro": 69.6,
+      "t_corpo": 37.2,
+      "evidencia": "fim da linha dos compassos 7 e 8, que fecha o período de 8 compassos desde a entrada da bateria: a energia melódica cai 9 dB (de -4,5 a 69,45 para -13,5 a 69,65, e -15 a 69,95) durante cerca de 0,35 s; resto fraco da nota até 69,85; a linha seguinte arranca com um glissando a subir em 69,95 a 70,0 e passa pelo tempo 1 do compasso 9 (70,24), onde muda o acorde"
+     },
+     {
+      "t_ficheiro": 72.3,
+      "t_corpo": 39.9,
+      "evidencia": "fim da linha dos compassos 9 e 10 (a que começa no corte): a energia melódica cai de -6,5 para -13 a -28 dB durante 1 s (72,31 a 73,4), com vale na banda da voz a 73,0; a linha nova forte entra no compasso 11 (73,45 a 73,8). Fica 2,0 s depois do corte, fora do alcance da opção C"
+     }
+    ],
+    "opcao": "combinada",
+    "mods_mix33": "[{\"ficheiro\": \"Mariah\", \"quando\": 9.6, \"sai_s\": 69.60, \"cauda\": 0.5}, {\"ficheiro\": \"Lang Lang\", \"quando\": 37.87, \"subida\": 0.5}]",
+    "resumo": "A Mariah passa a descer no fim da linha cantada dos compassos 7 e 8 (69,60 s do ficheiro, 37,20 s do corpo) e chega a zero em 0,5 s, em vez de começar a descer no cartão. O Lang Lang continua a entrar no cartão em 14,6 s, mas sobe em 0,5 s em vez de 2,2 s.",
+    "beneficio": "a Mariah fecha a frase e deixa de se ouvir uma linha nova cortada por baixo do piano; o piano chega cheio ao primeiro ataque, 0,56 s depois do cartão",
+    "conflitos": [
+     "A subida do Lang Lang na retoma passa de 2,2 s (regra da 094 para entradas a meio de uma música) para 0,5 s. O ponto de entrada aprovado na 095 (14,6 s) não muda: esse ponto fica 0,14 s depois de um acorde (14,46) e o ataque seguinte é em 15,16, por isso a subida curta traz a ressonância do acorde e o ataque seguinte já soa cheio.",
+     "Informação nova sobre a 079, sem mexer no cartão: 70,27 s é mesmo o fim do período de 8 compassos (tempo 1 do compasso 9, com mudança de acorde), mas a linha cantada acaba em 69,6 s e a seguinte já começa no corte. Com a descida de 2,2 s a partir do corte, ouve-se cerca de 1 s dessa linha nova a desaparecer. Por isso a opção E, que era a hipótese provável, não se confirma."
+    ],
+    "medida": "mix33 centrado em 37,87 (8 s antes, 6 s depois). Hoje: o nível RMS de 400 ms nunca desce abaixo de -27,9 dBFS e não há buracos, mas a Mariah mantém-se por cima (-24,5 a -25) até cerca de 38,9, ou seja, a linha nova ouve-se 1 s por cima da subida do Lang Lang (o piano sozinho está a cerca de -28,5). Proposta: a Mariah desce entre 37,20 e 37,70 e fica 0,17 s em silêncio antes do cartão; o mínimo a 400 ms é -42,1 dBFS a 37,82; com janelas de 100 ms fica abaixo de -40 dBFS 0,24 s e abaixo de -30 0,42 s; o piano já está a -29 dBFS em 38,17 e a -25 em 39,07, igual a hoje dali para a frente. Alternativa (só a saída da Mariah, com a subida de 2,2 s): mínimo -51,5 dBFS no corte, 0,40 s abaixo de -40 e 1,16 s abaixo de -30, e só volta a -30 dBFS em 38,97. Com subida de 0,7 s (prop_b07.wav): 0,26 s abaixo de -40 e 0,58 s abaixo de -30. Nenhuma das versões põe duas vozes a cantar ao mesmo tempo. Ficheiros hoje.wav, proposta.wav, alternativa.wav e prop_b07.wav na pasta p33\\t038_mariah_retoma.",
+    "confianca": "media",
+    "alternativa": "Só a opção A, sem mexer no Lang Lang: Mariah com sai_s 69,60 e cauda 0,5, e a subida de 2,2 s mantém-se. Não se afasta da 094, mas fica 1,16 s abaixo de -30 dBFS e 0,40 s abaixo de -40 (mínimo -51,5 no corte), e o piano só volta a -30 em 38,97: numa sala de jantar isso soa a música que desaparece. A terceira hipótese é deixar como está (E): o nível é contínuo, mas ouve-se a Mariah começar uma linha nova no cartão e desaparecer a meio.",
+    "bpm": 150
+   },
+   "verificacao": {
+    "id": "t038_mariah_retoma",
+    "veredicto": "confirmado",
+    "razoes": "Medi tudo de novo, sem usar os números dele. A pasta é verif, e a separação por medianas fica em hpss.py e h_61_75.txt, com a parte harmónica que muda de altura entre 250 e 2500 Hz.\n\n1. A frase. A linha dos compassos 7 e 8 acaba numa descida que termina a 69,63 s do ficheiro. A banda da voz cai de +4,4 dB (69,44) para -4,4 e -5,0 dB (69,68 a 69,72), uma queda de 9 dB. Mas só fica cerca de 0,1 s abaixo dos -6 dB do pico, e entre 69,77 e 70,28 há conteúdo harmónico mais grave e fraco, à volta de 0 dB relativos. É um fim de linha verdadeiro, mas o intervalo não fica vazio, ao contrário dos de 63,27 (-14 dB durante 0,6 s) e de 72,37 (-4 a -13 dB durante 1,1 s).\n\nA linha nova começa com clareza entre 70,28 e 70,33, em cima do tempo 1 do compasso 9 (70,24), que é o corte. Não consigo confirmar a anacruse a subir aos 69,95. Há material fraco entre 69,77 e 70,28, que pode ser a nota final ou um preenchimento. Para a proposta tanto faz: a descida de 69,60 a 70,10 deixa-o abaixo de -7 dB.\n\na_meio_da_frase = true confirma-se, e é pior do que ele diz. Hoje a Mariah fica a menos de 10 dB do seu nível até aos 39,6 do corpo, 1,7 s depois do cartão, e fica por cima do Lang Lang até cerca dos 39,0. Ouve-se a maior parte da linha nova, que acaba aos 72,3, a desaparecer. A opção E não se aguenta.\n\n2. A mistura, pelo mix33 com as variantes montadas em variantes.py. Com as mods dele:\n- o mínimo a 400 ms é -42,4 dBFS aos 37,79;\n- a 100 ms fica 0,29 s seguidos abaixo de -40 (menos de 0,8 s, não há buraco de som morto);\n- fica 0,54 s seguidos abaixo de -30.\nNão há duas vozes: a Mariah chega a zero aos 37,70 e o Lang Lang é piano. O in_s da Mariah (42) não muda.\n\nO Lang Lang aos 14,6 cai 0,15 s depois do ataque de um acorde (onset aos 14,45, próximo aos 15,18). A subida de 0,5 s traz a ressonância e o ataque seguinte já chega cheio. Fica a -3 dB do seu nível aos 38,15, contra os 38,98 de hoje.\n\n3. As alternativas, todas medidas:\n- Só a saída da Mariah, com a subida de 2,2 s: mínimo -51,7, 0,5 s seguidos abaixo de -40, 1,45 s seguidos abaixo de -30, e o piano só chega a -6 dB aos 38,77. Não tem conflito com a 094, mas numa sala cheia a música some-se durante mais de 1 s.\n- Cauda 0,8 com subida 0,5: não abre buraco (mínimo -33,8), mas o início da linha nova fica a cerca de -12 dB por baixo do piano.\n- Cauda 0,6: 0,21 s abaixo de -40. A melhoria é marginal e expõe mais o material de 69,9 a 70,2.\n- Subida 0,03: entraria a seco a meio de um acorde.\n- A opção C passa dos 1,5 s (o fim seguinte é aos 72,3, 2 s depois do corte).\n- A opção B não é possível, porque a entrada 42 foi desenhada.\n- A opção D violaria a regra dos blocos.\nNenhuma é claramente melhor.\n\nPequenas diferenças nos números dele, que não mudam a proposta:\n- o fim de 63,05 é mais exato aos 63,22 a 63,27;\n- abaixo de -30 dá 0,54 s seguidos e não 0,42;\n- a alternativa dele dá 0,5 s abaixo de -40 e não 0,40.\n\nOs conflitos estão marcados, e acrescento um. A decisão 079 diz explicitamente que no cartão a Mariah desce em 2,2 s, e isso muda. O cartão, porém, não sai do sítio.",
+    "a_meio_da_frase": true,
+    "opcao_final": "combinada",
+    "mods_mix33_final": "[{\"ficheiro\": \"Mariah\", \"quando\": 9.6, \"sai_s\": 69.60, \"cauda\": 0.5}, {\"ficheiro\": \"Lang Lang\", \"quando\": 37.87, \"subida\": 0.5}]",
+    "resumo_final": "A Mariah passa a descer no fim da linha dos compassos 7 e 8 (69,60 s do ficheiro, 37,20 s do corpo) e cala-se em 0,5 s, antes do cartão. O Lang Lang continua a entrar no cartão aos 14,6 s, mas sobe em 0,5 s em vez de 2,2 s.",
+    "beneficio_final": "Hoje ouve-se a Mariah começar uma linha nova no cartão e desaparecer 1,7 s depois, por cima do piano. Com a proposta ela fecha a frase, respira 0,2 s e o piano entra cheio com o cartão, sem buraco de som morto.",
+    "conflitos_final": [
+     "Decisão 094: a subida do Lang Lang na retoma passa de 2,2 s (regra para entradas a meio) para 0,5 s. O ponto de entrada aprovado na 095 (14,6 s) não muda: fica 0,15 s depois de um acorde e o ataque seguinte (15,18) já chega cheio. Sem esta mudança, só com a saída da Mariah, a música fica 1,45 s seguidos abaixo de -30 dBFS.",
+     "Decisão 079: diz que no cartão a Mariah desce em 2,2 s; passa a descer 0,67 s antes do cartão, em 0,5 s. O cartão não se mexe: 70,27 é mesmo o fim do período de 8 compassos, mas é aí que a voz começa uma linha nova.",
+     "Regra dos blocos: sem conflito. O Lang Lang continua a entrar no cartão; a Mariah acaba ainda com a foto anterior no ecrã, com 0,17 s de silêncio antes do cartão."
+    ],
+    "medida_final": "mix33 centrado nos 37,87 (8 s antes, 6 s depois), mistura completa e cada faixa em separado, na pasta p33\\t038_mariah_retoma\\verif. Hoje: a 400 ms não desce abaixo de -26,4 dBFS perto do corte, e a Mariah fica a menos de 10 dB do seu nível até aos 39,6 do corpo. Proposta: mínimo a 400 ms de -42,4 dBFS aos 37,79; a 100 ms, 0,29 s seguidos abaixo de -40 e 0,54 s seguidos abaixo de -30 (0,86 s no total); o Lang Lang fica a -3 dB do seu nível aos 38,15 (hoje aos 38,98) e é igual a hoje a partir dos 39,1. Só a saída da Mariah, com a subida de 2,2 s: mínimo de -51,7, 0,5 s abaixo de -40, 1,45 s abaixo de -30. Cauda 0,8 com subida 0,5: sem buraco, mas o início da linha nova fica a cerca de -12 dB. Cauda 0,6: 0,21 s abaixo de -40. Voz: queda de 9 dB aos 69,63 a 69,72, material fraco até aos 70,28, linha nova clara aos 70,28 a 70,33.",
+    "confianca": "media"
+   },
+   "troca": {
+    "corte_corpo": 37.87,
+    "sai": "Mariah Carey - All I Want for Christmas Is You (Make My Wish Come True Edition).mp3",
+    "sai_in": 42.0,
+    "sai_quando": 9.6,
+    "sai_no_ficheiro_ao_corte": 70.27,
+    "entra": "Lang Lang - Beauty and the Beast (From Lang Lang Plays Disney  Live).mp3",
+    "entra_in": 14.6
+   },
+   "workflow": "wf_c4fa5210-3a8"
+  },
+  {
+   "id": "t122_reileao_langlang",
+   "analise": {
+    "id": "t122_reileao_langlang",
+    "corte_corpo": 121.77,
+    "a_meio_da_frase": true,
+    "o_que_se_ouve_no_corte": "o coro do Rei Leao a comecar uma linha nova no primeiro tempo de um compasso (47,85 no ficheiro); a linha anterior acabou 0,8 s antes e o respiro com o bombo fecha 0,05 s antes do corte. Hoje a descida de 2,2 s deixa ouvir cerca de 1 s dessa linha nova a desaparecer debaixo do piano",
+    "fins_de_frase": [
+     {
+      "t_ficheiro": 44.2,
+      "t_corpo": 118.07,
+      "evidencia": "fim da linha do coro do compasso de 42,11: a banda da voz passa de -26/-29 para -33/-40 dB ate a barra de 44,98 (0,75 s), so com um golpe de percussao a 44,5. Mesmo desenho de todos os compassos do coro: linha cantada nos tempos 1 a 3, respiro no tempo 4"
+     },
+     {
+      "t_ficheiro": 47.1,
+      "t_corpo": 120.97,
+      "evidencia": "fim da ultima linha do coro antes do corte: a banda da voz cai de -28/-31 para -36/-41 dB durante 0,75 s (47,1 a 47,85), fundo -5,9 dB contra a mediana; so ficam o bombo de 47,31 e um deslize grave que acaba em 47,6. O respiro fecha na barra de 47,85, oito compassos de 2,868 s depois do inicio do coro em 24,91"
+     },
+     {
+      "t_ficheiro": 50,
+      "t_corpo": 123.87,
+      "evidencia": "fim da linha do coro que comeca no corte: a banda da voz cai 7 a 9 dB no quarto tempo (50,0 a 50,5), o baixo sustentado entra em 50,0 e a voz solista chega por volta de 50,5 a 50,72 (corpo 124,4 a 124,6), onde a semelhanca entre compassos cai de 0,8 para 0,59; fronteira de Foote em 48,875 (4 s e 8 s). Fica 2,1 s depois do corte, mais do que 1,5 s, por isso prolongar nao e possivel"
+     }
+    ],
+    "opcao": "combinada",
+    "mods_mix33": "[{\"ficheiro\":\"O Rei\",\"quando\":73.87,\"sai_s\":47.55,\"cauda\":0.3},{\"ficheiro\":\"Lang Lang\",\"quando\":121.77,\"subida\":1.0}]",
+    "resumo": "O Rei Leao passa a sair dentro do seu proprio respiro: comeca a descer em 47,55 do ficheiro (corpo 121,42) e chega a zero em 47,85 (121,72), na barra antes do primeiro tempo onde o coro comecaria outra linha. O piano continua a entrar no corte, na mesma entrada de 42,8, e sobe em 1,0 s, que e o que a propria regra da 094 da quando ja nao ha cruzamento com a musica anterior (confirmado a correr a logica do base() com a saida ja aplicada).",
+    "beneficio": "O Rei Leao acaba a linha e o respiro dele; deixa de se ouvir o coro a arrancar outra linha e a morrer debaixo do piano",
+    "conflitos": [],
+    "medida": "Mix33, centro 121,77, 8 s antes e 6 depois, nivel RMS de 400 ms em passos de 0,1 s. HOJE: minimo -29,8 dBFS (121,57), nada abaixo de -35. Nas pistas separadas, o coro comeca linha nova no corte com a banda da voz a -26/-29 dB contra -35/-38 do piano (9 dB por cima) durante 0,5 s, e o Rei Leao so fica abaixo do piano a partir de 122,7. PROPOSTA (proposta.wav): minimo -40,1 no corte, abaixo de -40 durante 0,2 s e abaixo de -35 durante 0,3 s; -31,4 em 122,17 e de volta ao nivel de hoje (-26) em 122,77. Em janelas de 200 ms o vazio vai de 121,65 a 121,85 (-44 e -41). Nao ha buraco maior do que 0,8 s nem duas vozes ao mesmo tempo, porque o Lang Lang e piano. ALTERNATIVA (alternativa.wav): minimo -44,5, abaixo de -40 durante 0,4 s e abaixo de -35 durante 0,8 s. Grelha: 83,7 BPM em 4/4, com compasso de 2,868 s e barras em 44,98, 47,85 e 50,72. O valor de 112 BPM do ficheiros.json esta errado para esta musica, porque apanha a colcheia pontuada do ritmo 3+3+2; a autocorrelacao da o pico mais forte em 2,86 s. Aparte, fora desta troca: com a retoma do Lang Lang em 14,6 (095), a segunda passagem acaba no ficheiro em 46,3, e esta terceira, a entrar em 42,8, repete cerca de 3,5 s ja ouvidos 52 s antes (1,3 s inteiros e 2,2 s a descer). Antes da 095 havia continuidade exata se a retoma estava em 11,1.",
+    "alternativa": "Opcao A sem mexer na rampa do piano, que fica em 2,2 s: a mesma saida do Rei Leao (sai_s 47,55, cauda 0,3). Cumpre o limite (abaixo de -40 dBFS so 0,4 s) mas o vazio dura o dobro: abaixo de -35 durante 0,8 s, minimo -44,5. Mods: [{\"ficheiro\":\"O Rei\",\"quando\":73.87,\"sai_s\":47.55,\"cauda\":0.3}]. A terceira escolha seria a E (hoje), sem vazio nenhum (minimo -29,8), mas com cerca de 1 s da linha nova do coro a desaparecer. Testadas e postas de lado: encurtar so a cauda a partir do corte (1,2 s) nao tira a linha nova, porque o primeiro meio segundo continua quase inteiro; sair no fim da linha em 47,1 com cauda de 0,75 abre um vazio de 0,9 s abaixo de -35.",
+    "confianca": "media",
+    "bpm": 83.7
+   },
+   "verificacao": {
+    "id": "t122_reileao_langlang",
+    "veredicto": "confirmado",
+    "razoes": "Medi tudo de novo, na pasta verif. Os scripts são stems.py, niveis.py, leak.py, fino_rei.py e espec.py, e os números estão em medidas_verif.txt.\n\n1) Grelha. A autocorrelação dos onsets entre 20 e 48 s dá o pico mais forte em 2,856 s, e outro em 5,735 s (dois compassos). A fase põe as barras em 24,93, 45,00 e 47,87. Isto confirma os 83,7 BPM dele e que o valor de 112 do ficheiros.json está errado. O período de oito compassos que começa em 24,93 fecha em 47,87, e o corte cai no ficheiro em 47,90: o sítio do corte está certo. O problema é só a descida de 2,2 s.\n\n2) Fim de frase. Separei harmónico e percussivo e medi a banda harmónica de 180 a 1500 Hz, em passos de 10 ms. Durante a linha está a -7,5/-8,6 dB (46,8). Desce para -14/-16 entre 47,05 e 47,3 e para -20/-22 entre 47,6 e 47,7. São 8 a 14 dB durante cerca de 0,6 s, portanto é um respiro verdadeiro e não um vale dentro de uma nota. O fim da linha em 47,1 (corpo 120,97) confirma-se. A linha seguinte arranca em 47,74 a 47,79, cerca de 0,1 s antes da barra, e não em 47,85 como ele dizia. Entre 47,35 e 47,75 só há o bombo (47,39) e um deslize a subir.\n\n3) a_meio_da_frase = true é verdade no que se ouve. Hoje, na pista só do Rei Leão, a banda da voz sobe de 16 para 28 dB entre 121,52 e 121,68. O Rei Leão fica 8 dB ou mais acima do piano até 122,42 e por cima dele até 122,72. Ouve-se cerca de 1 s de uma linha nova a morrer.\n\n4) Proposta: refiz o mix33 e as pistas separadas, com RMS de 400 ms em passos de 0,05 s.\n- Mínimo -41,4 dBFS em 121,72; abaixo de -40 durante 0,15 s e abaixo de -35 durante 0,35 s.\n- Em janelas de 200 ms: abaixo de -40 durante 0,25 s.\n- Não há buraco de mais de 0,8 s.\n- Na pista do Rei Leão, a banda da voz desce sempre (20,8, 17,5, 13,2, 12,3, 11,6, 8,6) e não volta a subir no arranque da linha nova, que fica abaixo do nível do próprio respiro.\n- Não há duas vozes: o Lang Lang é piano, e o Rei Leão já acabou quando ele entra.\n- O in_s do Rei Leão não muda (092), o corte não muda (regra dos blocos) e as entradas da 095 ficam intocadas.\n\n5) A subida de 1,0 s do piano está certa. A 094 só pede 2,2 s a quem cruza com a música que sai. Sem cruzamento fica a omissão do render, e o base() do mix33 dá o mesmo. Com 2,2 s, a alternativa dele, o vazio abaixo de -35 sobe para 0,85 s: é pior.\n\n6) Variantes que testei. Nenhuma é claramente melhor.\n- Zerar em 47,75 (sai 47,45 com cauda 0,3, ou 47,4 com 0,35) tira o resto do arranque, mas deixa 0,15 s de silêncio digital, e o vazio abaixo de -35 passa a 0,4 s.\n- Sair no fim da linha (47,1 com cauda 0,75) dá 0,45 s abaixo de -35 e 0,2 s abaixo de -40, se o piano subir em 1,0 s. Ele tinha medido 0,9 s, mas com a subida de 2,2 s. A qualidade é parecida.\n- O piano sem rampa quase fecha o vazio, porque há um ataque em 42,86, mas isso só serve com a entrada de hoje.\n\n7) Correção ao aparte dele. A entrada de 42,8 do Lang Lang automático não vem do fim da descida. Vem do montar_da_mesa, que faz in_s + dura_s do CSV: 13,3 + 29,5. Antes da 095 havia continuidade exata com a retoma em 13,3, não em 11,1. Quando a 095 for construída, com a retoma em 14,6, o montar passa a dar 44,1 sozinho, e não 46,3. Medi a proposta com o piano em 44,1: mínimo -43,5, abaixo de -40 durante 0,2 s e abaixo de -35 durante 0,4 s. Continua a aguentar.",
+    "a_meio_da_frase": true,
+    "opcao_final": "combinada",
+    "mods_mix33_final": "[{\"ficheiro\":\"O Rei\",\"quando\":73.87,\"sai_s\":47.55,\"cauda\":0.3},{\"ficheiro\":\"Lang Lang\",\"quando\":121.77,\"subida\":1.0}]",
+    "resumo_final": "O Rei Leão passa a sair dentro do respiro que fecha o seu período de oito compassos. Começa a descer em 47,55 do ficheiro e chega a zero em 47,85 (corpo 121,42 a 121,72), antes de o coro arrancar outra linha. O piano continua a entrar no corte e sobe em 1,0 s, porque já não cruza com o Rei Leão.",
+    "beneficio_final": "Deixa de se ouvir, durante cerca de 1 s, o coro a começar uma linha nova e a morrer debaixo do piano. O Rei Leão acaba o período e o piano entra no início da fita de 1995.",
+    "conflitos_final": [
+     "Dependência, não é conflito: a entrada do piano (42,8) é calculada pelo montar_da_mesa a partir da retoma (13,3 + 29,5). Com a 095 construída passa sozinha a 44,1. Medi a proposta nas duas entradas e aguenta: 0,35 s e 0,4 s abaixo de -35 dBFS. A subida de 1,0 s não depende disso; uma entrada sem rampa dependeria. Não há conflito com a 092, com a 095 nem com a regra dos blocos."
+    ],
+    "medida_final": "Medida com mix33 e pistas separadas, centro 121,77, 8 s antes e 6 s depois. Nível RMS de 400 ms em passos de 0,05 s, e de 200 ms quando indicado.\n\nHOJE: mínimo -29,8 dBFS e nada abaixo de -35. O Rei Leão fica 8 dB ou mais acima do piano até 122,42 e por cima dele até 122,72. A linha nova do coro arranca em 121,60 a 121,68 (47,74 a 47,79 no ficheiro).\n\nPROPOSTA: mínimo -41,4 em 121,72; abaixo de -40 durante 0,15 s e abaixo de -35 durante 0,35 s. Em janelas de 200 ms, mínimo -50,1 e abaixo de -40 durante 0,25 s. De volta a -27 em 122,72. Sem duas vozes.\n\nA MESMA PROPOSTA com o piano na entrada futura de 44,1: mínimo -43,5, abaixo de -40 durante 0,2 s e abaixo de -35 durante 0,4 s.\n\nALTERNATIVA DELE (piano com rampa de 2,2 s): mínimo -44,5, abaixo de -40 durante 0,4 s e abaixo de -35 durante 0,85 s.\n\nGrelha: compasso de 2,856 s, barras em 45,00 e 47,87. O período de oito compassos que começa em 24,93 fecha no corte.",
+    "confianca": "alta"
+   },
+   "troca": {
+    "corte_corpo": 121.77,
+    "sai": "O Rei Leão (PT-PT) Ciclo Sem Fim.mp3",
+    "sai_in": 0.0,
+    "sai_quando": 73.87,
+    "sai_no_ficheiro_ao_corte": 47.9,
+    "entra": "Lang Lang - Beauty and the Beast (From Lang Lang Plays Disney  Live).mp3",
+    "entra_in": 42.8
+   }
+  },
+  {
+   "id": "t246_anafaria_clair",
+   "analise": {
+    "id": "t246_anafaria_clair",
+    "corte_corpo": 246.42,
+    "a_meio_da_frase": true,
+    "o_que_se_ouve_no_corte": "a Ana Faria a atacar uma linha nova no tempo forte, 0,4 s depois de ter acabado uma frase de 4 compassos; com a descida de 2,2 s essa linha nova ouve-se cerca de 1,5 s por cima da introdução da Clair",
+    "fins_de_frase": [
+     {
+      "t_ficheiro": 103.5,
+      "t_corpo": 237.32,
+      "evidencia": "fronteira de secção: vale de 0,1 s (-7 dB na banda larga, -10,5 dB na voz) no tempo forte 103,52, e a partir de 103,6 a energia sobe 6 dB; pico de novidade a 101,6. Curto para o critério dos 150 ms"
+     },
+     {
+      "t_ficheiro": 108.07,
+      "t_corpo": 241.89,
+      "evidencia": "meia frase, 2 compassos depois de 103,52: vale de voz de -9 dB mas só 0,05 a 0,1 s. É uma respiração, não um fim de frase"
+     },
+     {
+      "t_ficheiro": 112.18,
+      "t_corpo": 246,
+      "evidencia": "FIM DE FRASE de 4 compassos (de 103,52 a 112,52, compasso de 2,25 s): a banda da voz cai 6 a 13 dB de 112,2 a 112,57 (0,35 s), a banda de 1 a 3 kHz cai 10 dB a 112,21; a linha nova ataca a 112,6 no tempo forte, com mudança de nota no baixo. Fica 0,42 s antes do corte"
+     },
+     {
+      "t_ficheiro": 114.75,
+      "t_corpo": 248.57,
+      "evidencia": "respiração de um compasso dentro da linha nova (vale de voz de -9 dB, 0,1 s, no tempo forte 114,8); não é fim de frase"
+     },
+     {
+      "t_ficheiro": 121.5,
+      "t_corpo": 255.32,
+      "evidencia": "fim da frase seguinte de 4 compassos (112,52 mais 4 compassos), com a voz a descer aos poucos até -5,7 dB; fica 9 s depois do corte, fora de alcance"
+     }
+    ],
+    "opcao": "A",
+    "mods_mix33": "[{\"ficheiro\":\"Ana Faria\",\"quando\":139.82,\"sai_s\":112.15,\"cauda\":0.4}]",
+    "resumo": "A Ana Faria passa a acabar no fim da sua frase de quatro compassos (ficheiro 112,15, corpo 245,97), com uma descida de 0,4 s que chega a zero a 246,37, em vez de atacar a linha seguinte e ser apagada por baixo da Clair. A Clair entra como hoje, a 6,5 s, com o cartão, e a entrada da Ana Faria (6,0) não muda.",
+    "beneficio": "acabam as duas canções a cantar ao mesmo tempo; a Clair começa limpa, com o cartão",
+    "conflitos": [
+     "Nenhum conflito com entradas aprovadas nem com a regra dos blocos: o corte fica a 246,42 e a Ana Faria continua a entrar a 6,0.",
+     "Dependência da troca t269 (Clair para Baha Men): esta proposta conta com a Clair a entrar a 6,5. Se a t269 propuser mudar o in_s da Clair (opção B dela), o arranque desta troca muda e tem de ser medido outra vez.",
+     "Se se escolher a alternativa (Clair a 6,6), a Clair fica 0,1 s mais adiantada em todo o bloco e o ponto de saída dela no corte 269,12 passa de 29,2 para 29,3 no ficheiro, o que mexe na análise da t269."
+    ],
+    "medida": "HOJE (mods []): não há buracos abaixo de -40 dBFS e o mínimo da mistura (RMS 400 ms) é -30,1 dBFS a 246,22. Mas nas pistas separadas a voz da Ana Faria está entre -19 e -23 dBFS de 246,47 a 247,4, contra a Clair entre -25 e -33: a Ana Faria manda durante cerca de 1,0 s depois do corte, fica a menos de 12 dB da Clair durante 1,8 s e só desce abaixo de -45 dBFS a 248,47. PROPOSTA: a Ana Faria chega a zero a 246,37 e fica a 0,0 s a menos de 12 dB da Clair. Há um buraco abaixo de -40 dBFS (RMS 100 ms) de 0,25 s, de 246,27 a 246,52, debaixo do cartão, e o mínimo em 400 ms é -40,5 dBFS a 246,42. A última sílaba fica intacta (voz a -29,4 dBFS a 246,02, igual a hoje). Aviso: sem a Ana Faria por cima, ouve-se a introdução da Clair sozinha (acorde e baixo) a -29 a -32 dBFS durante 1,7 s, cerca de 7 dB abaixo do leito (-22 a -25). Não é som morto, e às 248,2 entra o assobio a -22/-25. ALTERNATIVA (mais Clair a 6,6): buraco de 0,15 s, mínimo -38,6 dBFS, o resto igual. Ficheiros: hoje.wav, proposta.wav, alternativa.wav e stemA_/stemB_*.wav em C:\\Users\\USER1~1\\AppData\\Local\\Temp\\claude\\C--casamento-video\\1b92fe8a-9bb1-4c48-abf6-9956af511886\\scratchpad\\ideias\\p33\\t246_anafaria_clair",
+    "confianca": "alta",
+    "alternativa": "Combinada: a mesma saída da Ana Faria (sai_s 112,15, cauda 0,4) e a Clair a entrar em 6,6 em vez de 6,5, com as mods [{\"ficheiro\":\"Ana Faria\",\"quando\":139.82,\"sai_s\":112.15,\"cauda\":0.4},{\"ficheiro\":\"Gilbert\",\"quando\":246.42,\"in_s\":6.6}]. O primeiro acorde da Clair (6,62 no ficheiro) cai a 246,45, junto com o cartão e no tempo forte onde a Ana Faria começaria a linha seguinte (em vez de 246,55). O buraco abaixo de -40 dBFS passa de 0,25 para 0,15 s (mínimo em 400 ms de -40,5 para -38,6). Não a escolhi porque a diferença na sala é de uma décima de segundo e mexe na troca seguinte. Rejeitadas: C, porque prolongar até ao vale seguinte (113,6, ou seja 1,07 s depois do corte) punha 1 s de linha nova cantada por cima da Clair. B não é possível, porque a entrada 6,0 da Ana Faria está presa pela 093. D quebra a regra dos blocos só para ganhar 0,45 s. Pôr a Clair a entrar no assobio (8,25) arrancava com o ataque mais forte da introdução (-5 dB no ficheiro) e saltava o começo da canção.",
+    "bpm": 106.7
+   },
+   "verificacao": {
+    "id": "t246_anafaria_clair",
+    "veredicto": "confirmado",
+    "razoes": "Medi tudo de novo, com as minhas bandas (larga, graves, 300 a 3400 Hz, 1 a 3 kHz) em janelas de 25 ms, e com pistas separadas feitas pelo mix33.\n1) O fim de frase existe. Na banda de 1 a 3 kHz a Ana Faria tem uma nota longa de 111,5 a 112,16 no ficheiro, entre -25 e -29 dB. A 112,21 cai para -38 a -43 dB e fica em baixo até 112,56: cerca de 0,35 a 0,4 s e 10 a 13 dB de queda. Na banda da voz a queda é de 6 a 13 dB. A 112,6 volta a subir, com ataque no tempo forte 112,52/112,6 (larga -17,7) e baixo novo. As batidas vêm de 0,56 s em 0,56 s, com compasso de 2,25 s, e a frase de 103,52 a 112,2 são 4 compassos, depois de um trecho instrumental (95 a 103,2). Passa no critério (6 dB durante 150 ms, e depois uma linha nova). Pela medida grosseira de croma, a nota final assenta num acorde de ré, provavelmente a dominante, ou seja um fim em suspensão. Mesmo assim é o único fim de frase ao alcance: o seguinte é a 121,5, 9 s depois do corte.\n2) a_meio_da_frase = true, e aceito. No corte o ficheiro está a 112,6, 0,42 s depois do fim da frase e já em cima do tempo forte da linha nova (fica acima dos 0,3 s da opção E). Com a descida qsin de 2,2 s, essa linha ouve-se quase inteira: na banda de 1 a 3 kHz a Ana Faria fica por cima da Clair durante 1,65 s depois do corte, e a menos de 12 dB dela durante 1,85 s, até 248,22.\n3) mix33, HOJE ([]): não há nada abaixo de -40 dBFS. O mínimo em 400 ms é -30,1 a 246,22, e a Ana Faria ainda ouve-se debaixo da introdução e do começo da melodia da Clair (248,2). PROPOSTA: a Ana Faria chega a zero a 246,37 e fica 0,0 s por cima da Clair. Em 100 ms há um buraco abaixo de -40 dBFS de 0,25 s (246,27 a 246,47), com uns 0,15 s quase em silêncio, muito abaixo dos 0,8 s. O mínimo em 400 ms é -40,4 a 246,42. A última sílaba fica: a descida começa a 112,15, e a 112,2 o ganho ainda está a -0,2 dB. A descida acaba a 112,55, antes do ataque de 112,6, portanto não se ouve o início da linha nova. Os números dele batem com os meus (diferenças de 0,1 a 0,7 dB).\n4) As entradas não mudam: a Ana Faria continua em 6,0 (decisão 093), o corte fica em 246,42 e a Clair em 6,5, com a subida de 0,03 que a base já lhe dá (o som antes de 6,5 está a -44,7 dB). Não há efeitos por perto. Os conflitos estão bem marcados.\n5) Procurei uma opção melhor e não há. C não serve: o vale seguinte, a 113,1, é uma respiração a meio da linha nova. B é impossível, por causa da 093. D quebra a regra dos blocos só para ganhar 0,4 s. Uma cauda mais comprida deixava ouvir o ataque de 112,6 a uns -8 dB. A alternativa dele (Clair a 6,6) mede 0,15 s de buraco e -38,6 dB, o que confirma o que ele disse. Mas vi a proposta da t269: ela usa a saída da Clair a 28,62 no ficheiro e conta com a entrada 6,5. Com 6,6, o buraco da t269 passava de 0,15 para uns 0,25 s. É uma troca de uma décima de segundo de um lado para o outro, e por isso ficar em 6,5 é o certo. Pôr a Clair a entrar em 8,2 desfazia a t269 inteira.\nUm aviso que fica: sem a Ana Faria por cima, ouve-se a introdução de piano da Clair sozinha durante cerca de 1,8 s, a -29 a -32 dBFS, uns 7 dB abaixo do leito. Não é som morto: é o começo da canção, debaixo do cartão. Ficheiros em C:\\Users\\USER1~1\\AppData\\Local\\Temp\\claude\\C--casamento-video\\1b92fe8a-9bb1-4c48-abf6-9956af511886\\scratchpad\\ideias\\p33\\t246_anafaria_clair\\verif (hoje.wav, proposta.wav, alt.wav, stA_*/stB_*.wav, m1.py, m2.py, comp.py).",
+    "a_meio_da_frase": true,
+    "opcao_final": "A",
+    "mods_mix33_final": "[{\"ficheiro\":\"Ana Faria\",\"quando\":139.82,\"sai_s\":112.15,\"cauda\":0.4}]",
+    "resumo_final": "A Ana Faria passa a acabar no fim da sua frase de quatro compassos (112,15 no ficheiro, 245,97 no corpo) e desce em 0,4 s até zero a 246,37. Assim não chega a atacar a linha seguinte por baixo da Clair. A Clair continua a entrar em 6,5 com o cartão, e a Ana Faria continua a entrar em 6,0.",
+    "beneficio_final": "Deixa de haver duas canções a cantar ao mesmo tempo. A Ana Faria acaba a frase, há uma respiração de 0,15 a 0,25 s e a Clair começa limpa com o cartão.",
+    "conflitos_final": [
+     "Nenhum conflito com entradas aprovadas nem com a regra dos blocos: o corte fica a 246,42, a Ana Faria continua em 6,0 (093) e a Clair em 6,5.",
+     "Depende da t269: a proposta dela (saída da Clair a 28,62 no ficheiro) conta com a Clair a entrar em 6,5. Se alguém mudar a entrada da Clair, as duas trocas têm de ser medidas outra vez. Com a Clair a 6,6, o buraco da t269 passa de 0,15 para cerca de 0,25 s.",
+     "Aviso, sem ser conflito: a introdução de piano da Clair fica a descoberto durante cerca de 1,8 s, uns 7 dB abaixo do leito, até a melodia entrar a 248,2."
+    ],
+    "medida_final": "HOJE ([]): nada abaixo de -40 dBFS; o mínimo em 400 ms é -30,1 a 246,22. Nas pistas separadas, a Ana Faria (1 a 3 kHz) fica por cima da Clair durante 1,65 s depois do corte e a menos de 12 dB dela durante 1,85 s, até 248,22. PROPOSTA: a Ana Faria chega a zero a 246,37, com 0,0 s por cima da Clair. Em 100 ms há um buraco abaixo de -40 dBFS de 0,25 s (246,27 a 246,47), com cerca de 0,15 s abaixo de -50. O mínimo em 400 ms é -40,4 a 246,42. A última sílaba fica intacta: a descida começa a 112,15, a voz cai a 112,21 e a descida acaba a 112,55, antes do ataque de 112,6. Depois disso a introdução da Clair fica sozinha a -29 a -32 dBFS até 248,2, e aí o leito volta a -23/-25. ALTERNATIVA (Clair a 6,6): buraco de 0,15 s e mínimo de -38,6, mas o buraco da t269 fica 0,1 s maior. Fim de frase medido no ficheiro: queda de 10 a 13 dB na banda de 1 a 3 kHz de 112,21 a 112,56, depois de uma nota longa (111,5 a 112,16), e linha nova no tempo forte a 112,6.",
+    "confianca": "alta"
+   },
+   "troca": {
+    "corte_corpo": 246.42,
+    "sai": "Ana Faria - Clara.mp3",
+    "sai_in": 6.0,
+    "sai_quando": 139.82,
+    "sai_no_ficheiro_ao_corte": 112.6,
+    "entra": "Gilbert O`Sullivan - CLAIR - ( The Sweetest `Clair ` video Ever !) - And Clair answers back !.mp3",
+    "entra_in": 6.5
+   }
+  },
+  {
+   "id": "t269_clair_dogs",
+   "analise": {
+    "id": "t269_clair_dogs",
+    "corte_corpo": 269.12,
+    "a_meio_da_frase": true,
+    "o_que_se_ouve_no_corte": "a voz da Clair no arranque de uma linha nova: a anterior acabou 0,6 s antes do corte, a nova começou no tempo forte 0,15 s antes, e hoje ouve-se 1,8 s por cima do grito",
+    "fins_de_frase": [
+     {
+      "t_ficheiro": 21.5,
+      "t_corpo": 261.42,
+      "evidencia": "pausa longa da voz de 21,50 a 22,20 (canal do centro a -35/-44 dBFS), antes do compasso dos 22,16"
+     },
+     {
+      "t_ficheiro": 26.55,
+      "t_corpo": 266.47,
+      "evidencia": "respiração curta de 26,57 a 26,77 (banda da voz 11,7 dB abaixo da mediana), antes do compasso dos 26,74; fraca"
+     },
+     {
+      "t_ficheiro": 28.62,
+      "t_corpo": 268.54,
+      "evidencia": "fim de linha: banda da voz desce de -17,7 para -30,3 dB entre 28,52 e 29,02, canal do centro cai 15 dB durante 0,4 s; a linha nova arranca no tempo forte dos 29,03 (onset 5,3)"
+     },
+     {
+      "t_ficheiro": 31,
+      "t_corpo": 270.92,
+      "evidencia": "respiração de 31,02 a 31,35 (banda da voz 11 dB abaixo, 0,3 s), antes do compasso dos 31,31; 1,8 s depois do corte, longe de mais para prolongar"
+     },
+     {
+      "t_ficheiro": 32.7,
+      "t_corpo": 272.62,
+      "evidencia": "o fim de frase mais forte da zona: a nota longa acaba aos 32,7 e há pausa até 33,60 (0,85 s, mistura inteira a -24/-25 dB); linha nova no compasso dos 33,60"
+     }
+    ],
+    "opcao": "A",
+    "mods_mix33": "[{\"ficheiro\":\"Gilbert\",\"quando\":246.42,\"sai_s\":28.62,\"cauda\":0.4}]",
+    "resumo": "A Clair deixa de descer no corte e passa a acabar no fim da linha que termina aos 28,62 s do ficheiro (268,54 no corpo), com 0,4 s de cauda. O grito do Who Let The Dogs Out continua a entrar sem rampa com o cartão, aos 269,12, depois de 0,18 s de pausa.",
+    "beneficio": "A Clair acaba a linha dela e o grito entra sozinho com o cartão. Deixa de haver 1,85 s de duas vozes em cima uma da outra.",
+    "conflitos": [
+     "A proposta A não tem conflitos. Depende de a Clair continuar a entrar aos 6,5 s do ficheiro e aos 246,42 do corpo (troca t246, feita por outro agente). Se a Clair começar até 0,6 s mais cedo, a pausa antes do grito continua abaixo de 0,8 s.",
+     "Só na alternativa D: a troca passa do cartão (269,12, que abre o bloco dos cães) para a primeira foto dos cães (272,92), o que conflitua com a regra 'cada mudança de faixa coincide com mudança de bloco'.",
+     "Só na alternativa D: o Who Let The Dogs Out começa 3,8 s mais tarde, com a mesma entrada 1,69 e o mesmo fim. Na troca seguinte (312,52, para o Tokyo Drift) fica aos 41,29 s do ficheiro em vez de 45,09, e a t312 tem de ser medida outra vez.",
+     "AVISO, fora da troca: o mix33.py faz os.chdir para C:\\casamento-video quando é importado. Por isso o meu script de medida escreveu por engano quatro ficheiros não rastreados na raiz do repositório: medida.json, niveis_hoje.txt, niveis_proposta.txt e niveis_alternativa.txt, todos de 29/09 às 10:37. Tentei apagá-los e a remoção foi recusada, por isso têm de ser apagados à mão. Os outros agentes que importem o mix33 e escrevam com caminhos relativos vão cair no mesmo erro."
+    ],
+    "medida": "Passo de 50 ms, RMS de 400 ms, com A e B também medidas em separado. HOJE: a linha nova da Clair fica entre -25 e -30 dBFS de 269,07 a 270,87 (1,85 s com as duas acima de -35 dBFS), por baixo do grito, que está entre -23 e -26. Maior buraco abaixo de -40: 0,15 s (271,17 a 271,27, mínimo -46,5), que é uma pausa do próprio Dogs. PROPOSTA A: 0 s de sobreposição. A Clair desce de -27,9 dBFS (268,62) para -47,1 (268,92); há 0,15 s abaixo de -40 (268,87 a 268,97) antes do grito, que chega a -35,7 aos 269,02. A pausa do próprio Dogs aos 271,27 fica a -54 durante 0,15 s. Nenhum buraco passa de 0,8 s. ALTERNATIVA D: 0 s de sobreposição e nenhum buraco abaixo de -40 (mínimo -33,5 aos 272,77). Grelha: batida de 0,572 s, compassos de 4/4 a começar em 26,74, 29,03, 31,31 e 33,60. O corte cai 0,17 s depois do tempo forte dos 29,03. Ficheiros em scratchpad\\ideias\\p33\\t269_clair_dogs: hoje.wav, proposta.wav, alternativa.wav, e _*_A.wav e _*_B.wav com cada música sozinha.",
+    "confianca": "media",
+    "bpm": 104.9,
+    "corte_ficheiro_nota": "ignore",
+    "alternativa": "Opção D: a Clair continua por baixo do cartão até acabar a frase aos 32,7 s do ficheiro (272,62 no corpo) e desce em 0,3 s. O grito entra aos 272,92, com a primeira foto dos cães, como resposta à pergunta do cartão. Mods: [{\"ficheiro\":\"Gilbert\",\"quando\":246.42,\"sai_s\":32.7,\"cauda\":0.3},{\"ficheiro\":\"Baha\",\"quando\":269.12,\"novo_quando\":272.92}]. Não há sobreposição nem nenhum buraco abaixo de -40 dBFS (mínimo -33,5). A piada fica mais bem servida, mas conflitua com a regra dos blocos e tira 3,8 s ao Dogs, o que obriga a medir outra vez a troca t312."
+   },
+   "verificacao": {
+    "id": "t269_clair_dogs",
+    "veredicto": "confirmado",
+    "razoes": "Medi tudo de novo sem usar os números dele. Para seguir a voz usei o canal do centro menos o lado, na banda dos 2 aos 5 kHz, em janelas de 46 ms. A voz da Clair acaba aos 28,61 s do ficheiro: cai mais de 20 dB entre os 28,61 e os 28,68 e fica em baixo até aos 29,05 (0,37 s). A linha nova arranca aos 29,07, no tempo forte dos 29,03. É mesmo um fim de linha, e não um vale a meio de uma palavra. O que soa entre os 28,5 e os 28,9 é o acorde e o baixo a morrer, e aos 28,92 o acorde volta a ser tocado, já como entrada da linha seguinte. A afirmação a_meio_da_frase=true também é verdadeira: o corte (29,20 no ficheiro) cai 0,13 s depois de começar a linha nova. Hoje essa linha ouve-se por baixo do grito: 1,85 s com as duas acima de -35 dBFS (269,07 a 270,87, RMS de 400 ms), e 2,1 s com a Clair a menos de 12 dB do grito. Com as mods dele (sai_s 28,62, cauda 0,4), refeitas no mix33 com stems separados, deixa de haver sobreposição (0 s). O maior buraco abaixo de -40 dBFS, em janelas de 100 ms, vai de 268,77 a 269,12, ou seja 0,35 s, dos quais uns 0,15 s são silêncio digital. Em janelas de 400 ms não há buraco nenhum junto ao corte. A única pausa maior é do próprio Dogs, aos 271,1 a 271,4, e já existe hoje. O Dogs continua a entrar sem rampa (subida 0,03 na base). O ganho da Clair antes do corte não muda (0,1 dB). A proposta não mexe no in_s e não toca em nenhuma entrada da 095. Também medi uma variante com sai_s 28,75 e cauda 0,3. Encurta o buraco para 0,2 s, mas deixa passar a -38 dBFS o acorde tocado outra vez aos 28,92, que é o arranque cortado que se quer evitar. Não é melhor. A opção C não serve: o fim de linha seguinte é aos 30,95, 1,75 s depois do corte. A opção D, medida (Clair até ao fim de frase forte aos 32,7, seguido de pausa de 0,8 s confirmada, e Dogs aos 272,92), dá 0 s de sobreposição e não abre buraco na troca. Mas conflitua com a regra dos blocos e obriga a medir outra vez a t313. É uma escolha de montagem para o Tiago, não é claramente melhor. Os conflitos que ele marcou estão certos.",
+    "a_meio_da_frase": true,
+    "opcao_final": "A",
+    "mods_mix33_final": "[{\"ficheiro\":\"Gilbert\",\"quando\":246.42,\"sai_s\":28.62,\"cauda\":0.4}]",
+    "resumo_final": "A Clair acaba no fim da linha, aos 28,62 s do ficheiro (268,54 no corpo), e desce em 0,4 s. O grito do Who Let The Dogs Out continua a entrar com o cartão aos 269,12, sem rampa, depois de uma pausa curta.",
+    "beneficio_final": "Deixa de se ouvir a Clair a começar uma linha nova por baixo do grito. Hoje há 1,85 s de duas vozes, com a proposta nenhum. O grito entra sozinho, a seguir a uma respiração de cerca de 0,3 s, o que ainda lhe dá mais força.",
+    "conflitos_final": [
+     "Opção A: sem conflito com a 095 nem com a regra dos blocos. O in_s da Clair (6,5) e a entrada do Dogs (1,69) ficam iguais.",
+     "Depende de a Clair continuar a entrar aos 6,5 s do ficheiro e aos 246,42 do corpo. A proposta principal da t246 não mexe nisso (confirmei que a Clair sai igual ao byte depois dos 248,4 s). A alternativa da t246 mexe na Clair: se for essa a escolhida, o sai_s tem de ser medido outra vez.",
+     "Só na opção D: a troca passa do cartão que abre o bloco dos cães (269,12) para a primeira foto (272,92), o que conflitua com a regra 'cada mudança de faixa coincide com mudança de bloco'.",
+     "Só na opção D: o Dogs começa 3,8 s mais tarde e no corte dos 312,52 fica aos 41,29 s do ficheiro em vez dos 45,09. A t313 teria de ser medida outra vez.",
+     "Aviso fora da troca: na raiz do repositório estão quatro ficheiros soltos de 29/09 às 10:37 (medida.json, niveis_hoje.txt, niveis_proposta.txt, niveis_alternativa.txt). Escreveu-os o agente da análise por causa do os.chdir do mix33. Têm de ser apagados à mão. Esta verificação não escreveu nada fora da pasta verif."
+    ],
+    "medida_final": "Voz da Clair (centro menos lado, 2 a 5 kHz, janelas de 46 ms): fim aos 28,61 no ficheiro, queda de mais de 20 dB até aos 28,68, silêncio da voz até aos 29,05 (0,37 s), linha nova aos 29,07, no tempo forte dos 29,03. Fim de frase forte aos 32,7, com pausa até aos 33,6. HOJE (mix33, stems separados): as duas acima de -35 dBFS durante 1,85 s (269,07 a 270,87, RMS de 400 ms), Clair a menos de 12 dB do grito durante 2,1 s, nenhum buraco maior do que 0,15 s. PROPOSTA (sai_s 28,62, cauda 0,4): 0 s de sobreposição. Abaixo de -40 dBFS de 268,77 a 269,12 em janelas de 100 ms (0,35 s, com uns 0,15 s de silêncio digital). Nenhum buraco junto ao corte em janelas de 400 ms. A pausa do próprio Dogs aos 271,1 a 271,4 já existe hoje. Variante 28,75/0,3: buraco de 0,2 s, mas o acorde tocado outra vez aos 28,92 passa a -38 dBFS, por isso foi posta de parte. D (sai_s 32,7, cauda 0,3, Dogs aos 272,92): 0 s de sobreposição e nenhum buraco na troca. Ficheiros em scratchpad\\ideias\\p33\\t269_clair_dogs\\verif: hoje_*, prop_*, a2875_* e altD_* (tudo, A e B), mais medir.py, pitch.py e nota.py.",
+    "confianca": "alta"
+   },
+   "troca": {
+    "corte_corpo": 269.12,
+    "sai": "Gilbert O`Sullivan - CLAIR - ( The Sweetest `Clair ` video Ever !) - And Clair answers back !.mp3",
+    "sai_in": 6.5,
+    "sai_quando": 246.42,
+    "sai_no_ficheiro_ao_corte": 29.2,
+    "entra": "Baha Men - Who Let The Dogs Out (Lyrics) - Cães.mp3",
+    "entra_in": 1.69
+   }
+  },
+  {
+   "id": "t313_dogs_tokyo",
+   "analise": {
+    "id": "t313_dogs_tokyo",
+    "corte_corpo": 312.52,
+    "a_meio_da_frase": true,
+    "bpm": 129.2,
+    "o_que_se_ouve_no_corte": "Refrão do Who Let The Dogs Out, último compasso de uma frase de 8 compassos (31,14 a 45,99 no ficheiro, 4/4 a 129,2 BPM): a resposta em cinco gritos curtos com paragens da banda, cortada entre o segundo e o terceiro grito. Faltam 0,9 s para a frase acabar. Hoje a descida qsin segura o nível, a frase acaba e a linha nova que começa a seguir (46,05 no ficheiro, 313,48 no corpo) ouve-se a morrer por baixo do Tokyo Drift até cerca de 314,4.",
+    "fins_de_frase": [
+     {
+      "t_ficheiro": 42.3,
+      "t_corpo": 309.73,
+      "evidencia": "Fim do 3.º par pergunta e resposta, fronteira de 2 compassos (batida 90). A banda inteira pára de 42,18 a 42,33 (E -16,8 dB) e a banda da voz desce de -10 para -27,7 dB. A linha nova começa em 42,38. Fica 2,8 s antes do corte, portanto não serve."
+     },
+     {
+      "t_ficheiro": 44.43,
+      "t_corpo": 311.86,
+      "evidencia": "Fim da linha cantada do último par: a banda da voz cai de -11 para -39 dB durante 240 ms (44,43 a 44,67), com o instrumental sempre a tocar. Aqui há pico de novidade picos4 em 44,625. É fim de linha, não de frase: logo a seguir vem a resposta que completa os 2 compassos."
+     },
+     {
+      "t_ficheiro": 45.99,
+      "t_corpo": 313.42,
+      "evidencia": "Fim da resposta e do refrão de 8 compassos, na barra da batida 98. Paragem da banda de 45,87 a 45,91 (E -14 dB), último grito de 45,93 a 45,97 e voz a -30 dB de 45,99 a 46,03. A pausa é de só 60 ms: a secção nova (voz contínua 3,6 s, baixo diferente) entra em 46,05, por isso A tem de estar a zero antes disso."
+     },
+     {
+      "t_ficheiro": 50.15,
+      "t_corpo": 317.58,
+      "evidencia": "Fim da linha seguinte: voz a -39 dB em 50,18 e banda parada de 50,12 a 50,43 (E -19,5 a -26,7 dB). Fica 5,1 s depois do corte, fora do alcance de um prolongamento."
+     }
+    ],
+    "opcao": "C",
+    "mods_mix33": "[{\"ficheiro\":\"Baha\",\"quando\":269.12,\"sai_s\":45.86,\"cauda\":0.2}]",
+    "resumo": "O Who Let The Dogs Out deixa de descer no corte e toca a resposta do refrão até ao fim (313,29 no corpo). Sai em 0,2 s, acaba em 313,49, antes da linha nova que hoje se ouve a morrer por baixo. O Tokyo Drift continua a entrar em 312,52, na entrada 0,64, e nenhuma entrada nem o corte mudam.",
+    "beneficio": "O refrão acaba inteiro, sem arranque de uma linha nova cortada, e o riff do Tokyo Drift fica sozinho a partir de 313,5",
+    "conflitos": [],
+    "medida": "Hoje, entre 311,5 e 314,5, o nível mínimo (RMS de 400 ms) é -26,8 dBFS e não há buracos abaixo de -40. Mas a linha nova do Dogs ouve-se de 313,45 a cerca de 314,4, a -25 a -33 dBFS (banda da voz a -31 a -38), por cima do riff do Tokyo Drift, que está a -22 a -28. Com a proposta, o mínimo em 400 ms é -28,6 dBFS e também não há nada abaixo de -40. Em janelas de 100 ms só aparecem as pausas do próprio riff do Tokyo Drift, de 0,12 s cada (313,78 a 313,90 e 314,26 a 314,37). Antes de 313,45 a diferença para hoje fica abaixo de -41 dB, portanto a resposta mantém-se inteira. Tira-se a parte a -25 dB, que é a linha nova. Os dois tocam juntos de 312,52 a 313,49 (0,97 s), mas só um canta: o Tokyo Drift abre (0,64 a 4,4 no ficheiro) com um riff sem voz, sem baixo e sem bateria. As duas músicas estão a 129,2 BPM e o primeiro ataque do riff cai 0,02 s depois da batida do Dogs. A alternativa A deixa 0,40 s de silêncio digital, de 312,08 a 312,48. Ficheiros: hoje.wav, proposta.wav, alternativa.wav em scratchpad/ideias/p33/t313_dogs_tokyo.",
+    "alternativa": "A segunda opção é a A, com sai_s 44,42 e cauda 0,25: o Dogs acaba no fim da linha cantada, antes da resposta, e desce de 311,85 a 312,10. Deixa 0,40 s de silêncio digital (312,08 a 312,48) antes do Tokyo Drift, o que ainda cabe nos 0,8 s aceitáveis. Mas o riff entra despido, com as pausas de 0,12 s à vista desde o primeiro ataque, e corta a resposta que toda a sala conhece. A opção D (Tokyo Drift a entrar em 313,42) daria a troca mais limpa, mas põe a mudança de música 0,9 s dentro da foto com o texto e fere a regra da mudança de bloco. A B mexe na entrada 1,69, que está no grito, e fica excluída.",
+    "confianca": "alta"
+   },
+   "verificacao": {
+    "id": "t313_dogs_tokyo",
+    "veredicto": "confirmado",
+    "razoes": "Medi tudo de novo em scratchpad/ideias/p33/t313_dogs_tokyo/verif (env.py, porbeat.py, seccoes.py, medir_mix.py, dif.py, alinhar.py). 1) O ponto de fim de frase existe e está bem localizado. Por compassos, a partir de 31,14 no ficheiro o Who Let The Dogs Out repete a mesma unidade de 2 compassos. A semelhança espectral de cada compasso com o de 2 compassos antes fica entre 0,97 e 0,99. No compasso que começa em 46,00 cai para 0,31, e aí entra uma secção nova. O refrão tem 8 compassos, de 31,14 a 46,00. O corte (45,09 no ficheiro) cai no compasso da resposta da última unidade, a 0,9 s do fim, portanto a_meio_da_frase = true está certo. Em 45,99 a banda da voz cai de -15 para -34 dB. A pausa só dura uns 60 ms e não chega aos 150 ms, mas não é um vale a meio de uma palavra: é o fim da secção, na barra, e a seguir, em 46,05, começa uma linha contínua e centrada. Os pontos 42,3 e 44,43 que ele rejeitou estão bem rejeitados. 2) Verifiquei que o ficheiro e o corpo estão alinhados: a correlação com a mistura dá 0,994 e desvio zero. Corri o mix33 com as mods [] e com as dele. Hoje, o que a proposta tira (hoje menos proposta) está entre 313,50 e 314,3, a -25 a -33 dBFS, com a banda da voz entre -30 e -39 e centrada. É a linha nova do Dogs a arrancar por cima do riff do Tokyo Drift, que está entre -21 e -28. Com a proposta, o nível mínimo em 400 ms passa de -26,8 para -28,6 dBFS. Em janelas de 100 ms só há duas descidas abaixo de -40, de 0,13 s cada (313,78 e 314,26), e são pausas do próprio riff. Há também uma micro pausa de 30 ms na barra (313,44). Nenhum buraco chega aos 0,8 s. Não há duas vozes a cantar ao mesmo tempo: a abertura do Tokyo Drift (0,64 a 4,4 no ficheiro) é mono (correlação entre os canais 0,996), com notas curtas de altura fixa (466 Hz) que se apagam depressa. É um riff, não uma voz. O último grito (313,36 a 313,41) fica: o ataque perde 0,9 dB e só a cauda desce 2 a 5 dB. A batida do Dogs no 46,00 fica 11 dB mais baixa, o que evita um flam com a nota do Tokyo em 313,46. Nenhuma entrada muda (Dogs 1,69, Tokyo 0,64) e o corte também não, por isso não há conflito com a 095 nem com a regra dos blocos. 3) Não encontrei opção claramente melhor. Com sai_s 45,90 a 45,95 e caudas de 0,1 a 0,15, o último grito ficaria inteiro, mas deixava passar a batida da secção nova entre -2 e -6 dB, colada à nota do Tokyo. A diferença é mínima numa sala de jantar. A opção A deixa 0,4 s de silêncio e corta a resposta. A B mexe na entrada do grito. A D fere a regra dos blocos e tira o Tokyo da foto que fala de velocidade. Uma correção pequena ao texto dele: as duas músicas não estão ambas a 129,2 BPM. Esse número vem da quantização do analisador. Pelas batidas, o Dogs está a cerca de 129,4 e o riff do Tokyo a cerca de 127. Nos 0,97 s em que tocam juntos isso dá menos de 0,02 s de desvio, portanto não muda nada.",
+    "a_meio_da_frase": true,
+    "opcao_final": "C",
+    "mods_mix33_final": "[{\"ficheiro\":\"Baha\",\"quando\":269.12,\"sai_s\":45.86,\"cauda\":0.2}]",
+    "resumo_final": "O Who Let The Dogs Out deixa de descer no corte e toca a resposta do refrão até ao fim do compasso. Começa a sair em 313,29 e está a zero em 313,49, antes da linha nova que hoje se ouve a arrancar por baixo. O Tokyo Drift continua a entrar em 312,52, na entrada 0,64. O corte e as entradas não mudam.",
+    "beneficio_final": "O refrão acaba na barra, em vez de se ouvir o arranque de um verso novo cortado a meio. Depois fica só o riff do Tokyo Drift, a tempo com o Dogs e sem segunda voz.",
+    "conflitos_final": [],
+    "medida_final": "Alinhamento entre ficheiro e corpo verificado (correlação 0,994, desvio 0). Hoje, o nível mínimo em 400 ms entre 311,5 e 314,8 é -26,8 dBFS e não há nada abaixo de -40. A linha nova do Dogs ouve-se de 313,50 a 314,3, a -25 a -33 dBFS (banda da voz -30 a -39), por cima do riff do Tokyo, que está a -21 a -28. Com a proposta, o mínimo em 400 ms é -28,6 dBFS. Em janelas de 100 ms só há duas descidas abaixo de -40, de 0,13 s cada (313,78 a 313,91 e 314,26 a 314,38), que são pausas do próprio riff, e uma micro pausa de 30 ms na barra (313,44). Nenhum buraco chega aos 0,8 s. O último grito fica: o ataque perde 0,9 dB e a cauda 2 a 5 dB. Não há duas vozes: o riff do Tokyo é mono (L/R 0,996), com notas de altura fixa. As duas músicas tocam juntas 0,97 s, e o primeiro ataque do Tokyo cai 0,02 s depois da batida do Dogs. Ficheiros: verif/hoje.wav e verif/proposta.wav.",
+    "confianca": "alta"
+   },
+   "troca": {
+    "corte_corpo": 312.52,
+    "sai": "Baha Men - Who Let The Dogs Out (Lyrics) - Cães.mp3",
+    "sai_in": 1.69,
+    "sai_quando": 269.12,
+    "sai_no_ficheiro_ao_corte": 45.09,
+    "entra": "Tokyo Drift - Teriyaki Boyz [ MUSIC VIDEO ] HD.mp3",
+    "entra_in": 0.64
+   }
+  },
+  {
+   "id": "t344_tokyo_celebration",
+   "analise": {
+    "id": "t344_tokyo_celebration",
+    "corte_corpo": 344.32,
+    "a_meio_da_frase": false,
+    "o_que_se_ouve_no_corte": "Instrumental. É o último tempo do compasso 7 de uma frase de 8 compassos, com a linha melódica em pausa entre duas linhas e o baixo já a cair para a pausa de fim de compasso. A linha seguinte do Tokyo Drift arranca 0,3 s depois do corte (compasso 8, corpo 344,61). A descida de hoje, de 2,2 s, deixa ouvir essa linha a arrancar por cima da entrada do reggae.",
+    "fins_de_frase": [
+     {
+      "t_ficheiro": 29.55,
+      "t_corpo": 341.43,
+      "evidencia": "Fim da segunda linha melódica, no compasso 6. A energia tonal que não se repete (400 a 2500 Hz, sem o fundo que se repete de 2 em 2 compassos) cai de -19,5 para -29/-31 dB durante 0,3 s. Segue-se o compasso 7 sem linha, o mais baixo da frase (média -26,2 dB, contra -22,8 e -23,2 nos compassos 5 e 8)."
+     },
+     {
+      "t_ficheiro": 30.84,
+      "t_corpo": 342.72,
+      "evidencia": "Fronteira de 2 compassos, no fim dos compassos 5 e 6, que têm as duas linhas. O baixo abre um buraco de 30,59 a 30,79 (grave -29 dB) e o bombo volta no tempo forte, a 30,86."
+     },
+     {
+      "t_ficheiro": 32.73,
+      "t_corpo": 344.61,
+      "evidencia": "Fim do compasso 7, o da pausa da voz. O baixo cai de 32,39 a 32,73 (grave -29 dB, cerca de 20 dB abaixo do compasso). A linha seguinte arranca no tempo forte do compasso 8, a 32,73-32,76 (tonal +4 a 5 dB). É aqui que a proposta faz A acabar."
+     },
+     {
+      "t_ficheiro": 33.83,
+      "t_corpo": 345.71,
+      "evidencia": "Fim da linha do compasso 8, dentro da paragem do terceiro tempo: o baixo cai para -36/-45 dB entre 33,49 e 33,89. A energia tonal desce de -18,3 para -27 dB durante mais de 0,4 s. Fica 1,39 s depois do corte."
+     },
+     {
+      "t_ficheiro": 34.63,
+      "t_corpo": 346.51,
+      "evidencia": "Fim da frase de 8 compassos (as frases começam a 4,37, 19,50 e 34,63; 1 compasso = 1,891 s, cerca de 127 BPM). A mesma paragem no terceiro tempo do compasso 8 aparece 8 compassos antes, a 18,4-18,7. A seguir entra uma linha nova, e a secção muda a 42,19 (picos8 41,875). Fica 2,19 s depois do corte."
+     }
+    ],
+    "opcao": "A",
+    "mods_mix33": "[{\"ficheiro\":\"Tokyo\",\"quando\":312.52,\"sai_s\":32.30,\"cauda\":0.4}]",
+    "resumo": "O Tokyo Drift começa a descer 0,14 s antes do corte (ficheiro 32,30) e cala-se em 0,4 s, dentro da pausa do baixo no fim do compasso 7, em vez de descer 2,2 s e arrancar a linha seguinte por cima do reggae. A entrada do Tiago Celebration a 0,81, no corte, fica igual.",
+    "beneficio": "A acaba o compasso sem começar a linha seguinte, e deixa de cantar por cima do arranque do reggae. Não fica buraco.",
+    "conflitos": [],
+    "medida": "mix33, janela 336,3 a 350,3, passo 0,1 s, RMS de 400 ms. Hoje, A ainda está a -0,3 a -3 dB do seu nível quando o compasso 8 arranca, a 344,61. A linha nova ouve-se de 344,64 a cerca de 345,9, e a mistura fica entre -24,4 e -27,5 dBFS de 344,9 a 345,9: é A por cima da intro calma de B, que sozinha está a -31/-32 dBFS. Essa linha pisa em cerca de 0,4 s o material central de B que começa a 345,36. Proposta: A desce de 344,18 a 344,58 e acaba antes do tempo forte do compasso 8. De 344,92 a 345,32 fica B sozinho, a -30,8/-32,4 dBFS (hoje -24,4/-27,5). Nível mínimo entre 342 e 348: -33,2 dBFS a 346,82, igual a hoje, e é da própria intro de B. Nenhum ponto abaixo de -40 dBFS, e não há duas linhas ao mesmo tempo. Alternativa: 7 pontos abaixo de -40 dBFS, de 343,52 a 344,12, com silêncio digital de 343,62 a 344,12.",
+    "alternativa": "Opção A com sai_s 30,84 e cauda 0,8, no fim do par de compassos das duas linhas (corpo 342,72): mods [{\"ficheiro\":\"Tokyo\",\"quando\":312.52,\"sai_s\":30.84,\"cauda\":0.8}]. A acaba num fim de frase mais claro, mas deixa cerca de 0,7 s de silêncio (abaixo de -40 dBFS de 343,52 a 344,12, digital de 343,62 a 344,12) debaixo do cartão Carro, antes do arranque de B. Numa sala de jantar isso é som morto. Rejeitadas: C (prolongar até 345,71) punha a linha do compasso 8 a nível cheio 1,4 s por cima do arranque de B, com dois andamentos, cerca de 127 e 83 BPM. B (mudar a entrada de A em +0,3 s) cortaria o início do ficheiro a 0,64 e não é um número inteiro de compassos. D (mudar o corte) contraria a regra dos blocos e não é precisa.",
+    "bpm": 127,
+    "confianca": "media"
+   },
+   "verificacao": {
+    "id": "t344_tokyo_celebration",
+    "veredicto": "confirmado",
+    "razoes": "Medi tudo de novo, na pasta verif (medir.py, estrutura.py, mistura.py, fino_mix.py).\n\n1) A música A. Pelos beats, o Tokyo está a 129 BPM, com compasso de 1,89 s e frases de 8 compassos que começam a 4,37, 19,50 e 34,63; a secção muda a 42,19, onde o grave cai 5 a 6 dB. Na banda de 800 a 2500 Hz, os compassos ímpares são mais cheios: é uma linha de 2 compassos. O compasso 7 é o mais baixo da frase (-17,2 dB contra -14,7 no 5) e o 8 volta a subir (-15,3), com material novo que leva à frase seguinte, incluindo um glissando descendente de 33,5 a 33,85. A frase 1 tem o mesmo desenho (c7 -16,6, c8 -14,7). No corte (ficheiro 32,44) está o fim do compasso 7, dentro de uma pausa do grave de 32,42 a 32,73 (-30 a -46 dB contra o p90, mais de 25 dB abaixo do resto do compasso). O tempo forte do compasso 8 volta a 32,73-32,77. Portanto a_meio_da_frase = false está certo: o corte não apanha uma linha a meio, apanha a pausa antes da linha nova. Confirmei também os outros pontos dele: a pausa do grave em 30,52-30,83, a pausa em 33,48-33,88 e o início de frase em 34,63.\n\n2) As misturas (mix33, com as faixas isoladas). Hoje, o tempo forte do compasso 8 de A (corpo 344,61-344,66) cai em cima do golpe forte de B (344,63-344,68). Nesses 25 ms, A está a -18,7 e B a -9,4: são dois golpes de andamentos diferentes, 129 e 83 BPM. Depois, A fica 6 a 8 dB acima de B até cerca de 345,4, e só se cala a 346,3. Com a proposta, A começa a descer a 344,18, está a -40 a 344,51 e a zero a 344,56, antes do tempo forte do compasso 8. A e B só se sobrepõem 0,21 s, com A já a descer. Entre 344,56 e 344,63 fica B sozinho, a -30/-31 dBFS, e o golpe de B entra onde seria o tempo forte de A. Até 344,12 os níveis são iguais aos de hoje, por isso a medida do loudnorm (087) não mudou o ganho. Não há buraco: o mínimo entre 342 e 348 é -33,2 a 346,82, da própria introdução de B e igual a hoje, e nenhum ponto fica abaixo de -40. Também não há duas linhas ao mesmo tempo durante mais de 0,5 s.\n\n3) As outras opções. A alternativa dele (30,84 com cauda 0,8) deixa silêncio digital de 343,72 a 344,12, com 7 pontos abaixo de -40: foi bem recusada. A variante 32,10 com cauda 0,6 sai quase igual, só baixa 1 a 2 dB mais cedo, e não é claramente melhor. A opção B não serve: a entrada 0,64 é o início do som (começa a 0,62), avançá-la 2,19 s cortava o riff de abertura a meio, e recuá-la é impossível. A opção D não é precisa.\n\nConflitos: não há. A entrada de B a 0,81 (095) e o corte ficam como estão.\n\nUma reserva: a descida de A até ao nível da introdução calma de B (cerca de -31 dBFS) passa a fazer-se em 0,4 s em vez de 2,2 s. Mas acontece no fim do compasso, com o grave já em pausa, e o golpe de B tapa-a logo a seguir.",
+    "a_meio_da_frase": false,
+    "opcao_final": "A",
+    "mods_mix33_final": "[{\"ficheiro\":\"Tokyo\",\"quando\":312.52,\"sai_s\":32.30,\"cauda\":0.4}]",
+    "resumo_final": "O Tokyo Drift acaba o compasso 7 dentro da pausa do grave. Começa a descer no ficheiro a 32,30 (corpo 344,18) e cala-se em 0,4 s, antes do tempo forte do compasso 8. Deixa assim de começar a linha nova por cima do reggae. O Tiago Celebration continua a entrar a 0,81, no corte, e o seu primeiro golpe cai onde seria o tempo forte do Tokyo.",
+    "beneficio_final": "Acabam os dois golpes quase ao mesmo tempo em andamentos diferentes no arranque de B, e deixa de haver 1,5 s de Tokyo a tocar por cima da introdução calma de B. A passagem fica no fim do compasso, sem buraco.",
+    "conflitos_final": [],
+    "medida_final": "mix33, janela de 336,32 a 352,32, com as faixas A e B também isoladas. Níveis em RMS de 400 ms com passo de 0,1 s, e envelope fino de 25 ms.\n\nHoje: no tempo forte de A, a 344,63-344,68, A está a -18,7 e B a -9,4, dois golpes juntos. De 344,92 a 345,32 a mistura fica entre -24,4 e -27,5, com A dominante (-25 a -29), e A ouve-se até 346,3.\n\nProposta: A a -40 a 344,51 e a zero a 344,56; B sozinho a -30/-31 até ao seu golpe a 344,66. De 344,92 a 345,32 fica B sozinho, a -30,8/-32,4. Mínimo entre 342 e 348: -33,2 a 346,82, igual a hoje e vindo de B. Nenhum ponto abaixo de -40. Até 344,12 os níveis são iguais aos de hoje.\n\nAlternativa 30,84 com cauda 0,8: 7 pontos abaixo de -40, de 343,52 a 344,12, com silêncio digital de 343,72 a 344,12.\n\nVariante 32,10 com cauda 0,6: praticamente igual à proposta.",
+    "confianca": "alta"
+   },
+   "troca": {
+    "corte_corpo": 344.32,
+    "sai": "Tokyo Drift - Teriyaki Boyz [ MUSIC VIDEO ] HD.mp3",
+    "sai_in": 0.64,
+    "sai_quando": 312.52,
+    "sai_no_ficheiro_ao_corte": 32.44,
+    "entra": "Tiago Celebration Song (Reggae).mp3",
+    "entra_in": 0.81
+   }
+  },
+  {
+   "id": "t430_celebration_corpo",
+   "analise": {
+    "id": "t430_celebration_corpo",
+    "corte_corpo": 430.12,
+    "a_meio_da_frase": true,
+    "o_que_se_ouve_no_corte": "a voz da Celebration a arrancar uma linha nova (começou 0,2 s antes do corte) que se ouve quase inteira a morrer por cima do arranque de B",
+    "fins_de_frase": [
+     {
+      "t_ficheiro": 82.55,
+      "t_corpo": 426.06,
+      "evidencia": "fim de linha: voz (banda 300 a 3400 Hz, harmónica e ao centro) cai 19 dB durante 0,84 s, linha nova a 83,35; picos4 a 82,875 (0,59)"
+     },
+     {
+      "t_ficheiro": 84.97,
+      "t_corpo": 428.48,
+      "evidencia": "fim da última linha da frase de 4 compassos que vai de 74,9 a 86,4 (picos4 74,875 com força 0,71): a voz cai 15 a 30 dB durante 1,4 s (85,0 a 86,38), ficam só baixo, bombo e skank; é o maior descanso da voz em toda a janela"
+     },
+     {
+      "t_ficheiro": 86.38,
+      "t_corpo": 429.89,
+      "evidencia": "fecho do compasso instrumental e fronteira de frase (picos4 e picos8 a 86,375, 4 compassos de 2,88 s depois de 74,875): a voz volta a 86,40 com linha nova, 0,23 s antes do corte"
+     },
+     {
+      "t_ficheiro": 88.4,
+      "t_corpo": 431.91,
+      "evidencia": "fim da primeira linha da frase nova: voz cai 29 dB durante 0,9 s; fica 1,79 s depois do corte, fora do alcance da opção C"
+     },
+     {
+      "t_ficheiro": 93.7,
+      "t_corpo": 437.21,
+      "evidencia": "fim de linha: voz cai 19 dB durante 0,88 s"
+     }
+    ],
+    "opcao": "A",
+    "mods_mix33": "[{\"ficheiro\":\"Tiago Celebration\",\"quando\":344.32,\"sai_s\":85.30,\"cauda\":1.0}]",
+    "resumo": "A Celebration deixa de descer no corte e passa a acabar no compasso instrumental que fecha a sua frase. Começa a descer em 85,30 do ficheiro (428,81 no corpo), 0,3 s depois da última palavra, e chega a zero em 86,30 (429,81), antes de a voz arrancar a linha seguinte. O corte, o cartão e a entrada do António Variações ficam onde estão.",
+    "beneficio": "A Celebration acaba com a frase dela em vez de começar uma linha nova e a deixar morrer, e deixam de se ouvir duas músicas ao mesmo tempo",
+    "conflitos": [],
+    "medida": "Hoje: o nível mínimo entre 429 e 431 s é de -27,5 dBFS (RMS de 400 ms) e não há buraco. A linha nova de A (86,40 no ficheiro, 429,91 no corpo) ouve-se quase em cheio até cerca de 431,7 e fica por cima do arranque de B, cujo primeiro som é a 430,25; sobrepõem-se cerca de 1,4 s. Proposta: A chega a zero digital a 429,81. O maior buraco abaixo de -40 dBFS é de 0,35 s (RMS de 400 ms) ou 0,55 s (RMS de 100 ms), entre 429,67 e 430,22, e o mínimo é -69 dBFS, na passagem da última foto para o cartão. Nada se sobrepõe. Até 428,9 o som é igual ao de hoje ao décimo de dB. Alternativa: buraco de 0,30 s (400 ms) ou 0,50 s (100 ms), mínimo -66 dBFS. Os ficheiros hoje.wav, proposta.wav e alternativa.wav, com os níveis em .txt, estão em scratchpad/ideias/p33/t430_celebration_corpo.",
+    "confianca": "alta",
+    "bpm": 83.4,
+    "alternativa": "Também opção A, mas com uma descida mais curta: sai_s 85,71 (a última pancada do bombo no compasso instrumental) e cauda de 0,6 s. A chega a zero a 86,31 do ficheiro (429,82 no corpo) e o buraco fica em 0,30 s (RMS de 400 ms) ou 0,50 s (RMS de 100 ms). A banda toca em cheio mais 0,4 s, mas uma descida de 0,6 s nota-se mais numa sala. Mods: [{\"ficheiro\":\"Tiago Celebration\",\"quando\":344.32,\"sai_s\":85.71,\"cauda\":0.6}]"
+   },
+   "verificacao": {
+    "id": "t430_celebration_corpo",
+    "veredicto": "confirmado",
+    "razoes": "Medi de forma independente, na pasta verif. Para isolar a voz usei o centro menos os lados na banda de 300 a 3400 Hz, com STFT de 10 ms. A última linha antes do corte acaba em 84,95 a 84,97 do ficheiro (428,47 no corpo): a banda da voz cai de cerca de -18 para -30 a -40, ou seja 10 a 20 dB, durante 1,43 s. Nesse tempo ficam só toques curtos do skank e da tarola (85,34, 85,70, 86,07), sempre com menos de 0,12 s. A linha nova arranca em 86,40 e 86,41 (429,91 no corpo). O corte cai em 86,61, 0,2 s já dentro dessa linha, portanto a_meio_da_frase = true está certo.\n\nHoje, medido com as faixas separadas: a voz nova de A fica a -23 a -29 dBFS até 431,8 por baixo do arranque de B. B tem silêncio digital até 2,5 s do ficheiro e o primeiro som em 430,21. As duas faixas estão acima de -30 dBFS ao mesmo tempo durante 1,2 s, e acima de -40 durante 1,8 s. É preciso mexer.\n\nProposta, pelo mix33: até 428,9 o som é igual ao de hoje. A chega a zero em 429,81 e fica 0,1 s de margem antes da voz nova. O maior buraco abaixo de -40 dBFS mede 0,32 s em RMS de 400 ms e 0,56 s em RMS de 100 ms, entre 429,65 e 430,19, com mínimo de -69,6 dBFS. Fica abaixo do limite de 0,8 s e termina 0,07 s depois de o cartão entrar. As duas faixas nunca tocam ao mesmo tempo. Os números dele batem com os meus a menos de 0,05 s.\n\nAs outras opções não servem:\n- B, mudar a entrada de A: está bloqueada, porque a 0,81 foi aprovada.\n- C, prolongar: o fim de frase seguinte é em 88,3, 1,7 s depois do corte, acima do limite de 1,5 s, e punha a linha inteira por cima de B.\n- D, mudar o corte: parte a regra dos blocos e não evita cortar a linha nova.\n- A mais tarde, com zero em 86,38: ganha só 0,08 s de buraco e perde a margem para a voz.\n- A alternativa dele, com descida de 0,6 s: nota-se mais como corte, que é justamente a queixa.\n\nNão há conflitos: A continua a entrar em 0,81, B em 2,44 e o corte fica em 430,12.",
+    "a_meio_da_frase": true,
+    "opcao_final": "A",
+    "mods_mix33_final": "[{\"ficheiro\":\"Tiago Celebration\",\"quando\":344.32,\"sai_s\":85.30,\"cauda\":1.0}]",
+    "resumo_final": "A Celebration acaba com a frase dela. Começa a descer 0,35 s depois da última palavra, em 85,30 do ficheiro (428,81 no corpo), e chega a zero em 429,81, 0,1 s antes de a voz arrancar a linha seguinte. O corte, o cartão Gosto pelo desporto e a entrada do António Variações em 2,44 ficam onde estão.",
+    "beneficio_final": "A linha nova da Celebration deixa de começar e morrer por cima do arranque do António Variações. Hoje as duas músicas soam juntas 1,2 s acima de -30 dBFS. Com a proposta nunca se sobrepõem, e fica só uma pausa curta, de 0,3 a 0,5 s, antes do cartão.",
+    "conflitos_final": [],
+    "medida_final": "Hoje, com as faixas separadas: A fica a -23 a -29 dBFS até 431,8, por cima de B, que começa em 430,21. As duas estão acima de -30 dBFS ao mesmo tempo durante 1,20 s, e acima de -40 durante 1,78 s. Não há buraco: o mínimo em 400 ms é -27,9 dBFS.\n\nProposta: até 428,9 o som é igual ao de hoje, com diferença de 0,1 dB. O último som de A acima de -40 é em 429,63 e A chega a zero digital em 429,81. O primeiro som de B acima de -40 é em 430,21. O maior buraco abaixo de -40 dBFS mede 0,32 s em RMS de 400 ms, de 429,76 a 430,06, e 0,56 s em RMS de 100 ms, de 429,65 a 430,19. O mínimo é -69,6 dBFS. A e B nunca estão acima de -40 dBFS ao mesmo tempo.\n\nA voz de A, medida no ficheiro: a linha acaba em 84,95; o descanso vai de 84,97 a 86,40, 1,43 s com a voz 10 a 20 dB abaixo; a linha nova começa em 86,41.\n\nFicheiros: scratchpad/ideias/p33/t430_celebration_corpo/verif, com voz_78_96.txt, s_hoje*.wav, s_prop*.wav e s_prop_medida.txt.",
+    "confianca": "alta"
+   },
+   "troca": {
+    "corte_corpo": 430.12,
+    "sai": "Tiago Celebration Song (Reggae).mp3",
+    "sai_in": 0.81,
+    "sai_quando": 344.32,
+    "sai_no_ficheiro_ao_corte": 86.61,
+    "entra": "Antonio variações - o corpo é que paga ( semi-original ) - Exercicio.mp3",
+    "entra_in": 2.44
+   }
+  },
+  {
+   "id": "t474_corpo_fome",
+   "analise": {
+    "id": "t474_corpo_fome",
+    "corte_corpo": 473.82,
+    "a_meio_da_frase": true,
+    "o_que_se_ouve_no_corte": "a voz de A a começar a última linha da frase de 4 compassos (arranca em 46,12 no ficheiro, 0,02 s antes do corte); a linha anterior acabou 2,3 s antes e pelo meio há um compasso de resposta mais baixo",
+    "fins_de_frase": [
+     {
+      "t_ficheiro": 43.85,
+      "t_corpo": 471.53,
+      "evidencia": "fim de linha cantada: voz HC cai de -19 para -36 a -51 dB durante 0,45 s (43,90 a 44,32), mesmo antes do tempo 1 de 44,12; fronteira de 2 compassos, a meio da frase de 4"
+     },
+     {
+      "t_ficheiro": 45.8,
+      "t_corpo": 473.48,
+      "evidencia": "fim do compasso de resposta (material harmónico 10 dB abaixo da voz principal), vale de 0,3 s antes da linha nova em 46,12; fronteira de 1 compasso só (tempo 1 em 45,88), candidato fraco"
+     },
+     {
+      "t_ficheiro": 47.28,
+      "t_corpo": 474.96,
+      "evidencia": "fim da linha que fecha a frase de 4 compassos: voz HC cai de -20 para -39 a -47 dB durante 0,33 s (47,29 a 47,62); o tempo 1 seguinte (47,58) é fronteira de secção, picos4 e picos8 em 47,875; linha nova arranca em 47,67"
+     }
+    ],
+    "opcao": "C",
+    "mods_mix33": "[{\"ficheiro\":\"Antonio\",\"quando\":430.12,\"sai_s\":47.28,\"cauda\":0.3}]",
+    "resumo": "O corpo é que paga deixa de começar a descer no corte. Passa a tocar inteira a última linha da frase, que começa mesmo no cartão Viagens, até 474,96, e depois sai em 0,3 s: fica a zero em 475,26, antes do tempo 1 seguinte e da linha nova. A Fome de Viagem continua a entrar no corte, em 2,7 e sem rampa.",
+    "beneficio": "A acaba a frase de 4 compassos e sai quando entra o ritmo da Fome de Viagem, sem buraco e sem o início de outra linha por baixo",
+    "conflitos": [],
+    "medida": "Hoje: mínimo -30,4 dBFS (RMS 400 ms, 472,8 a 474,8), nenhum buraco abaixo de -40. A ouve-se até 476,02 e deixa passar o início da linha seguinte (475,35 a 476,02) a -7 a -15 dB, por baixo do ritmo da Fome de Viagem; isso soma 0,5 a 0,8 dB entre 475,32 e 475,57. Proposta C: mesmo mínimo de -30,4, 0,00 s abaixo de -40 em RMS de 400 ms e de 100 ms. A fica a zero em 475,26, 0,76 s mais cedo do que hoje, e depois de 475,02 já não soma nada (0,0 a 0,2 dB). A última linha soa 0,7 a 2,3 dB mais cheia entre 474,72 e 474,97. A Fome de Viagem não tem voz antes do ficheiro 4,9 (corpo 476,0), portanto nunca há duas vozes. Alternativa A: mínimo -33,4 em 473,80; 0,00 s abaixo de -40 em 400 ms, 0,22 s em 100 ms (473,69 a 473,89).",
+    "confianca": "media",
+    "alternativa": "Opção A, A acaba no tempo 1 a seguir ao compasso de resposta e antes da linha nova: sai_s 45,92, cauda 0,16, a zero no corpo 473,76. Nada abaixo de -40 dBFS em RMS de 400 ms (0,22 s em 100 ms, de 473,69 a 473,89), mínimo -33,4. A deixa de tocar por baixo do cartão, mas acaba a 3/4 da frase e não na fronteira dos 4 compassos. mods: [{\"ficheiro\":\"Antonio\",\"quando\":430.12,\"sai_s\":45.92,\"cauda\":0.16}]",
+    "bpm": 136
+   },
+   "verificacao": {
+    "id": "t474_corpo_fome",
+    "veredicto": "confirmado",
+    "razoes": "Medi tudo de novo em verif/, sem usar os ficheiros do outro agente. Isolei a voz com extração do centro (L e R iguais em módulo e fase), separação harmónica por mediana e banda de 250 a 4000 Hz.\n\n1) O alinhamento está certo: por correlação cruzada da mistura de hoje com o ficheiro, o corte cai em 46,144 no ficheiro.\n\n2) É verdade que a troca está a meio da frase. A voz principal arranca uma linha nova em 46,13, mesmo no corte: sobe de -19 para +1,8 dB em 60 ms. Hoje essa linha toca debaixo da descida, e o início da linha seguinte e o tempo forte de A (ficheiro 47,6, corpo 475,32) ainda se ouvem só 2,6 dB abaixo de B, em janelas de 40 ms. A mistura sobe 2 dB nesse instante: é o arranque de que o Tiago fala.\n\n3) 47,28 é um fim de linha verdadeiro. A voz cai de -5 para -21 a -31 dB durante 0,33 s (47,28 a 47,60) e só recomeça com uma linha nova em 47,63. A última sílaba apaga-se sozinha e a descida da proposta começa depois dela. 43,85 também é fim de linha: 0,5 s abaixo de -18. 45,8 não é: é material de resposta cerca de 10 dB abaixo, com um vale de só 0,1 s. A ideia de que 47,28 fecha uma frase de 4 compassos é plausível mas não ficou provada: o tempo 1 não se decide pelo croma do baixo, e a minha novidade de Foote, mais fina, põe fronteiras em 45,67 e 48,12 e não em 47,875. Ainda assim, a grelha da voz alinhada a 40,63 mostra o 3.º compasso de resposta e o 4.º a acabar em silêncio antes de 47,58.\n\n4) Medi com o mix33. Nem hoje nem com a proposta há buraco: o mínimo em RMS de 400 ms é -29,9 dBFS, antes do corte, e nada fica abaixo de -40 em 100 ms. Com a proposta, A fica a zero em 475,24 a 475,26. A descida acontece dentro da pausa da própria voz de A e fica tapada pela entrada da banda de B em 475,04, onde B passa de -26 para -19 dB em 40 ms. Nunca há duas vozes: a intro de B entre 2,7 e 4,1 não tem voz (não se veem glissandos no espectro) e a voz de B só aparece depois de 4,9, ou seja no corpo 476,0 ou mais tarde. As tonalidades não chocam: a linha de A tem croma C/E/F e a intro de B C/G/E, ambas perto de dó maior, com correlação 0,59. A proposta deixa a mistura 0,7 a 2,5 dB mais cheia entre 474,72 e 474,9, abaixo do nível que B tem logo a seguir.\n\n5) Não há conflitos. A entrada 2,7 de B, o corte no cartão e o in_s de A ficam como estão. A alternativa A (sai_s 45,92) tem 0,22 s abaixo de -40 em 100 ms, entre 473,69 e 473,89, com mínimo de -33,1. Corta A a meio do material de resposta, num ponto que não passa o critério da voz. Não é melhor.",
+    "a_meio_da_frase": true,
+    "opcao_final": "C",
+    "mods_mix33_final": "[{\"ficheiro\":\"Antonio\",\"quando\":430.12,\"sai_s\":47.28,\"cauda\":0.3}]",
+    "resumo_final": "O corpo é que paga deixa de começar a descer no corte. Toca inteira a linha que começa com o cartão Viagens e acaba em 474,96. Depois sai em 0,3 s, dentro da pausa da própria voz, e fica a zero em 475,26, antes de começar a linha seguinte. A Fome de Viagem continua a entrar no corte, em 2,7 e sem rampa.",
+    "beneficio_final": "A frase de A acaba numa pausa verdadeira da voz. Deixa de se ouvir o começo da linha seguinte e o tempo forte de A por baixo da Fome de Viagem, em 475,32. A saída de A fica tapada pela entrada da banda de B em 475,04, e não há buraco nem duas vozes.",
+    "conflitos_final": [],
+    "medida_final": "Medido no mix33, RMS de 400 ms com passo de 0,1 s. Hoje e com a proposta o mínimo é o mesmo, -29,9 dBFS em 472,92, antes do corte. Nada abaixo de -40 em 100 ms, em nenhuma das duas.\n\nA sozinha, hoje: ouve-se até 476,0. Em 475,32 tem um ataque (tempo forte e início de linha) a -26,2 contra B a -23,6 em 40 ms, e a mistura sobe 2,0 dB nesse ponto.\n\nA sozinha, com a proposta: a última sílaba chega a -17,2 em 474,88 e apaga-se sozinha para -31 em 475,00. Depois a descida corre dentro da pausa da voz: -35 em 475,08, -44,6 em 475,16, silêncio a partir de 475,24. B sobe de -26 para -19 em 475,04. Entre 474,72 e 474,9 a mistura fica 0,7 a 2,5 dB mais cheia.\n\nVoz de A no ficheiro: cai de -5 para -21 a -31 dB entre 47,28 e 47,60, ou seja 0,33 s, e a linha nova começa em 47,63.\n\nAlternativa A (sai_s 45,92, cauda 0,16): mínimo de -33,1 em 473,82, e 0,22 s abaixo de -40 em 100 ms, de 473,69 a 473,89.",
+    "confianca": "alta"
+   },
+   "troca": {
+    "corte_corpo": 473.82,
+    "sai": "Antonio variações - o corpo é que paga ( semi-original ) - Exercicio.mp3",
+    "sai_in": 2.44,
+    "sai_quando": 430.12,
+    "sai_no_ficheiro_ao_corte": 46.14,
+    "entra": "Inês Homem de Melo – Fome de Viagem (Music Video).mp3",
+    "entra_in": 2.7
+   }
+  },
+  {
+   "id": "t500_fome_jasei",
+   "analise": {
+    "id": "t500_fome_jasei",
+    "corte_corpo": 499.62,
+    "a_meio_da_frase": false,
+    "o_que_se_ouve_no_corte": "a respiração entre duas linhas cantadas da Fome de Viagem, com a banda inteira a tocar: a linha acabou 0,3 s antes do corte e a seguinte arranca 0,3 s depois, e hoje essa linha nova sai por cima da voz de B",
+    "fins_de_frase": [
+     {
+      "t_ficheiro": 23.25,
+      "t_corpo": 494.37,
+      "evidencia": "fim da estrofe: a linha desce e pára, banda da voz a -15 dB durante 150 ms (23,22 a 23,32), pancada da banda inteira a 23,35 e fronteira de secção a 24,125 (picos8 0,30). Forte, mas 5,2 s antes do corte"
+     },
+     {
+      "t_ficheiro": 26.65,
+      "t_corpo": 497.77,
+      "evidencia": "fim de linha curta: banda da voz 7 a 14 dB abaixo de 26,58 a 27,02, com um estalo a 26,73; linha nova a 27,06 (nota perto de 310 Hz). Média, 1,85 s antes do corte"
+     },
+     {
+      "t_ficheiro": 28.2,
+      "t_corpo": 499.32,
+      "evidencia": "linha a descer de 350 Hz (27,6) para 235 a 258 Hz (28,0 a 28,2), última nota na batida 28,07; a banda da voz cai 6,5 a 14 dB durante 220 ms (28,23 a 28,45); linha nova a 28,79, na batida 28,77, com uma nota curta perto de 300 Hz a 28,46 a 28,54. 0,30 s antes do corte"
+     },
+     {
+      "t_ficheiro": 35.35,
+      "t_corpo": 506.47,
+      "evidencia": "nota longa com vibrato de 34,5 a 35,3, a voz pára de 35,37 a 36,02 (-32 dB, 700 ms) e secção nova a 35,63 (a fronteira mais forte, picos8 34,625 com 0,65). Fica depois do fim de A no filme (30,7), inalcançável"
+     }
+    ],
+    "opcao": "A",
+    "mods_mix33": "[{\"ficheiro\": \"Inês Homem de Melo\", \"quando\": 473.82, \"sai_s\": 28.2, \"cauda\": 0.8}]",
+    "resumo": "A Fome de Viagem começa a descer no fim da linha que acaba 0,3 s antes da foto da Escola Secundária (28,2 s no ficheiro) e sai em 0,8 s. Hoje desce 2,2 s a partir do corte e canta a linha seguinte por cima da entrada da Já Sei Namorar. As entradas, o corte e o bloco ficam iguais.",
+    "beneficio": "a Fome de Viagem acaba a linha dela e a voz dos Tribalistas entra sozinha, em vez de duas vozes a cantar 1,6 s ao mesmo tempo",
+    "conflitos": [],
+    "medida": "Hoje (mix33, mods []): depois do corte A continua quase inteira e canta a linha nova por cima da voz de B. Na banda da voz, A fica a menos de 10 dB de B durante 1,6 s, até 501,47. Nível mínimo à volta do corte (mais ou menos 1,5 s, RMS 400 ms): -26,9 dBFS a 499,52, que é a respiração da própria A. Nenhum buraco abaixo de -40 dBFS. Proposta (sai_s 28,2, cauda 0,8): duas vozes só 0,25 s, até 499,97, e A a zero em 500,12. O mínimo é -28,4 dBFS a 499,57 e continua a não haver buraco abaixo de -40 dBFS, porque a cauda de A tapa os primeiros 0,5 s de B. De 499,6 a 500,6 o som fica 3 a 5 dB abaixo de hoje (-27,5 a -24,8 contra -24,3 a -21,3 dBFS), porque deixam de estar as duas músicas somadas; a partir de 501,6 fica igual. Alternativa (cauda 0,6): duas vozes 0,1 s, mínimo -29,7 dBFS. Os ficheiros hoje.wav, proposta.wav e alternativa.wav e os niveis_*.txt estão em C:\\Users\\USER1~1\\AppData\\Local\\Temp\\claude\\C--casamento-video\\1b92fe8a-9bb1-4c48-abf6-9956af511886\\scratchpad\\ideias\\p33\\t500_fome_jasei. Nota: por engano renomeei C:\\casamento-video\\niveis_proposta.txt, um ficheiro não rastreado, e voltei logo a pôr-lhe o nome certo. O conteúdo não mudou.",
+    "confianca": "media",
+    "bpm": 83.35,
+    "alternativa": "Opção A com cauda 0,6 s: sai_s 28,2, e A chega a zero em 28,8 no ficheiro (corpo 499,92), mesmo antes da linha seguinte. Duas vozes só 0,1 s, mas o mínimo à volta do corte desce para -29,7 dBFS (hoje -26,9), uma respiração mais funda. Mods: [{\"ficheiro\": \"Inês Homem de Melo\", \"quando\": 473.82, \"sai_s\": 28.2, \"cauda\": 0.6}]"
+   },
+   "verificacao": {
+    "id": "t500_fome_jasei",
+    "veredicto": "ajustar",
+    "razoes": "Medi tudo de novo e a ideia está certa, mas a cauda de 0,8 s deixa passar a primeira sílaba da linha seguinte da Fome de Viagem. A cauda de 0,6 s tira-a.\n\n1) O fim de frase aos 28,2 s é verdadeiro. Estimei a voz de outra maneira: centro L/R mais a parte harmónica, na banda de 250 a 3500 Hz.\n- A voz de A cai 6 dB ou mais de 28,26 a 28,46 no ficheiro (200 ms, mínimo 12,9 dB abaixo da mediana de 3 s).\n- Até 28,80 só há dois toques curtos (28,48 a 28,52 e 28,62 a 28,66).\n- A linha nova arranca a 28,82, na batida 28,77, e a melodia antes desce de cerca de 350 Hz para cerca de 245 Hz.\n- É a maior pausa da voz entre os 20 s e os 35 s, fora o fim de secção aos 35,35 (659 ms).\n- O corte cai a 28,5, dentro dessa respiração. Por isso a_meio_da_frase = false está certo.\n\nO problema de hoje não está no corte. A desce 2,2 s em qsin e a linha nova de A entra a 499,94 com o ganho a cerca de 0,2 dB abaixo do nível cheio, cerca de 4 dB acima da voz de B.\n\nUm dos pontos dele não se confirma: o fim de linha aos 26,65. Só há 20 ms abaixo de 6 dB e a voz continua de 26,68 a 27,14. Isso não mexe na proposta.\n\n2) Medidas com o mix33 e cada faixa sozinha:\n- Hoje: duas vozes 1,40 s.\n- Proposta, cauda 0,8: duas vozes 0,22 s, abaixo dos 0,5 s. Mas desses 0,22 s, 0,1 s (499,91 a 500,01) são o início da linha nova de A, cerca de 6 a 8 dB abaixo da voz de B: ouve-se A a começar uma linha e a ser cortada.\n- Cauda 0,6: A chega a zero a 28,8 no ficheiro (corpo 499,92) e a linha nova fica 19 dB ou mais abaixo de B. Só sobram os dois toques curtos junto ao corte, antes de B ganhar voz.\n\nNão há buraco abaixo de -40 dBFS em nenhum caso. O preço da cauda 0,6 é uma descida mais funda: cerca de 5 dB durante 0,5 s, contra cerca de 4 dB com a de 0,8. A razão é que a própria entrada de B aos 34,9 (aprovada) cresce cerca de 5 dB no ficheiro entre 35,1 e 35,7. Hoje isso fica tapado pela soma com A.\n\nO ganho de A antes de 499,0 fica igual ao de hoje (0,00 dB), por isso o loudnorm não mudou.\n\n3) O corte, as entradas (2,7 e 34,9) e o bloco não mudam. Não há conflito com a 095 nem com a regra dos blocos. Testei também sai_s 28,25 com cauda 0,55 e sai_s 28,3 com cauda 0,45: são equivalentes ou piores, por isso fico com a de 0,6, que é mais simples.",
+    "a_meio_da_frase": false,
+    "opcao_final": "A",
+    "mods_mix33_final": "[{\"ficheiro\": \"Inês Homem de Melo\", \"quando\": 473.82, \"sai_s\": 28.2, \"cauda\": 0.6}]",
+    "resumo_final": "A Fome de Viagem começa a descer no fim da linha que acaba 0,3 s antes da foto da Escola Secundária (28,2 s no ficheiro) e fica em silêncio 0,6 s depois (corpo 499,92), mesmo antes de a linha seguinte começar. A Já Sei Namorar entra no corte como hoje. As entradas, o corte e o bloco ficam iguais.",
+    "beneficio_final": "A Fome de Viagem acaba a linha dela e a voz dos Tribalistas entra sozinha. Hoje as duas cantam ao mesmo tempo cerca de 1,4 s, e com a cauda de 0,8 ainda se ouvia a primeira sílaba da linha seguinte.",
+    "conflitos_final": [],
+    "medida_final": "Voz de A no ficheiro (centro L/R mais parte harmónica, banda de 250 a 3500 Hz): pausa de 28,26 a 28,46 com 6 dB ou mais durante 200 ms (mínimo 12,9 dB), fraca até 28,80, linha nova a 28,82. O corte cai a 28,5.\n\nHoje (mods []):\n- Duas vozes 1,40 s; a linha nova de A fica cerca de 4 dB acima da voz de B a 499,94.\n- Mínimo à volta do corte: -26,9 dBFS RMS a 499,52; LUFS-M mínimo -24,2.\n- Nada abaixo de -40 dBFS.\n\nProposta dele (sai_s 28,2, cauda 0,8):\n- Duas vozes 0,22 s, com a primeira sílaba da linha nova de A (499,91 a 500,01) cerca de 6 a 8 dB abaixo de B.\n- Mínimo -27,5 dBFS a 500,02; LUFS-M mínimo -24,9.\n\nFinal (sai_s 28,2, cauda 0,6):\n- Duas vozes 0,10 s, só dois toques curtos de A a 499,63 e 499,73, antes de B ganhar voz. A linha nova de A fica 19 dB ou mais abaixo de B, e A chega a zero a 499,92.\n- Mínimo -29,3 dBFS a 499,72; LUFS-M mínimo -26,7, contra -20,8 antes. Volta a -22,2 a 500,42 e fica em -21,5 depois, igual à proposta.\n- Nada abaixo de -40 dBFS.\n- A antes de 499,0 fica igual a hoje (0,00 dB).\n\nA descida de cerca de 5 dB durante 0,5 s vem da própria entrada de B aos 34,9, que cresce cerca de 5 dB no ficheiro entre 35,1 e 35,7.\n\nFicheiros em C:\\Users\\USER1~1\\AppData\\Local\\Temp\\claude\\C--casamento-video\\1b92fe8a-9bb1-4c48-abf6-9956af511886\\scratchpad\\ideias\\p33\\t500_fome_jasei\\verif:\n- hoje_mix.wav, prop08_mix.wav, prop06_mix.wav\n- *_A.wav, B.wav\n- niveis_*.txt\n- voz_A_20_37.png, voz_A_25_31.png",
+    "confianca": "media"
+   },
+   "troca": {
+    "corte_corpo": 499.62,
+    "sai": "Inês Homem de Melo – Fome de Viagem (Music Video).mp3",
+    "sai_in": 2.7,
+    "sai_quando": 473.82,
+    "sai_no_ficheiro_ao_corte": 28.5,
+    "entra": "Já Sei Namorar - Tribalistas.mp3",
+    "entra_in": 34.9
+   }
+  },
+  {
+   "id": "t573_jasei_born",
+   "analise": {
+    "id": "t573_jasei_born",
+    "corte_corpo": 573.22,
+    "a_meio_da_frase": true,
+    "o_que_se_ouve_no_corte": "a voz a meio da primeira linha de uma estrofe nova, a entrar na nota longa que a fecha; a estrofe anterior acabou 1,75 s antes",
+    "fins_de_frase": [
+     {
+      "t_ficheiro": 100.15,
+      "t_corpo": 564.87,
+      "evidencia": "fim de linha a meio da estrofe, fronteira de 2 compassos (batida 100,86): a voz cai 11 dB durante 0,7 s e a linha nova entra em 100,9"
+     },
+     {
+      "t_ficheiro": 103.8,
+      "t_corpo": 568.52,
+      "evidencia": "fim de linha, fronteira de 1 compasso (104,14): a voz cai 9 dB durante 0,35 s"
+     },
+     {
+      "t_ficheiro": 106.75,
+      "t_corpo": 571.47,
+      "evidencia": "fim da estrofe de 4 compassos (94,27 a 107,44; a auto semelhanca repete de 6,6 em 6,6 s): a voz cai 10 dB durante 0,8 s, a banda da a ultima batida e para sozinha em 107,28 (corpo 572,00), 10 dB abaixo ate 107,67; a estrofe nova, com timbre mais agudo e a subir 10 dB na banda de 1 a 3,4 kHz, comeca em 107,5"
+     },
+     {
+      "t_ficheiro": 108.85,
+      "t_corpo": 573.57,
+      "evidencia": "fim da primeira linha curta da estrofe nova (nota longa de 108,55 a 109,05): a voz cai 7 a 13 dB durante 0,25 s, mas so numa fronteira de meio compasso (109,09) e a frase continua em silabas cortadas ate 110; fim fraco"
+     },
+     {
+      "t_ficheiro": 114,
+      "t_corpo": 578.72,
+      "evidencia": "fronteira de 2 compassos seguinte, vale de 0,15 s; 5,5 s depois do corte, longe demais"
+     }
+    ],
+    "opcao": "A",
+    "mods_mix33": "[{\"ficheiro\": \"Já Sei Namorar\", \"quando\": 499.62, \"sai_s\": 107.2, \"cauda\": 0.45}]",
+    "resumo": "A Já Sei Namorar passa a acabar no fim da estrofe, com a última batida da banda e a paragem que a própria música faz, em vez de começar uma estrofe nova e ser apanhada a meio dela pelo Born To Be Wild. Fica um respiro de 0,9 s sobre a última foto, e depois a pilha de Peniche e o primeiro acorde entram juntos, como hoje.",
+    "beneficio": "a música acaba numa frase inteira e as duas canções deixam de tocar uma por cima da outra",
+    "conflitos": [],
+    "medida": "Hoje: não há buraco, e o mínimo é -31,0 dBFS, na paragem da própria música a 572,2. A e B estão ambos acima de -30 dBFS durante 1,0 s. Entre 573,8 e 574,8 a A ainda está a -30 dBFS contra -28,5 da B, e só se cala a 575,4. Proposta: a A desce de 571,92 a 572,37. O buraco abaixo de -40 dBFS mede 0,8 s na medida de 400 ms do mix33 (572,32 a 573,02) e 0,95 s em janelas de 50 ms (572,27 a 573,22). É o limite da regra, sem folga. A sobreposição entre A e B é de 0 s. Alternativa: sem buraco, mínimo de -31,1 dBFS, A e B acima de -30 dBFS durante 0,4 s, e a A cala-se a 573,87. Ficheiros em scratchpad/ideias/p33/t573_jasei_born: hoje.wav, proposta.wav, alternativa.wav e os *_niveis.txt.",
+    "confianca": "media",
+    "alternativa": "C: prolongar a A até ao fim da primeira linha da estrofe nova, com sai_s 108,85 e cauda de 0,3 s (corpo 573,57 a 573,87): [{\"ficheiro\": \"Já Sei Namorar\", \"quando\": 499.62, \"sai_s\": 108.85, \"cauda\": 0.3}]. Fica sem buraco, e A e B ficam juntos acima de -30 dBFS durante 0,4 s em vez de 1,0 s. O riff da B não tem voz, por isso não há duas vozes. Mas ouve-se a estrofe nova começar 1 s antes do corte, e o primeiro acorde da B entra por baixo da nota longa da A, que o tapa durante 0,35 s. Serve se o Tiago achar o respiro de 0,9 s comprido demais.",
+    "bpm": 72
+   },
+   "verificacao": {
+    "id": "t573_jasei_born",
+    "veredicto": "ajustar",
+    "razoes": "Medi tudo de novo e de forma independente: bandas da voz, separação harmónica e percussiva por mediana, lados, fluxo e espectrogramas (scripts medir_v.py, espec_v.py e mixv.py na pasta verif). Com o corpo = ficheiro + 464,72, o corte cai no ficheiro em 108,5.\n\n1) A frase. A estrofe antiga fecha com linhas de um compasso de 3,3 s, e a voz cai 9 a 11 dB perto de 94,1, 97,4, 100,5, 104,0 e 107,0. A voz acaba em 106,78 e a percussão pára entre 107,0 e 107,45, sem nada na banda alta. O tempo forte da parte nova é uma pancada larga em 107,5, na batida de 107,44, e a voz entra em 107,68 com um deslize. O corte, em 108,5, cai dentro da nota longa que fecha essa primeira linha. A nota vai de 108,36 a 108,87, e a voz cai 6 a 10 dB a partir de 108,88. Por isso a_meio_da_frase = true está certo. Hoje a A desce durante 2,2 s e a linha seguinte (ficheiro 109,95, corpo 574,67) ouve-se ainda a 3 dB ou menos da B durante 0,65 s.\n\nNão concordo que 108,85 seja um fim fraco. Entre 108,9 e 109,95 a parte harmónica fica abaixo de -24 dB e não há deslizes de voz no espectrograma. As subidas em 109,17, 109,38, 109,58 e 109,78 coincidem com picos percussivos, e só há um pequeno arco de 0,1 s perto de 109,35. É uma pausa de voz de cerca de 1,05 s antes da linha nova: um fim de linha verdadeiro.\n\n2) Mix. A proposta A (sai_s 107,2, cauda 0,45) deixa 0,875 s de silêncio digital (572,35 a 573,22). Fica 0,99 s abaixo de -40 dBFS em janelas de 50 ms e 0,9 s em janelas de 400 ms, e não 0,8 s como ele disse. Contando a paragem da própria música, que está a -32 a -36 dBFS, a mistura fica 1,28 s abaixo de -30 dBFS. Passa o limite de 0,8 s, e fica debaixo de uma foto (DSC09844), não de um cartão. Uma variante (sai_s 107,3, cauda 0,35) dá o mesmo buraco de 0,99 s. Para a A tocar até perto de 572,42 teria de apanhar o tempo forte da parte nova e o início da voz, ou seja, um arranque cortado. A opção A tem este buraco por natureza.\n\nNão há duas vozes em nenhum caso: o espectrograma da B de 0 a 4 s só mostra o riff, com linhas planas e pancadas, sem voz. Não se mudou nenhum in_s. A B continua a entrar no corte, em 0,55 e sem rampa, como aprova a 095. O corte fica onde está, por isso a regra dos blocos é respeitada.\n\n3) A melhor opção é C: a A acaba no fim real da linha, em 108,87 (corpo 573,59), com cauda de 0,2 s. A cauda cobre o resto da nota e acaba antes da pancada de 109,11. Fica sem buraco (o mínimo nos 400 ms é -31,1 dBFS, na paragem da própria música, igual a hoje). A e B ficam juntas acima de -30 dBFS 0,38 s, só na nota longa que fecha a linha, e a linha seguinte da A desaparece. É a alternativa do outro agente, com o fim da nota medido e uma cauda um pouco mais curta: a cauda de 0,3 s chegava a 109,15 e ainda apanhava a pancada, a -14 dB. O preço, que já existe hoje, é o primeiro acorde da B entrar 2 a 4 dB abaixo da nota da A durante 0,37 s. Numa sala de jantar isso é menos audível do que 1,3 s de música morta.",
+    "a_meio_da_frase": true,
+    "opcao_final": "C",
+    "mods_mix33_final": "[{\"ficheiro\": \"Já Sei Namorar\", \"quando\": 499.62, \"sai_s\": 108.87, \"cauda\": 0.2}]",
+    "resumo_final": "A Já Sei Namorar passa a acabar no fim da linha que está a cantar quando entra o Born To Be Wild. Deixa acabar a nota longa e cala-se em 0,2 s, na pausa que a própria canção faz, em vez de continuar dois segundos e começar a linha seguinte por baixo do riff. O corte, a entrada da B e a pilha de Peniche ficam como estão.",
+    "beneficio_final": "A música sai no fim de uma frase, sem buraco de silêncio, e deixa de se ouvir a linha seguinte por baixo do riff.",
+    "conflitos_final": [],
+    "medida_final": "Hoje: sem buraco. A e B ficam acima de -30 dBFS durante 0,58 s (janelas de 50 ms), e a linha seguinte da A (ficheiro 109,95, corpo 574,67) ouve-se a 3 dB ou menos da B durante 0,65 s.\n\nProposta do outro agente (sai_s 107,2, cauda 0,45): 0,875 s de silêncio digital (572,35 a 573,22). Fica 0,99 s abaixo de -40 dBFS em 50 ms (0,9 s em 400 ms) e 1,28 s abaixo de -30 dBFS com a paragem da própria música. Passa o limite de 0,8 s, debaixo de uma foto.\n\nFinal C (sai_s 108,87, cauda 0,2; a A desce de 573,59 a 573,79 no corpo): sem buraco. O mínimo em 400 ms é -31,1 dBFS em 572,2, igual a hoje. A e B ficam acima de -30 dBFS 0,38 s (0,5 s em 400 ms), só na nota que fecha a linha. A A fica abaixo de -45 dBFS a partir de 573,75, e o tempo em que ela se ouve a 3 dB ou menos da B depois de 574 passa de 0,65 s para 0.\n\nA variante C1 (sai_s 108,85, cauda 0,3) mede igual, mas a cauda chega à pancada de 109,11.\n\nFicheiros em scratchpad/ideias/p33/t573_jasei_born/verif: hoje, proposta, C1, C2 e A2 (.wav, _A.wav, _B.wav e _niveis50.txt), mais medir_v.txt e os espectrogramas esp_A*.png e esp_B.png.",
+    "confianca": "media"
+   },
+   "troca": {
+    "corte_corpo": 573.22,
+    "sai": "Já Sei Namorar - Tribalistas.mp3",
+    "sai_in": 34.9,
+    "sai_quando": 499.62,
+    "sai_no_ficheiro_ao_corte": 108.5,
+    "entra": "Steppenwolf - Born To Be Wild (Lyrics).mp3",
+    "entra_in": 0.55
+   }
+  },
+  {
+   "id": "t614_born_filhos",
+   "analise": null,
+   "verificacao": {
+    "id": "t614_born_filhos",
+    "veredicto": "confirmado",
+    "quem": "medida por Claude a 29/09, sem verificador: o filtro de conteudo bloqueou os agentes duas vezes",
+    "razoes": "Born To Be Wild a 143,6 BPM. Banda da voz (300 a 3400 Hz, 50 ms) contra a mediana de 3 s: pausa de linha de 39,55 a 39,88 (-6 a -7 dB, 0,35 s); vales curtos e fundos a 40,67, 40,88 a 40,92 (-13 dB) e 41,48 a 41,52; fronteira de novidade picos4 aos 41,125. O corte (41,05 no ficheiro) cai logo a seguir ao vale dos 40,9, quando comeca um bocado novo (a banda da voz sobe de -5 aos 40,98 para +4 aos 41,23). Hoje esse bocado ouve-se a descer 1,5 s por baixo do hino: A e B os dois acima de -35 dBFS de 614,12 a 615,3 (1,2 s). Opcoes medidas com o comum (mix de 200 ms): no corte com cauda 0,4 e B a 0,5 (0,3 s de sobreposicao); ate 41,40 com cauda 0,12 e B a 0,5 (0,4 s de sobreposicao); no corte com B a 2,2 (quebra ate -36,2 dBFS); antes, no vale dos 40,9 (sai 40,78, cauda 0,12) com B a 0,3: sem sobreposicao, respiracao abaixo de -40 de cerca de 0,2 s (613,57 a 613,75), hino a -33 aos 613,82 e cheio aos 614,02.",
+    "a_meio_da_frase": true,
+    "opcao_final": "combinada",
+    "mods_mix33_final": "[{\"ficheiro\": \"Steppenwolf\", \"quando\": 573.22, \"sai_s\": 40.78, \"cauda\": 0.12}, {\"ficheiro\": \"Filhos\", \"quando\": 613.72, \"subida\": 0.3}]",
+    "resumo_final": "O Born To Be Wild acaba no vale curto que fica 0,27 s antes do corte (40,78 no ficheiro) e cala-se em 0,12 s. O hino entra no cartao como hoje, aos 7,0, mas sobe em 0,3 s em vez de 2,2 s.",
+    "beneficio_final": "Deixa de se ouvir o comeco do bocado seguinte do Born To Be Wild 1,2 s por cima do hino. Fica uma respiracao de 0,2 s e o hino entra sozinho com o cartao.",
+    "conflitos_final": [
+     "095: a tabela diz que o Filhos do Dragao entra a meio e cruza em 2,2 s; aqui sobe em 0,3 s, como no Taking Care of Business. A entrada (7,0) nao muda. Precisa do sim dele.",
+     "Confianca baixa: numa guitarra rock a banda da voz engana, e nao houve verificador independente. O vale dos 40,9 pode ser entre dois golpes do riff e nao fim de linha; ouvir decide."
+    ],
+    "medida_final": "Ver razoes. Ficheiros em scratchpad/ideias/p33/t614_born_filhos (opcoes.py, opcoes.txt, medida.txt).",
+    "confianca": "baixa"
+   },
+   "troca": {
+    "corte_corpo": 613.72,
+    "sai": "Steppenwolf - Born To Be Wild (Lyrics).mp3",
+    "sai_in": 0.55,
+    "sai_quando": 573.22,
+    "sai_no_ficheiro_ao_corte": 41.05,
+    "entra": "Filhos Do Dragão - Letra e Musica - Porto.mp3",
+    "entra_in": 7.0
+   }
+  },
+  {
+   "id": "t643_filhos_queen",
+   "analise": {
+    "id": "t643_filhos_queen",
+    "corte_corpo": 643.02,
+    "a_meio_da_frase": true,
+    "o_que_se_ouve_no_corte": "A voz está a meio de uma linha. Acaba uma nota longa e ainda faltam as duas últimas notas, a última em vibrato, que só acabam 0,94 s depois do corte.",
+    "fins_de_frase": [
+     {
+      "t_ficheiro": 33.45,
+      "t_corpo": 640.17,
+      "evidencia": "Fim de linha: a banda da voz cai de -18,5/-21 para -27 a -29 dB entre 33,45 e 34,7 (1,2 s) e a linha seguinte arranca no tempo forte 34,69. Fica 2,85 s antes do corte, por isso sair aqui deixaria um buraco de mais de 2 s."
+     },
+     {
+      "t_ficheiro": 37.24,
+      "t_corpo": 643.96,
+      "evidencia": "Fim da frase de 2 compassos (31,25 a 38,13, compasso de 3,437 s, pico da autocorrelação). A última nota, com vibrato a cerca de 175 Hz, acaba a 37,22. A voz cai de -20,9 para -26,8 dB (cerca de 6 dB) durante 0,7 s, o picos4 a 37,625 cai no meio da pausa e a linha nova entra no tempo forte 38,13 (corpo 644,85). No corte (36,3) há só um micro vale de 3 dB entre duas sílabas, e a nota a 175 Hz ainda soa."
+     }
+    ],
+    "opcao": "C",
+    "mods_mix33": "[{\"ficheiro\": \"Filhos\", \"quando\": 613.72, \"sai_s\": 37.24, \"cauda\": 0.5}]",
+    "resumo": "O Filhos do Dragão deixa de descer no corte. Toca inteiro até acabar a linha, com a última nota em vibrato a 643,96, e sai em 0,5 s, antes de a linha seguinte começar (644,85). A Queen entra no cartão como hoje, com a subida de 2,2 s, e a frase nova dela começa a 644,02, logo a seguir.",
+    "beneficio": "A linha do hino acaba inteira e deixa de se ouvir, por baixo da Queen, o arranque cortado da linha seguinte.",
+    "conflitos": [],
+    "medida": "Janela de 642 a 646,5, RMS de 400 ms. Hoje o mínimo é -27,5 dBFS (645,22). Na proposta é -27,5 (645,12), e esse ponto é a própria Queen. Nenhum ponto fica abaixo de -40 dBFS, portanto não há buraco. Entre 643,4 e 644,2 a proposta fica 0,4 a 1,1 dB acima de hoje, porque a última nota do hino passa inteira. Entre 644,32 e 644,52 fica 0,6 a 0,9 dB abaixo (-27,0 contra -26,1), porque o hino sai quando a Queen já vai a -1,5 dB. Vozes, na banda 300 a 3400 com os ganhos qsin: hoje o arranque da linha seguinte do hino (644,85 a 645,2) passa 10 a 15 dB abaixo da voz da Queen. Na proposta a voz do hino acaba a 643,96 e o hino está calado desde 644,46. A frase nova da Queen (ficheiro 29,0) começa a 644,02. Antes disso a Queen está numa pausa instrumental (ficheiro 28,25 a 29,0), 15 a 20 dB abaixo da voz do hino. Por isso nunca se ouvem duas vozes ao mesmo tempo. Ficheiros em scratchpad/ideias/p33/t643_filhos_queen: hoje.wav, proposta.wav, alternativa.wav, niveis_*.txt, e as imagens s_35_44.png e q_24_33.png.",
+    "confianca": "media",
+    "alternativa": "A mesma opção C com cauda de 0,8 s, em vez de 0,5 s: [{\"ficheiro\":\"Filhos\",\"quando\":613.72,\"sai_s\":37.24,\"cauda\":0.8}]. O hino sai a 644,76, ainda antes da linha nova (644,85). O mínimo continua a -27,5 dBFS e entre 644,32 e 644,52 fica a -25,9/-26,0, igual a hoje. O preço são mais 0,3 s do hino por baixo do arranque da frase da Queen, 11 a 19 dB abaixo dela.",
+    "bpm": 69.8
+   },
+   "verificacao": {
+    "id": "t643_filhos_queen",
+    "veredicto": "ajustar",
+    "razoes": "Medi tudo de novo na pasta verif. Primeiro o corte. No ficheiro, o corte cai aos 36,3 s. Entre 36,2 e 36,4 há só um vale de 2 a 4 dB e 0,2 s (a banda 300 a 3400 passa de -24/-25 para -26/-27,7). Aos 36,45, no terceiro tempo (36,41), entra a nota mais forte do troço, a -18. Portanto a_meio_da_frase = true está certo.\n\nDepois o fim de frase. Aos 37,24 ele existe mesmo. A voz vai de 36,45 a 37,2 (-18, e depois cerca de -22,5), com a última nota perto dos 170 a 175 Hz. De 37,25 a 37,95 a banda da voz fica entre -24,5 e -27,8. São 5 a 6 dB abaixo da média da frase e 8 dB ou mais abaixo do pico, durante 0,7 s. No espectrograma fino não há parciais entre 400 e 1600 Hz nesse intervalo. A anacruse vem aos 37,97 e a linha nova entra no tempo forte 38,13, a -18. A grelha de tempos bate certo com isto: tempos fortes em 34,69 e 38,13, e a frase acaba no quarto tempo.\n\nNa Queen, o ficheiro tem uma nota que acaba aos 28,25, uma pausa verdadeira de 28,3 a 28,95 (a voz cai 10 a 15 dB), uma anacruse aos 29,0 (corpo 644,02) e a linha a partir dos 29,4 (644,42).\n\nO mix33, com a janela de 638 a 649, dá o mínimo de -29,7 dBFS em todas as versões (646,82, é da própria Queen). Nenhum buraco perto de -40.\n\nHoje há mesmo duas vozes. Pus as faixas a solo e medi que o arranque da linha seguinte do hino (644,7 a 644,9) passa só 8 a 10 dB abaixo da voz da Queen: 0,5 s com a voz de A a menos de 12 dB da de B. Com a proposta isso desaparece. A voz do hino acaba aos 643,94 e a da Queen começa aos 644,02, e o que sobra do hino a sair é só instrumental.\n\nA cauda de 0,5 s, porém, cria um defeito pequeno que hoje não existe. Com o hino a cair muito depressa, na pausa entre a anacruse e a linha da Queen, o som desce a -31,1 dBFS (RMS de 100 ms, aos 644,30), 3 dB abaixo de hoje, com uma queda de 5,7 dB em 200 ms. É a descida mais brusca da janela, precisamente o tipo de corte de que o Tiago se queixou.\n\nTestei caudas de 0,7, 0,8 e 1,0. Com 0,8 esse vale desaparece: 644,15 a 644,35 fica a -26/-28, igual a hoje, e a queda máxima volta aos -5,0 dB, que já são da Queen aos 645,05. O hino acaba aos 644,76, e a anacruse da linha seguinte (644,69) passa a pelo menos 17 dB abaixo, sem se ouvir. A cauda de 1,0 volta a deixar passar essa anacruse: a voz do hino fica a -39/-40 aos 644,65 a 644,7 e a sobreposição sobe para 0,35 s.\n\nSem conflitos. A entrada do Filhos (7,0, aprovada) não muda, a Queen continua a entrar no corte (cartão 'Com os amigos') e o hino até acaba mais cedo do que hoje (644,76 contra 645,22). As opções A (buraco de mais de 2 s), B (entrada aprovada) e D (regra dos blocos) ficam piores.",
+    "a_meio_da_frase": true,
+    "opcao_final": "C",
+    "mods_mix33_final": "[{\"ficheiro\": \"Filhos\", \"quando\": 613.72, \"sai_s\": 37.24, \"cauda\": 0.8}]",
+    "resumo_final": "O Filhos do Dragão deixa de descer no corte. Toca inteiro até acabar a linha, aos 643,96, e sai em 0,8 s, durante a pausa dele. Acaba aos 644,76, antes da anacruse da linha seguinte. A Queen entra no cartão como hoje, com a subida de 2,2 s, e a frase nova dela começa aos 644,02.",
+    "beneficio_final": "A linha do hino acaba inteira, e deixa de se ouvir por baixo da voz da Queen o arranque cortado da linha seguinte. A cauda de 0,8 s evita o pequeno vale de 3 dB que a de 0,5 s abria aos 644,3.",
+    "conflitos_final": [],
+    "medida_final": "Medi com o mix33, janela de 638 a 649 s. O mínimo em RMS de 400 ms é -29,7 dBFS em todas as versões (646,82, da Queen). Não há nada abaixo de -40.\n\nEm RMS de 100 ms, à volta dos 644,3:\n- hoje: -28\n- cauda 0,5: -31,1, com uma queda de 5,7 dB em 200 ms\n- cauda 0,7: -28,8\n- cauda 0,8: -28, igual a hoje, com queda máxima de 5,0 dB (a da própria Queen aos 645,05)\n\nEntre 643,6 e 644,2, a cauda de 0,8 fica 0,8 a 1,1 dB acima de hoje, porque a última nota do hino passa inteira.\n\nDuas vozes, medidas com as faixas a solo na banda 300 a 3400:\n- hoje: 0,5 s com a voz de A a menos de 12 dB da voz ativa de B, com o arranque da linha seguinte do hino (644,7 a 644,9) a 8 a 10 dB da Queen\n- cauda 0,8: 0,2 s, e é só o instrumental do hino na pausa (643,96 a 644,2), sem voz\n- cauda 1,0: 0,35 s, porque volta a apanhar a anacruse\n\nFicheiros em scratchpad/ideias/p33/t643_filhos_queen/verif: hoje.wav, prop.wav, prop_c0.7/0.8/1.0.wav, as faixas a solo *_F.wav e hoje_Q.wav, niv_*.txt, comp.py e os espectrogramas specA_fine.png, specA_z_mid.png e specB_mid.png.",
+    "confianca": "media"
+   },
+   "troca": {
+    "corte_corpo": 643.02,
+    "sai": "Filhos Do Dragão - Letra e Musica - Porto.mp3",
+    "sai_in": 7.0,
+    "sai_quando": 613.72,
+    "sai_no_ficheiro_ao_corte": 36.3,
+    "entra": "Queen - Friends Will Be Friends (Lyrics).mp3",
+    "entra_in": 28.0
+   }
+  },
+  {
+   "id": "t713_queen_tcob",
+   "analise": {
+    "id": "t713_queen_tcob",
+    "corte_corpo": 712.52,
+    "a_meio_da_frase": false,
+    "o_que_se_ouve_no_corte": "a voz de A a fechar uma linha do 2.º verso (última nota a soltar-se), 0,2 s antes do tempo 2; a linha seguinte arranca 0,57 s depois do corte",
+    "fins_de_frase": [
+     {
+      "t_ficheiro": 90.62,
+      "t_corpo": 705.64,
+      "evidencia": "fim de linha forte: voz ao centro cai 19 dB durante 0,55 s (90,62 a 91,14), banda da voz total -11 dB, logo depois do 1 do compasso (batida 90,51); linha nova a 91,25, no tempo 2; no mix de hoje é o mínimo do troço, -33,3 dBFS às 705,92"
+     },
+     {
+      "t_ficheiro": 95.25,
+      "t_corpo": 710.27,
+      "evidencia": "fraco: nota segura com o baixo a sair (total -5,5 dB, banda da voz só -3 a -4 dB), ataque de linha a 95,35; parece respiração a meio da frase, não fim"
+     },
+     {
+      "t_ficheiro": 97.47,
+      "t_corpo": 712.49,
+      "evidencia": "fim de linha no corte: a última sílaba (97,05 a 97,2) solta-se, a banda da voz cai 6 dB às 97,5 e fica em baixo 0,55 s, com respiração de 97,80 a 97,95 (voz ao centro -10 a -14 dB); linha seguinte a 98,07 (corpo 713,09); fronteira de 2 compassos (a linha anterior começou no tempo 2 às 91,30, esta acaba antes do tempo 2 às 97,71, 8 batidas); no 1.º verso o mesmo sítio tem pausa de 0,43 s (42,54 a 42,94)"
+     }
+    ],
+    "opcao": "A",
+    "mods_mix33": "[{\"ficheiro\":\"Queen\",\"quando\":643.02,\"sai_s\":97.5,\"cauda\":0.5},{\"ficheiro\":\"Bachman\",\"quando\":712.52,\"subida\":2.2}]",
+    "resumo": "O corte já cai no fim de uma linha de A, mas a descida de 2,2 s deixa ouvir a linha seguinte, que arranca 0,57 s depois, quase inteira e a apagar-se por cima do arranque de B. A proposta faz A sair na respiração: começa a descer no corte (97,5 no ficheiro) e cala-se em 0,5 s, antes da linha nova; B entra como hoje, no cartão, a 60,8 e com a subida de 2,2 s.",
+    "beneficio": "A acaba a linha e não começa outra; deixam de se ouvir duas vozes ao mesmo tempo",
+    "conflitos": [
+     "Nenhum com entradas aprovadas nem com a regra dos blocos: B entra no mesmo sítio e no mesmo instante, no cartão 'O trabalho'.",
+     "Dependência da troca t643: a conta assume a entrada de Queen em 28,0. Se a t643 mudar essa entrada, o sai_s tem de acompanhar (sai_s = entrada + 69,5) e é preciso voltar a confirmar que o corte continua num fim de linha.",
+     "A subida de B fica presa a 2,2 s na mod. Sem isso, se o render recalcular a subida depois de A deixar de cruzar, B passa para a omissão de 1,0 s, que é a alternativa e mexe na rampa da 094."
+    ],
+    "medida": "Grelha: 76 bpm (0,79 a 0,81 s por batida), 4/4 com bombo no 1 e no 3; o 1 do compasso cai a 90,51, 93,69, 96,90 e 100,06; o corte (97,5) está 0,21 s antes do tempo 2. Hoje: -26 a -27,7 dBFS à volta do corte, sem buraco (o mínimo do troço é -33,3 às 705,92, a respiração da própria música), mas a linha seguinte de A ouve-se de 713,09 a 714,3 entre 0 e -6 dB do topo e há 0,85 s com duas vozes ao centro (713,47 a 714,37). Proposta: A calada às 713,02 (a voz de A está a -27 dB nesse instante, hoje a -7); o nível desce a -33,4 dBFS entre 713,12 e 713,32 e fica abaixo de -31,8 durante 0,6 s (712,92 a 713,52), a mesma fundura da respiração da música às 705,92; nada abaixo de -40 dBFS; duas vozes 0,0 s. Alternativa: mínimo -29,0 dBFS, duas vozes 0,15 s. Por que não as outras: depois do corte não há fim de frase até passar de 100,1 no ficheiro (só folgas de sílaba de 0,1 s a 99,67 e 100,05), por isso prolongar (C) passava de 1,5 s; recuar a entrada de A (B) para pôr o fim forte de 90,62 no corte pedia entrada 21,1 e a linha seguinte arrancava na mesma 0,65 s depois. Ficheiros: hoje.wav, proposta.wav, alternativa.wav e os níveis em niveis_*.txt na pasta t713_queen_tcob.",
+    "confianca": "media",
+    "alternativa": "A mesma saída de A (sai_s 97,5, cauda 0,5), mas com B a subir em 1,0 s em vez de 2,2 s ({\"ficheiro\":\"Bachman\",\"quando\":712.52,\"subida\":1.0}). Assim o nível quase não desce: o mínimo fica em -29,0 dBFS, com -26 a -27 à volta, e há só 0,15 s em que a cauda da última nota de A se sobrepõe ao arranque de B. Fica em segundo lugar porque mexe na rampa de 2,2 s que a 094 dá a uma entrada a meio.",
+    "bpm": 76
+   },
+   "verificacao": {
+    "id": "t713_queen_tcob",
+    "veredicto": "ajustar",
+    "razoes": "1) O fim de frase aguenta. Medi-o de forma independente, com o centro por subtração espectral (|M| menos |S|, 300 a 4000 Hz, fotogramas de 10 ms) e com uma segunda medida (HPSS mais altura dominante). A linha de A acaba numa nota longa que vai de cerca de 97,3 a 97,8 no ficheiro. A banda de 1 a 4 kHz da voz ao centro cai perto de 10 dB a partir de 97,46. O conjunto fica 6 dB ou mais abaixo do nível da linha de 97,5 a 98,05, cerca de 0,55 s, com o mínimo às 97,90. A linha nova ataca entre 98,05 e 98,10 (corpo 713,09). No 1.º verso, no mesmo sítio, há uma pausa de 42,51 a 42,96. O corte (97,5) cai portanto na nota final de uma linha e não a meio de uma palavra: a_meio_da_frase = false confirma-se. Não há fim de frase antes de cerca de 100,9, o que exclui a opção C, e a entrada de A não precisa de mexer.\n2) O problema de hoje confirma-se. Com a descida de 2,2 s, a linha nova de A fica entre -23 e -25 dBFS até 713,7, e A e B ouvem-se juntos ao centro durante 0,62 s (713,73 a 714,37). A saída proposta para A também está certa: com sai_s 97,5 e cauda 0,5, A cala-se às 713,02, antes do ataque da linha nova. Testei outras duas saídas e ficam piores. Com cauda 0,8 o ataque da linha nova ainda passa a cerca de -7 dB. Com sai_s 97,7 e cauda 0,35 a quebra quase não muda (0,9 s abaixo de -29,5) e A cala-se a apenas 30 ms do ataque.\n3) A falha está na subida de B. A proposta põe A a descer em 0,5 s e prende a subida de B nos 2,2 s. Isto abre uma quebra de nível: mínimo de -33,8 dBFS às 713,07, contra uma mediana de -26,5. A mistura fica abaixo de -31 durante 0,75 s e abaixo de -29,5 durante 1,05 s, e em janelas de 100 ms fica 7 a 8 dB abaixo do que está à volta durante cerca de 0,6 s. Não é som morto (nada abaixo de -40), mas dura o dobro da respiração da própria música às 705,9 (0,5 s abaixo de -29,5). E é exatamente o que a 094 veio tirar: subida e descida com tempos diferentes deixam uma quebra a meio. A regra da 094 é que a que entra sobe no mesmo tempo em que a outra desce. Manter os 2,2 s contra uma descida de 0,5 s cumpre o número e falha a regra.\nCom B a subir em 0,5 s, igual à cauda de A, o nível fica direito: mínimo de -28,2, que é o próprio B às 713,57, e nada abaixo de -29,5. As duas vozes juntas duram só 0,19 s, e o que se sobrepõe é a cauda da nota longa de A sob a primeira batida de B, não uma linha nova. A entrada de B continua a 60,8, que é o início de frase e cai numa batida, e B continua a entrar no mesmo instante, no cartão. A alternativa do outro agente (B a subir em 1,0 s) também tira a quebra, com mínimo de -28,9 e zero de duas vozes, e fica como segunda escolha.\nOs números dele batem com os meus: -33,4 contra -33,8, e -29,0 contra -28,9. A dependência da t643 está bem marcada. Falta marcar como conflito que a 095 escreve o Taking Care of Business a cruzar em 2,2 s. Medidas e wav em verif (hoje, proposta, sub05, alt_sub1, sai977, cauda08, cada um com _soA e _soB).",
+    "a_meio_da_frase": false,
+    "opcao_final": "combinada",
+    "mods_mix33_final": "[{\"ficheiro\":\"Queen\",\"quando\":643.02,\"sai_s\":97.5,\"cauda\":0.5},{\"ficheiro\":\"Bachman\",\"quando\":712.52,\"subida\":0.5}]",
+    "resumo_final": "O corte já cai no fim de uma linha de A, mas hoje a descida de 2,2 s deixa ouvir a linha seguinte, que arranca 0,57 s depois, por cima da entrada de B. A saída proposta para A está certa: começa a descer no corte (97,5 no ficheiro) e fica calada em 0,5 s, antes da linha nova. O que muda é a subida de B. Com 2,2 s contra uma descida de 0,5 s abre-se uma quebra de 7 a 8 dB durante cerca de 0,6 s. Por isso B passa a subir em 0,5 s, no mesmo tempo em que A desce, como manda a 094. Continua a entrar a 60,8, no cartão 'O trabalho'.",
+    "beneficio_final": "A acaba a linha e não começa outra. Deixa de haver duas vozes ao mesmo tempo e não fica nenhuma quebra de nível no cartão.",
+    "conflitos_final": [
+     "095: a tabela diz que o Taking Care of Business entra a meio e cruza em 2,2 s. Aqui a subida passa a 0,5 s, o tempo em que A desce. O ponto de entrada (60,8) não muda. É uma alteração ao que ele aprovou e precisa do sim dele.",
+     "Construção: quando a música que sai tem um sai_s, a que entra tem de subir no tempo da cauda. Sem isso o render dá a B ou os 2,2 s (a quebra) ou a omissão de 1,0 s. A omissão também serve: mínimo -28,9 dBFS, sem duas vozes.",
+     "Dependência da troca t643: a conta assume Queen a entrar em 28,0. Se essa entrada mudar, sai_s = entrada + 69,5, e é preciso voltar a confirmar que o corte cai no fim da linha.",
+     "Regra dos blocos: sem conflito. B entra no mesmo instante, no cartão 'O trabalho'."
+    ],
+    "medida_final": "Voz de A (centro |M| menos |S|, 300 a 4000 Hz): nota longa final de 97,3 a 97,8. A banda de 1 a 4 kHz cai cerca de 10 dB a partir de 97,46, e a voz fica 6 dB ou mais abaixo da linha de 97,5 a 98,05 (mínimo às 97,90). A linha nova ataca entre 98,05 e 98,10 (corpo 713,09). No 1.º verso o mesmo desenho tem pausa de 42,51 a 42,96. Mistura com mix33 (RMS de 400 ms, mediana antes do corte -26,5 dBFS). Hoje: mínimo -27,8, mas a linha nova de A fica entre -23 e -25 dBFS até 713,7, e A e B juntos ao centro durante 0,62 s. Proposta (B em 2,2 s): mínimo -33,8 às 713,07, abaixo de -31 durante 0,75 s, abaixo de -29,5 durante 1,05 s, nada abaixo de -40, duas vozes 0 s. Final (B em 0,5 s): A calada às 713,02, mínimo -28,2 (o próprio B às 713,57), nada abaixo de -29,5, nada abaixo de -40, duas vozes 0,19 s (a cauda da nota longa de A sob a primeira batida de B). B em 1,0 s: mínimo -28,9, duas vozes 0 s. Cauda 0,8: o ataque da linha nova passa a cerca de -7 dB. sai_s 97,7 com cauda 0,35: 0,9 s abaixo de -29,5, e A cala-se a 30 ms do ataque. Referência: a respiração da própria música às 705,9 desce a -33,7, mas fica abaixo de -29,5 só 0,5 s. Ficheiros: C:\\Users\\USER1~1\\AppData\\Local\\Temp\\claude\\C--casamento-video\\1b92fe8a-9bb1-4c48-abf6-9956af511886\\scratchpad\\ideias\\p33\\t713_queen_tcob\\verif (sub05.wav é a final; medidas_*.json).",
+    "confianca": "media"
+   },
+   "troca": {
+    "corte_corpo": 712.52,
+    "sai": "Queen - Friends Will Be Friends (Lyrics).mp3",
+    "sai_in": 28.0,
+    "sai_quando": 643.02,
+    "sai_no_ficheiro_ao_corte": 97.5,
+    "entra": "Bachman Turner Overdrive-Taking care of business_62s.mp3",
+    "entra_in": 60.8
+   },
+   "workflow": "wf_c4fa5210-3a8"
+  }
+ ],
+ "como_ler": "Cada troca: 'troca' diz onde estava (sai_no_ficheiro_ao_corte = segundo do ficheiro da musica que sai no instante do corte); 'analise' e a proposta do primeiro agente; 'verificacao' e o veredicto do verificador independente, com as mods finais (sai_s e cauda na musica que sai: comeca a descer em sai_s, em segundos do ficheiro, e chega a zero cauda segundos depois). Se a ordem mudar e o sai_no_ficheiro_ao_corte de uma troca deixar de bater, essa troca tem de ser medida outra vez.",
+ "revisoes": [
+  {
+   "quando": "2026-09-30",
+   "workflow": "wf_377a954c-d63",
+   "porque": "o nome no preto (092, 093) acrescentou 0,2 s depois de cada nascimento, e a 099 mudou a retoma do Lang Lang",
+   "t122": {
+    "analise": {
+     "sai": "O Rei Leão (PT-PT) Ciclo Sem Fim.mp3",
+     "entra": "Lang Lang - Beauty and the Beast (From Lang Lang Plays Disney  Live).mp3",
+     "no_corte": 48.1,
+     "entra_in": 32.15,
+     "sai_s": 47.55,
+     "cauda": 0.3,
+     "subida_entra": 0.3,
+     "medidas": "Medido com o medir_troca.py (render construído, montagem de hoje): corte aos 81,30 s do corpo, o Rei Leão chega ao corte aos 48,10 s do ficheiro e o Lang Lang volta aos 32,15. Excerto de 6 s antes a 5 s depois do corte, mistura e cada música sozinha (--so A e --so B). Nível RMS em janelas de 400, 200 e 100 ms, em passos de 10 ms. O \"resto\" é a mediana antes (-26,5 dBFS) e depois (-28,2). Os wav e os números estão em scratchpad/ideias/p33/construcao/t122/analise (medidas_todas.txt, variantes.json).\n\nGRELHA, medida outra vez: o compasso do Rei Leão tem 2,866 s, com barras em 45,00, 47,87 e 50,73. O período de oito compassos que começa em 24,94 fecha em 47,87. Numa análise fina (10 ms), a banda harmónica fica no fundo do respiro entre 47,59 e 47,64 (-20 a -21 dB). Um deslize a subir vai de 47,66 a 47,75, a voz arranca entre 47,74 e 47,79, e o primeiro tempo da linha nova é um ataque forte em 47,86 e 47,87. Com o corte agora em 48,10, o corte cai 0,23 s depois desse primeiro tempo. No Lang Lang, os acordes fortes estão em 30,25, 33,51 e 36,77, compassos de cerca de 3,26 s. O 32,15 fica a meio de um compasso, 0,35 s depois de um acorde em 31,80, num diminuendo que desce até 33,4. O primeiro tempo seguinte é o acorde de 33,46 a 33,51.\n\nHOJE (mods [], o Rei Leão desce 2,2 s a partir do corte, o piano sobe em 2,2 s): nada abaixo de -35 e mínimo de -30,6. Mas o primeiro tempo e a linha nova do coro ouvem-se por cima do piano: o Rei Leão fica acima do piano durante 1,36 s depois do corte, e as duas músicas ficam a menos de 10 dB uma da outra durante 1,38 s. Falha o critério das duas melodias.\n\nAPROVADO A 29/09 (sai_s 47,55, cauda 0,3, subida 1,0): o Rei Leão acaba no mesmo sítio da música, a zero em 47,85. Agora isso fica 0,25 s antes do corte, e não 0,05 s como então. Silêncio digital de 0,28 s (81,02 a 81,30). Abaixo de -40 dBFS durante 0,44, 0,52 e 0,55 s (janelas de 400, 200 e 100 ms). Abaixo de -35 durante 0,66 s, e 7 dB abaixo do resto durante 0,66 a 0,69 s, com mínimo de -56,9. Falha o critério da quebra de cerca de 0,5 s, porque o piano sobe devagar e entra numa passagem baixa.\n\nPROPOSTA (sai_s 47,55, cauda 0,3, subida 0,3): o mesmo silêncio de 0,28 s. Abaixo de -40 durante 0,26, 0,38 e 0,41 s, abaixo de -35 durante 0,41 s, e 7 dB abaixo do resto durante 0,41 s (0,43 s contra a média do antes e do depois). Mínimo de -51,4. O piano chega ao seu próprio nível (-28 dBFS) aos 81,65 s. Não há duas melodias ao mesmo tempo, e o Rei Leão não toca na linha nova: fica no máximo a -47 dBFS depois de 47,80. Depois vem o diminuendo do próprio piano (-29 a -33) e o acorde aos 82,65 s (-19,5).\n\nOUTRAS VARIANTES MEDIDAS: subida de 0,5 dá quebra de 0,48 s (no limite). Subida de 0,4 dá 0,45 s. Subida de 0,25 dá 0,38 s. Sem rampa (0,03) dá 0,27 s, mas o piano entra cortado a meio de um acorde sustentado, sem ataque. Descer de 47,60 com cauda de 0,25 dá o mesmo que a proposta (0,40 s). Descer no fim da linha, em 47,1 com cauda de 0,75 e subida de 0,5, dá quebra de 0,56 s. Acabar no corte (47,80 com cauda de 0,3) não deixa buraco, mas ouvem-se 0,28 s do arranque da linha nova, até -27,9 dBFS. Segurar a linha nova até 49,9 põe o coro por cima do piano 1,7 s. ALTERNATIVA (o Lang Lang a entrar aos 33,41 sem rampa, no acorde do primeiro tempo): abaixo de -40 durante 0,17, 0,30 e 0,35 s, e quebra de 0,30 s. O acorde chega a -20 dBFS entre 81,40 e 81,55 s, logo depois do respiro.",
+     "resumo": "O Rei Leão continua a sair no mesmo sítio da música que foi aprovado, dentro do respiro que fecha o período de oito compassos: desce aos 47,55 do ficheiro e fica a zero aos 47,85, antes do primeiro tempo da linha nova (47,87). Por causa dos 0,2 s do nome no preto, esse sítio fica agora 0,25 s antes do corte, e não 0,05 s. Com o piano a subir em 1,0 s, a quebra passava a durar 0,66 s. Por isso o piano passa a subir em 0,3 s, o mesmo tempo da cauda do Rei Leão, que é a regra da 096. Entra onde parou, aos 32,15. O corte e as duas entradas não mudam.",
+     "beneficio": "Deixa de se ouvir o coro a começar uma linha nova e a morrer debaixo do piano durante mais de 1 s. O Rei Leão acaba o período, há um respiro de um quarto de segundo, e o piano entra com o regresso da fita.",
+     "conflitos": [
+      "Muda um número aprovado a 29/09: a subida do Lang Lang passa de 1,0 para 0,3 s. É a mesma regra da 096 (a que entra sobe no tempo da cauda da que sai), mas com o sítio novo os 1,0 s abrem uma quebra de 0,66 s. Tem de ser mostrado ao Tiago antes do render (096, revisão).",
+      "Fica um silêncio digital de 0,28 s mesmo antes do corte, de 81,02 a 81,30 s do corpo. Nenhum fim de frase o evita: a voz da linha nova arranca 0,3 s antes do corte, e o corte e as entradas não se mexem. Cabe nos critérios (buraco muito abaixo de 0,8 s e quebra de 0,41 s), mas ouve-se como um respiro curto.",
+      "Para construir: uma linha em data/fins_de_frase.csv com no_corte 48.10, entra_in 32.15, sai_s 47.55, cauda 0.30 e subida_entra 0.30. O montar_da_mesa.py só a aplica se o no_corte e o entra_in baterem com uma tolerância de 0,05 s. Se o nome no preto ou a montagem antes deste ponto mudarem outra vez, mede-se de novo.",
+      "A alternativa (o Lang Lang a entrar aos 33,41, no acorde do primeiro tempo seguinte, sem rampa) soa mais limpa e tem uma quebra de só 0,30 s. Mas choca com a 099 e com a 096: a retoma automática volta onde parou (32,15), e nenhuma troca muda uma entrada. Precisava de mudar a regra da retoma no montar_da_mesa.py e de uma linha em data/entradas_ataque.csv. A atenuante é que o troço de 32,15 a 33,41 só se ouviu a desvanecer por baixo dos foguetes do Tiago. Só com decisão dele."
+     ],
+     "confianca": "alta"
+    },
+    "verificacao": {
+     "sai": "O Rei Leão (PT-PT) Ciclo Sem Fim.mp3",
+     "entra": "Lang Lang - Beauty and the Beast (From Lang Lang Plays Disney  Live).mp3",
+     "no_corte": 48.1,
+     "entra_in": 32.15,
+     "sai_s": 47.55,
+     "cauda": 0.3,
+     "subida_entra": 0.3,
+     "medidas": "Medi tudo outra vez com o medir_troca.py (render construído, montagem de hoje) e com scripts meus, em scratchpad/ideias/p33/construcao/t122/verif (correr.sh, medir.py, musica.py, medidas_verif.json, wav em w/). O corte fica aos 81,30 s do corpo. O v3.som.csv confirma os números: o Rei Leão entra aos 33,2 s do corpo a partir do segundo 0 do ficheiro, por isso está nos 48,10 s do ficheiro no corte. O Lang Lang da abertura toca 26,7 s a partir dos 5,45 e volta nos 32,15. Excerto de 6 s antes a 5 s depois do corte, com a mistura e cada música sozinha. Nível RMS em janelas de 400, 200 e 100 ms, em passos de 10 ms. O resto é a mediana antes (-26,6 dBFS) e depois (-28,3).\n\nHOJE: nada abaixo de -35 dBFS, mínimo -30,6. O Rei Leão fica acima do piano durante 1,30 s depois do corte, e as duas músicas ficam a menos de 10 dB uma da outra durante 1,41 s. Falha o critério das duas melodias. Confirmado.\n\nAPROVADO A 29/09 (subida 1,0): silêncio digital de 0,30 s (81,01 a 81,31). Abaixo de -40 dBFS durante 0,44, 0,52 e 0,55 s (janelas de 400, 200 e 100 ms). A quebra de 7 dB dura 0,65 a 0,69 s com janelas de 400 ms e 0,71 a 0,78 s com janelas mais curtas. Mínimo -56,9. Falha o critério da quebra. Confirmado.\n\nPROPOSTA (desce aos 47,55, cauda 0,3, subida 0,3): o mesmo silêncio. Abaixo de -40 durante 0,26, 0,38 e 0,41 s, e abaixo de -35 durante 0,41 s. A quebra de 7 dB dura 0,40 a 0,42 s com janelas de 400 ms, mas 0,51 a 0,54 s com 200 ms e 0,54 a 0,57 s com 100 ms: nas janelas curtas fica no limite dos cerca de 0,5 s. Mínimo -51,4. Nenhuma sobreposição, e o Rei Leão está em silêncio desde os 81,04. O piano fica a -29/-28 dBFS (400 ms) a partir dos 81,6, e o acorde chega entre 82,6 e 82,9 (-22 dBFS em 400 ms, -19 em 200 ms).\n\nVARIANTES (quebra em 400 ms, entre parênteses em 200 ms): subida de 0,5 dá 0,48 s (0,58 a 0,61). Subida de 0,15 dá 0,33 s (0,44 a 0,47). Subida de 0,03 dá 0,26 s (0,39 a 0,42). Descer aos 47,60 com cauda de 0,25 dá 0,39 a 0,42 s. Descer aos 47,62 com cauda de 0,2 dá 0,40 s, com 0,36 s de silêncio digital. A alternativa, com o Lang Lang a entrar aos 33,41 sem rampa, dá 0,30 s e fica abaixo de -40 durante 0,17, 0,30 e 0,35 s. Todos os números do analista se reproduzem, com diferenças de 0,01 a 0,06 s.\n\nMÚSICA, medida à parte: no Rei Leão, a autocorrelação dos ataques dá um compasso de 2,863 s (e 5,737 s para dois). Há um ataque forte com bombo entre 47,88 e 47,90, que é a barra, e as barras vizinhas caem em 45,00 e 50,74. Separei a parte harmónica da percussão: a banda de 180 a 1500 Hz começa a descer aos 47,04 e tem o fundo entre 47,60 e 47,68, 11 dB abaixo da mediana. Volta a subir a partir de 47,70 e passa a mediana entre 47,76 e 47,78: é a entrada da linha nova, um pouco antes da barra. Na pista só do Rei Leão, com a proposta, essa entrada ouve-se a -39/-40 dBFS entre 47,72 e 47,74 (hoje -31/-30), a -47 aos 47,78 e a -52 aos 47,80, ou seja 13 dB ou mais abaixo do resto.\n\nNo Lang Lang, os ataques fortes estão em 30,28, 33,48 e 36,75. Depois de umas notas suaves entre 31,68 e 32,01 não há ataque até aos 33,48. O 32,15 cai num som sustentado a -35/-36 dBFS no ficheiro, que desce a -39/-40 perto dos 33,0 antes do acorde. O que o analista chama acorde aos 31,80 é uma nota fraca e não um acorde forte, mas isso não muda nada.\n\nCONSTRUÇÃO: no render, a subida do Lang Lang vem da coluna subida_entra. Sem ela, com a cauda da que sai a zero, o render usa 1,0 s por omissão.",
+     "resumo": "A proposta aguenta: medi tudo outra vez e os números do analista reproduzem-se. O Rei Leão começa a descer aos 47,55 e cala-se aos 47,85, no respiro que fecha o período de oito compassos. A linha nova começa antes da barra e ouve-se apenas a 13 dB ou mais abaixo do resto. Por causa do nome no preto, fica um silêncio de 0,3 s antes da fita, que nenhum fim de frase evita. Com a subida aprovada de 1,0 s a quebra passava a 0,65 s. Com 0,3 s fica em 0,41 s em janelas de 400 ms, e no limite em janelas mais curtas. O corte e as entradas não mudam.",
+     "beneficio": "Deixa de se ouvir o coro a começar uma linha nova e a morrer mais de 1 s debaixo do piano. O Rei Leão acaba o período, há um respiro curto e o piano volta com a fita.",
+     "conflitos": [
+      "Muda um número aprovado a 29/09: a subida do Lang Lang passa de 1,0 para 0,3 s. Segue o princípio da 096 (quando a que sai desce depressa, a que entra sobe depressa), mas a 29/09 esta troca ficou com 1,0 s. Com o sítio novo do corte, 1,0 s abre uma quebra de 0,65 a 0,69 s. Tem de ser mostrado ao Tiago antes do render (096, revisão).",
+      "Fica um silêncio digital de 0,3 s mesmo antes do corte, entre 81,01 e 81,31 s do corpo. A quebra é de 0,40 a 0,42 s com janelas de 400 ms, a medida usada nas trocas de 29/09. Com janelas de 200 ms sobe para 0,51 a 0,54 s, no limite dos cerca de 0,5 s. Se ele achar o respiro comprido, uma subida de 0,15 s baixa a quebra para 0,33 s (0,44 a 0,47 com 200 ms), mas já não segue a regra de a subida durar o mesmo que a cauda.",
+      "Para construir: uma linha em data/fins_de_frase.csv com os nomes exatos dos ficheiros (o do Lang Lang tem dois espaços antes de Live), no_corte 48.10, entra_in 32.15, sai_s 47.55, cauda 0.30, subida_entra 0.30, confiança alta, id t122_reileao_langlang. A subida_entra tem de ir preenchida: sem ela o render sobe em 1,0 s. O montar_da_mesa.py só a aplica com uma tolerância de 0,05 s. Se o nome no preto ou a montagem antes deste ponto mudarem outra vez, mede-se de novo.",
+      "A alternativa, com o Lang Lang a entrar aos 33,41 sem rampa, no acorde forte dos 33,48, tem uma quebra de só 0,30 s. Mas choca com a 099 (a retoma volta onde parou, aos 32,15) e com a 096 (nenhuma troca muda uma entrada). Só avança com decisão dele."
+     ],
+     "confianca": "alta"
+    }
+   },
+   "t246": {
+    "analise": {
+     "sai": "Ana Faria - Clara.mp3",
+     "entra": "Gilbert O`Sullivan - CLAIR - ( The Sweetest `Clair ` video Ever !) - And Clair answers back !.mp3",
+     "no_corte": 112.8,
+     "entra_in": 6.5,
+     "sai_s": 112.3,
+     "cauda": 0.3,
+     "subida_entra": 0.03,
+     "medidas": "Medi com o medir_troca.py e o render já construído. Excerto de 4 s antes e 4 s depois do corte, que fica a 206,15 do corpo. No corte a Ana Faria está a 112,80 do ficheiro e a Clair entra a 6,50 com subida 0,03. Fiz pistas separadas com --so A e --so B: a Clair sai igual ao byte em todas as variantes, e a mistura é só as duas, sem efeitos por perto. Verifiquei o alinhamento com os ficheiros por correlação: 5 ms. O resto do filme (mediana do RMS de 400 ms fora da troca) está a -24,1 dBFS.\n\nFICHEIRO DA ANA FARIA (janelas de 25 ms). Há uma nota longa de 111,49 a 112,19, com a banda de 1 a 3 kHz entre -22 e -29, que cai 10 dB entre 112,19 e 112,21. De 112,21 a 112,55 só se ouve o acompanhamento a morrer (banda larga de -24 a -29). A linha nova ataca a 112,56/112,60: o tempo forte do tracker é 112,52, e a banda larga chega a -17,6 a 112,66. O fim de frase seguinte é a 121,5, fora de alcance.\nFICHEIRO DA CLAIR. Silêncio até 6,61, o primeiro acorde a 6,62, e o ataque mais forte da introdução a 8,34.\n\nHOJE ([]). A Ana Faria entra na linha nova e desce 2,2 s a partir do corte. Fica acima de -45 dBFS durante 2,14 s depois do corte, e as duas competem durante 1,00 s (206,24 a 207,23; as duas acima de -35 e a menos de 12 dB uma da outra). Não há buraco.\n\nREFERÊNCIA DE 29/09. São os mesmos números com a geometria antiga (a Ana Faria a 112,60 no corte), refeita com in_s 5,8 só para comparar. Buraco abaixo de -40 (RMS de 100 ms): 0,24 s. Silêncio abaixo de -50 (RMS de 50 ms): 0,21 s. Quebra de 7 dB (RMS de 400 ms): 0,41 s.\n\nAPROVADO, NO SÍTIO NOVO (112,15/0,4). Buraco de 0,44 s (205,79 a 206,22), silêncio de 0,41 s, quebra de 0,62 s, mínimo em 400 ms de -69,5. No render real a descida chega a zero já perto de 112,52, e não nos 112,55 nominais, ou seja 0,28 s antes do corte. A respiração fica com o dobro do tamanho.\n\nPROPOSTA (112,30/0,30). Buraco de 0,33 s (205,90 a 206,22), silêncio de 0,29 s, quebra de 0,55 s, mínimo em 400 ms de -48,4. Não há nada a competir e a Ana Faria já não se ouve depois do corte. O ganho real segue o qsin nominal a menos de 2 dB e chega a zero a 112,60. A última nota fica inteira, porque a descida só começa 0,1 s depois de ela acabar. O começo do ataque (112,56 a 112,60) passa pelo menos 17,7 dB abaixo: -46 a -51 dBFS na banda larga e -53 a -56 na banda da voz. Isso fica 10 a 15 dB abaixo do acompanhamento que acabou de soar, que o tapa.\n\nOUTRAS VARIANTES (buraco, silêncio, quebra):\n- Com zero a 112,55 (112,20/0,35, 112,25/0,30, 112,30/0,25 e 112,35/0,20): de 0,43 a 0,39 s, de 0,40 a 0,39 s, de 0,62 a 0,58 s.\n- 112,30/0,28: 0,36, 0,34, 0,56.\n- 112,25/0,35: 0,34, 0,30, 0,56.\n- 112,15/0,45: 0,36, 0,31, 0,59.\n- 112,15/0,60 (zero a 112,75): buraco de só 0,23 s, mas deixa passar o ataque da linha nova a cerca de -39 dBFS. Rejeitada.\n\nOs ficheiros estão em C:\\Users\\USER1~1\\AppData\\Local\\Temp\\claude\\C--casamento-video\\1b92fe8a-9bb1-4c48-abf6-9956af511886\\scratchpad\\ideias\\p33\\construcao\\t246\\analise: hoje.wav, ref29.wav, aprovado.wav, s3030.wav e as outras variantes, cada uma com _A e _B, e os scripts correr.py, medidas.py, ataque.py e ficheiros.py.",
+     "resumo": "O nome da Clara no preto pôs mais 0,2 s entre o fim da frase da Ana Faria e a entrada da Clair. Com os números de 29/09, a pausa entre as duas passava para o dobro: 0,41 s de silêncio em vez de 0,21. Proponho que a Ana Faria desça aos 112,30 com uma cauda de 0,30. O fim de frase é o mesmo, mas o acompanhamento que fica a soar depois da última nota aguenta mais 0,15 s e cala-se exatamente no ataque da linha nova, aos 112,60. As entradas da Ana Faria (6,0) e da Clair (6,5) não mudam.",
+     "beneficio": "A Ana Faria continua a acabar a frase inteira e a Clair continua a entrar limpa com o cartão, sem sobreposição nenhuma. A pausa entre as duas volta a ser uma respiração de 0,29 s, e deixa de ser o buraco de 0,41 s que os números antigos davam no sítio novo.",
+     "conflitos": [
+      "Nenhuma entrada muda: a Ana Faria continua a entrar aos 6,0 (093), a Clair aos 6,5 e o corte aos 206,15 do corpo. Não há efeitos por perto.",
+      "Não mexe na t269 (Clair para Who Let The Dogs Out): a Clair sai igual ao byte em todas as variantes e continua a chegar a esse corte no mesmo sítio.",
+      "A quebra de 7 dB (RMS de 400 ms) fica em 0,55 s, um pouco acima dos cerca de 0,5 s do critério, e a 29/09 era de 0,41 s. Quem a faz é o começo suave da Clair, que já estava marcado como aviso a 29/09. Só baixa se a Clair mudar (a 6,6 poupava 0,1 s, mas mexe na t269 e está presa) ou se se deixar entrar a linha nova da Ana Faria, e as duas coisas são piores.",
+      "Para o render usar isto, a linha t246 do data/fins_de_frase.csv tem de passar a no_corte 112,80, sai_s 112,30 e cauda 0,30. Até lá o montar avisa e a Ana Faria desce 2,2 s em cima do corte, com a linha nova por baixo da Clair.",
+      "Depende de o nome no preto continuar com 0,2 s e de não mudar nenhuma duração entre o nascimento da Clara e o cartão dos penteados. Qualquer mudança aí volta a mudar o sítio da troca."
+     ],
+     "confianca": "alta"
+    },
+    "verificacao": {
+     "sai": "Ana Faria - Clara.mp3",
+     "entra": "Gilbert O`Sullivan - CLAIR - ( The Sweetest `Clair ` video Ever !) - And Clair answers back !.mp3",
+     "no_corte": 112.8,
+     "entra_in": 6.5,
+     "sai_s": 112.28,
+     "cauda": 0.3,
+     "subida_entra": 0.03,
+     "medidas": "Medi tudo de novo com o medir_troca.py e o render já construído. Os excertos vão de 8 s antes a 8 s depois do corte e as medidas são minhas (medir.py, traco.py, ganho_mix.py), sem usar nenhum ficheiro do analista.\n\nGEOMETRIA. No v3.som.csv a Ana Faria entra aos 99,35 do corpo com in 6,0 e a Clair aos 206,15 com in 6,5, por isso no corte a Ana Faria está a 6,0 + 206,15 - 99,35 = 112,80 do ficheiro. O medir_troca diz o mesmo. Verifiquei o alinhamento por correlação das pistas separadas com os ficheiros: a Ana Faria e a Clair saem as duas 5 ms depois do nominal, com ganhos de -3,9 dB e -10,4 dB. A Clair sai igual ao byte (md5) em hoje, na proposta e no aprovado. Entre 195 e 215 do corpo não toca mais nada.\n\nFICHEIRO DA ANA FARIA (janelas de 10 e 25 ms). A nota longa acaba entre 112,16 e 112,19, e a banda de 1 a 3 kHz cai de -28,5 para -36,7. De 112,19 a 112,55 fica o acompanhamento a morrer, de -24 a -30 em banda larga. O ataque da linha nova é aos 112,557: acima de 4 kHz o nível salta de -52 para -34 numa janela de 10 ms, e a banda larga chega a -17 aos 112,66.\nFICHEIRO DA CLAIR. Silêncio até 6,59 e o primeiro acorde aos 6,600, que fica aos 206,255 do corpo. Por isso, sem a linha nova, há sempre pelo menos 0,34 s entre o ataque da Ana Faria (205,912 do corpo) e a Clair.\n\nUMA COISA NOVA SOBRE O RENDER. O fim real da descida não é o nominal. Com a cadeia do próprio render sem loudnorm, a descida acaba no sítio nominal. Com o loudnorm acaba mais cedo, conforme a duração da faixa (sonda.py): a 106,50 e a 106,60 acaba no nominal, a 106,55 e a 106,65 acaba 0,05 s antes, a 106,57 0,03 s antes e a 106,58 0,02 s antes. Corri duas vezes e o resultado é igual ao byte. Isto explica o que o analista viu no aprovado (112,15/0,40 acaba de facto aos 112,50) e faz com que 112,25/0,30 e 112,20/0,30 soem iguais.\n\nMEDIDAS, todas pelo mesmo método: buraco com RMS de 100 ms abaixo de -40; silêncio com RMS de 50 ms abaixo de -50; quebra com RMS de 400 ms 7 dB abaixo do resto, que está a -24,4; respiração desde a última Ana acima de -50 (RMS de 20 ms) até à Clair acima de -50.\n- HOJE ([]): as duas competem 0,92 s (206,26 a 207,17) e a Ana Faria fica acima de -45 até 2,13 s depois do corte, com a linha nova a -20. Não há buraco.\n- REF 29/09 (in 5,8, 112,15/0,40): buraco 0,26, silêncio 0,21, quebra 0,49, respiração 0,24, nada da linha nova.\n- APROVADO NO SÍTIO NOVO (112,15/0,40): 0,46, 0,41, 0,69, respiração 0,44.\n- PROPOSTA DO ANALISTA (112,30/0,30, duração 106,60, acaba de facto aos 112,60): 0,35, 0,30, 0,63, respiração 0,32. Deixa passar os primeiros 40 ms do ataque, com um máximo de -45,8 em banda larga e -49,5 acima de 4 kHz. Aqui refuto o analista, que diz que o acompanhamento anterior tapa esse ataque. No instante do ataque o acompanhamento já desceu para -44,6, e acima de 4 kHz a mistura salta 16 dB, de -68 para -52, em 205,91 a 205,93. É um arranque agudo isolado e muito baixo, mas é o começo da linha seguinte, e isso não existia no que se aprovou a 29/09.\n- FINAL (112,28/0,30, duração 106,58, acaba de facto aos 112,56, em cima do ataque): 0,39, 0,35, 0,64, respiração 0,37. Mínimo em 400 ms de -56,1, nada a competir e nada da linha nova (o máximo depois do ataque é -71,9, cauda da descida). O ganho fica a 0,0 ± 0,2 dB até 112,27, por isso a última nota e o princípio do acompanhamento ficam inteiros. Depois desce: -0,8 dB aos 112,345, -4,6 aos 112,445, -10 aos 112,505, -19 aos 112,545, e zero aos 112,56.\n- OUTRAS: 112,29/0,29 acaba no mesmo sítio e mede o mesmo (0,38/0,34/0,64). Com 112,27/0,30, 112,30/0,27 e 112,25/0,32 (duração 106,57, acabam aos 112,545) dá 0,40/0,36/0,65. Com 112,26/0,30 dá 0,42/0,38/0,66. As que acabam aos 112,60 (112,33/0,27, 112,28/0,32, 112,35/0,25, 112,40/0,20) deixam passar o ataque a -44 ou -46. 112,30/0,40 (fim aos 112,70) dá buraco de 0,20 s mas passa o ataque a -34,8. Fica rejeitada.\n\nFicheiros em C:\\Users\\USER1~1\\AppData\\Local\\Temp\\claude\\C--casamento-video\\1b92fe8a-9bb1-4c48-abf6-9956af511886\\scratchpad\\ideias\\p33\\construcao\\t246\\verif: hoje.wav, ref29.wav, s215_40.wav (aprovado), s230_30.wav (proposta), s228_30.wav (final) e as outras variantes, com as pistas _A e _B. Scripts: gerar.py, gerar2.py, medir.py, traco.py, ganho_mix.py, fonte.py, alinhar.py, sonda.py.",
+     "resumo": "A proposta aguenta quase toda, menos num ponto. Descer aos 112,30 com cauda 0,30 deixa passar os primeiros 40 ms da linha nova da Ana Faria, muito baixo mas audível nos agudos. Com 112,28 e a mesma cauda, a Ana Faria cala-se exatamente no ataque da linha nova (112,56 no render real), acaba a frase e não começa a seguinte, como a 29/09. As entradas e o corte não mudam.",
+     "beneficio": "A Ana Faria acaba a frase inteira, sem nenhum pedaço da linha seguinte, e a Clair entra limpa com o cartão. A pausa entre as duas fica em cerca de 0,37 s, o mínimo possível sem deixar entrar a linha nova, e não 0,44 s como com os números de 29/09 no sítio novo.",
+     "conflitos": [
+      "Nenhuma entrada muda: a Ana Faria continua aos 6,0 (093), a Clair aos 6,5 com subida 0,03, e o corte aos 206,15 do corpo. A Clair sai igual ao byte em todas as variantes, por isso a t269 (Clair para Who Let The Dogs Out) não mexe.",
+      "Para o render usar isto, a linha t246 do data/fins_de_frase.csv tem de passar a no_corte 112,80, sai_s 112,28 e cauda 0,30 (entra_in 6,50 e subida 0,03 ficam). Até lá o montar avisa e a Ana Faria desce 2,2 s em cima do corte: medido hoje, as duas competem 0,92 s e a linha nova fica acima de -45 até 2,13 s depois do corte.",
+      "A respiração é de 0,37 s e não os 0,24 de 29/09. É geometria: o nome no preto afastou 0,2 s a Clair do fim da frase, e entre o ataque da linha nova (112,557) e o primeiro acorde da Clair há sempre 0,34 s. A proposta do analista ganha 0,05 s mas à custa de deixar entrar o começo da linha nova.",
+      "A quebra de 7 dB (RMS de 400 ms) fica em 0,64 s pelo meu método; a de 29/09, medida da mesma maneira, dava 0,49, e a proposta do analista dá 0,63. Passa um pouco os cerca de 0,5 s do critério. Quem a faz é o primeiro acorde da Clair, que nos primeiros 0,2 s está uns 7 dB abaixo do resto, mais o acompanhamento calmo depois da frase. Só baixa mudando a Clair (presa pela t269) ou deixando entrar a linha nova.",
+      "O loudnorm do render faz a descida acabar até 0,05 s antes do nominal, conforme a duração da faixa. Com 112,28/0,30 (duração 106,58) o nominal é 112,58 e o real é 112,56. Se um ffmpeg novo tirar esse efeito, passam 20 ms do ataque a cerca de -53 dBFS, o que não se ouve. Isto vale para todas as trocas do 3.3: os números da tabela da 096 não são o sítio real onde cada música se cala, e cada troca tem de se medir com o render.",
+      "Depende de o nome no preto continuar com 0,2 s e de não mudar nenhuma duração entre o nascimento da Clara e o cartão dos penteados. Qualquer mudança aí muda o sítio da troca e o montar volta a avisar."
+     ],
+     "confianca": "alta"
+    }
+   }
+  }
+ ]
+}

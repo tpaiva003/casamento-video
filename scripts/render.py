@@ -36,6 +36,7 @@ import itertools
 import json
 import math
 import os
+import re
 import subprocess
 import sys
 import time
@@ -78,6 +79,13 @@ VIDEOS = {
     "intro_clara_tiago_5 igualado.mp4": (
         os.path.join(r"C:\casamento-video-media\gerados\som_igualado",
                      "intro_clara_tiago_5 igualado.mp4"), 0.0),
+    # A INTRO SEM O PRETO DO FIM, decisao 097: o _5 cortado aos 13,20 s, e a copia igualada.
+    "intro_clara_tiago_5 sem preto.mp4": (
+        os.path.join(r"C:\casamento-video-media\gerados\intro_marvel",
+                     "intro_clara_tiago_5 sem preto.mp4"), 0.0),
+    "intro_clara_tiago_5 sem preto igualado.mp4": (
+        os.path.join(r"C:\casamento-video-media\gerados\som_igualado",
+                     "intro_clara_tiago_5 sem preto igualado.mp4"), 0.0),
 }
 
 
@@ -818,6 +826,183 @@ def cartao(texto):
     return base
 
 
+# ---------------------------------------------------------- o letreiro, decisoes 092, 093 e 098
+# O Tiago, a 28 de setembro, sobre os cartoes: "nao gosto assim muito dos separadores que vou
+# metendo pretos e com a letra branca, esta basico, um pouco amador". A 29 aprovou o letreiro do
+# titulo do filme Oppenheimer (sem o fogo por dentro da letra do tutorial que ele mandou, e sem
+# grao, que fazia o ficheiro seis vezes maior e a 15 m nao se ve): Arial Bold na cor champanhe
+# quente a subir para um branco quente, com um brilho quente fraco a volta, sobre preto. As letras
+# acendem a partir do preto e aproximam-se devagar, e dissolvem-se na foto seguinte no encadeado
+# de saida, como os cartoes de sempre. Com o champanhe em vez do branco (098): 13,3:1 contra 15,2:1.
+#
+# E O MESMO LETREIRO DOS NOMES DOS BEBES (092, 093): "O TIAGO" e "A CLARA" nascem no preto no
+# ultimo segundo dos foguetes, num clip "nome" que o montar_da_mesa.py poe entre a fita e a
+# primeira foto. As previas estao em scripts/discussao/ (comum.letreiro); esta e a copia que o
+# filme usa, porque o render nunca importa o comum.
+#
+# OS TEXTOS CURTOS E AS FRASES. Ate 3 palavras: maiusculas espacadas 0,30 em, a 100 px, em linhas
+# que caibam na largura do cartao de sempre. Uma frase fica com as linhas, as minusculas e o corpo
+# 78 do cartao de sempre: espacada ficava lenta de ler, e as frases ja sao as que passam depressa
+# (082). As letras ficam inteiras do fim da subida ate ao encadeado de saida, 2,3 s num cartao de
+# 3,6 s contra 2,2 s de hoje: a proposta de 28 de setembro apagava-as 0,5 s antes, e isso tirava
+# 0,4 s de leitura a todos os cartoes.
+LETREIRO_SS = 2
+LETREIRO_CURTO_PALAVRAS = 3
+LETREIRO_CURTO_TAMANHO, LETREIRO_ESPACO = 100, 0.30
+NOME_TAMANHO, NOME_ESPACO = 120, 0.30
+LETREIRO_ENTRA = 0.6            # segundos que as letras de um cartao levam a acender do preto
+NOME_ENTRA = 0.9                # e as do nome do bebe
+LETREIRO_EMPURRA = 0.025        # quanto se aproxima, por segundo
+LETREIRO_QUENTE = (226, 184, 140)
+LETREIRO_BRANCO = (255, 247, 234)
+LETREIRO_BRILHO = (255, 150, 70)
+
+
+def _mascara_letreiro(linhas, tamanho, espaco, entrelinha=1.45):
+    """As letras em branco sobre preto, LETREIRO_SS vezes maiores, uma a uma para o espacamento."""
+    f = ImageFont.truetype(FONTE_TEXTO, tamanho * LETREIRO_SS)
+    passo = espaco * tamanho * LETREIRO_SS
+    larguras = [sum(f.getlength(c) for c in ln) + passo * (len(ln) - 1) for ln in linhas]
+    folga = 160 * LETREIRO_SS
+    W = int(max(larguras)) + 2 * folga
+    H = int(tamanho * LETREIRO_SS * entrelinha * len(linhas)) + 2 * folga
+    m = Image.new("L", (W, H), 0)
+    d = ImageDraw.Draw(m)
+    y = folga
+    for ln, w in zip(linhas, larguras):
+        x = (W - w) / 2
+        for c in ln:
+            d.text((x, y), c, font=f, fill=255)
+            x += f.getlength(c) + passo
+        y += tamanho * LETREIRO_SS * entrelinha
+    return m
+
+
+def _colorir_letreiro(m, semente):
+    """Champanhe quente a subir para branco quente, com manchas lentas, e o brilho a volta."""
+    import numpy as np
+    W, H = m.size
+    rng = np.random.default_rng(semente)
+    baixa = (rng.random((5, 16)) * 255).astype(np.uint8)
+    baixa = np.asarray(Image.fromarray(baixa).resize((W, H), Image.BICUBIC), np.float32) / 255.0
+    grad = np.linspace(1.0, 0.0, H, dtype=np.float32)[:, None]
+    v = np.clip(0.5 * baixa + 0.5 * grad, 0, 1)
+    quente, branco = np.array(LETREIRO_QUENTE, np.float32), np.array(LETREIRO_BRANCO, np.float32)
+    mk = np.asarray(m, np.float32)[..., None] / 255.0
+    cor = (quente + (branco - quente) * v[..., None]) * mk
+    q = m.resize((W // 4, H // 4), Image.BILINEAR)
+    s1, s2 = 18 * LETREIRO_SS / 4, 60 * LETREIRO_SS / 4
+    g1 = np.asarray(q.filter(ImageFilter.GaussianBlur(s1)).resize((W, H), Image.BILINEAR), np.float32)[..., None] / 255.0
+    g2 = np.asarray(q.filter(ImageFilter.GaussianBlur(s2)).resize((W, H), Image.BILINEAR), np.float32)[..., None] / 255.0
+    brilho = np.array(LETREIRO_BRILHO, np.float32) * (0.55 * g1 + 0.30 * g2)
+    cor = 255 - (255 - cor) * (1 - brilho / 255.0)
+    return Image.fromarray(np.clip(cor, 0, 255).astype(np.uint8), "RGB")
+
+
+def letreiro(linhas, tamanho, espaco, semente=7, entrelinha=1.45):
+    return _colorir_letreiro(_mascara_letreiro(linhas, tamanho, espaco, entrelinha), semente)
+
+
+def _linhas_curtas(texto):
+    f = ImageFont.truetype(FONTE_TEXTO, LETREIRO_CURTO_TAMANHO)
+    passo = LETREIRO_ESPACO * LETREIRO_CURTO_TAMANHO
+
+    def largura(ln):
+        return sum(f.getlength(c) for c in ln) + passo * (len(ln) - 1)
+    linhas, atual = [], ""
+    for p in texto.upper().split():
+        tenta = (atual + " " + p).strip()
+        if atual and largura(tenta) > L - 360:
+            linhas.append(atual)
+            atual = p
+        else:
+            atual = tenta
+    return linhas + ([atual] if atual else [])
+
+
+def letreiro_do_cartao(texto):
+    """O letreiro de um cartao com texto: curto (ate 3 palavras) espacado, frase como a de sempre."""
+    semente = 7 + sum(ord(c) for c in texto) % 97
+    if len(texto.split()) <= LETREIRO_CURTO_PALAVRAS:
+        return letreiro(_linhas_curtas(texto), LETREIRO_CURTO_TAMANHO, LETREIRO_ESPACO, semente)
+    d = ImageDraw.Draw(Image.new("RGB", (8, 8)))
+    tamanho = 78
+    fonte = ImageFont.truetype(FONTE_TEXTO, tamanho)
+    linhas = quebrar_paragrafos(texto, fonte, L - 360, d)
+    while len(linhas) > 4 and tamanho > 44:
+        tamanho -= 6
+        fonte = ImageFont.truetype(FONTE_TEXTO, tamanho)
+        linhas = quebrar_paragrafos(texto, fonte, L - 360, d)
+    return letreiro(linhas, tamanho, 0.0, semente, entrelinha=1.4)
+
+
+def pousar_letreiro(let, t_rel):
+    """O letreiro no quadro, a aproximar-se devagar. A escala e fracionaria e a amostragem e bicubica
+    sobre preto (o letreiro tem borda a zero), por isso nao ha borda que pisque."""
+    k = (1.0 + LETREIRO_EMPURRA * max(0.0, t_rel)) / LETREIRO_SS
+    W, H = let.size
+    return let.transform((L, A), Image.AFFINE, (1 / k, 0, W / 2 - (L / 2) / k, 0, 1 / k, H / 2 - (A / 2) / k),
+                         resample=Image.BICUBIC, fillcolor=(0, 0, 0))
+
+
+def _suave(x):
+    x = max(0.0, min(1.0, x))
+    return x * x * (3 - 2 * x)
+
+
+def desenhar_letreiro(let, t_rel, entra):
+    """O letreiro a acender do preto em `entra` s e a aproximar-se devagar."""
+    tela = pousar_letreiro(let, t_rel)
+    alfa = _suave(t_rel / entra) if entra > 0 else 1.0
+    if alfa >= 0.999:
+        return tela
+    return Image.eval(tela, lambda v, a=alfa: int(v * a))
+
+
+# O NOME DO BEBE COMPOE-SE COMO NA PREVIA APROVADA (092, "sim fechamos"), e nao como um encadeado de
+# dois clips. A fita escurece para preto (suave) no encadeado de entrada do nome; a foto sobe do
+# preto (suave) no encadeado dela; e o nome fica POR CIMA dos dois em modo ecra, inteiro ate
+# NOME_APAGA_DEPOIS s depois de a foto comecar a subir, e apaga-se em NOME_APAGA s. Como encadeado
+# normal, o nome comecava a apagar-se no primeiro fotograma da foto e ficava inteiro 0,7 s em vez de
+# 1,1 s (revisores, 30 de setembro).
+NOME_APAGA_DEPOIS = 0.4
+NOME_APAGA = 0.6
+
+
+def compor_nome(camadas, nome, t):
+    """O fotograma quando um clip "nome" esta ativo. camadas: [(clip, imagem)] dos clips ativos."""
+    from PIL import ImageChops
+    ini = float(nome["inicio_s"])
+    dt = t - ini
+    antes = [(c, im) for c, im in camadas if c is not nome and float(c["inicio_s"]) < ini]
+    depois = [(c, im) for c, im in camadas if c is not nome and float(c["inicio_s"]) > ini]
+    preto = Image.new("RGB", (L, A), (0, 0, 0))
+    if depois:
+        c_foto, im_foto = depois[-1]
+        u = t - float(c_foto["inicio_s"])
+        fundo = Image.blend(preto, im_foto.convert("RGB"), _suave(u / (float(c_foto["transicao_s"]) or 0.01)))
+    elif antes:
+        entra = float(nome["transicao_s"]) or 0.01
+        fundo = Image.blend(antes[-1][1].convert("RGB"), preto, _suave(dt / entra))
+    else:
+        fundo = preto
+    # quando a foto comeca a subir (o fim do nome menos o encadeado dela)
+    foto_sobe = float(nome["duracao_s"]) - (float(depois[-1][0]["transicao_s"]) if depois else NOME_FOTO_SOBE_OMISSAO)
+    if dt < foto_sobe + NOME_APAGA_DEPOIS:
+        alfa = _suave(dt / NOME_ENTRA)
+    else:
+        alfa = 1.0 - _suave((dt - foto_sobe - NOME_APAGA_DEPOIS) / NOME_APAGA)
+    if alfa <= 0.001:
+        return fundo
+    let = pousar_letreiro(nome["_pronto"]["let"], dt)
+    if alfa < 0.999:
+        let = Image.eval(let, lambda v, a=alfa: int(v * a))
+    return ImageChops.screen(fundo, let)
+
+
+NOME_FOTO_SOBE_OMISSAO = 1.0
+
+
 # ---------------------------------------------------------- texto em cada foto
 # O Tiago: "permite colocar o texto nas fotos mesmo as que ficam em leque e assim, tem
 # de ser opcional ter o texto ou nao". Um grupo (lado a lado, colagem, pilha) tinha uma
@@ -1221,7 +1406,21 @@ MOLDURA_COR = (240, 240, 242)     # a do ensaio
 # estao no montar_da_mesa.py e no GRUPOS da Mesa, e o teste_limites_dos_grupos_iguais
 # falha se um dos tres mudar sozinho. A Mesa avisa, sem impedir, a partir de 9 na colagem
 # e de 13 na pilha: a 15 metros cada foto fica pequena de mais.
-LIMITES_MONTE = {"colagem": (2, 12), "pilha": (2, 20)}
+#
+# 28 DE SETEMBRO, decisao 087: a colagem sobe a 20 e a pilha a 40. O Tiago: "sobe o limite
+# para 20 e para a pilha mete tambem o maximo que der, pois a pilha e um registo
+# interessante". Medido antes de subir:
+#   colagem  270 disposicoes de 13 a 20 fotos, filas e espalhada, com e sem legenda: nenhuma
+#            sai do ecra nem pisa miolo, cada foto fica pelo menos 81% a vista; a mais
+#            pequena desce a cerca de 0,8% do ecra, na ordem do pior caso aceite para 12. O
+#            colagem_particoes() so vai ate 24 (4 filas de 6), e por isso 20 tem folga.
+#   pilha    o monte nao parte com nenhum numero; o que trava e o leque, que a partir de
+#            ~20 ocupa a largura toda e encolhe as fotos: a 40 a mais pequena tem 1,15% do
+#            ecra e cada uma fica 23% a vista, a 60 a garantia de PILHA_LEQUE_VE fica por 0,1
+#            ponto e a 80 parte. E a memoria: cada fatia abre as fotos todas em resolucao
+#            total, e uma pilha de 40 fotos de 5 MP pede cerca de 850 MB por processo, 6 GB
+#            com as 7 fatias. O main() avisa quando isso pode acontecer.
+LIMITES_MONTE = {"colagem": (2, 20), "pilha": (2, 40)}
 MONTE_ATRASO = 0.35               # a primeira espera o encadeado, como no lado a lado
 MONTE_FOLGA = 1.4                 # a duracao minima: segundos com todas pousadas, ver duracao_minima_monte()
 MONTE_FRACAO_FIM = 0.3            # so no aperto e na agenda de antes, ver _agenda_de_antes()
@@ -2038,6 +2237,13 @@ PILHA_LEQUE_VE = 0.20             # cada foto de baixo com pelo menos isto da ar
 PILHA_LEQUE_FOLGA = 0.06          # a disposicao procura esta margem a mais, contra o esbatido
 PILHA_LEQUE_SOBES = (0.035, 0.06, 0.09)   # desvios de cima para baixo que se experimentam, fracao de A
 PILHA_LEQUE_ABRE = 90.0 / 1920.0  # entre lugares vizinhos, fracao de L: o que o monte desvia, no minimo
+# O LEQUE SO ATE 24 FOTOS, decisao 087. A pilha vai ate 40, mas so em monte, onde as de baixo
+# ficam tapadas de proposito. No leque cada foto de baixo tem de ficar com PILHA_LEQUE_VE a vista
+# no fim, e desenhado a serio (e nao so pela geometria, que dizia 23% a 40) isso cumpre-se em
+# todas as formas ate 24 e falha a partir de 25 (17,8% com fotos misturadas) e a 40 (16,6%):
+# a moldura de 6 pixeis e o esbatido comem a tira de fora quando as fotos encolhem. Medido a 28
+# de setembro; o montar_da_mesa.py poe em monte um leque com mais do que isto, e diz-lo.
+PILHA_LEQUE_MAX = 24
 
 
 def _no_convexo(px, py, poli):
@@ -3124,7 +3330,13 @@ def preparar(clip, inv_por_nome):
     """
     texto = clip["texto_ecra"]
     if clip["tipo"] == "cartao":
+        # Um cartao vazio continua a ser preto (e o de uma foto que falta, em carregar_montagem).
+        if (texto or "").strip():
+            return {"tipo": "cartao", "let": letreiro_do_cartao(texto.strip()), "capa": None}
         return {"tipo": "cartao", "base": cartao(texto), "capa": None}
+    if clip["tipo"] == "nome":
+        return {"tipo": "nome", "let": letreiro([(texto or "").strip().upper()], NOME_TAMANHO,
+                                                NOME_ESPACO, 7), "capa": None}
     if clip["tipo"] == "contador":
         # DOIS FORMATOS, UM SO TIPO DE CLIP. O de anos, "2026>1995|...", e o de sempre;
         # o de datas, "04/10/2026>25/12/2025|...", e de 17 de setembro, para a abertura
@@ -3156,7 +3368,8 @@ def preparar(clip, inv_por_nome):
     if clip["tipo"] == "marcos":
         ano, marcas, troco, abre = linha_tempo.ler_meses(texto)
         return {"tipo": "marcos", "ano": ano, "marcas": marcas,
-                "troco": troco, "abre": abre}
+                "troco": troco, "abre": abre, "segura": linha_tempo.segura_de(texto),
+                "congela": linha_tempo.congela_de(texto)}
 
     if clip["tipo"] == "video":
         # UM VIDEO DO CORPO DESENHA-SE COMO QUALQUER OUTRO CLIP, e o que ele tem para
@@ -3363,9 +3576,13 @@ def caminho_da_camera(clips):
 def desenhar(pronto, t_rel, duracao):
     """Um fotograma do clip, no instante t_rel."""
     if pronto["tipo"] == "cartao":
+        if pronto.get("let") is not None:
+            return desenhar_letreiro(pronto["let"], t_rel, LETREIRO_ENTRA)
         tela = Image.new("RGB", (L, A), (0, 0, 0))
         tela.paste(pronto["base"], (0, 0))
         return tela
+    if pronto["tipo"] == "nome":
+        return desenhar_letreiro(pronto["let"], t_rel, NOME_ENTRA)
     if pronto["tipo"] == "contador":
         # O modo foi decidido no preparar, e so la: um clip preparado como anos desenha
         # sempre anos, mesmo que as duas datas de onde veio ainda estejam no texto.
@@ -3391,6 +3608,19 @@ def desenhar(pronto, t_rel, duracao):
             tela.paste(cor, (0, 0), mascara)
         return tela
     if pronto["tipo"] == "marcos":
+        # A FITA PARADA NA DATA ACESA, decisao 089: com "~segundos@instante" no texto a fita
+        # anda no tempo de sempre ate ao instante (o meio da paragem do nascimento, palavra
+        # acesa a 100%) e fica nesse fotograma ate ao fim do clip, enquanto os foguetes
+        # acabam; so depois entra a foto do bebe. Sem "@" fica no ultimo fotograma da parte
+        # que anda. Sem paragem nenhuma a conta e a de sempre, ao bit.
+        segura = pronto.get("segura", 0.0)
+        if segura > 0:
+            anda = max(1.0 / FPS, duracao - segura)
+            congela = pronto.get("congela")
+            ate = anda - 1.0 / FPS if congela is None else min(congela, anda - 1.0 / FPS)
+            return linha_tempo.meses(L, A, pronto["ano"], pronto["marcas"],
+                                     min(t_rel, ate), anda, pronto["troco"],
+                                     pronto.get("abre", True))
         return linha_tempo.meses(L, A, pronto["ano"], pronto["marcas"],
                                  t_rel, duracao, pronto["troco"],
                                  pronto.get("abre", True))
@@ -3545,6 +3775,21 @@ def som_do_ficheiro(nome, fim_corpo):
         return None
     with open(caminho, encoding="utf-8-sig", newline="") as fh:
         linhas = list(csv.DictReader(fh))
+
+    # A DURACAO QUE CADA FAIXA TEM NO FILME INTEIRO, com o cruzamento que la leva, para a
+    # medida do nivel (falta_ao_loudnorm, decisao 087). Um render parcial corta as faixas no
+    # --ate, e a medida sobre o bocado cortado dava outro ganho: um parcial ate aos 80 s tocava
+    # o Rei Leao 2 dB abaixo do que o filme vai ter (revisores, 28 de setembro). Com a medida
+    # sobre a faixa inteira, o parcial soa como o filme; no filme inteiro nada muda.
+    def fala(r):
+        return bool((r.get("voz") or "").strip()) or bool((r.get("video") or "").strip())
+    no_filme = {}
+    for r in linhas:
+        fim_r = float(r["quando_s"]) + float(r["dura_s"])
+        cruza = (not fala(r)) and any(
+            x is not r and not fala(x) and abs(float(x["quando_s"]) - fim_r) < 0.35 for x in linhas)
+        no_filme[id(r)] = float(r["dura_s"]) + (CRUZAMENTO if cruza else 0.0)
+
     entradas = []
     for r in linhas:
         quando = float(r["quando_s"])
@@ -3552,12 +3797,25 @@ def som_do_ficheiro(nome, fim_corpo):
         if dura <= 0.4:
             continue
         entradas.append({"ficheiro": r["ficheiro"], "caminho": r["caminho"],
+                         "dura_medida": no_filme[id(r)],
                          "quando": quando, "in_s": float(r["in_s"] or 0),
                          "dura": dura, "ganho": float(r.get("ganho") or 1.0),
                          "encontrado": "Sim", "cruza": 0.0,
                          "voz": bool((r.get("voz") or "").strip()),
                          "video": bool((r.get("video") or "").strip()),
                          "abafar": ler_abafar(r.get("abafar"))})
+        # AS COLUNAS DA 094 E DA 096, que o montar_da_mesa.py so escreve quando ha o que dizer:
+        # a subida desta faixa, e o fim de frase (sai_s, em segundos do ficheiro) com a cauda.
+        for coluna in ("subida", "sai_s", "cauda"):
+            valor = str(r.get(coluna) or "").strip()
+            if valor:
+                # Uma celula mal escrita nao pode matar o render ao fim de meia hora: o som so se
+                # constroi depois de os fotogramas todos estarem desenhados. Ignora-se essa coluna.
+                try:
+                    entradas[-1]["_" + coluna] = float(valor.replace(",", "."))
+                except ValueError:
+                    print("  AVISO: %s, coluna %s com %r, que nao e um numero: fica de fora"
+                          % (r["ficheiro"][:40], coluna, valor))
 
     # CRUZAR EM VEZ DE ENCOSTAR.
     #
@@ -3586,7 +3844,99 @@ def som_do_ficheiro(nome, fim_corpo):
             extra = min(CRUZAMENTO, max(0.0, fim_corpo - (e["quando"] + e["dura"])))
             e["dura"] += extra
             e["cruza"] = extra
+    subidas_e_descidas(pela_hora, fim_corpo)
     return entradas
+
+
+# A MUSICA QUE SAI ACABA NO FIM DA FRASE, decisao 096. Ate 29 de setembro a que saia descia sempre
+# CRUZAMENTO segundos a partir do corte, estivesse onde estivesse, e quase sempre apanhava o comeco
+# da frase seguinte: duas vozes ao mesmo tempo, ou uma linha nova a morrer por baixo da outra
+# musica. O Tiago: "nota-se cortes e arranques de outras". Cada troca foi medida (um agente analisa,
+# outro verifica) e o fim de frase ficou em data/fins_de_frase.csv; o montar poe-no na faixa que sai
+# (sai_s e cauda) quando a musica chega ao corte no mesmo sitio do ficheiro, e avisa quando nao.
+#
+# E A SUBIDA E A DESCIDA DE CADA FAIXA, decisao 094. A que entra num inicio (in no zero, ou quase
+# silencio antes e som logo a seguir) ou num ataque (o montar escreve a subida, 095 e 097) entra sem
+# rampa; a que entra a meio e cruza com a que sai sobe no mesmo tempo em que a outra desce; as curvas
+# sao de potencia igual (afade curve=qsin), sem o vale a meio que as rectas davam. Os efeitos, as
+# vozes e o som dos videos ficam como estavam.
+SUBIDA_NUM_INICIO = 0.03
+EFEITOS_SOM = ("Candidato a vereador", "rebobinar")
+
+
+def _nivel_dbfs(caminho, a, b):
+    if b <= a or not caminho or not os.path.exists(caminho):
+        return None
+    try:
+        r = subprocess.run([ffmpeg(), "-v", "error", "-ss", "%.3f" % max(0.0, a), "-t", "%.3f" % (b - max(0.0, a)),
+                            "-i", caminho, "-ac", "1", "-ar", "16000", "-f", "s16le", "-"],
+                           capture_output=True)
+    except OSError:
+        return None
+    n = len(r.stdout) // 2
+    if not n:
+        return None
+    import struct
+    amostras = struct.unpack("<%dh" % n, r.stdout[:2 * n])
+    rms = math.sqrt(sum(x * x for x in amostras) / n) / 32768.0
+    return 20 * math.log10(max(1e-6, rms))
+
+
+def entra_num_inicio(e):
+    """In no zero, ou quase silencio nos 0,4 s antes do in e som logo a seguir (decisao 094)."""
+    if e["in_s"] < 0.05:
+        return True
+    antes = _nivel_dbfs(e.get("caminho"), e["in_s"] - 0.4, e["in_s"])
+    depois = _nivel_dbfs(e.get("caminho"), e["in_s"], e["in_s"] + 0.4)
+    return antes is not None and depois is not None and antes < -40 and depois - antes > 15
+
+
+def e_efeito_de_som(e):
+    return e["ficheiro"].startswith(EFEITOS_SOM)
+
+
+# UM FIM DE FRASE LONGE DO CORTE E UM ERRO DE ESCRITA, e nao uma frase: os da 096 ficam todos entre
+# 1,3 s antes e 1,1 s depois do corte. Um sai_s de 4,755 em vez de 47,55 calava o Rei Leao ao fim de
+# 0,5 s e deixava o bloco dele mudo, sem aviso (revisores, 30 de setembro).
+TOLERANCIA_FIM_DE_FRASE = 3.0
+
+
+def subidas_e_descidas(pela_hora, fim_corpo):
+    """Poe em cada faixa de musica a curva, a subida e, com fim de frase, a descida (094, 096)."""
+    leitos = [e for e in pela_hora if not entra_depressa(e) and not e_efeito_de_som(e)]
+    # AS SUBIDAS PRIMEIRO, com os cruzamentos de sempre: a de uma faixa que entra a meio e cruza e o
+    # tempo em que a outra desce (094).
+    for e in leitos:
+        e["curva"] = "qsin"
+        if "_subida" in e:
+            e["subida"] = e["_subida"]
+        elif entra_num_inicio(e):
+            e["subida"] = SUBIDA_NUM_INICIO
+        else:
+            anterior = [x for x in leitos if x is not e and x.get("cruza")
+                        and abs((x["quando"] + x["dura"] - x["cruza"]) - e["quando"]) < 0.35]
+            if anterior:
+                e["subida"] = anterior[0]["cruza"]
+    # DEPOIS O FIM DE FRASE (096): muda o fim da faixa e a descida, e ela deixa de cruzar. Se acabar
+    # no corte ou antes, a que entra sobe no tempo da cauda, salvo se o montar escreveu outra subida.
+    for i, e in enumerate(leitos):
+        if "_sai_s" not in e:
+            continue
+        cauda = e.get("_cauda", 0.8)
+        no_corte = e["in_s"] + e["dura"] - e["cruza"]
+        corte_t = e["quando"] + e["dura"] - e["cruza"]
+        if not (e["in_s"] < e["_sai_s"] and abs(e["_sai_s"] - no_corte) <= TOLERANCIA_FIM_DE_FRASE):
+            print("  AVISO: %s com fim de frase aos %.2f s do ficheiro, e chega ao corte aos %.2f: "
+                  "longe de mais, fica a descer no corte" % (e["ficheiro"][:40], e["_sai_s"], no_corte))
+            continue
+        e["dura"] = max(0.5, min(e["_sai_s"] - e["in_s"] + cauda, fim_corpo - e["quando"]))
+        # O loudnorm mede o troco que toca, e nao o de antes (087).
+        e["dura_medida"] = max(0.5, e["_sai_s"] - e["in_s"] + cauda)
+        e["descida"] = cauda
+        seguinte = next((x for x in leitos if x is not e and abs(x["quando"] - corte_t) < 0.35), None)
+        if seguinte is not None and "_subida" not in seguinte and e["_sai_s"] <= no_corte + 0.05:
+            seguinte["subida"] = cauda
+        e["cruza"] = 0.0
 
 
 def musica_reancorada(clips, desvio, fim_corpo):
@@ -3766,6 +4116,57 @@ def tem_stream_de_som(caminho):
     return tem
 
 
+# O NIVEL DE CADA LEITO NO FILME, decisao 087.
+#
+# O loudnorm de uma passagem guarda tres segundos de antecipacao e decide o ganho com eles.
+# Uma musica que ARRANCA muito mais alto do que o resto do troco fica toda em baixo: medido a
+# 28 de setembro, o Rei Leao (arranque +6,0 dB acima do troco) saia a -25,4 LUFS no filme, a
+# retoma do Lang Lang (+3,4) a -25,2 e a Fome de Viagem (+5,6) a -25,0, contra os -21,9 do
+# resto. Nao e o alcance dinamico: a Mariah tem LRA 13,2 e sai certa. Com projecao e as colunas
+# do DJ um volume serve o filme inteiro, e 3,5 dB a menos num bloco inteiro ouve-se.
+#
+# O loudnorm fica como esta, e e por isso que os leitos certos nao mudam um bit. Mede-se a
+# saida dele NESTE troco (mesmo in, mesma duracao) e, se estiver a mais de TOLERANCIA_LEITO_DB
+# do alvo, multiplica-se o ganho da faixa pela diferenca. O ganho da montagem continua a
+# significar o mesmo por cima: os foguetes a 2,0 ficam o dobro do leito. O alvo a saida do
+# loudnorm e -21,9 menos o +0,54 dB que o alimiter da mistura acrescenta (1/0,94).
+# Duas passagens com linear=true foram medidas e rejeitadas: acertavam nos tres mas mudavam
+# a Mariah, a Clara e os Queen, que estavam certos.
+NORMA_LEITO = "loudnorm=I=-23:TP=-2:LRA=11"
+LEITO_NO_FILME_LUFS = -21.9
+LEITO_SAIDA_LUFS = LEITO_NO_FILME_LUFS - 20 * math.log10(1 / 0.94)
+TOLERANCIA_LEITO_DB = 1.0
+_FALTA_LOUDNORM = {}
+
+
+def falta_ao_loudnorm(ff, e):
+    """dB que faltam a saida do loudnorm DESTE troco para LEITO_SAIDA_LUFS; 0.0 sem medida.
+
+    Uma medida que falha nao para o render: fica o ganho de sempre. Guardado por ficheiro,
+    tamanho, data, entrada e duracao, porque as fatias e o render inteiro pedem o mesmo.
+    """
+    dura = e.get("dura_medida") or e["dura"]
+    chave = (e["caminho"], os.path.getsize(e["caminho"]), os.path.getmtime(e["caminho"]),
+             round(e["in_s"], 3), round(dura, 3))
+    if chave in _FALTA_LOUDNORM:
+        return _FALTA_LOUDNORM[chave]
+    falta = 0.0
+    try:
+        r = subprocess.run(
+            [ff, "-hide_banner", "-nostats", "-ss", "%.3f" % e["in_s"], "-t", "%.3f" % dura,
+             "-i", e["caminho"], "-map", "0:a:0", "-af",
+             "aformat=sample_fmts=fltp:sample_rates=48000:channel_layouts=stereo,%s,"
+             "ebur128=framelog=quiet" % NORMA_LEITO, "-f", "null", "-"],
+            capture_output=True, text=True, encoding="utf-8", errors="replace")
+        achado = re.findall(r"^\s*I:\s+(-?[\d.]+) LUFS", r.stderr or "", re.M)
+        if achado and float(achado[-1]) > -70.0:
+            falta = LEITO_SAIDA_LUFS - float(achado[-1])
+    except Exception:
+        falta = 0.0
+    _FALTA_LOUDNORM[chave] = falta
+    return falta
+
+
 def construir_som(ff, entradas, duracao_total, saida, fade_fim=0.0):
     usaveis = [e for e in entradas if e["encontrado"] != "Nao"
                and e["caminho"] and os.path.exists(e["caminho"]) and e["dura"] > 0.4]
@@ -3797,8 +4198,8 @@ def construir_som(ff, entradas, duracao_total, saida, fade_fim=0.0):
         # cheio quando ja estava a acabar. Trinta milissegundos chegam para nao dar
         # estalo no corte e nao comem nada da frase.
         voz = entra_depressa(e)
-        descida = VOZ_FADE if voz else max(1.0, e.get("cruza", 0.0))
-        subida = VOZ_FADE if voz else (1.0 if e["quando"] > 0.05 else 0.4)
+        descida = e.get("descida") or (VOZ_FADE if voz else max(1.0, e.get("cruza", 0.0)))
+        subida = e.get("subida") or (VOZ_FADE if voz else (1.0 if e["quando"] > 0.05 else 0.4))
         # IGUALAR O VOLUME PERCEBIDO, e nao o volume do ficheiro.
         #
         # Medido no primeiro render da v3: o Lang Lang ficava a -35 dB e os
@@ -3815,7 +4216,15 @@ def construir_som(ff, entradas, duracao_total, saida, fade_fim=0.0):
         # sozinha punha uma frase sussurrada ao mesmo nivel de uma dita em voz alta, e o
         # que se perdia era a gravacao. O ganho delas ja vem medido sobre as pecas
         # JUNTAS, do montar_da_mesa.py, e e o mesmo em todas as vozes do mesmo clip.
-        norma = "" if voz else "loudnorm=I=-23:TP=-2:LRA=11,"
+        norma = "" if voz else NORMA_LEITO + ","
+        # E O LOUDNORM DE UMA PASSAGEM NEM SEMPRE ACERTA, decisao 087: mede-se o que ele fez
+        # a este troco e acerta-se o ganho, ver falta_ao_loudnorm().
+        if not voz:
+            falta = falta_ao_loudnorm(ff, e)
+            if abs(falta) > TOLERANCIA_LEITO_DB:
+                print("  %s: o loudnorm deixou-a a %+.1f dB do alvo, corrijo o ganho"
+                      % (e["ficheiro"][:40], -falta))
+                e = dict(e, ganho=round(e.get("ganho", 1.0) * 10 ** (falta / 20.0), 3))
         # O LOUDNORM CEGA O RELOGIO DO `volume` NOS ULTIMOS TRES SEGUNDOS DA FAIXA.
         #
         # Ele guarda tres segundos de antecipacao e no fim despeja-os de uma vez, num so
@@ -3834,9 +4243,10 @@ def construir_som(ff, entradas, duracao_total, saida, fade_fim=0.0):
         filtros.append(
             "[%d:a]aformat=sample_fmts=fltp:sample_rates=48000:channel_layouts=stereo,"
             "%s"
-            "afade=t=in:st=0:d=%.2f,afade=t=out:st=%.3f:d=%.2f,"
+            "afade=t=in:st=0:d=%.2f:curve=%s,afade=t=out:st=%.3f:d=%.2f:curve=%s,"
             "%s,adelay=%d|%d[a%d]"
-            % (i, norma, subida, max(0.0, e["dura"] - descida), descida,
+            % (i, norma, subida, e.get("curva", "tri"), max(0.0, e["dura"] - descida), descida,
+               e.get("curva", "tri"),
                volume_da_faixa(e),
                int(e["quando"] * 1000), int(e["quando"] * 1000), i))
         etiquetas.append("[a%d]" % i)
@@ -4141,7 +4551,12 @@ def fotograma(q, estado):
         ini, dur = float(c["inicio_s"]), float(c["duracao_s"])
         camadas.append((c, desenhar(prontos[k], t - ini, dur)))
 
-    if len(camadas) == 1:
+    nomes = [c for c, _im in camadas if c["tipo"] == "nome"]
+    if nomes:
+        nome = dict(nomes[0], _pronto=prontos[nomes[0]["ordem"]])
+        camadas = [(nome if c is nomes[0] else c, im) for c, im in camadas]
+        quadro = compor_nome(camadas, nome, t)
+    elif len(camadas) == 1:
         quadro = camadas[0][1]
     else:
         c2, img2 = camadas[-1]
@@ -4359,6 +4774,12 @@ def main():
         fatia = ler_fatia(sys.argv[sys.argv.index("--fatia") + 1])
         canal = canal_da_fatia()
     sem_som = "--sem-som" in sys.argv
+    # SO A COPIA DO TELEMOVEL, ate o Tiago dizer que e a versao final (27 de setembro): "ate eu
+    # dizer que esta e a versao final e que quero fazer um de alta qualidade a versao do
+    # telemovel e suficiente". Salta a copia leve, que eram 10 dos cerca de 57 minutos do render
+    # de 23 de setembro, e faz a do telemovel direto do ficheiro final. O ficheiro final sai na
+    # mesma: e ele que o desenho dos fotogramas produz, e e dele que a copia do telemovel sai.
+    so_telemovel = "--so-telemovel" in sys.argv
     fatias = fatias_pedidas(sys.argv)
     ate = None
     if "--ate" in sys.argv:
@@ -4382,6 +4803,18 @@ def main():
     if fatia is not None:
         correr_fatia(estado, fatia[0], fatia[1], canal)
         return
+
+    # UMA PILHA GRANDE PEDE MEMORIA EM CADA FATIA (decisao 087). O preparar() abre as fotos
+    # todas do clip em resolucao total, e as fatias preparam o mesmo clip ao mesmo tempo:
+    # uma pilha de 40 fotos de 5 MP pede cerca de 850 MB por processo, 6 GB com 7 fatias. Uma
+    # fatia que morre por falta de memoria para o render inteiro a meio. Diz-se antes de
+    # comecar, com o remedio, e nao se muda nada sozinho.
+    maior = max([len(c.get("_caminhos") or []) for c in estado["clips"]
+                 if c.get("tipo") in LIMITES_MONTE] or [0])
+    if maior > 20 and fatias > 4:
+        print("  ATENCAO: ha um grupo com %d fotos. Com %d fatias o pico de memoria pode "
+              "passar dos %.0f GB; se a maquina tiver pouca livre, corre com --fatias 4."
+              % (maior, fatias, 0.021 * maior * fatias))
 
     if estado["sem_indice"]:
         sem_indice = estado["sem_indice"]
@@ -4508,7 +4941,7 @@ def main():
     # A copia leve, a que vai para o telemovel, passa a sair sempre com o render
     # e com o mesmo nome. Antes era feita a mao, e a mao esquece-se.
     leve = ""
-    if os.path.exists(final) and not parcial:
+    if os.path.exists(final) and not parcial and not so_telemovel:
         leve = final[:-4] + "_leve.mp4"
         r = subprocess.run([ff, "-hide_banner", "-loglevel", "error", "-y",
                             "-i", final, "-vf", "scale=1280:720:flags=lanczos",
@@ -4523,18 +4956,52 @@ def main():
     # telemovel, e o envio para la tem um limite de 30 MB. A copia leve de um filme
     # de 6:30 ja tem 41 MB e nao chegava. Quando a leve passa dos 29 MB, sai tambem
     # uma copia a 960x540, apertada ate caber.
-    if leve and os.path.exists(leve) and os.path.getsize(leve) > 29 * 1048576:
+    if ((so_telemovel and os.path.exists(final) and not parcial)
+            or (leve and os.path.exists(leve) and os.path.getsize(leve) > 29 * 1048576)):
         movel = final[:-4] + "_telemovel.mp4"
-        for crf in (28, 31, 34):
-            subprocess.run([ff, "-hide_banner", "-loglevel", "error", "-y",
-                            "-i", final, "-vf", "scale=960:540:flags=lanczos",
-                            "-c:v", "libx264", "-preset", "slow", "-crf", str(crf),
-                            "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "96k",
-                            movel], capture_output=True, text=True)
-            if os.path.exists(movel) and os.path.getsize(movel) <= 29 * 1048576:
-                break
+        # POR TAMANHO ALVO, E NAO POR TENTATIVA. Isto era uma escada de qualidade, crf 28, 31
+        # e 34, que parava na primeira que coubesse. A 23 de setembro, com o filme a 14:28,
+        # nenhuma das tres coube, a escada acabou, e imprimia-se na mesma "Telemovel ... (31,7
+        # MB)" como se estivesse feito: um ficheiro que nao cabe no envio nao serve para nada
+        # e ninguem era avisado. Agora o debito sai da duracao e o encode e em duas passagens,
+        # que e o modo em que o x264 acerta no tamanho pedido: cabe sempre, e o que varia e a
+        # nitidez, que e o que pode variar numa copia de revisao.
+        alvo = 28 * 1048576
+        som_kbps = 96
+        # A DURACAO DO FICHEIRO FINAL, com os videos de abertura, e nao so a do corpo: com o
+        # `fim` do corpo o debito saia 4% alto de mais e a copia passava os 29 MB (revisores, 28
+        # de setembro). Mede-se o ficheiro, como o registar_render() faz.
+        dur_final = fim
+        try:
+            dur_final = float(subprocess.run(
+                [os.path.join(os.path.dirname(ff), "ffprobe.exe"), "-v", "error",
+                 "-show_entries", "format=duration", "-of", "default=nw=1:nk=1", final],
+                capture_output=True, text=True).stdout.strip()) or fim
+        except (ValueError, OSError):
+            dur_final = fim
+        video_kbps = int(alvo * 8 / max(0.1, dur_final) / 1000.0) - som_kbps
+        passlog = os.path.join(SAIDA, "_passlog_%s" % nome)
+        comum = [ff, "-hide_banner", "-loglevel", "error", "-y", "-i", final,
+                 "-vf", "scale=960:540:flags=lanczos", "-c:v", "libx264",
+                 "-preset", "medium", "-b:v", "%dk" % max(80, video_kbps),
+                 "-pix_fmt", "yuv420p", "-passlogfile", passlog]
+        p1 = subprocess.run(comum + ["-pass", "1", "-an", "-f", "mp4", os.devnull],
+                            capture_output=True, text=True)
+        if p1.returncode == 0:
+            subprocess.run(comum + ["-pass", "2", "-c:a", "aac", "-b:a", "%dk" % som_kbps,
+                                    movel], capture_output=True, text=True)
+        # NAO chamar "resto" a isto: e a lista dos clips do corpo, e o registar_render() la em
+        # baixo conta-a; com o nome reutilizado o renders.csv registava 57 clips em vez de 225.
+        for sobra in (passlog + "-0.log", passlog + "-0.log.mbtree"):
+            if os.path.exists(sobra):
+                os.remove(sobra)
         if os.path.exists(movel):
-            print("Telemovel: %s  (%.1f MB)" % (movel, os.path.getsize(movel) / 1048576.0))
+            mb = os.path.getsize(movel) / 1048576.0
+            print("Telemovel: %s  (%.1f MB, video a %d kbps)" % (movel, mb, max(80, video_kbps)))
+            if mb > 29:
+                print("  ATENCAO: passa dos 29 MB e nao cabe no envio. Manda so um troco.")
+        else:
+            print("  NAO CONSEGUI FAZER A COPIA PARA O TELEMOVEL.")
 
     if os.path.exists(final):
         registar_render(nome, final, leve, parcial, len(resto) + len(fanfarra))

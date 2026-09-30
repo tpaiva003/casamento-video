@@ -1,0 +1,1317 @@
+[
+ {
+  "clip": 13,
+  "t": 112.01,
+  "id": "f0103",
+  "ficheiro": "21-46.jpg",
+  "agora": "IA",
+  "proposta": "lanczos",
+  "muda": true,
+  "motivo": "cara fiel e pixeis que chegam",
+  "zoom": 1.12,
+  "cara_agora": 0.7916768663456241,
+  "cara_proposta": 0.9017183062772857,
+  "ampliacao_proposta": 0.9739130434782609,
+  "alternativas": [
+   {
+    "versao": "original",
+    "caminho": "C:\\casamento-video-media\\trabalho\\00-ORIGINAL-MAE\\wetransfer_fotos_2026-09-10_1110\\21-46.jpg",
+    "cara": 1.0,
+    "ssim": 1.0,
+    "px": "533x720",
+    "ampliacao": 1.6800000000000002,
+    "desvio": 0.0
+   },
+   {
+    "versao": "lanczos",
+    "caminho": "C:\\casamento-video-media\\upscaled\\f0103__21-46.jpg",
+    "cara": 0.9017183062772857,
+    "ssim": 0.9924176291329014,
+    "px": "920x1242",
+    "ampliacao": 0.9739130434782609,
+    "desvio": 0.09828169372271434
+   },
+   {
+    "versao": "IA",
+    "caminho": "C:\\casamento-video-media\\upscaled-ia\\f0103__21-46.jpg",
+    "cara": 0.7916768663456241,
+    "ssim": 0.9565841462871805,
+    "px": "919x1242",
+    "ampliacao": 0.9739130434782609,
+    "desvio": 0.20832313365437594
+   }
+  ]
+ },
+ {
+  "clip": 14,
+  "t": 115.31,
+  "id": "f0153",
+  "ficheiro": "21-49.jpg",
+  "agora": "IA",
+  "proposta": "lanczos",
+  "muda": true,
+  "motivo": "cara fiel e pixeis que chegam",
+  "zoom": 1.12,
+  "cara_agora": 0.715847636164217,
+  "cara_proposta": 0.8785848138414842,
+  "ampliacao_proposta": 0.9739130434782609,
+  "alternativas": [
+   {
+    "versao": "original",
+    "caminho": "C:\\casamento-video-media\\trabalho\\00-ORIGINAL-MAE\\wetransfer_fotos_2026-09-10_1110\\21-49.jpg",
+    "cara": 1.0,
+    "ssim": 1.0,
+    "px": "1248x818",
+    "ampliacao": 1.4787286063569685,
+    "desvio": 0.0
+   },
+   {
+    "versao": "lanczos",
+    "caminho": "C:\\casamento-video-media\\upscaled\\f0153__21-49.jpg",
+    "cara": 0.8785848138414842,
+    "ssim": 0.9900472636113264,
+    "px": "1894x1242",
+    "ampliacao": 0.9739130434782609,
+    "desvio": 0.12141518615851576
+   },
+   {
+    "versao": "IA",
+    "caminho": "C:\\casamento-video-media\\upscaled-ia\\f0153__21-49.jpg",
+    "cara": 0.715847636164217,
+    "ssim": 0.9585031482033818,
+    "px": "1895x1242",
+    "ampliacao": 0.9739130434782609,
+    "desvio": 0.284152363835783
+   }
+  ]
+ },
+ {
+  "clip": 17,
+  "t": 125.21,
+  "id": "f0105",
+  "ficheiro": "21-48.jpg",
+  "agora": "IA",
+  "proposta": "lanczos",
+  "muda": true,
+  "motivo": "cara fiel e pixeis que chegam",
+  "zoom": 1.12,
+  "cara_agora": 0.3728922821198047,
+  "cara_proposta": 0.8017009081770097,
+  "ampliacao_proposta": 0.9739130434782609,
+  "alternativas": [
+   {
+    "versao": "original",
+    "caminho": "C:\\casamento-video-media\\trabalho\\00-ORIGINAL-MAE\\wetransfer_fotos_2026-09-10_1110\\21-48.jpg",
+    "cara": 1.0,
+    "ssim": 1.0,
+    "px": "698x578",
+    "ampliacao": 2.092733564013841,
+    "desvio": 0.0
+   },
+   {
+    "versao": "lanczos",
+    "caminho": "C:\\casamento-video-media\\upscaled\\f0105__21-48.jpg",
+    "cara": 0.8017009081770097,
+    "ssim": 0.9844745391490344,
+    "px": "1500x1242",
+    "ampliacao": 0.9739130434782609,
+    "desvio": 0.19829909182299033
+   },
+   {
+    "versao": "IA",
+    "caminho": "C:\\casamento-video-media\\upscaled-ia\\f0105__21-48.jpg",
+    "cara": 0.3728922821198047,
+    "ssim": 0.810381279365858,
+    "px": "1500x1242",
+    "ampliacao": 0.9739130434782609,
+    "desvio": 0.6271077178801954
+   }
+  ]
+ },
+ {
+  "clip": 18,
+  "t": 128.51,
+  "id": "f0115",
+  "ficheiro": "21-49-2.jpg",
+  "agora": "IA",
+  "proposta": "lanczos",
+  "muda": true,
+  "motivo": "cara fiel e pixeis que chegam",
+  "zoom": 1.12,
+  "cara_agora": 0.32791769362600853,
+  "cara_proposta": 0.8076811732107636,
+  "ampliacao_proposta": 0.9739130434782609,
+  "alternativas": [
+   {
+    "versao": "original",
+    "caminho": "C:\\casamento-video-media\\trabalho\\00-ORIGINAL-MAE\\wetransfer_fotos_2026-09-10_1110\\21-49-2.jpg",
+    "cara": 1.0,
+    "ssim": 1.0,
+    "px": "638x826",
+    "ampliacao": 1.4644067796610172,
+    "desvio": 0.0
+   },
+   {
+    "versao": "lanczos",
+    "caminho": "C:\\casamento-video-media\\upscaled\\f0115__21-49-2.jpg",
+    "cara": 0.8076811732107636,
+    "ssim": 0.9851473067970868,
+    "px": "960x1242",
+    "ampliacao": 0.9739130434782609,
+    "desvio": 0.1923188267892364
+   },
+   {
+    "versao": "IA",
+    "caminho": "C:\\casamento-video-media\\upscaled-ia\\f0115__21-49-2.jpg",
+    "cara": 0.32791769362600853,
+    "ssim": 0.9137614820186651,
+    "px": "959x1242",
+    "ampliacao": 0.9739130434782609,
+    "desvio": 0.6720823063739915
+   }
+  ]
+ },
+ {
+  "clip": 19,
+  "t": 131.81,
+  "id": "f0125",
+  "ficheiro": "21-49-3.jpg",
+  "agora": "IA",
+  "proposta": "lanczos",
+  "muda": true,
+  "motivo": "cara fiel e pixeis que chegam",
+  "zoom": 1.12,
+  "cara_agora": 0.34245006245828874,
+  "cara_proposta": 0.8176450682817252,
+  "ampliacao_proposta": 0.8739884393063585,
+  "alternativas": [
+   {
+    "versao": "original",
+    "caminho": "C:\\casamento-video-media\\trabalho\\00-ORIGINAL-MAE\\wetransfer_fotos_2026-09-10_1110\\21-49-3.jpg",
+    "cara": 1.0,
+    "ssim": 1.0,
+    "px": "1192x747",
+    "ampliacao": 1.6192771084337352,
+    "desvio": 0.0
+   },
+   {
+    "versao": "lanczos",
+    "caminho": "C:\\casamento-video-media\\upscaled\\f0125__21-49-3.jpg",
+    "cara": 0.8176450682817252,
+    "ssim": 0.9851464655183875,
+    "px": "2208x1384",
+    "ampliacao": 0.8739884393063585,
+    "desvio": 0.18235493171827477
+   },
+   {
+    "versao": "IA",
+    "caminho": "C:\\casamento-video-media\\upscaled-ia\\f0125__21-49-3.jpg",
+    "cara": 0.34245006245828874,
+    "ssim": 0.7940678688937047,
+    "px": "2208x1384",
+    "ampliacao": 0.8739884393063585,
+    "desvio": 0.6575499375417113
+   }
+  ]
+ },
+ {
+  "clip": 22,
+  "t": 141.71,
+  "id": "f0134",
+  "ficheiro": "21-49-4.jpg",
+  "agora": "IA",
+  "proposta": "IA",
+  "muda": false,
+  "motivo": "a alternativa nao melhora o suficiente",
+  "zoom": 1.12,
+  "cara_agora": 1.0,
+  "cara_proposta": 1.0,
+  "ampliacao_proposta": 1.5673469387755103,
+  "alternativas": [
+   {
+    "versao": "original",
+    "caminho": "C:\\casamento-video-media\\trabalho\\00-ORIGINAL-MAE\\wetransfer_fotos_2026-09-10_1110\\21-49-4.jpg",
+    "cara": 1.0,
+    "ssim": 1.0,
+    "px": "612x554",
+    "ampliacao": 3.513725490196079,
+    "desvio": 0.0
+   },
+   {
+    "versao": "lanczos",
+    "caminho": "C:\\casamento-video-media\\upscaled\\f0134__21-49-4.jpg",
+    "cara": 1.0,
+    "ssim": 1.0,
+    "px": "1372x1242",
+    "ampliacao": 1.5673469387755103,
+    "desvio": 0.0
+   },
+   {
+    "versao": "IA",
+    "caminho": "C:\\casamento-video-media\\upscaled-ia\\f0134__21-49-4.jpg",
+    "cara": 1.0,
+    "ssim": 1.0,
+    "px": "1372x1242",
+    "ampliacao": 1.5673469387755103,
+    "desvio": 0.0
+   }
+  ]
+ },
+ {
+  "clip": 23,
+  "t": 145.01,
+  "id": "f0106",
+  "ficheiro": "21-49-10.jpg",
+  "agora": "IA",
+  "proposta": "lanczos",
+  "muda": true,
+  "motivo": "cara fiel e pixeis que chegam",
+  "zoom": 1.12,
+  "cara_agora": 0.7646035722432317,
+  "cara_proposta": 0.8820582284836506,
+  "ampliacao_proposta": 0.9739130434782609,
+  "alternativas": [
+   {
+    "versao": "original",
+    "caminho": "C:\\casamento-video-media\\trabalho\\00-ORIGINAL-MAE\\wetransfer_fotos_2026-09-10_1110\\21-49-10.jpg",
+    "cara": 1.0,
+    "ssim": 1.0,
+    "px": "613x803",
+    "ampliacao": 1.5063511830635121,
+    "desvio": 0.0
+   },
+   {
+    "versao": "lanczos",
+    "caminho": "C:\\casamento-video-media\\upscaled\\f0106__21-49-10.jpg",
+    "cara": 0.8820582284836506,
+    "ssim": 0.9920256343059851,
+    "px": "948x1242",
+    "ampliacao": 0.9739130434782609,
+    "desvio": 0.11794177151634944
+   },
+   {
+    "versao": "IA",
+    "caminho": "C:\\casamento-video-media\\upscaled-ia\\f0106__21-49-10.jpg",
+    "cara": 0.7646035722432317,
+    "ssim": 0.9679257441464311,
+    "px": "948x1242",
+    "ampliacao": 0.9739130434782609,
+    "desvio": 0.23539642775676828
+   }
+  ]
+ },
+ {
+  "clip": 24,
+  "t": 147.31,
+  "id": "f0151",
+  "ficheiro": "21-49-6.jpg",
+  "agora": "IA",
+  "proposta": "lanczos",
+  "muda": true,
+  "motivo": "cara fiel e pixeis que chegam",
+  "zoom": 1.12,
+  "cara_agora": 0.7147732614944866,
+  "cara_proposta": 0.8550713778655402,
+  "ampliacao_proposta": 0.9739130434782609,
+  "alternativas": [
+   {
+    "versao": "original",
+    "caminho": "C:\\casamento-video-media\\trabalho\\00-ORIGINAL-MAE\\wetransfer_fotos_2026-09-10_1110\\21-49-6.jpg",
+    "cara": 1.0,
+    "ssim": 1.0,
+    "px": "1208x795",
+    "ampliacao": 1.5215094339622641,
+    "desvio": 0.0
+   },
+   {
+    "versao": "lanczos",
+    "caminho": "C:\\casamento-video-media\\upscaled\\f0151__21-49-6.jpg",
+    "cara": 0.8550713778655402,
+    "ssim": 0.987769134447682,
+    "px": "1888x1242",
+    "ampliacao": 0.9739130434782609,
+    "desvio": 0.14492862213445978
+   },
+   {
+    "versao": "IA",
+    "caminho": "C:\\casamento-video-media\\upscaled-ia\\f0151__21-49-6.jpg",
+    "cara": 0.7147732614944866,
+    "ssim": 0.9399505528629871,
+    "px": "1887x1242",
+    "ampliacao": 0.9739130434782609,
+    "desvio": 0.2852267385055134
+   }
+  ]
+ },
+ {
+  "clip": 36,
+  "t": 197.76,
+  "id": "f0186",
+  "ficheiro": "8.jpg",
+  "agora": "IA",
+  "proposta": "lanczos",
+  "muda": true,
+  "motivo": "cara fiel e pixeis que chegam",
+  "zoom": 1.12,
+  "cara_agora": 0.5553738870994669,
+  "cara_proposta": 0.8485169341610113,
+  "ampliacao_proposta": 0.9053892215568864,
+  "alternativas": [
+   {
+    "versao": "original",
+    "caminho": "C:\\casamento-video-media\\trabalho\\00-ORIGINAL-MAE\\wetransfer_fotos_2026-09-10_1110\\8.jpg",
+    "cara": 1.0,
+    "ssim": 1.0,
+    "px": "1230x744",
+    "ampliacao": 1.6258064516129034,
+    "desvio": 0.0
+   },
+   {
+    "versao": "lanczos",
+    "caminho": "C:\\casamento-video-media\\upscaled\\f0186__8.jpg",
+    "cara": 0.8485169341610113,
+    "ssim": 0.9872316439347745,
+    "px": "2208x1336",
+    "ampliacao": 0.9053892215568864,
+    "desvio": 0.15148306583898874
+   },
+   {
+    "versao": "IA",
+    "caminho": "C:\\casamento-video-media\\upscaled-ia\\f0186__8.jpg",
+    "cara": 0.5553738870994669,
+    "ssim": 0.9230027861849072,
+    "px": "2208x1336",
+    "ampliacao": 0.9053892215568864,
+    "desvio": 0.4446261129005331
+   }
+  ]
+ },
+ {
+  "clip": 39,
+  "t": 207.66,
+  "id": "f0033",
+  "ficheiro": "11.jpg",
+  "agora": "IA",
+  "proposta": "original",
+  "muda": true,
+  "motivo": "a que menos estica das fieis; ainda estica 1.52x",
+  "zoom": 1.12,
+  "cara_agora": 0.4475904433176728,
+  "cara_proposta": 1.0,
+  "ampliacao_proposta": 1.523425692695214,
+  "alternativas": [
+   {
+    "versao": "original",
+    "caminho": "C:\\casamento-video-media\\trabalho\\00-ORIGINAL-MAE\\wetransfer_fotos_2026-09-10_1110\\11.jpg",
+    "cara": 1.0,
+    "ssim": 1.0,
+    "px": "1165x794",
+    "ampliacao": 1.523425692695214,
+    "desvio": 0.0
+   },
+   {
+    "versao": "lanczos",
+    "caminho": "C:\\casamento-video-media\\upscaled\\f0033__11.jpg",
+    "cara": 0.7725671117850988,
+    "ssim": 0.9680619381560839,
+    "px": "1822x1242",
+    "ampliacao": 0.9739130434782609,
+    "desvio": 0.22743288821490115
+   },
+   {
+    "versao": "IA",
+    "caminho": "C:\\casamento-video-media\\upscaled-ia\\f0033__11.jpg",
+    "cara": 0.4475904433176728,
+    "ssim": 0.8210753703547516,
+    "px": "1822x1242",
+    "ampliacao": 0.9739130434782609,
+    "desvio": 0.5524095566823273
+   }
+  ]
+ },
+ {
+  "clip": 41,
+  "t": 214.26,
+  "id": "f0016",
+  "ficheiro": "10-4.jpg",
+  "agora": "IA",
+  "proposta": "lanczos",
+  "muda": true,
+  "motivo": "cara fiel e pixeis que chegam",
+  "zoom": 1.12,
+  "cara_agora": 0.6860401796298822,
+  "cara_proposta": 0.8827237785087534,
+  "ampliacao_proposta": 0.9739130434782609,
+  "alternativas": [
+   {
+    "versao": "original",
+    "caminho": "C:\\casamento-video-media\\trabalho\\00-ORIGINAL-MAE\\wetransfer_fotos_2026-09-10_1110\\10-4.jpg",
+    "cara": 1.0,
+    "ssim": 1.0,
+    "px": "1167x789",
+    "ampliacao": 1.5330798479087453,
+    "desvio": 0.0
+   },
+   {
+    "versao": "lanczos",
+    "caminho": "C:\\casamento-video-media\\upscaled\\f0016__10-4.jpg",
+    "cara": 0.8827237785087534,
+    "ssim": 0.9895063039578952,
+    "px": "1838x1242",
+    "ampliacao": 0.9739130434782609,
+    "desvio": 0.11727622149124661
+   },
+   {
+    "versao": "IA",
+    "caminho": "C:\\casamento-video-media\\upscaled-ia\\f0016__10-4.jpg",
+    "cara": 0.6860401796298822,
+    "ssim": 0.9408411469310103,
+    "px": "1837x1242",
+    "ampliacao": 0.9739130434782609,
+    "desvio": 0.3139598203701178
+   }
+  ]
+ },
+ {
+  "clip": 43,
+  "t": 220.86,
+  "id": "f0024",
+  "ficheiro": "11-14.jpg",
+  "agora": "IA",
+  "proposta": "lanczos",
+  "muda": true,
+  "motivo": "cara fiel e pixeis que chegam",
+  "zoom": 1.12,
+  "cara_agora": 0.6852800523763428,
+  "cara_proposta": 0.8613318465699391,
+  "ampliacao_proposta": 0.8542372881355933,
+  "alternativas": [
+   {
+    "versao": "original",
+    "caminho": "C:\\casamento-video-media\\trabalho\\00-ORIGINAL-MAE\\wetransfer_fotos_2026-09-10_1110\\11-14.jpg",
+    "cara": 1.0,
+    "ssim": 1.0,
+    "px": "1178x755",
+    "ampliacao": 1.6021192052980133,
+    "desvio": 0.0
+   },
+   {
+    "versao": "lanczos",
+    "caminho": "C:\\casamento-video-media\\upscaled\\f0024__11-14.jpg",
+    "cara": 0.8613318465699391,
+    "ssim": 0.9845945918912875,
+    "px": "2208x1416",
+    "ampliacao": 0.8542372881355933,
+    "desvio": 0.1386681534300609
+   },
+   {
+    "versao": "IA",
+    "caminho": "C:\\casamento-video-media\\upscaled-ia\\f0024__11-14.jpg",
+    "cara": 0.6852800523763428,
+    "ssim": 0.9266160087891536,
+    "px": "2208x1415",
+    "ampliacao": 0.8548409893992933,
+    "desvio": 0.3147199476236572
+   }
+  ]
+ },
+ {
+  "clip": 45,
+  "t": 227.46,
+  "id": "f0028",
+  "ficheiro": "11-5.jpg",
+  "agora": "IA",
+  "proposta": "lanczos",
+  "muda": true,
+  "motivo": "cara fiel e pixeis que chegam",
+  "zoom": 1.12,
+  "cara_agora": 0.7551406796865802,
+  "cara_proposta": 0.8873295560337372,
+  "ampliacao_proposta": 0.9739130434782609,
+  "alternativas": [
+   {
+    "versao": "original",
+    "caminho": "C:\\casamento-video-media\\trabalho\\00-ORIGINAL-MAE\\wetransfer_fotos_2026-09-10_1110\\11-5.jpg",
+    "cara": 1.0,
+    "ssim": 1.0,
+    "px": "720x504",
+    "ampliacao": 2.4000000000000004,
+    "desvio": 0.0
+   },
+   {
+    "versao": "lanczos",
+    "caminho": "C:\\casamento-video-media\\upscaled\\f0028__11-5.jpg",
+    "cara": 0.8873295560337372,
+    "ssim": 0.9943438293472907,
+    "px": "1774x1242",
+    "ampliacao": 0.9739130434782609,
+    "desvio": 0.1126704439662628
+   },
+   {
+    "versao": "IA",
+    "caminho": "C:\\casamento-video-media\\upscaled-ia\\f0028__11-5.jpg",
+    "cara": 0.7551406796865802,
+    "ssim": 0.9629751254433842,
+    "px": "1774x1242",
+    "ampliacao": 0.9739130434782609,
+    "desvio": 0.24485932031341984
+   }
+  ]
+ },
+ {
+  "clip": 62,
+  "t": 281.66,
+  "id": "f0319",
+  "ficheiro": "IMG-20220807-WA0105.jpg",
+  "agora": "lanczos",
+  "proposta": "original",
+  "muda": true,
+  "motivo": "a que menos estica das fieis; ainda estica 1.13x",
+  "zoom": 1.12,
+  "cara_agora": 0.7722206652918823,
+  "cara_proposta": 1.0,
+  "ampliacao_proposta": 1.1336457357075913,
+  "alternativas": [
+   {
+    "versao": "original",
+    "caminho": "C:\\casamento-video-media\\trabalho\\01-NOVAS\\Clara\\IMG-20220807-WA0105.jpg",
+    "cara": 1.0,
+    "ssim": 1.0,
+    "px": "1600x1067",
+    "ampliacao": 1.1336457357075913,
+    "desvio": 0.0
+   },
+   {
+    "versao": "lanczos",
+    "caminho": "C:\\casamento-video-media\\upscaled\\f0319__IMG-20220807-WA0105.jpg",
+    "cara": 0.7722206652918823,
+    "ssim": 0.9581812472083966,
+    "px": "1862x1242",
+    "ampliacao": 0.9739130434782609,
+    "desvio": 0.22777933470811773
+   },
+   {
+    "versao": "IA",
+    "caminho": "C:\\casamento-video-media\\upscaled-ia\\f0319__IMG-20220807-WA0105.jpg",
+    "cara": 0.5402758284200573,
+    "ssim": 0.858670470617139,
+    "px": "1862x1242",
+    "ampliacao": 0.9739130434782609,
+    "desvio": 0.4597241715799427
+   }
+  ]
+ },
+ {
+  "clip": 64,
+  "t": 287.86,
+  "id": "f0236",
+  "ficheiro": "9.1.jpg",
+  "agora": "lanczos",
+  "proposta": "original",
+  "muda": true,
+  "motivo": "a que menos estica das fieis; ainda estica 1.33x",
+  "zoom": 1.12,
+  "cara_agora": 0.7926285193509053,
+  "cara_proposta": 1.0,
+  "ampliacao_proposta": 1.3277716794731065,
+  "alternativas": [
+   {
+    "versao": "original",
+    "caminho": "C:\\casamento-video-media\\trabalho\\00-ORIGINAL-MAE\\wetransfer_fotos_2026-09-10_1110\\9.1.jpg",
+    "cara": 1.0,
+    "ssim": 1.0,
+    "px": "616x911",
+    "ampliacao": 1.3277716794731065,
+    "desvio": 0.0
+   },
+   {
+    "versao": "lanczos",
+    "caminho": "C:\\casamento-video-media\\upscaled\\f0236__9.1.jpg",
+    "cara": 0.7926285193509053,
+    "ssim": 0.977980514727029,
+    "px": "840x1242",
+    "ampliacao": 0.9739130434782609,
+    "desvio": 0.20737148064909472
+   },
+   {
+    "versao": "IA",
+    "caminho": "C:\\casamento-video-media\\upscaled-ia\\f0236__9.1.jpg",
+    "cara": 0.4098724358417065,
+    "ssim": 0.8798733421085968,
+    "px": "840x1242",
+    "ampliacao": 0.9739130434782609,
+    "desvio": 0.5901275641582935
+   }
+  ]
+ },
+ {
+  "clip": 87,
+  "t": 364.26,
+  "id": "f0473",
+  "ficheiro": "IMG-20180917-WA0000.jpg",
+  "agora": "lanczos",
+  "proposta": "lanczos",
+  "muda": false,
+  "motivo": "a que menos estica das fieis; ainda estica 1.30x",
+  "zoom": 1.12,
+  "cara_agora": 1.0,
+  "cara_proposta": 1.0,
+  "ampliacao_proposta": 1.2985507246376813,
+  "alternativas": [
+   {
+    "versao": "original",
+    "caminho": "C:\\casamento-video-media\\trabalho\\01-NOVAS\\Novas_Novas\\IMG-20180917-WA0000.jpg",
+    "cara": 1.0,
+    "ssim": 1.0,
+    "px": "1288x966",
+    "ampliacao": 1.6695652173913045,
+    "desvio": 0.0
+   },
+   {
+    "versao": "lanczos",
+    "caminho": "C:\\casamento-video-media\\upscaled\\f0473__IMG-20180917-WA0000.jpg",
+    "cara": 1.0,
+    "ssim": 1.0,
+    "px": "1656x1242",
+    "ampliacao": 1.2985507246376813,
+    "desvio": 0.0
+   },
+   {
+    "versao": "IA",
+    "caminho": "C:\\casamento-video-media\\upscaled-ia\\f0473__IMG-20180917-WA0000.jpg",
+    "cara": 1.0,
+    "ssim": 1.0,
+    "px": "1656x1242",
+    "ampliacao": 1.2985507246376813,
+    "desvio": 0.0
+   }
+  ]
+ },
+ {
+  "clip": 90,
+  "t": 373.76,
+  "id": "f0107",
+  "ficheiro": "21-49-11.jpg",
+  "agora": "IA",
+  "proposta": "lanczos",
+  "muda": true,
+  "motivo": "a que menos estica das fieis; ainda estica 1.13x",
+  "zoom": 1.12,
+  "cara_agora": 0.55512172300824,
+  "cara_proposta": 0.8248354076620101,
+  "ampliacao_proposta": 1.127044025157233,
+  "alternativas": [
+   {
+    "versao": "original",
+    "caminho": "C:\\casamento-video-media\\trabalho\\00-ORIGINAL-MAE\\wetransfer_fotos_2026-09-10_1110\\21-49-11.jpg",
+    "cara": 1.0,
+    "ssim": 1.0,
+    "px": "1237x805",
+    "ampliacao": 1.7383993532740503,
+    "desvio": 0.0
+   },
+   {
+    "versao": "lanczos",
+    "caminho": "C:\\casamento-video-media\\upscaled\\f0107__21-49-11.jpg",
+    "cara": 0.8248354076620101,
+    "ssim": 0.9863561438190924,
+    "px": "1908x1242",
+    "ampliacao": 1.127044025157233,
+    "desvio": 0.17516459233798987
+   },
+   {
+    "versao": "IA",
+    "caminho": "C:\\casamento-video-media\\upscaled-ia\\f0107__21-49-11.jpg",
+    "cara": 0.55512172300824,
+    "ssim": 0.9454199632139323,
+    "px": "1909x1242",
+    "ampliacao": 1.1264536406495549,
+    "desvio": 0.44487827699175997
+   }
+  ]
+ },
+ {
+  "clip": 133,
+  "t": 514.86,
+  "id": "f0312",
+  "ficheiro": "2016_tIAGO_ANDEBOL_FACULDADE.jpg",
+  "agora": "IA",
+  "proposta": "IA",
+  "muda": false,
+  "motivo": "a que menos estica das fieis; ainda estica 1.87x",
+  "zoom": 2.2,
+  "cara_agora": 0.847048134061576,
+  "cara_proposta": 0.847048134061576,
+  "ampliacao_proposta": 1.8731707317073172,
+  "alternativas": [
+   {
+    "versao": "original",
+    "caminho": "C:\\casamento-video-media\\trabalho\\01-NOVAS\\Amigos Tiago\\2016_tIAGO_ANDEBOL_FACULDADE.jpg",
+    "cara": 1.0,
+    "ssim": 1.0,
+    "px": "1140x628",
+    "ampliacao": 3.705263157894737,
+    "desvio": 0.0
+   },
+   {
+    "versao": "lanczos",
+    "caminho": "C:\\casamento-video-media\\upscaled\\f0312__2016_tIAGO_ANDEBOL_FACULDADE.jpg",
+    "cara": 0.8897284216187147,
+    "ssim": 0.9923759954633372,
+    "px": "2254x1242",
+    "ampliacao": 1.8740017746228927,
+    "desvio": 0.11027157838128532
+   },
+   {
+    "versao": "IA",
+    "caminho": "C:\\casamento-video-media\\upscaled-ia\\f0312__2016_tIAGO_ANDEBOL_FACULDADE.jpg",
+    "cara": 0.847048134061576,
+    "ssim": 0.9387736869968724,
+    "px": "2255x1242",
+    "ampliacao": 1.8731707317073172,
+    "desvio": 0.15295186593842403
+   }
+  ]
+ },
+ {
+  "clip": 135,
+  "t": 521.46,
+  "id": "f0140",
+  "ficheiro": "21-49-45.jpeg",
+  "agora": "original",
+  "proposta": "lanczos",
+  "muda": true,
+  "motivo": "cara fiel e pixeis que chegam",
+  "zoom": 1.0,
+  "cara_agora": 1.0,
+  "cara_proposta": 0.9074491068596237,
+  "ampliacao_proposta": 0.8695652173913043,
+  "alternativas": [
+   {
+    "versao": "original",
+    "caminho": "C:\\casamento-video-media\\trabalho\\00-ORIGINAL-MAE\\wetransfer_fotos_2026-09-10_1110\\21-49-45.jpeg",
+    "cara": 1.0,
+    "ssim": 1.0,
+    "px": "830x1600",
+    "ampliacao": 2.3132530120481927,
+    "desvio": 0.0
+   },
+   {
+    "versao": "lanczos",
+    "caminho": "C:\\casamento-video-media\\upscaled\\f0140__21-49-45.jpg",
+    "cara": 0.9074491068596237,
+    "ssim": 0.9955765039825274,
+    "px": "2208x4256",
+    "ampliacao": 0.8695652173913043,
+    "desvio": 0.09255089314037634
+   },
+   {
+    "versao": "IA",
+    "caminho": "C:\\casamento-video-media\\upscaled-ia\\f0140__21-49-45.jpg",
+    "cara": 0.7702036138216137,
+    "ssim": 0.9682753209805776,
+    "px": "830x1600",
+    "ampliacao": 2.3132530120481927,
+    "desvio": 0.22979638617838627
+   }
+  ]
+ },
+ {
+  "clip": 135,
+  "t": 521.46,
+  "id": "f0370",
+  "ficheiro": "465577778_18469984858036289_3599993957042226426_n.jpg",
+  "agora": "original",
+  "proposta": "original",
+  "muda": false,
+  "motivo": "a que menos estica das fieis; ainda estica 1.33x",
+  "zoom": 1.0,
+  "cara_agora": 1.0,
+  "cara_proposta": 1.0,
+  "ampliacao_proposta": 1.3333333333333333,
+  "alternativas": [
+   {
+    "versao": "original",
+    "caminho": "C:\\casamento-video-media\\trabalho\\01-NOVAS\\Amigos Tiago\\2024_Maratona_com_Rita_files\\465577778_18469984858036289_3599993957042226426_n.jpg",
+    "cara": 1.0,
+    "ssim": 1.0,
+    "px": "1440x1800",
+    "ampliacao": 1.3333333333333333,
+    "desvio": 0.0
+   },
+   {
+    "versao": "IA",
+    "caminho": "C:\\casamento-video-media\\upscaled-ia\\f0370__465577778_18469984858036289_3599993957042226426_n.jpg",
+    "cara": 0.8442211289488297,
+    "ssim": 0.964971210833467,
+    "px": "1440x1800",
+    "ampliacao": 1.3333333333333333,
+    "desvio": 0.15577887105117028
+   }
+  ]
+ },
+ {
+  "clip": 139,
+  "t": 538.76,
+  "id": "f0061",
+  "ficheiro": "21-12.JPG",
+  "agora": "lanczos",
+  "proposta": "lanczos",
+  "muda": false,
+  "motivo": "a que menos estica das fieis; ainda estica 1.43x",
+  "zoom": 1.0,
+  "cara_agora": 0.9057641801579839,
+  "cara_proposta": 0.9057641801579839,
+  "ampliacao_proposta": 1.4328358208955223,
+  "alternativas": [
+   {
+    "versao": "original",
+    "caminho": "C:\\casamento-video-media\\trabalho\\00-ORIGINAL-MAE\\wetransfer_fotos_2026-09-10_1110\\21-12.JPG",
+    "cara": 1.0,
+    "ssim": 1.0,
+    "px": "983x911",
+    "ampliacao": 1.9532044760935912,
+    "desvio": 0.0
+   },
+   {
+    "versao": "lanczos",
+    "caminho": "C:\\casamento-video-media\\upscaled\\f0061__21-12.jpg",
+    "cara": 0.9057641801579839,
+    "ssim": 0.9927929587553207,
+    "px": "1340x1242",
+    "ampliacao": 1.4328358208955223,
+    "desvio": 0.09423581984201612
+   },
+   {
+    "versao": "IA",
+    "caminho": "C:\\casamento-video-media\\upscaled-ia\\f0061__21-12.jpg",
+    "cara": 0.9037140924018098,
+    "ssim": 0.9806180758451569,
+    "px": "1340x1242",
+    "ampliacao": 1.4328358208955223,
+    "desvio": 0.09628590759819022
+   }
+  ]
+ },
+ {
+  "clip": 139,
+  "t": 538.76,
+  "id": "f0212",
+  "ficheiro": "9-13.JPG",
+  "agora": "original",
+  "proposta": "lanczos",
+  "muda": true,
+  "motivo": "cara fiel e pixeis que chegam",
+  "zoom": 1.0,
+  "cara_agora": 1.0,
+  "cara_proposta": 1.0,
+  "ampliacao_proposta": 0.8695652173913043,
+  "alternativas": [
+   {
+    "versao": "original",
+    "caminho": "C:\\casamento-video-media\\trabalho\\00-ORIGINAL-MAE\\wetransfer_fotos_2026-09-10_1110\\9-13.JPG",
+    "cara": 1.0,
+    "ssim": 1.0,
+    "px": "1630x1776",
+    "ampliacao": 1.177914110429448,
+    "desvio": 0.0
+   },
+   {
+    "versao": "lanczos",
+    "caminho": "C:\\casamento-video-media\\upscaled\\f0212__9-13.jpg",
+    "cara": 1.0,
+    "ssim": 1.0,
+    "px": "2208x2406",
+    "ampliacao": 0.8695652173913043,
+    "desvio": 0.0
+   },
+   {
+    "versao": "IA",
+    "caminho": "C:\\casamento-video-media\\upscaled-ia\\f0212__9-13.jpg",
+    "cara": 1.0,
+    "ssim": 1.0,
+    "px": "1630x1776",
+    "ampliacao": 1.177914110429448,
+    "desvio": 0.0
+   }
+  ]
+ },
+ {
+  "clip": 139,
+  "t": 538.76,
+  "id": "f0059",
+  "ficheiro": "21-11-3.jpg",
+  "agora": "lanczos",
+  "proposta": "original",
+  "muda": true,
+  "motivo": "a que menos estica das fieis; ainda estica 1.58x",
+  "zoom": 1.0,
+  "cara_agora": 0.7779499108656482,
+  "cara_proposta": 1.0,
+  "ampliacao_proposta": 1.5802469135802468,
+  "alternativas": [
+   {
+    "versao": "original",
+    "caminho": "C:\\casamento-video-media\\trabalho\\00-ORIGINAL-MAE\\wetransfer_fotos_2026-09-10_1110\\21-11-3.jpg",
+    "cara": 1.0,
+    "ssim": 1.0,
+    "px": "1215x911",
+    "ampliacao": 1.5802469135802468,
+    "desvio": 0.0
+   },
+   {
+    "versao": "lanczos",
+    "caminho": "C:\\casamento-video-media\\upscaled\\f0059__21-11-3.jpg",
+    "cara": 0.7779499108656482,
+    "ssim": 0.9639863839709956,
+    "px": "1656x1242",
+    "ampliacao": 1.1594202898550725,
+    "desvio": 0.22205008913435176
+   },
+   {
+    "versao": "IA",
+    "caminho": "C:\\casamento-video-media\\upscaled-ia\\f0059__21-11-3.jpg",
+    "cara": 0.6232664427937481,
+    "ssim": 0.8911856559834662,
+    "px": "1656x1242",
+    "ampliacao": 1.1594202898550725,
+    "desvio": 0.3767335572062519
+   }
+  ]
+ },
+ {
+  "clip": 164,
+  "t": 638.06,
+  "id": "f0482",
+  "ficheiro": "IMG-20181006-WA0013.jpg",
+  "agora": "lanczos",
+  "proposta": "lanczos",
+  "muda": false,
+  "motivo": "a que menos estica das fieis; ainda estica 1.16x",
+  "zoom": 1.0,
+  "cara_agora": 0.9304937269637187,
+  "cara_proposta": 0.9304937269637187,
+  "ampliacao_proposta": 1.1594202898550725,
+  "alternativas": [
+   {
+    "versao": "original",
+    "caminho": "C:\\casamento-video-media\\trabalho\\01-NOVAS\\Novas_Novas\\IMG-20181006-WA0013.jpg",
+    "cara": 1.0,
+    "ssim": 1.0,
+    "px": "1600x1200",
+    "ampliacao": 1.2,
+    "desvio": 0.0
+   },
+   {
+    "versao": "lanczos",
+    "caminho": "C:\\casamento-video-media\\upscaled\\f0482__IMG-20181006-WA0013.jpg",
+    "cara": 0.9304937269637187,
+    "ssim": 0.9907179040411543,
+    "px": "1656x1242",
+    "ampliacao": 1.1594202898550725,
+    "desvio": 0.06950627303628132
+   },
+   {
+    "versao": "IA",
+    "caminho": "C:\\casamento-video-media\\upscaled-ia\\f0482__IMG-20181006-WA0013.jpg",
+    "cara": 0.9667674854032027,
+    "ssim": 0.9780517901233479,
+    "px": "1656x1242",
+    "ampliacao": 1.1594202898550725,
+    "desvio": 0.033232514596797325
+   }
+  ]
+ },
+ {
+  "clip": 165,
+  "t": 650.36,
+  "id": "f0515",
+  "ficheiro": "IMG-20230727-WA0003.jpg",
+  "agora": "IA",
+  "proposta": "lanczos",
+  "muda": true,
+  "motivo": "a que menos estica das fieis; ainda estica 1.16x",
+  "zoom": 1.0,
+  "cara_agora": 0.7635381182446866,
+  "cara_proposta": 0.8718014497991814,
+  "ampliacao_proposta": 1.1594202898550725,
+  "alternativas": [
+   {
+    "versao": "original",
+    "caminho": "C:\\casamento-video-media\\trabalho\\01-NOVAS\\Novas_Novas\\IMG-20230727-WA0003.jpg",
+    "cara": 1.0,
+    "ssim": 1.0,
+    "px": "1024x768",
+    "ampliacao": 1.875,
+    "desvio": 0.0
+   },
+   {
+    "versao": "lanczos",
+    "caminho": "C:\\casamento-video-media\\upscaled\\f0515__IMG-20230727-WA0003.jpg",
+    "cara": 0.8718014497991814,
+    "ssim": 0.9897301491413547,
+    "px": "1656x1242",
+    "ampliacao": 1.1594202898550725,
+    "desvio": 0.1281985502008186
+   },
+   {
+    "versao": "IA",
+    "caminho": "C:\\casamento-video-media\\upscaled-ia\\f0515__IMG-20230727-WA0003.jpg",
+    "cara": 0.7635381182446866,
+    "ssim": 0.953559755454085,
+    "px": "1656x1242",
+    "ampliacao": 1.1594202898550725,
+    "desvio": 0.23646188175531335
+   }
+  ]
+ },
+ {
+  "clip": 187,
+  "t": 737.16,
+  "id": "f0344",
+  "ficheiro": "DSC00781.JPG",
+  "agora": "IA",
+  "proposta": "lanczos",
+  "muda": true,
+  "motivo": "cara fiel e pixeis que chegam",
+  "zoom": 1.12,
+  "cara_agora": 0.7804770971772674,
+  "cara_proposta": 0.8805517418823843,
+  "ampliacao_proposta": 0.9739130434782609,
+  "alternativas": [
+   {
+    "versao": "original",
+    "caminho": "C:\\casamento-video-media\\trabalho\\01-NOVAS\\Clara_Tiago_e_amigos\\DSC00781.JPG",
+    "cara": 1.0,
+    "ssim": 1.0,
+    "px": "768x576",
+    "ampliacao": 2.1,
+    "desvio": 0.0
+   },
+   {
+    "versao": "lanczos",
+    "caminho": "C:\\casamento-video-media\\upscaled\\f0344__DSC00781.jpg",
+    "cara": 0.8805517418823843,
+    "ssim": 0.993164747127743,
+    "px": "1656x1242",
+    "ampliacao": 0.9739130434782609,
+    "desvio": 0.11944825811761572
+   },
+   {
+    "versao": "IA",
+    "caminho": "C:\\casamento-video-media\\upscaled-ia\\f0344__DSC00781.jpg",
+    "cara": 0.7804770971772674,
+    "ssim": 0.9628055592484273,
+    "px": "1656x1242",
+    "ampliacao": 0.9739130434782609,
+    "desvio": 0.21952290282273257
+   }
+  ]
+ },
+ {
+  "clip": 188,
+  "t": 740.46,
+  "id": "f0337",
+  "ficheiro": "2015_CLARA_TIAGO_AMIGOS_SECUNDARIO_2.jpg",
+  "agora": "IA",
+  "proposta": "lanczos",
+  "muda": true,
+  "motivo": "cara fiel e pixeis que chegam",
+  "zoom": 1.12,
+  "cara_agora": 0.7949054451505074,
+  "cara_proposta": 0.8931235276276427,
+  "ampliacao_proposta": 0.9739130434782609,
+  "alternativas": [
+   {
+    "versao": "original",
+    "caminho": "C:\\casamento-video-media\\trabalho\\01-NOVAS\\Clara_Tiago_e_amigos\\2015_CLARA_TIAGO_AMIGOS_SECUNDARIO_2.jpg",
+    "cara": 1.0,
+    "ssim": 1.0,
+    "px": "960x540",
+    "ampliacao": 2.24,
+    "desvio": 0.0
+   },
+   {
+    "versao": "lanczos",
+    "caminho": "C:\\casamento-video-media\\upscaled\\f0337__2015_CLARA_TIAGO_AMIGOS_SECUNDARIO_2.jpg",
+    "cara": 0.8931235276276427,
+    "ssim": 0.9944475951065854,
+    "px": "2208x1242",
+    "ampliacao": 0.9739130434782609,
+    "desvio": 0.10687647237235731
+   },
+   {
+    "versao": "IA",
+    "caminho": "C:\\casamento-video-media\\upscaled-ia\\f0337__2015_CLARA_TIAGO_AMIGOS_SECUNDARIO_2.jpg",
+    "cara": 0.7949054451505074,
+    "ssim": 0.9562266175304449,
+    "px": "2208x1242",
+    "ampliacao": 0.9739130434782609,
+    "desvio": 0.20509455484949257
+   }
+  ]
+ },
+ {
+  "clip": 189,
+  "t": 743.76,
+  "id": "f0160",
+  "ficheiro": "21-60.jpg",
+  "agora": "IA",
+  "proposta": "lanczos",
+  "muda": true,
+  "motivo": "cara fiel e pixeis que chegam",
+  "zoom": 1.12,
+  "cara_agora": 0.6941091794928579,
+  "cara_proposta": 0.8842320894696047,
+  "ampliacao_proposta": 0.9739130434782609,
+  "alternativas": [
+   {
+    "versao": "original",
+    "caminho": "C:\\casamento-video-media\\trabalho\\00-ORIGINAL-MAE\\wetransfer_fotos_2026-09-10_1110\\21-60.jpg",
+    "cara": 1.0,
+    "ssim": 1.0,
+    "px": "642x715",
+    "ampliacao": 1.6917482517482518,
+    "desvio": 0.0
+   },
+   {
+    "versao": "lanczos",
+    "caminho": "C:\\casamento-video-media\\upscaled\\f0160__21-60.jpg",
+    "cara": 0.8842320894696047,
+    "ssim": 0.9893889460022968,
+    "px": "1116x1242",
+    "ampliacao": 0.9739130434782609,
+    "desvio": 0.11576791053039526
+   },
+   {
+    "versao": "IA",
+    "caminho": "C:\\casamento-video-media\\upscaled-ia\\f0160__21-60.jpg",
+    "cara": 0.6941091794928579,
+    "ssim": 0.9488026936668752,
+    "px": "1115x1242",
+    "ampliacao": 0.9739130434782609,
+    "desvio": 0.3058908205071421
+   }
+  ]
+ },
+ {
+  "clip": 206,
+  "t": 800.06,
+  "id": "f0018",
+  "ficheiro": "1021-1.jpg",
+  "agora": "IA",
+  "proposta": "lanczos",
+  "muda": true,
+  "motivo": "a que menos estica das fieis; ainda estica 1.70x",
+  "zoom": 1.0,
+  "cara_agora": 0.8199311768754302,
+  "cara_proposta": 0.8981693048864419,
+  "ampliacao_proposta": 1.696113074204947,
+  "alternativas": [
+   {
+    "versao": "original",
+    "caminho": "C:\\casamento-video-media\\trabalho\\00-ORIGINAL-MAE\\wetransfer_fotos_2026-09-10_1110\\1021-1.jpg",
+    "cara": 1.0,
+    "ssim": 1.0,
+    "px": "663x728",
+    "ampliacao": 2.8959276018099547,
+    "desvio": 0.0
+   },
+   {
+    "versao": "lanczos",
+    "caminho": "C:\\casamento-video-media\\upscaled\\f0018__1021-1.jpg",
+    "cara": 0.8981693048864419,
+    "ssim": 0.9931125951529058,
+    "px": "1132x1242",
+    "ampliacao": 1.696113074204947,
+    "desvio": 0.10183069511355813
+   },
+   {
+    "versao": "IA",
+    "caminho": "C:\\casamento-video-media\\upscaled-ia\\f0018__1021-1.jpg",
+    "cara": 0.8199311768754302,
+    "ssim": 0.9584787035349022,
+    "px": "1131x1242",
+    "ampliacao": 1.6976127320954908,
+    "desvio": 0.18006882312456984
+   }
+  ]
+ },
+ {
+  "clip": 206,
+  "t": 800.06,
+  "id": "f0019",
+  "ficheiro": "1021.jpg",
+  "agora": "lanczos",
+  "proposta": "lanczos",
+  "muda": false,
+  "motivo": "a que menos estica das fieis; ainda estica 1.47x",
+  "zoom": 1.0,
+  "cara_agora": 1.0,
+  "cara_proposta": 1.0,
+  "ampliacao_proposta": 1.4746543778801844,
+  "alternativas": [
+   {
+    "versao": "original",
+    "caminho": "C:\\casamento-video-media\\trabalho\\00-ORIGINAL-MAE\\wetransfer_fotos_2026-09-10_1110\\1021.jpg",
+    "cara": 1.0,
+    "ssim": 1.0,
+    "px": "1200x1145",
+    "ampliacao": 1.6,
+    "desvio": 0.0
+   },
+   {
+    "versao": "lanczos",
+    "caminho": "C:\\casamento-video-media\\upscaled\\f0019__1021.jpg",
+    "cara": 1.0,
+    "ssim": 1.0,
+    "px": "1302x1242",
+    "ampliacao": 1.4746543778801844,
+    "desvio": 0.0
+   },
+   {
+    "versao": "IA",
+    "caminho": "C:\\casamento-video-media\\upscaled-ia\\f0019__1021.jpg",
+    "cara": 1.0,
+    "ssim": 1.0,
+    "px": "1302x1242",
+    "ampliacao": 1.4746543778801844,
+    "desvio": 0.0
+   }
+  ]
+ },
+ {
+  "clip": 217,
+  "t": 836.96,
+  "id": "f0357",
+  "ficheiro": "2016_Familia_Tiago_imposicao_insignias.jpg",
+  "agora": "restaurada",
+  "proposta": "original",
+  "muda": true,
+  "motivo": "cara fiel e pixeis que chegam",
+  "zoom": 1.12,
+  "cara_agora": 0.21708817567863226,
+  "cara_proposta": 1.0,
+  "ampliacao_proposta": 0.4526946107784432,
+  "alternativas": [
+   {
+    "versao": "original",
+    "caminho": "C:\\casamento-video-media\\trabalho\\01-NOVAS\\Família_Tiago\\2016_Familia_Tiago_imposicao_insignias.jpg",
+    "cara": 1.0,
+    "ssim": 1.0,
+    "px": "4000x2672",
+    "ampliacao": 0.4526946107784432,
+    "desvio": 0.0
+   },
+   {
+    "versao": "restaurada",
+    "caminho": "C:\\casamento-video-media\\restauradas\\f0357__2016_Familia_Tiago_imposicao_insignias.jpg",
+    "cara": 0.21708817567863226,
+    "ssim": 0.862697860514811,
+    "px": "4000x2672",
+    "ampliacao": 0.4526946107784432,
+    "desvio": 0.7829118243213677
+   }
+  ]
+ }
+]

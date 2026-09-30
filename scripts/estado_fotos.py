@@ -10,9 +10,12 @@ Uma fotografia esta PRONTA quando a versao que a FINAIS usa e a que as regras
 mandam usar:
 
   nao precisa de crescer              original                decisao 040
-  cresce menos de 1,5 vezes           lanczos                 decisao 052
-  cresce 1,5 vezes ou mais            rede neuronal           decisao 052
+  cresce                              lanczos                 decisoes 052 e 090
   so aparece como marca da fita       qualquer uma            decisao 038
+
+Desde 28 de setembro (decisao 090) a rede neuronal nao entra no filme: o que acima de 1,5
+vezes era a rede passou a ser o lanczos. E uma foto cuja versao lanczos a guarda das caras
+recusou fica com o original, e isso tambem e pronta: e uma escolha feita.
 
 Tudo o resto fica "a espera", com o motivo: falta a versao lanczos, falta a da
 rede neuronal, ou a versao existe mas o consolidar.py ainda nao correu.
@@ -92,26 +95,30 @@ def main():
     tem_lanczos, tem_rede = ids_em(LANCZOS), ids_em(REDE)
     vinhetas = consolidar.vinhetas_da_fita()
     estados, origens, espera = Counter(), Counter(), []
+    guarda = 0
 
     for r in inv:
         fator = consolidar.fator_ampliacao(int(r["largura"]), int(r["altura"]))
-        origem = (indice.get(r["id"]) or {}).get("origem")
+        linha = indice.get(r["id"]) or {}
+        origem = linha.get("origem")
+        # A VERSAO DA REGRA PODE TER SIDO RECUSADA DE PROPOSITO, pela guarda das caras ou pelo
+        # limite de alteracao (decisao 086). O consolidar.py escreve-o na coluna recusadas do
+        # indice, "IA:cara 0.17;lanczos:cara 0.78", e isso e uma escolha feita, nao uma que
+        # falta fazer: a 27 de setembro, sem esta leitura, a Mesa dizia 48 fotos "a espera".
+        recusadas = {p.split(":")[0] for p in (linha.get("recusadas") or "").split(";") if p}
         if origem:
             origens[origem] += 1
         if not origem:
             estado = "falta_consolidar"
         elif fator <= 1.0 or r["ficheiro"].lower() in vinhetas:
             estado = "pronta"
-        elif fator < consolidar.LIMITE_LANCZOS:
-            if origem in ("lanczos", "restaurada"):
-                estado = "pronta"
-            else:
-                estado = "espera_lanczos" if r["id"] not in tem_lanczos else "falta_consolidar"
+        elif origem == "lanczos":
+            estado = "pronta"
+        elif "lanczos" in recusadas:
+            estado = "pronta"
+            guarda += 1
         else:
-            if origem in ("IA", "restaurada"):
-                estado = "pronta"
-            else:
-                estado = "espera_ia" if r["id"] not in tem_rede else "falta_consolidar"
+            estado = "espera_lanczos" if r["id"] not in tem_lanczos else "falta_consolidar"
         estados[estado] += 1
         if estado != "pronta":
             espera.append({"id": r["id"], "f": r["ficheiro"], "e": estado,
@@ -135,6 +142,8 @@ def main():
     print("Estado das fotografias, %s" % dados["gerado"])
     print("  no inventario:            %d" % dados["total"])
     print("  prontas:                  %d" % dados["prontas"])
+    if guarda:
+        print("    das quais com a versao da regra recusada pela guarda: %d" % guarda)
     for chave, texto in MOTIVOS.items():
         if estados[chave]:
             print("  a espera, %-28s %d" % (texto + ":", estados[chave]))

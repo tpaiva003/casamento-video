@@ -32,6 +32,12 @@ ser respeitado, não substituído. Reordenar, aparar e dar-lhe a voz do casal.
    `montagem/publicacao`, a atualização das fotos é a primeira coisa a fazer, e
    diz-se isso ao Tiago.
 
+4. **Ler `docs/DISCUSSAO.md`**, enquanto a discussão dos cinco pontos (aberta a 28 de
+   setembro) não estiver construída: diz que ponto está aberto, o que ele já disse, como
+   se refazem as prévias (`scripts/discussao/`, que encontram tudo pelo nome e por isso
+   sobrevivem a uma mudança de ordem) e o que falta construir. Cada coisa que ele disser
+   sobre um ponto regista-se lá, com a data e as palavras dele.
+
 **Atualizar as fotos é um comando só:** `py -3.11 scripts/atualizar_fotos.py`.
 Regista, melhora, escolhe a versão, refaz as miniaturas, tira o retrato do estado
 e monta `saida/mesa.html`. Depois, com a ferramenta Artifact, publica-se a Mesa e
@@ -76,6 +82,13 @@ saem mudos. Depois de ler `montagem/estado` para `saida/leitura_mesaN`, correr
 o `montar_da_mesa.py`. Parte sempre da versão dele, não duplica o que ele já tiver, e
 se estiver tudo diz "nada".
 
+**Antes do render final, e depois de fotos novas ou de mudanças de ordem ou de durações,
+revêem-se os fins de frase das músicas (decisão 096, pedido dele).** Um fim de frase é um
+sítio da música, e qualquer mudança na montagem põe a música a chegar ao corte noutro sítio.
+Corre-se `py -3.11 scripts/discussao/ponto3_3_frases.py`: as trocas marcadas "MEDIR OUTRA
+VEZ" medem-se de novo (um agente analisa, outro verifica, sem escrever letras de canções) e
+mostram-se ao Tiago antes do render.
+
 **As prévias grandes vão em folhas, nunca uma por foto.** O link da Mesa aceita no
 máximo 256 ficheiros ao todo, contando a página, e 255 entradas por publicação. Com
 641 fotos, um ficheiro por foto foi recusado. O `gerar_previas.py` faz folhas de 4 por
@@ -113,7 +126,8 @@ dentro do filme não se corrige na sala. Daí decorre:
 
 - Planos fechados. Foto de grupo tirada de longe não se lê a 15 metros. Se uma
   foto importante estiver distante, corta e aproxima.
-- Texto grande, poucas palavras, alto contraste, branco sobre escuro.
+- Texto grande, poucas palavras, alto contraste, claro sobre escuro. Nos cartões e nos
+  nomes dos bebés, champanhe quente com brilho em vez de branco (decisão 098, 13,3:1).
 - Nenhuma narração falada. A acústica mata a palavra. A música carrega tudo.
 - Fim inequívoco com fade a preto, para as pessoas saberem que podem aplaudir.
 
@@ -213,6 +227,38 @@ intactos. Um vídeo de abertura novo passa pelo mesmo caminho antes de entrar na
 **O nível da música do filme é -21,9 LUFS e não os -23 do loudnorm**, porque a opção `level` do
 alimiter multiplica a saída por 1/0,94. É contra -21,9 que se compara qualquer coisa.
 
+**E cada leito é medido depois do loudnorm, decisão 087.** O loudnorm de uma passagem decide com
+os primeiros três segundos, e uma música que arranca muito acima do resto ficava 3 dB em baixo (o
+Rei Leão, a retoma do Lang Lang, a Fome de Viagem). O `render.falta_ao_loudnorm()` mede a saída em
+cada troço e acerta o ganho quando passa de 1 dB. Para medir o som sem desenhar fotogramas,
+chamam-se `carregar_montagem`, `som_do_ficheiro` e `construir_som` à mão, como o `main()` faz.
+
+**Uma marca da mesma música que a automática não a duplica, decisão 087.** Se ele marca o Rei
+Leão ou a Ana Faria dentro do bloco onde o montar já os põe, entra uma só: a marca, se vem antes;
+a automática, se já está a tocar. E os foguetes de cada nascimento disparam quando acende, na fita
+de 1995, o marco grande (com asterisco) com o nome ou com a data, 12/09 e 24/11 (decisão 088): o
+texto do marco é dele. Sem asterisco a data não chega, que o Côa também é a 24/11. A foto do bebé
+só entra depois de os foguetes acabarem: o montar estica o cartão do nascimento e, sem cartão,
+segura a fita parada na data acesa, escrito no CSV como `~segundos@instante` no fim do texto da
+fita (decisões 089 e 091): o instante é o meio da paragem do nascimento, com a palavra acesa, e
+nunca o último fotograma, onde ela já se apagou. Um leitor novo do texto da fita passa pelo
+`linha_tempo.ler_meses()`, e uma chave de clip da fita pelo `linha_tempo.sem_segura()`.
+
+**O que a construção de 30 de setembro pôs no filme (decisão 100, das 092 a 099).**
+- **O clip `nome`:** o montar põe "O TIAGO" ou "A CLARA" entre a fita do nascimento e a primeira foto
+  (ou grupo). O nome nasce no último segundo dos foguetes, e a foto sobe 1,6 s depois, em 1 s. A Mesa
+  não tem este clip, e com um cartão pelo meio ele não entra.
+- **Os cartões com texto e os nomes** usam o `letreiro` do render: champanhe quente com brilho, a
+  acender do preto e a aproximar-se.
+- **O som** lê do `som.csv` a subida, o fim de frase (`sai_s`) e a cauda, e os leitos levam
+  `curve=qsin`. As entradas num ataque estão em `data/entradas_ataque.csv`. Os fins de frase estão em
+  `data/fins_de_frase.csv`, cada um com o segundo do ficheiro em que foi medido. Se a música chegar ao
+  corte noutro sítio, o montar avisa "fim de frase por medir outra vez" e a música desce no corte, como
+  antes.
+
+**A pilha vai até 40 em monte, e só até 24 em leque** (decisão 091): desenhado a sério, o leque
+deixa de mostrar 20% de cada foto de baixo a partir de 25. O montar põe em monte um leque maior.
+
 ---
 
 ## Quanto ampliar cada foto
@@ -237,8 +283,10 @@ fotos para 109, e o lote urgente de 68 para 15.
 **Quem escolhe a versão de cada foto é o `data/finais.csv`, mais ninguém.**
 
 O `consolidar.py` escreve esse índice ao mesmo tempo que copia para a `FINAIS`:
-uma linha por fotografia, com o id, o ficheiro final, de onde veio e quanto
-mudou. O `render.py`, o `gerar_editor.py` e o `auditar_finais.py` leem de lá.
+uma linha por fotografia, com o id, o ficheiro final, de onde veio, quanto
+mudou e, na coluna `recusadas`, as versões que recusou e porquê
+(`IA:cara 0.17;lanczos:cara 0.78`). Uma foto com a versão da regra recusada está
+pronta, não à espera: é o `estado_fotos.py` que o lê de lá. O `render.py`, o `gerar_editor.py` e o `auditar_finais.py` leem de lá.
 
 Nenhum deles pode voltar a decidir sozinho. Já houve três cópias da mesma regra
 em três ficheiros e a que fazia o vídeo era a que estava por corrigir: o render
@@ -249,17 +297,40 @@ A `FINAIS` também guarda ficheiros de corridas antigas, com outra extensão. N�
 se apagam, regra 3. O `consolidar.py` lista-os no fim de cada corrida, e quem
 procurar por nome em vez de pelo índice apanha o ficheiro errado.
 
+**A rede neuronal não entra no filme, decisão 090.** Nenhuma foto da FINAIS vem da rede nem da
+restauração: só o Lanczos e o original. A 28 de setembro o Tiago mostrou a 21-45-8 com os olhos
+desfeitos, e a razão é de fundo: nas fotos de grupo as caras têm 25 a 45 pixéis no original, o
+detector não as encontra, a guarda das caras não as mede, e é aí que a rede desenha olhos e bocas.
+Nenhuma guarda que dependa de encontrar as caras garante zero invenções. O Lanczos só interpola e
+tem o mesmo tamanho, por isso nada estica mais; fica mais macio e verdadeiro. O
+`consolidar.VERSOES_PERMITIDAS` e o `teste_nenhuma_foto_vem_da_rede` prendem isto, e o
+`atualizar_fotos.py` já não corre o `upscale_ia.py`. **Não voltar a ligar a rede** sem o Tiago o
+pedir com a comparação à frente.
+
 **Duas pastas de saída, e nenhuma delas é o original:**
 
 | Pasta | Técnica | Quando usar |
 |---|---|---|
-| `upscaled\` | Lanczos mais `cas`, rápido | Ampliações abaixo de 1,5x. É esta que a FINAIS usa, decisão 052 |
-| `upscaled-ia\` | Real-ESRGAN `realesrgan-x4plus`, 88 s por foto em CPU | Acima de 1,5x |
+| `upscaled\` | Lanczos mais `cas`, rápido | Sempre que a foto precisa de crescer. É a única versão melhorada da FINAIS, decisões 052 e 090 |
+| `upscaled-ia\` | Real-ESRGAN `realesrgan-x4plus`, 88 s por foto em CPU | **Nunca, desde a decisão 090.** Fica em disco, não entra no filme |
 
 Nunca usar `realesrgan-x4plus-anime` nem `realesr-animevideov3`: são para
 desenho animado e em fotografias de pessoas dão pele de plástico. Nunca usar
 restauro de rostos (GFPGAN, CodeFormer): esses não ampliam a cara,
 redesenham-na, e inventam um rosto plausível que não é o da pessoa.
+
+**A guarda das caras, decisão 086.** O travão dos 8 por cento mede a fotografia inteira e não vê
+um olho redesenhado: foi o Tiago que viu, no ecrã. O `consolidar.py` mede agora, dentro de cada
+cara que o opencv encontra no original, o detalhe fino que sobra em cada versão, e só aceita entre
+**0,80 e 1,25** do original. Abaixo o modelo apagou a cara, acima desenhou detalhe que ninguém
+fotografou: a fidelidade é a distância a 1,00, **nunca "quanto mais detalhe melhor"**. Vale para
+todas as fontes, o Lanczos incluído, e o original está sempre isento. Sem opencv o `consolidar.py`
+avisa que não houve guarda. `opencv-python` fica preso na 4.10.0.84: a 5 não traz os classificadores.
+
+**E o zoom do clip multiplica a ampliação.** A tabela acima prepara a foto para aparecer parada.
+«Aproxima N» mostra um recorte e precisa de N vezes mais pixéis; «Zoom in» e «Zoom out» de 1,12. O
+`scripts/auditar_nitidez.py` faz a conta por lugar do filme. Os zooms são do Tiago: diz-se-lhe o
+valor a baixar, não se muda na Mesa.
 
 ---
 
@@ -533,6 +604,12 @@ e a cópia leve `..._leve.mp4` ao lado, e regista cada render em `data/renders.c
 Nunca voltar a dar ao render um nome fixo: foi assim que se perdeu a v3 de 12 de
 setembro. Para mandar ao Tiago, a `_telemovel` do render mais recente, que cabe no
 limite de 30 MB do envio; se não existir, a `_leve`.
+
+**Até ele dizer que é a versão final, o render corre com `--so-telemovel`** (pedido dele a 27
+de setembro): salta a `_leve` e faz a `_telemovel` direto do ficheiro final. Poupa uns 10 dos
+cerca de 57 minutos; o desenho dos fotogramas, uns 30, não se poupa, porque a cópia do telemóvel
+sai do ficheiro 1080p. E a cópia do telemóvel não serve para julgar nitidez: para isso tiram-se
+fotogramas do ficheiro final.
 
 **O render desenha em fatias, com um só encoder (decisão 073).** Por omissão 7 processos
 desenham os fotogramas alternados (`q % 7`) e o processo principal entrega-os por ordem ao
