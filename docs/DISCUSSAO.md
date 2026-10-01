@@ -777,6 +777,38 @@ um vídeo incluindo os créditos."* Pela ordem:
   - cinco são pares novos, por causa da ordem dele e da troca Steppenwolf e Fome de Viagem, e
     cruzam-se como antes da 096.
 
+**O render de 1 de outubro, 23:11, o que ele pediu "depois de tudo":**
+- **O filme:** `C:\casamento-video-media\saida\v3_2026-10-01_2311.mp4`, em resolução cheia, com
+  `--fatias 6`.
+- **Com os créditos:** `saida/discussao/ponto5/v3_2026-10-01_2311_com_creditos_telemovel.mp4`, 843 s, com
+  o som a -21,8 LUFS.
+- **A Mesa e a montagem:** a Mesa na rev 1042 e a Mesa 48 publicada. A montagem é igual à do render
+  rápido das 21:03.
+- **O que falta para o render final:** a cópia do filme com os créditos em resolução cheia, porque o
+  `--colar` só faz a cópia do telemóvel. Fica para quando os créditos estiverem fechados.
+
+**As prévias do mergulho em mais do que uma foto** (1 de outubro, 23:01):
+`py -3.11 scripts/discussao/previa_mergulho_varias.py` faz `saida/discussao/mergulho/mergulho_varias_ABCD.mp4`
+(73 s), as quatro em separado e uma folha de fotogramas. `--quadros` tira só os fotogramas.
+- **Como se fez:** as mesmas 20 fotos das viagens (pilhas 116, 139 e 140) e três mergulhos em todas,
+  com as funções do render.
+- **Cada maneira, com 3 mergulhos:**
+  - **A, mergulha e volta:** 18,0 s; cada mergulho a mais custa 4,9 s.
+  - **B, passeia de perto:** 13,6 s; desliza 1,86 s entre vizinhas da fila de baixo, à velocidade do
+    mergulho.
+  - **C, voo entre fotos:** 13,9 s. No voo para o canto abranda quase até parar no ponto mais longe,
+    porque encostado ao canto não tem para onde andar de lado.
+  - **D, três grupos seguidos:** 14,9 s, sem código novo. As vizinhas nunca passam de 1,5x.
+- **Para lhe dizer:**
+  - cada foto mergulhada fica 0,8 s a encher o ecrã, contra a regra dos 3 s;
+  - nas grelhas de 20 as vizinhas chegam esticadas a 2,5x perto do fim do mergulho (já acontece no
+    render de hoje);
+  - quando a câmara mostra a grelha inteira, a foto marcada é desenhada a partir do sprite reduzido
+    cerca de 5 vezes sem filtro, e cintila um pouco. Vem do `render.compor` e corrige-se se ele usar o
+    mergulho.
+- **Depois de escolher:** constrói-se no render, no montar e na Mesa, e revêem-se os fins de frase
+  (096).
+
 **A troca de músicas** (1 de outubro): *"Estava a pensar trocar a música do Fome de Viagem com esta
 música: Steppenwolf - Born To Be Wild (Lyrics). Não precisamos de fazer os ajustes todos de quando
 começa e acaba, pois isso ainda vai ser ajustado mais tarde."* Feito na Mesa (rev 991), trocando as duas
