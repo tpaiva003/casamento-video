@@ -166,6 +166,16 @@ section:last-child{border-right:0}
 .grupoPeca{position:absolute; background:#f0f0f2; box-shadow:0 6px 18px rgba(0,0,0,.55); animation:grupoEntra .6s ease-out both}
 @keyframes grupoEntra{from{opacity:0} to{opacity:1}}
 @media (prefers-reduced-motion: reduce){ .grupoPeca{animation:none} }
+/* o mergulho na pre-visualizacao: a caixa e o ecra 16:9, a grelha e o que a camara aproxima, e a
+   legenda fica fora dela, por cima, como no render, ver legendaDoMergulhoNoPalco() */
+.mergulhoCaixa{position:relative; overflow:hidden; background:#000}
+.mergulhoGrelha{position:absolute; inset:0}
+.mergulhoCel{position:absolute; overflow:hidden; background:#000}
+/* a legenda do mergulho no sitio e no tamanho do render (legendaDoMergulho): a faixa escura e as linhas */
+.mergulhoFaixa{position:absolute; left:0; right:0; z-index:2}
+.mergulhoLegenda{position:absolute; left:0; right:0; z-index:3; text-align:center; color:#fff;
+  font-family:Arial, Helvetica, sans-serif; font-weight:700; white-space:nowrap}
+@media (prefers-reduced-motion: reduce){ .mergulhoCel{animation:none !important} }
 .clip .tmb.ladoTmb{display:grid; grid-template-columns:26px 26px; grid-auto-rows:26px; gap:2px; background:none}
 .ladoTmb span{width:26px; height:26px; background-repeat:no-repeat; border-radius:2px; background-color:var(--fundo2)}
 .ladoLinha{display:flex; align-items:center; gap:6px; margin-bottom:5px}
@@ -1038,9 +1048,47 @@ function tratamentoLado(v, c, lay){
 /* 28 de setembro, decisao 087: colagem ate 20 e pilha ate 40. O Tiago: "para a pilha mete
    tambem o maximo que der, pois a pilha e um registo interessante". As medidas estao junto do
    render.LIMITES_MONTE; os avisos do MUITAS ficam onde estavam, porque continuam verdade. */
+/* 1 de outubro, decisao 102: a pilha sobe a 60, so em monte. O Tiago: "A pilha: ate 60 fotos
+   em monte, depois da correcao de memoria." Na duracao minima cada foto fica cerca de 0,5 s,
+   e o notaPorFoto diz quanto; um texto em cada foto fica menos de 1,5 s e nao se le, e o
+   textosCurtosNaPilha() avisa. */
+/* 1 de outubro, decisao 102: a colagem sobe a 30, em filas e espalhada. O Tiago: "A colagem: ate
+   30 fotos." De 25 a 30 as fotos ficam do tamanho das de uma colagem de 20; acima de 30 passam
+   a textura a 15 metros. Os textos dentro de cada foto ja nao cabem acima de 20, e a Mesa avisa,
+   ver avisoTextosNaColagem(). */
 var GRUPOS = {lado: {min: 2, max: 6, nome: "lado a lado"},
-              colagem: {min: 2, max: 20, nome: "colagem"},
-              pilha: {min: 2, max: 40, nome: "pilha"}};
+              colagem: {min: 2, max: 30, nome: "colagem"},
+              pilha: {min: 2, max: 60, nome: "pilha"}};
+/* O LIMITE DE UM ESTILO, quando nao e o do tipo: o render.LIMITES_ESTILO e o
+   montar_da_mesa.LIMITES_ESTILO, que o teste_limites_dos_grupos_iguais le com estes. O mergulho
+   na grelha e um estilo da colagem e vai ate 36 (decisao 102): a grelha aguenta mais do que as
+   filas. Quem pergunta pelo limite de um grupo passa por limitesGrupo(). */
+var GRUPOS_ESTILO = {mergulho: {tipo: "colagem", min: 2, max: 36, nome: "em grelha, com mergulho"}};
+/* {min, max, nome} de um grupo deste tipo no estilo dado: o do estilo, se o tiver, senao o do
+   tipo. Sem estilo, ou com um que o tipo nao conhece, e o da omissao, como no render. */
+function limitesGrupo(tipo, estilo){
+  var g = GRUPOS[tipo], e = GRUPOS_ESTILO[estilo];
+  if(!g) return null;
+  return e && e.tipo === tipo ? {min: e.min, max: e.max, nome: g.nome} : g;
+}
+/* "A colagem junta 2 a 30 fotografias; em grelha, com mergulho, 2 a 36." A frase do limite de
+   um tipo no estilo dado, e a dos outros estilos dele que tem limite proprio, para ele saber
+   que ha. `verbo` e "junta" ou "leva". */
+function fraseLimites(tipo, estilo, verbo){
+  var g = limitesGrupo(tipo, estilo), proprio = GRUPOS_ESTILO[estilo] && GRUPOS_ESTILO[estilo].tipo === tipo;
+  var r = "A " + g.nome + (proprio ? " " + GRUPOS_ESTILO[estilo].nome + "," : "") + " " + (verbo || "junta") + " " +
+          g.min + " a " + g.max + " fotografias";
+  Object.keys(GRUPOS_ESTILO).forEach(function(k){
+    var e = GRUPOS_ESTILO[k];
+    if(e.tipo !== tipo || k === estilo) return;
+    r += "; " + e.nome + ", " + e.min + " a " + e.max;
+  });
+  if(proprio){
+    var omissao = GRUPOS[tipo];
+    r += "; nos outros estilos, " + omissao.min + " a " + omissao.max;
+  }
+  return r + ".";
+}
 /* a pilha em leque so ate aqui, o render.PILHA_LEQUE_MAX: com mais o montar pe-la em monte */
 var PILHA_LEQUE_MAX = 24;
 /* Acima disto nao se impede nada, avisa-se: a 15 metros uma colagem de mais de 8 fica com
@@ -1052,8 +1100,15 @@ var PILHA_LEQUE_MAX = 24;
    12, e por isso fica aqui. */
 var MUITAS = {colagem: {acima: 8, nota: "Com mais de 8 fotos cada uma fica pequena para se ver a 15 metros."},
               pilha: {acima: 12, nota: "Numa pilha de mais de 12 as de baixo quase não se veem."}};
-function notaMuitas(tipo, n){
-  var m = MUITAS[tipo];
+/* O MERGULHO TEM O SEU: a grelha nao encolhe as fotos como a colagem em filas, e com 20 cada
+   celula tem 374 x 260, mais do que a foto mais pequena de uma colagem de 12. O que pesa e a
+   tela: medido a 1 de outubro, numa de 2 metros o lado curto da celula fica com 33 pixeis uteis
+   a 30 fotos e 27 a 36, e as fotos de grupo passam a textura. */
+var MUITAS_ESTILO = {mergulho: {tipo: "colagem", acima: 30,
+  nota: "Com mais de 30 fotos, numa tela de 2 metros cada célula da grelha deixa de se ler como fotografia e passa a textura."}};
+/* `estilo` e o do grupo; um estilo com aviso proprio troca o do tipo */
+function notaMuitas(tipo, n, estilo){
+  var e = MUITAS_ESTILO[estilo], m = e && e.tipo === tipo ? e : MUITAS[tipo];
   return m && n > m.acima ? m.nota : "";
 }
 /* quantas fotografias seguidas ha na montagem a comecar no clip i, contando com ele */
@@ -1109,7 +1164,135 @@ function duracaoMinimaGrupo(v, i){
   var c = v && v.clips[i];
   if(!c || (c.t !== "colagem" && c.t !== "pilha")) return 0;
   var e = encadeadosDe(v, i);
+  /* O MERGULHO TEM A SUA CONTA (1 de outubro): a da colagem pede cada foto a entrar e a pousar,
+     e num mergulho de 20 dava 11,1 s quando ele cabe inteiro em 8,2. O estilo le-se do campo e
+     nao pelo estiloDe(), que e o mesmo para a colagem: "mergulho" so existe nela. */
+  if(c.t === "colagem" && c.estilo === "mergulho")
+    return duracaoMinimaMergulho((c.fotos || []).length, e.entra, e.sai, cobreDoMergulho(c));
   return duracaoMinimaMonte(c.t, (c.fotos || []).length, e.entra, e.sai);
+}
+/* ---------- o mergulho na grelha (decisoes 101 e 102) ----------
+   AS CONTAS DO RENDER, as mesmas e pela mesma ordem: mergulho_grelha(), mergulho_altura(),
+   mergulho_cobre(), mergulho_entre(), mergulho_desce(), mergulho_tempos(), duracao_mergulho() e
+   duracao_minima_mergulho(). Os numeros sao os MERGULHO_* do render.py, e o teste_mesa_mergulho
+   le-os daqui e compara-os com os de la. A grelha e a do video ao pixel; a altura dela com
+   legenda e aproximada, porque as linhas da legenda contam-se com a letra do browser
+   (linhasNaLegendaAprox), e uma legenda que parta noutro sitio muda a altura uma linha. */
+var MERGULHO = {folga: 8, atraso: 0.35, entra: 0.35, entre: 0.18, espera: 1.0, desce: 1.2, fica: 0.8,
+                respira: 0.03, ficaZoom: 0.03, aspetoMin: 1.0, aspetoMax: 2.2, aspetoAlvo: 1.5,
+                encheMax: 4.0, minimo: 0.4};
+/* a legenda de baixo do render, para a altura da grelha e para a desenhar na pre-visualizacao:
+   LEGENDA_TAMANHO, LEGENDA_MIN, LEGENDA_LINHAS, LEGENDA_TEXTO, LEGENDA_ALMOFADA, MONTE_LEGENDA_FOLGA,
+   LEGENDA_FUNDO e LEGENDA_ALFA */
+var LEGENDA_RENDER = {tamanho: 46, minimo: 30, linhas: 4, texto: 70, almofada: 26, folgaMonte: 0.02,
+                      fundo: 34, alfa: 165};
+/* [[x, y, w, h]] das celulas, pela ordem das fotos, em pixeis de 1920 x 1080. As colunas pela nota
+   do render: a celula dentro do formato de fotografia (1,0 a 2,2) ou a menos fora dele, depois as
+   menos vazias, depois a mais perto de 3:2; a ultima fila centrada. */
+function grelhaMergulho(n, larg, alt){
+  var f = MERGULHO.folga, melhor = null;
+  for(var cols = 1; cols <= n; cols++){
+    var filas = Math.ceil(n / cols), vazias = cols * filas - n;
+    var cw = (larg - f * (cols + 1)) / cols, ch = (alt - f * (filas + 1)) / filas, a = cw / ch;
+    var nota = [Math.max(0, Math.log(MERGULHO.aspetoMin / a), Math.log(a / MERGULHO.aspetoMax)), vazias,
+                Math.abs(Math.log(a / MERGULHO.aspetoAlvo))];
+    /* a comparacao de tuplos do Python: a primeira diferenca decide, e nas iguais fica a primeira */
+    var menor = !melhor;
+    for(var q = 0; !menor && q < 3; q++){
+      if(nota[q] < melhor.nota[q]){ menor = true; break; }
+      if(nota[q] > melhor.nota[q]) break;
+    }
+    if(menor) melhor = {nota: nota, cols: cols, filas: filas, cw: cw, ch: ch};
+  }
+  var celulas = [];
+  for(var k = 0; k < n; k++){
+    var fi = Math.floor(k / melhor.cols), co = k % melhor.cols;
+    var naFila = Math.min(melhor.cols, n - fi * melhor.cols);
+    var desvio = (melhor.cols - naFila) * (melhor.cw + f) / 2;
+    celulas.push([f + co * (melhor.cw + f) + desvio, f + fi * (melhor.ch + f), melhor.cw, melhor.ch]);
+  }
+  return celulas;
+}
+/* A legenda do clip como o render.faixa_texto() a desenha, ou null sem legenda: o tamanho, que desce
+   de 4 em 4 ate caberem LEGENDA_RENDER.linhas, as linhas (as do quebrarAprox(), aproximadas), o
+   bloco delas, que acaba a LEGENDA_RENDER.texto do fundo, e o topo da faixa escura, almofada acima
+   do bloco. Serve a altura da grelha e a legenda da pre-visualizacao, que assim sao uma so conta. */
+function legendaDoMergulho(c){
+  var x = String((c && c.x) || "").trim();
+  if(!x) return null;
+  var tam = LEGENDA_RENDER.tamanho, linhas = linhasDaLegendaAprox(x, tam);
+  while(linhas.length > LEGENDA_RENDER.linhas && tam > LEGENDA_RENDER.minimo){
+    tam = Math.max(LEGENDA_RENDER.minimo, tam - 4); linhas = linhasDaLegendaAprox(x, tam);
+  }
+  var bloco = Math.floor(tam * 1.35) * Math.max(1, linhas.length);
+  return {tam: tam, linhas: linhas, bloco: bloco, topo: 1080 - LEGENDA_RENDER.texto - bloco - LEGENDA_RENDER.almofada};
+}
+/* a altura da grelha: 1080, ou com legenda ate 2% acima da faixa dela, como o render.mergulho_altura() */
+function alturaMergulho(c){
+  var leg = legendaDoMergulho(c);
+  return leg ? leg.topo - LEGENDA_RENDER.folgaMonte * 1080 : 1080;
+}
+/* quanto a celula cresce para cobrir o ecra, a escala da camara no fim do mergulho */
+function cobreMergulho(cel){ return Math.max(1920 / cel[2], 1080 / cel[3]); }
+/* o cobre da grelha de 3 por 3 sem legenda: o mergulho dura em proporcao ao logaritmo do zoom,
+   a velocidade dela (render.MERGULHO_COBRE_REF) */
+function cobreReferenciaMergulho(){ return cobreMergulho(grelhaMergulho(9, 1920, 1080)[8]); }
+function entreMergulho(n){
+  return n < 2 ? MERGULHO.entre : Math.min(MERGULHO.entre, (MERGULHO.encheMax - MERGULHO.atraso - MERGULHO.entra) / (n - 1));
+}
+function desceMergulho(cobre){
+  return MERGULHO.desce * Math.max(1, Math.log(cobre) / Math.log(cobreReferenciaMergulho()));
+}
+/* o que cada parte pede, pela ordem em que encolhe: encher, espera, a ultima sozinha e o mergulho */
+function partesMergulho(n, cobre){
+  return [MERGULHO.entra + entreMergulho(n) * (n - 1), MERGULHO.espera, MERGULHO.fica, desceMergulho(cobre || cobreReferenciaMergulho())];
+}
+/* os tempos a caber na duracao: a sobra vai para a espera; a falta tira-se do encher, da espera,
+   da ultima e por fim do mergulho, cada um ate 40% do que pedia. `enche` e quando a grelha fica
+   cheia e `comeca` quando a camara comeca a mergulhar, em segundos do clip. */
+function temposMergulho(n, duracao, entra, sai, cobre){
+  var atraso = Math.min(MERGULHO.atraso, Math.max(entra || 0, 0)), partes = partesMergulho(n, cobre);
+  var livre = Math.max(0, duracao - atraso - Math.max(sai || 0, 0));
+  var falta = partes.reduce(function(s, p){ return s + p; }, 0) - livre, ficam = [];
+  partes.forEach(function(p){
+    var tira = Math.min(Math.max(falta, 0), p * (1 - MERGULHO.minimo));
+    ficam.push(p - tira); falta -= tira;
+  });
+  var f = partes[0] ? ficam[0] / partes[0] : 1, espera = ficam[1] + Math.max(0, -falta);
+  var r = {atraso: atraso, entra: MERGULHO.entra * f, entre: entreMergulho(n) * f, espera: espera, desce: ficam[3], fica: ficam[2]};
+  r.enche = atraso + r.entra + r.entre * (n - 1);
+  r.comeca = r.enche + espera;
+  return r;
+}
+function duracaoMergulho(n, entra, sai, cobre){
+  return Math.min(MERGULHO.atraso, Math.max(entra || 0, 0)) + partesMergulho(n, cobre).reduce(function(s, p){ return s + p; }, 0) +
+         Math.max(sai || 0, 0);
+}
+function duracaoMinimaMergulho(n, entra, sai, cobre){
+  var p = partesMergulho(n, cobre);
+  return Math.min(MERGULHO.atraso, Math.max(entra || 0, 0)) + MERGULHO.minimo * (p[0] + p[1]) + p[2] + p[3] + Math.max(sai || 0, 0);
+}
+/* o cobre da ultima foto de um grupo em mergulho, com a legenda dele */
+function cobreDoMergulho(c){
+  var n = (c.fotos || []).length;
+  return n ? cobreMergulho(grelhaMergulho(n, 1920, alturaMergulho(c))[n - 1]) : cobreReferenciaMergulho();
+}
+/* os tempos e a duracao sem sobra de um mergulho no seu sitio da montagem, com os encadeados do render */
+function temposDoMergulho(v, c){
+  var e = encadeadosDe(v, v ? v.clips.indexOf(c) : -1);
+  return temposMergulho((c.fotos || []).length, +c.d || 0, e.entra, e.sai, cobreDoMergulho(c));
+}
+function duracaoDoMergulho(v, c){
+  var e = encadeadosDe(v, v ? v.clips.indexOf(c) : -1);
+  return duracaoMergulho((c.fotos || []).length, e.entra, e.sai, cobreDoMergulho(c));
+}
+/* "a grelha enche em 4 s e fica 1 s inteira; o mergulho leva 1,7 s e a ultima fica 0,8 s sozinha" */
+function textoDoMergulho(v, c){
+  var t = temposDoMergulho(v, c), minima = duracaoMinimaGrupo(v, v.clips.indexOf(c));
+  if((+c.d || 0) < minima - 0.001)
+    return "curta de mais: o mergulho fica apressado; a mínima com estes encadeados é " + s1(Math.ceil(minima * 10) / 10) + " s";
+  return "a grelha enche em " + s1(t.enche) + " s e fica " + s1(t.espera) + " s inteira; o mergulho leva " + s1(t.desce) +
+         " s e a última fica " + s1(t.fica) + " s sozinha";
 }
 /* A MESMA CONTA DO render.agenda_monte(), para a Mesa dizer quando cada foto comeca a entrar
    sem inventar outra regra. Se aquela mudar, esta muda com ela.
@@ -1184,6 +1367,9 @@ function agendaDoClip(v, c){
    a duracao. Vazio fora da colagem e da pilha. */
 function textoPorFoto(v, c){
   if(!v || !c || (c.t !== "colagem" && c.t !== "pilha") || !(c.fotos || []).length || v.clips.indexOf(c) < 0) return "";
+  /* NO MERGULHO NAO HA VEZ POR FOTO: a grelha enche, espera e mergulha (1 de outubro). A conta e
+     a do render.mergulho_tempos(), ver textoDoMergulho(). */
+  if(c.t === "colagem" && c.estilo === "mergulho") return textoDoMergulho(v, c);
   /* NO APERTO a agenda ja nao reparte a duracao pelas fotos (agendaMonte volta aos passos da de
      antes) e a vez da zero ou quase: "cerca de 0 s por foto" enganava. Diz-se a minima. */
   if(porFotoApertada(v, c))
@@ -1194,6 +1380,8 @@ function textoPorFoto(v, c){
    agendaMonte deixa de repartir a duracao pelas fotos */
 function porFotoApertada(v, c){
   if(!v || !c || (c.t !== "colagem" && c.t !== "pilha") || !(c.fotos || []).length || v.clips.indexOf(c) < 0) return false;
+  /* no mergulho, abaixo da minima dele, que e quando o proprio mergulho encolhe */
+  if(c.t === "colagem" && c.estilo === "mergulho") return (+c.d || 0) < duracaoMinimaGrupo(v, v.clips.indexOf(c)) - 0.001;
   return agendaDoClip(v, c).vez < MONTE.entradaMin + MONTE.pausa - 1e-9;
 }
 /* a duracao minima de duracaoMinimaGrupo(), arredondada para cima a 0,1 s, a que se mostra */
@@ -1201,8 +1389,10 @@ function minimaArredondada(v, c){ return Math.ceil(duracaoMinimaGrupo(v, v.clips
 /* "Duracao minima com estes encadeados", e o aviso quando a duracao fica abaixo dela */
 function notaMinimaGrupo(v, c){
   var dmin = duracaoMinimaGrupo(v, v.clips.indexOf(c)), curta = c.d < dmin - 0.001;
+  var mergulho = c.t === "colagem" && c.estilo === "mergulho";
   return {curta: curta, html: 'Duração mínima com estes encadeados: <b>' + s1(minimaArredondada(v, c)) + ' s</b>' +
-    (curta ? '. Com ' + s1(Math.floor(c.d * 10) / 10) + ' s as fotos não chegam a ficar paradas à vista: aumenta a duração.' : '.')};
+    (curta ? '. Com ' + s1(Math.floor(c.d * 10) / 10) + (mergulho ? ' s o mergulho fica apressado e a última mal se vê sozinha'
+                                                              : ' s as fotos não chegam a ficar paradas à vista') + ': aumenta a duração.' : '.')};
 }
 /* A DURACAO OU O CROSS MUDARAM: a nota do tempo por foto e a da duracao minima refazem-se
    enquanto ele escreve. A da minima so se refazia quando o inspetor se voltava a pintar, e
@@ -1218,6 +1408,8 @@ function atualizaPorFoto(c){
     var nm = notaMinimaGrupo(v, c);
     m.innerHTML = nm.html; m.classList.toggle("somAviso", nm.curta);
   }
+  /* e o tempo de cada texto numa pilha com texto em cada foto, que e a mesma vez */
+  atualizaCurtosNaPilha(c);
 }
 /* A CONTA DE render.tempos_legenda_grupo(): na opcao "na legenda de baixo" o texto da foto k
    esta no ecra desde que ela comeca a entrar (os inicios de agenda_monte, ou o atraso da
@@ -1322,6 +1514,12 @@ function legendaRepete(c){
      sem texto: nao ha nada repetido */
   return modoTextos(c) === "foto" && !!x && x === (textosDasFotos(c)[0] || "").trim();
 }
+/* NO MERGULHO OS TEXTOS DE CADA FOTO NAO VAO AO FILME (decisao 101): o render.preparar() so passa
+   ao preparar_mergulho() a legenda do clip. Ficam guardados no xf e voltam noutro estilo, mas nao
+   se lhes conta tempo nem se avisa deles. Na revisao de 1 de outubro, um mergulho de 9 com os
+   textos na legenda de baixo mostrava "Fica so 0,6 s no ecra" em oito fotos e o Validar punha-os
+   em "Esta mal", de textos que o video nao mostra. */
+function textosForaDoFilme(c){ return !!c && c.t === "colagem" && estiloDe(c) === "mergulho"; }
 /* MUITAS FOTOS COM TEXTO EM TODAS: LEMBRETE, NUNCA UM TRAVAO.
    O Tiago, a 17 de setembro, depois de ver a folha dos grupos grandes: "se o utilizador
    selecionar mais fotos do que essas e tiver legenda em todas as fotos, entao pergunta.
@@ -1329,7 +1527,8 @@ function legendaRepete(c){
    colagem de 12 a faixa do texto ocupa 39 a 48% da altura de cada foto, medido a 17 de
    setembro, e sem ponto de foco tapa quem la esta. Continua a poder-se fazer. */
 function textoEmMuitas(c){
-  if(modoTextos(c) !== "foto") return 0;
+  /* no mergulho os textos de cada foto nao entram (decisao 101): nao ha faixa a tapar ninguem */
+  if(modoTextos(c) !== "foto" || (c.t === "colagem" && c.estilo === "mergulho")) return 0;
   var n = (c.fotos || []).length, m = MUITAS[c.t];
   if(!m || n <= m.acima) return 0;
   var xf = textosDasFotos(c);
@@ -1342,11 +1541,46 @@ function avisoTextoEmMuitas(c){
   return "São " + n + " fotos com texto em todas. A faixa de cada texto ocupa quase metade da altura da sua foto, " +
     "e sem ponto de foco marcado tapa quem lá está. Na legenda de baixo, a mudar com cada foto, lê-se melhor a 15 metros.";
 }
+/* ---------- os textos dentro das fotos de uma colagem de mais de 20 ----------
+   1 DE OUTUBRO, decisao 102: a colagem vai ate 30. Medido nesse dia com proporcoes reais, de 25 a
+   30 fotos cada uma fica com 60 a 200 pixeis de lado no ecra, e a letra de omissao e 46, ja abaixo
+   dos 58 a partir dos quais o Arial Bold se le a 15 metros (decisao 084). A faixa de um texto tem
+   1,8 vezes a letra por linha, e a letra so desce ate 78% dela (render.linhas_texto_foto): pelo
+   menos 65 pixeis a 46, que tapam um terco a metade de cada foto, e o texto que nao cabe fica
+   cortado com reticencias. Por isso, acima de COLAGEM_TEXTO_MAX fotos, qualquer texto em cada foto
+   avisa-se, e nao so com texto em todas como no avisoTextoEmMuitas(); e sugere-se a legenda de
+   baixo, que muda com cada foto e tem a letra do ecra inteiro.
+   AVISA, NAO CORRIGE (decisao 083): nada muda sozinho, e a escolha e no campo Texto das fotos. No
+   mergulho os textos de cada foto nao entram (decisao 101), e nao conta. Devolve quantas fotos
+   tem texto, ou 0. */
+var COLAGEM_TEXTO_MAX = 20;
+function textosNaColagemGrande(c){
+  if(!c || c.t !== "colagem" || estiloDe(c) === "mergulho" || modoTextos(c) !== "foto") return 0;
+  if((c.fotos || []).length <= COLAGEM_TEXTO_MAX) return 0;
+  return textosDasFotos(c).filter(function(t){ return t.trim(); }).length;
+}
+/* As alturas sao as de tamanhoPousado(), aproximadas como a zona da faixa; a faixa e a da letra
+   mais pequena a que o render desce, para nao dizer mais do que e. */
+function avisoTextosNaColagem(c){
+  var k = textosNaColagemGrande(c);
+  if(!k) return "";
+  var n = (c.fotos || []).length, menor = Infinity, maior = 0;
+  for(var j = 0; j < n; j++){ var h = tamanhoPousado(c, j).h; menor = Math.min(menor, h); maior = Math.max(maior, h); }
+  var faixa = Math.round(1.8 * Math.floor(0.78 * tamanhoTextos(c) + 0.5));
+  var de = Math.min(100, Math.round(100 * faixa / maior)), ate = Math.min(100, Math.round(100 * faixa / menor));
+  return "Numa colagem de " + n + " fotos cada uma fica com cerca de " + Math.round(menor) + " a " + Math.round(maior) +
+    " pixéis de altura no ecrã, e a faixa de um texto tem pelo menos " + faixa + ": " +
+    (k === 1 ? "o texto tapa " : "os " + k + " textos tapam ") + (de === ate ? de + "%" : de + " a " + ate + "%") +
+    " da altura da foto, e um texto comprido fica cortado. Na legenda de baixo, a mudar com cada foto, lê-se a 15 metros.";
+}
+/* o aviso dos textos das fotos de um grupo, um so: o da colagem grande, se o houver, ou o de
+   muitas fotos com texto em todas */
+function avisoDosTextosDasFotos(c){ return avisoTextosNaColagem(c) || avisoTextoEmMuitas(c); }
 /* muda so os avisos ja desenhados, sem repintar o inspetor a meio de uma palavra */
 function mostraRepete(c){
   var el = document.getElementById("xfRepete");
   if(el) el.hidden = !legendaRepete(c);
-  var mu = document.getElementById("xfMuitas"), txt = avisoTextoEmMuitas(c);
+  var mu = document.getElementById("xfMuitas"), txt = avisoDosTextosDasFotos(c);
   if(mu){
     var p = mu.querySelector("[data-muitastexto]");
     if(p && txt) p.textContent = txt;
@@ -1354,6 +1588,7 @@ function mostraRepete(c){
   }
 }
 function avisoLongo(t, c){
+  if(textosForaDoFilme(c)) return "";
   var s = String(t || "").trim(), n = s.length;
   if(c && modoTextos(c) === "legenda"){
     /* na legenda de baixo cabe muito mais do que numa foto; o que custa e a altura: a faixa
@@ -1368,13 +1603,16 @@ function avisoLongo(t, c){
   }
   return n > XF_LONGO ? "Longo para ler a 15 metros: " + n + " letras. Pode não caber em duas linhas." : "";
 }
-function linhasNaLegendaAprox(texto, tt){
-  var n = 0;
+function linhasNaLegendaAprox(texto, tt){ return linhasDaLegendaAprox(texto, tt).length; }
+/* as linhas da legenda de baixo: cada mudanca de linha conta, e cada paragrafo parte-se em 1660
+   pixeis (1920 menos 260, como o linhas_legenda() do render) */
+function linhasDaLegendaAprox(texto, tt){
+  var r = [];
   String(texto || "").split(/\r?\n/).forEach(function(par){
     par = par.split(/\s+/).join(" ").trim();
-    if(par) n += quebrarAprox(par, tt, 1920 - 260).length;
+    if(par) r = r.concat(quebrarAprox(par, tt, 1920 - 260));
   });
-  return n;
+  return r;
 }
 /* O ANULAR DESTAS MUDANCAS REPOE CAMPOS, NAO O OBJETO. Ligar o texto, tirar a legenda e
    mudar o tratamento punham no lugar uma copia do clip, e o anular repunha o objeto
@@ -1422,7 +1660,7 @@ function ligaTextosFotos(v, c, modo){
      seguir nos campos nao se perde com um Ctrl+Z desta mudanca, ver desfazer() */
   if(u) u.campos.depois = {xf: Array.isArray(c.xf) ? JSON.parse(JSON.stringify(c.xf)) : undefined};
   pintaClips(); pintaInspetor(); marcar();
-  var lembrete = modo === "foto" ? avisoTextoEmMuitas(c) : "";
+  var lembrete = modo === "foto" ? avisoDosTextosDasFotos(c) : "";
   avisar(modo === "legenda" ? "Os textos vão para a legenda de baixo, a mudar com cada foto. Vazio mostra a legenda do grupo. Ctrl+Z para anular."
          : on ? "Texto em cada foto ligado. Vazio fica sem texto. Ctrl+Z para anular." + (lembrete ? " " + lembrete : "")
               : "Texto das fotos desligado. Os textos ficam guardados. Ctrl+Z para anular.");
@@ -1452,6 +1690,10 @@ function blocoTextosFotos(c, v){
   if(!modo)
     return h + '<div class="focoAjuda" style="margin-bottom:8px">Desligado: as fotos não levam texto.' +
       (guardados ? ' Há ' + (guardados === 1 ? '1 texto guardado' : guardados + ' textos guardados') + ', que voltam ao ligar.' : '') + '</div>';
+  if(textosForaDoFilme(c))
+    return h + '<div class="focoAjuda" style="margin-bottom:8px">Em grelha, com mergulho, os textos de cada foto não vão ao vídeo: só a legenda do clip. ' +
+      (guardados ? (guardados === 1 ? 'O texto escrito fica guardado' : 'Os ' + guardados + ' textos escritos ficam guardados') + ' e volta' +
+        (guardados === 1 ? '' : 'm') + ' noutro estilo.' : 'O que escreveres fica guardado para outro estilo.') + '</div>';
   var tt = tamanhoValido(c.tt);
   h += '<div class="campo" style="margin-bottom:8px"><label for="cTt">Tamanho da letra</label>' +
     '<input type="number" id="cTt" min="' + TT_MIN + '" max="' + TT_MAX + '" step="2" value="' + (tt && tt !== TT_OMISSAO ? tt : '') +
@@ -1466,6 +1708,13 @@ function blocoTextosFotos(c, v){
         '<div class="focoAjuda">' + (tapadasFicam(c)
           ? 'Cada texto fica na sua foto até ao fim, mesmo tapado em parte pelas que caem por cima.'
           : 'O texto de cada foto apaga-se em 0,2 s quando a seguinte começa a cair, e não volta. O da última fica até ao fim.') + '</div></div>';
+    if(c.t === "pilha"){
+      /* o tempo de cada texto com "desaparece": a caixa existe sempre, escondida quando nao ha
+         aviso, para o atualizaCurtosNaPilha() a encher enquanto ele escreve a duracao */
+      var cpilha = textosCurtosNaPilha(v, c);
+      h += '<div class="focoAjuda somAviso" id="xfCurtosPilha" style="margin-bottom:6px"' + (cpilha.curtos ? '' : ' hidden') + '>' +
+        esc(avisoCurtosNaPilha(cpilha)) + '</div>';
+    }
     h += '<div class="focoAjuda" style="margin-bottom:6px">Poucas palavras: a 15 metros leem-se nomes e datas. ' +
       'Cada texto vai numa faixa escura no fundo da sua foto' +
       (c.t === "colagem" || c.t === "pilha" ? ', e passa para o topo se o ponto de foco cair na faixa: marca-o onde está a cara.' : '.') +
@@ -1473,7 +1722,7 @@ function blocoTextosFotos(c, v){
       '</div>';
     h += '<div class="aviso" id="xfRepete"' + (legendaRepete(c) ? '' : ' hidden') + '>A legenda de baixo diz o mesmo que o texto da 1.ª foto e aparece duas vezes.' +
       ' <button class="bt pequeno" id="btTirarLegenda" style="margin-top:5px">Tirar a legenda de baixo</button></div>';
-    var avMuitas = avisoTextoEmMuitas(c);
+    var avMuitas = avisoDosTextosDasFotos(c);
     h += '<div class="aviso" id="xfMuitas"' + (avMuitas ? '' : ' hidden') + '><span data-muitastexto>' + esc(avMuitas || "") + '</span>' +
       ' <button class="bt pequeno" id="btTextoNaLegenda" style="margin-top:5px">Pôr na legenda de baixo</button></div>';
   } else {
@@ -1487,6 +1736,61 @@ function blocoTextosFotos(c, v){
 }
 function avisoCurtos(curtos){
   return (curtos === 1 ? '1 texto fica' : curtos + ' textos ficam') + ' menos de 1,5 s no ecrã: aumenta a duração do clip, ou tira textos.';
+}
+/* ---------- os textos em cada foto de uma pilha, e o tempo que cada um tem ----------
+   1 DE OUTUBRO, decisao 102: a pilha vai ate 60. Com o texto "em cada foto" e a omissao das de
+   baixo, "desaparece quando outra cai por cima" (render.alfa_texto_pilha), cada texto so esta no
+   ecra desde que a sua foto comeca a cair ate a seguinte comecar, que e a vez da agenda, e o da
+   ultima ate ao fim do clip. Numa pilha de 60 na duracao minima isso e cerca de 0,5 s, e abaixo
+   de render.LEGENDA_MINIMO_S nao se le a 15 metros.
+   ATE AQUI SO A OPCAO "NA LEGENDA DE BAIXO" TINHA ESTA CONTA (contaCurtos). Em cada foto nao havia
+   nenhuma: uma pilha de 60 com um texto em cada foto passava sem aviso, e o avisoTextoEmMuitas()
+   so fala da faixa e so quando todas tem texto. A conta e a mesma do render: os inicios do
+   agenda_monte() com os encadeados do sitio do clip, e textos iguais seguidos contam como um, como
+   no legendas_curtas(), porque o mesmo texto continua a ver-se na foto que cai. Com "fica a vista"
+   o texto nao desaparece e esta conta nao vale: o que o tapa sao as de cima, e o render avisa.
+   AVISA, NAO CORRIGE (decisao 083): nao mexe na duracao nem nos textos, diz quanto chegava.
+   Devolve {curtos, menor, precisa}: quantos textos ficam pouco, o mais curto, e a duracao com que
+   todos chegavam a LEGENDA_MINIMO_S, vez = (duracao - atraso - sai) / (n + 1). */
+var LEGENDA_MINIMO_S = 1.5;      /* o render.LEGENDA_MINIMO_S: abaixo disto um texto nao se le a 15 metros */
+function textosCurtosNaPilha(v, c){
+  var nada = {curtos: 0, menor: 0, precisa: 0};
+  if(!v || !c || c.t !== "pilha" || modoTextos(c) !== "foto" || tapadasFicam(c) || v.clips.indexOf(c) < 0) return nada;
+  var xf = textosDasFotos(c).map(function(t){ return t.split(/\s+/).join(" ").trim(); });
+  var n = xf.length, d = +c.d || 0, inicios = agendaDoClip(v, c).inicios;
+  if(!n || inicios.length !== n) return nada;
+  var curtos = 0, menor = Infinity, k = 0;
+  while(k < n){
+    var j = k;
+    while(j + 1 < n && xf[j + 1] === xf[k]) j++;
+    var dura = (j + 1 < n ? inicios[j + 1] : d) - inicios[k];
+    if(xf[k] && dura < LEGENDA_MINIMO_S - 1e-9){ curtos++; menor = Math.min(menor, dura); }
+    k = j + 1;
+  }
+  if(!curtos) return nada;
+  var e = encadeadosDe(v, v.clips.indexOf(c));
+  return {curtos: curtos, menor: Math.max(0, menor),
+          precisa: Math.ceil((LEGENDA_MINIMO_S * (n + 1) + Math.max(MONTE.atraso, e.entra) + e.sai) * 10 - 1e-6) / 10};
+}
+/* O mais curto arredonda-se como o "cerca de X s por foto" do notaPorFoto, que diz o mesmo
+   numero; so quando isso daria o proprio limite vai para baixo, como a duracao no
+   notaMinimaGrupo(): 1,46 s dava "menos de 1,5 s no ecra, o mais curto 1,5 s". */
+function avisoCurtosNaPilha(r){
+  if(!r || !r.curtos) return "";
+  var m = Math.round(r.menor * 10) / 10;
+  var menor = s1(m < LEGENDA_MINIMO_S - 1e-9 ? m : Math.floor(r.menor * 10 + 1e-6) / 10);
+  return (r.curtos === 1 ? "1 texto fica só " + menor + " s no ecrã"
+                         : r.curtos + " textos ficam menos de 1,5 s no ecrã, o mais curto " + menor + " s") +
+    ": cada texto desaparece quando a foto seguinte começa a cair, e a 15 metros não se lê. Com " + s1(r.precisa) +
+    " s de duração todos chegavam a 1,5 s; senão, tira textos.";
+}
+/* a duracao, o cross ou um texto mudaram: o aviso refaz-se no sitio, sem repintar o inspetor */
+function atualizaCurtosNaPilha(c){
+  var v = versaoAtual(), el = document.getElementById("xfCurtosPilha");
+  if(!el || !v) return;
+  var r = textosCurtosNaPilha(v, c);
+  el.textContent = avisoCurtosNaPilha(r);
+  el.hidden = !r.curtos;
 }
 
 /* ---------- texto a mais para o tempo que o clip tem ----------
@@ -1607,12 +1911,13 @@ function atualizaAvisoDenso(c){
    render avisa dela. */
 function contaCurtos(c, v){
   var n = 0;
+  if(textosForaDoFilme(c)) return 0;
   if(v) (c.fotos || []).forEach(function(_id, k){ var nt = notaTempo(c, k, v); if(nt.aviso && nt.primeira) n++; });
   return n;
 }
 /* a duracao, o cross ou um texto mudaram: as notas dos tempos refazem-se no sitio */
 function atualizaNotasTempo(c){
-  var v = versaoAtual(); if(!v || modoTextos(c) !== "legenda") return;
+  var v = versaoAtual(); if(!v || modoTextos(c) !== "legenda" || textosForaDoFilme(c)) return;
   (c.fotos || []).forEach(function(_id, k){
     var nt = notaTempo(c, k, v), el = document.querySelector('#ladoFotos [data-xftempo="' + k + '"]');
     if(el){ el.textContent = nt.texto; el.classList.toggle("somAviso", nt.aviso); }
@@ -1632,13 +1937,13 @@ function campoXf(c, k, v){
     'placeholder="texto da foto ' + (k + 1) + ' (vazio ' + (modo === "legenda" ? 'mostra a legenda do grupo' : 'fica sem texto') + ')" aria-label="Texto da foto ' + (k + 1) + '">' +
     esc(t) + '</textarea>' +
     '<div class="focoAjuda somAviso" data-xfaviso="' + k + '"' + (av ? '' : ' hidden') + '>' + esc(av) + '</div>';
-  if(modo === "legenda"){
+  if(modo === "legenda" && !textosForaDoFilme(c)){
     var nt = notaTempo(c, k, v);
     h += '<div class="focoAjuda' + (nt.aviso ? ' somAviso' : '') + '" data-xftempo="' + k + '">' + esc(nt.texto) + '</div>';
   }
   h += '</div>';
   /* na colagem e na pilha a foto vai inteira e o foco so serve a faixa: mostra-se com ela */
-  if(modo === "foto" && (c.t === "colagem" || c.t === "pilha") && t.trim()){
+  if(modo === "foto" && (c.t === "colagem" || c.t === "pilha") && t.trim() && !textosForaDoFilme(c)){
     var ff = porId[(c.fotos || [])[k]];
     if(ff) h += blocoFocoFaixa(c, k, ff, t);
   }
@@ -1749,7 +2054,9 @@ function linhasTextoFotoAprox(texto, larguraPx, tt){
    DE 6 A 12 (17 de setembro) as contas do render sao outras e ainda mais longe desta: em
    filas reparte-se por max(2, raiz de n / 1,33 arredondada) filas, e na espalhada a largura
    desce da primeira a ultima na proporcao de 760 a 440, com a primeira do tamanho de uma
-   coluna e um quarto. So serve a zona da faixa, como acima. */
+   coluna e um quarto. So serve a zona da faixa, como acima.
+   ACIMA DE 20 EM FILAS (1 de outubro, decisao 102) as filas sao as que o render mais
+   provavelmente escolhe com estas proporcoes, ver contasDasFilas(). */
 function tamanhoPousado(c, k){
   var L = 1920, A = 1080;
   var aspetos = (c.fotos || []).map(function(id){ var f = porId[id]; return f && f.w && f.h ? f.w / f.h : 4 / 3; });
@@ -1762,13 +2069,29 @@ function tamanhoPousado(c, k){
     w = Math.min(760, 1.25 * 0.93 * L / (colunasE + 0.5)) * (1 - (320 / 760) * k / (n - 1));
     return {w: w, h: w / a};
   }
-  var mx = 0.035 * L, my = 0.05 * A, g = 0.018 * L;
-  var largUtil = L - 2 * mx, altUtil = A - 2 * my - (String(c.x || "").trim() ? 0.13 * A : 0);
-  var filas = [], nf = filasColagem(n), ini = 0;
-  for(var q = 0; q < nf; q++){
-    var leva = Math.ceil((n - ini) / (nf - q));
-    filas.push(aspetos.slice(ini, ini + leva)); ini += leva;
-  }
+  var med = medidasDaColagem(c), filas = [], ini = 0;
+  contasDasFilas(c, aspetos).forEach(function(leva){ filas.push(aspetos.slice(ini, ini + leva)); ini += leva; });
+  var alturas = alturasDasFilas(filas, med.largUtil, med.altUtil, med.g);
+  var fila = 0, conta = filas[0].length;
+  while(fila + 1 < filas.length && k >= conta){ fila++; conta += filas[fila].length; }
+  h = alturas[fila];
+  return {w: a * h, h: h};
+}
+/* quantas filas a Mesa usa para aproximar uma colagem de n: uma ate 3, duas de 4 a 8, tres de
+   9 a 12. Ate 5 e o que ja fazia; o resto e a conta do ensaio da espalhada do render (as filas
+   de uma grelha 16:9 de fotos 4:3). */
+function filasColagem(n){ return n <= 3 ? 1 : Math.max(2, Math.round(Math.sqrt(n / (4 / 3)))); }
+/* As margens e a altura util da colagem em filas, as do render.colagem_disposicao(): 3,5% de L
+   dos lados, 5% de A em cima e em baixo, 1,8% de L entre fotos, e a legenda de baixo, se a
+   houver, aproximada a 13% de A. */
+function medidasDaColagem(c){
+  var L = 1920, A = 1080, mx = 0.035 * L, my = 0.05 * A;
+  return {largUtil: L - 2 * mx, altUtil: A - 2 * my - (String(c.x || "").trim() ? 0.13 * A : 0), g: 0.018 * L};
+}
+/* As alturas das filas, enchidas como agua, como no render.colagem_disposicao() antes de afastar:
+   cada fila sobe com o peso 1 sobre a raiz do seu numero de fotos ate bater no teto dela, que e a
+   largura util. `filas` e uma lista de listas de aspetos, uma por fila. */
+function alturasDasFilas(filas, largUtil, altUtil, g){
   var tetos = filas.map(function(f){ return (largUtil - g * (f.length - 1)) / f.reduce(function(s, x){ return s + x; }, 0); });
   var pesos = filas.map(function(f){ return 1 / Math.sqrt(f.length); });
   var disponivel = altUtil - g * (filas.length - 1), lo = 0, hi = 0, i, j;
@@ -1778,15 +2101,87 @@ function tamanhoPousado(c, k){
     for(j = 0; j < tetos.length; j++) soma += Math.min(tetos[j], meio * pesos[j]);
     if(soma > disponivel) hi = meio; else lo = meio;
   }
-  var fila = 0, conta = filas[0].length;
-  while(fila + 1 < filas.length && k >= conta){ fila++; conta += filas[fila].length; }
-  h = Math.min(tetos[fila], lo * pesos[fila]);
-  return {w: a * h, h: h};
+  return tetos.map(function(t, q){ return Math.min(t, lo * pesos[q]); });
 }
-/* quantas filas a Mesa usa para aproximar uma colagem de n: uma ate 3, duas de 4 a 8, tres de
-   9 a 12. Ate 5 e o que ja fazia; o resto e a conta do ensaio da espalhada do render (as filas
-   de uma grelha 16:9 de fotos 4:3). */
-function filasColagem(n){ return n <= 3 ? 1 : Math.max(2, Math.round(Math.sqrt(n / (4 / 3)))); }
+/* ---------- as filas da colagem de mais de 20 fotos, como o render as escolhe ----------
+   1 DE OUTUBRO, decisao 102: a colagem vai ate 30. Ate 20 a Mesa reparte as fotos pelas filas de
+   filasColagem(), as de cima mais cheias, e isso fica como estava. De 21 a 30 enganava: a 25 a
+   Mesa punha sempre 7666 e o render escolhia 6667, 6676 ou 6766; a 30 punha 5 filas de 6 e o
+   render quase sempre 4 filas, 8877, 7887 e as outras. Aqui experimentam-se as particoes do
+   render.colagem_particoes(), as mesmas e pela mesma ordem (filas equilibradas: ate 24 de 1 a 4
+   filas de ate 6 fotos, acima de 4 a 6 filas de ate 10), enche-se cada uma como agua com as
+   proporcoes das fotos, e fica a da regra do render: das que chegam a COLAGEM_TOLERANCIA da maior
+   area, as que chegam a COLAGEM_MENOR_BANDA da melhor foto mais pequena, e dessas a de mais area.
+   O QUE NAO SE PORTA e o colagem_afastar(), que empurra as fotos para fora do miolo umas das
+   outras, encolhe o conjunto para caber no ecra e, acima de 20, deita fora as particoes que nao
+   assentam. No render e a area depois disso que escolhe. Medido a 1 de outubro em 360 colagens
+   de 21 a 30, com proporcoes do inventario e legenda de nenhuma, uma e duas linhas, contra o
+   render: o numero de filas bate em 357 e a particao inteira em 294, de 24 em 36 com 27 e com 30
+   fotos a 36 em 36 com 24. A reparticao de sempre dava 258 e 84, e a 28, 29 e 30 errava o numero
+   de filas em 34 de 36. E uma aproximacao, como o resto da pre-visualizacao: a disposicao certa
+   so existe no render. */
+var COLAGEM_PARTICOES = {muitasLinhas: 4, muitasPorLinha: 6, maisLinhas: 6, maisPorLinha: 10};  /* os do render */
+var COLAGEM_ESCOLHA = {tolerancia: 0.90, menorBanda: 0.95};  /* COLAGEM_TOLERANCIA e COLAGEM_MENOR_BANDA */
+var COLAGEM_FILAS_MESA = 20;     /* ate aqui fica a reparticao de sempre, a de filasColagem() */
+/* as k de m pela ordem do itertools.combinations(range(m), k), que e a que desempata no render */
+function combinacoes(m, k){
+  var r = [], atual = [];
+  (function passo(ini){
+    if(atual.length === k){ r.push(atual.slice()); return; }
+    for(var i = ini; i < m; i++){ atual.push(i); passo(i + 1); atual.pop(); }
+  })(0);
+  return r;
+}
+/* as particoes do render.colagem_particoes() para mais de COLAGEM_POUCAS fotos, como contas por fila */
+function particoesColagem(n){
+  var P = COLAGEM_PARTICOES, r = [], acima = n > P.muitasLinhas * P.muitasPorLinha;
+  var porLinha = acima ? P.maisPorLinha : P.muitasPorLinha;
+  for(var filas = acima ? P.muitasLinhas : 1; filas <= (acima ? P.maisLinhas : P.muitasLinhas); filas++){
+    var base = Math.floor(n / filas), resto = n % filas;
+    if(base + (resto ? 1 : 0) > porLinha) continue;
+    combinacoes(filas, resto).forEach(function(mais){
+      var contas = [];
+      for(var f = 0; f < filas; f++) contas.push(base + (mais.indexOf(f) >= 0 ? 1 : 0));
+      r.push(contas);
+    });
+  }
+  return r;
+}
+/* a particao que o render mais provavelmente escolhe, como contas por fila, ou null se nao ha nenhuma */
+function filasComoORender(aspetos, med){
+  var opcoes = particoesColagem(aspetos.length).map(function(contas){
+    var filas = [], ini = 0, total = 0, menor = Infinity;
+    contas.forEach(function(leva){ filas.push(aspetos.slice(ini, ini + leva)); ini += leva; });
+    var alturas = alturasDasFilas(filas, med.largUtil, med.altUtil, med.g);
+    filas.forEach(function(f, q){
+      f.forEach(function(a){ var area = a * alturas[q] * alturas[q]; total += area; menor = Math.min(menor, area); });
+    });
+    return {contas: contas, total: total, menor: menor};
+  });
+  if(!opcoes.length) return null;
+  var topo = Math.max.apply(null, opcoes.map(function(o){ return o.total; }));
+  var banda = opcoes.filter(function(o){ return o.total >= COLAGEM_ESCOLHA.tolerancia * topo - 1e-6; });
+  var melhorMenor = Math.max.apply(null, banda.map(function(o){ return o.menor; }));
+  var finalistas = banda.filter(function(o){ return o.menor >= COLAGEM_ESCOLHA.menorBanda * melhorMenor - 1e-9; });
+  /* o max() do Python fica com a primeira das iguais */
+  var melhor = finalistas[0];
+  finalistas.forEach(function(o){ if(o.total > melhor.total) melhor = o; });
+  return melhor.contas;
+}
+/* Quantas fotos vao em cada fila de uma colagem, de cima para baixo: [7, 6, 6, 6]. Em filas com
+   mais de COLAGEM_FILAS_MESA fotos, as do render (filasComoORender); senao, e no mergulho, que
+   tem a sua grelha, as de filasColagem() com as de cima mais cheias, como sempre. `aspetos` sao
+   os das fotos, pela ordem. */
+function contasDasFilas(c, aspetos){
+  var n = aspetos.length;
+  if(c && c.t === "colagem" && estiloDe(c) === "filas" && n > COLAGEM_FILAS_MESA){
+    var r = filasComoORender(aspetos, medidasDaColagem(c));
+    if(r) return r;
+  }
+  var contas = [], nf = filasColagem(n), ini = 0;
+  for(var q = 0; q < nf; q++){ var leva = Math.ceil((n - ini) / (nf - q)); contas.push(leva); ini += leva; }
+  return contas;
+}
 /* {y0, y1} da faixa em fracoes da altura da foto, e se foi para o topo por causa do foco.
    Na colagem, uma foto que ainda vai ser pisada por outra sobe a faixa 8% (MONTE_PISA) e
    perde essa orla de cada lado, como no render. */
@@ -1879,9 +2274,9 @@ function legendaDoPalco(c, pecas, passo, H){
 /* `estilo`, quando vem (do Tratamento de uma foto solta), fica logo no grupo novo; o de
    omissao fica sem campo, como num grupo feito pela barra */
 function juntarGrupo(v, tipo, estilo){
-  var g = GRUPOS[tipo], ordem = v.clips.filter(escolhido);
+  var g = limitesGrupo(tipo, estilo), ordem = v.clips.filter(escolhido);
   if(ordem.length < g.min || ordem.length > g.max || ordem.some(function(c){ return c.t !== "foto"; })){
-    avisar("A " + g.nome + " junta " + g.min + " a " + g.max + " fotografias."); return false;
+    avisar(fraseLimites(tipo, estilo)); return false;
   }
   var comMusica = ordem.slice(1).filter(function(c){ return c.m && c.m.f; })[0];
   if(comMusica){
@@ -1904,19 +2299,36 @@ function juntarGrupo(v, tipo, estilo){
   var resto = v.clips.filter(function(c){ return ordem.indexOf(c) < 0; });
   var antes = v.clips.slice(0, primeiro).filter(function(c){ return ordem.indexOf(c) < 0; }).length;
   v.clips = resto.slice(0, antes).concat([novo], resto.slice(antes));
+  /* NO MERGULHO A DURACAO PROPOSTA E A DELE (1 de outubro). A do ensaio da colagem deixava a
+     grelha parada 12,6 s com 9 fotos e 28,2 s com 20. E a duracao_mergulho() do render no sitio
+     do clip, com os encadeados e a legenda dele, arredondada para cima a 0,1 s: nada encolhe e
+     nada sobra. Ele muda-a no campo Duracao, e o que puser a mais fica com a grelha parada. */
+  if(novo.estilo === "mergulho") novo.d = Math.ceil(duracaoDoMergulho(v, novo) * 10 - 1e-6) / 10;
   selClips = []; clipAtivo = v.clips.indexOf(novo);
   pintaClips(); pintaInspetor(); pintaVersoes(); marcar();
-  var muitas = notaMuitas(tipo, n);
-  avisar(n + " fotos em " + g.nome + "." +
+  var muitas = notaMuitas(tipo, n, novo.estilo);
+  avisar(n + " fotos em " + g.nome + "." + notaTempoJuntar(v, novo) +
          (legendas.length > 1 ? " Fica a primeira legenda; as outras ficam em Texto em cada foto e voltam se separares." : "") +
          (muitas ? " " + muitas : "") + " Ctrl+Z para anular.");
   return true;
 }
+/* A NOTA DE TEMPO DE UMA COLAGEM ACABADA DE JUNTAR: a duracao proposta e quanto fica cada foto.
+   1 de outubro, decisao 102: a proposta e a do ensaio, 3 + 1,6 x n, e com a colagem a ir ate 30
+   da 51 s, quase um minuto de uma colagem so. A formula fica; o que muda e ele ver logo quanto
+   isso da a cada foto, a conta do textoPorFoto() que o inspetor ja mostra, e que a Duracao e dele.
+   NO MERGULHO a duracao e a do mergulho, e diz-se como se reparte (1 de outubro). */
+function notaTempoJuntar(v, c){
+  if(!c || c.t !== "colagem") return "";
+  var t = textoPorFoto(v, c);
+  if(c.estilo === "mergulho")
+    return t ? " Fica com " + s1(+c.d || 0) + " s, o tempo do mergulho: " + t + ". O que puseres a mais na Duração fica com a grelha parada." : "";
+  return t ? " Fica com " + s1(+c.d || 0) + " s, " + t + ": muda a Duração se quiseres outro tempo." : "";
+}
 function tratamentoGrupo(v, c, tipo, n, estilo){
-  var g = GRUPOS[tipo], i = v.clips.indexOf(c);
+  var g = limitesGrupo(tipo, estilo), i = v.clips.indexOf(c);
   /* o numero vem de um campo escrito a mao: fora dos limites diz-se, antes de ver as seguintes */
   if(!g || tipo === "lado" || !(n >= g.min && n <= g.max && n === Math.floor(n))){
-    avisar(g && tipo !== "lado" ? "A " + g.nome + " junta " + g.min + " a " + g.max + " fotografias." : "Tratamento desconhecido.");
+    avisar(g && tipo !== "lado" ? fraseLimites(tipo, estilo) : "Tratamento desconhecido.");
     return false;
   }
   var grupo = i < 0 ? [] : v.clips.slice(i, i + n);
@@ -1933,8 +2345,8 @@ function tratamentoGrupo(v, c, tipo, n, estilo){
   var legendas = grupo.filter(function(x){ return x.x; }).length;
   selClips = grupo.slice();
   if(!juntarGrupo(v, tipo, estilo)){ selClips = []; pintaClips(); pintaInspetor(); return false; }
-  var novo = v.clips[clipAtivo], muitas = notaMuitas(tipo, n);
-  avisar(n + " fotos em " + g.nome + ": " + s1(antes) + " s passam a " + s1(+novo.d) + " s." +
+  var novo = v.clips[clipAtivo], muitas = notaMuitas(tipo, n, estilo), porFoto = notaTempoJuntar(v, novo) ? textoPorFoto(v, novo) : "";
+  avisar(n + " fotos em " + g.nome + ": " + s1(antes) + " s passam a " + s1(+novo.d) + " s" + (porFoto ? ", " + porFoto : "") + "." +
          (legendas > 1 ? " Fica a primeira legenda; as outras ficam em Texto em cada foto e voltam se separares." : "") +
          (muitas ? " " + muitas : "") + " Ctrl+Z para anular.");
   return true;
@@ -1951,18 +2363,24 @@ function abrirTratJuntar(v, c, tipo){
     /* a maior disposicao que cabe nas fotos seguidas, ou duas colunas */
     lay = ["6g", "4q", "3v", "2v"].filter(function(k){ return LADO_N[k] <= seguidas; })[0] || "2v";
   }
-  tratJuntar = {clip: c, tipo: tipo, lay: lay, estilo: ESTILOS[tipo] ? ESTILOS[tipo][0][0] : "",
-                n: ultimoJuntar[tipo] || Math.max(g.min, Math.min(seguidas, 4, g.max))};
+  var estilo = ESTILOS[tipo] ? ESTILOS[tipo][0][0] : "";
+  /* O NUMERO GUARDADO CABE NO ESTILO COM QUE A CAIXA ABRE (revisao de 1 de outubro). O ultimo
+     juntar pode ter sido um mergulho de 33, que cabe nos 36 dele, e a caixa abre no estilo de
+     omissao, em filas, que vai so ate 30: abria ja com o aviso do limite e o Juntar recusado. */
+  tratJuntar = {clip: c, tipo: tipo, lay: lay, estilo: estilo,
+                n: ultimoJuntar[tipo] ? Math.min(ultimoJuntar[tipo], limitesGrupo(tipo, estilo).max)
+                                      : Math.max(g.min, Math.min(seguidas, 4, g.max))};
 }
-/* no lado a lado `n` e o da disposicao escolhida, sempre dentro dos limites */
-function notaTratJuntar(tipo, n, seguidas){
-  var g = GRUPOS[tipo];
+/* no lado a lado `n` e o da disposicao escolhida, sempre dentro dos limites; `estilo` conta no
+   limite, que no mergulho e outro (decisao 102) */
+function notaTratJuntar(tipo, n, seguidas, estilo){
+  var g = limitesGrupo(tipo, estilo);
   var ha = seguidas <= 1 ? "A seguir a esta não há outra fotografia na montagem."
                          : "Há " + seguidas + " fotografias seguidas a começar nesta.";
   if(tipo === "lado") return {texto: ha + (n > seguidas ? " Não chegam para esta disposição: escolhe outra, ou escolhe as fotos na montagem e junta-as na barra." : ""),
                               aviso: n > seguidas};
   if(!(n >= g.min && n <= g.max && n === Math.floor(n)))
-    return {texto: "A " + g.nome + " junta " + g.min + " a " + g.max + " fotografias. " + ha, aviso: true};
+    return {texto: fraseLimites(tipo, estilo) + " " + ha, aviso: true};
   return {texto: (n === 2 ? "Esta e a seguinte. " : "Esta e as " + (n - 1) + " seguintes. ") + ha +
                  (n > seguidas ? " Não chegam: junta menos, ou escolhe-as na montagem e junta-as na barra." : ""),
           aviso: n > seguidas};
@@ -1980,7 +2398,7 @@ function blocoTratJuntar(v, c, tj){
       }).join("") + '</select>' + botoes + '</div>' +
       '<div class="focoAjuda' + (notaL.aviso ? ' somAviso' : '') + '" id="tjNota">' + esc(notaL.texto) + '</div></div>';
   }
-  var g = GRUPOS[tj.tipo], nota = notaTratJuntar(tj.tipo, tj.n, seguidas);
+  var g = limitesGrupo(tj.tipo, tj.estilo), nota = notaTratJuntar(tj.tipo, tj.n, seguidas, tj.estilo);
   return '<div class="tratJuntar" id="tratJuntar"><div class="linhaTj">' +
     '<span>Quantas fotos</span><input type="number" id="tjN" min="' + g.min + '" max="' + g.max + '" step="1" value="' + esc(tj.n) +
     '" aria-label="Quantas fotos na ' + g.nome + ', a contar com esta">' +
@@ -1988,16 +2406,18 @@ function blocoTratJuntar(v, c, tj){
       return '<option value="' + e[0] + '"' + (tj.estilo === e[0] ? ' selected' : '') + '>' + e[1] + '</option>';
     }).join("") + '</select>' + botoes + '</div>' +
     '<div class="focoAjuda' + (nota.aviso ? ' somAviso' : '') + '" id="tjNota">' + esc(nota.texto) + '</div>' +
-    '<div class="focoAjuda" id="tjMuitas"' + (notaMuitas(tj.tipo, tj.n) ? '' : ' hidden') + '>' + esc(notaMuitas(tj.tipo, tj.n)) + '</div></div>';
+    '<div class="focoAjuda" id="tjMuitas"' + (notaMuitas(tj.tipo, tj.n, tj.estilo) ? '' : ' hidden') + '>' + esc(notaMuitas(tj.tipo, tj.n, tj.estilo)) + '</div></div>';
 }
 /* o numero escrito refaz as notas no sitio, sem repintar o inspetor, que tirava o cursor */
 function atualizaTratJuntar(v, c){
   if(!tratJuntar || tratJuntar.clip !== c) return;
   var seguidas = fotosSeguidas(v, v.clips.indexOf(c)), el = document.getElementById("tjNota");
-  var nota = notaTratJuntar(tratJuntar.tipo, tratJuntar.tipo === "lado" ? LADO_N[tratJuntar.lay] : tratJuntar.n, seguidas);
-  var mu = document.getElementById("tjMuitas");
+  var nota = notaTratJuntar(tratJuntar.tipo, tratJuntar.tipo === "lado" ? LADO_N[tratJuntar.lay] : tratJuntar.n, seguidas,
+                            tratJuntar.estilo);
+  var mu = document.getElementById("tjMuitas"), campo = document.getElementById("tjN");
   if(el){ el.textContent = nota.texto; el.classList.toggle("somAviso", nota.aviso); }
-  if(mu){ var t = notaMuitas(tratJuntar.tipo, tratJuntar.n); mu.textContent = t; mu.hidden = !t; }
+  if(campo && tratJuntar.tipo !== "lado") campo.max = limitesGrupo(tratJuntar.tipo, tratJuntar.estilo).max;
+  if(mu){ var t = notaMuitas(tratJuntar.tipo, tratJuntar.n, tratJuntar.estilo); mu.textContent = t; mu.hidden = !t; }
 }
 function juntarDoTratamento(v, c){
   var tj = tratJuntar; if(!tj || tj.clip !== c || !v) return;
@@ -2008,7 +2428,8 @@ function juntarDoTratamento(v, c){
   } else {
     var campo = document.getElementById("tjN"), n = campo ? Number(campo.value) : tj.n;
     tj.n = n;
-    if(n >= GRUPOS[tj.tipo].min && n <= GRUPOS[tj.tipo].max && n === Math.floor(n)) ultimoJuntar[tj.tipo] = n;
+    var lim = limitesGrupo(tj.tipo, tj.estilo);
+    if(n >= lim.min && n <= lim.max && n === Math.floor(n)) ultimoJuntar[tj.tipo] = n;
     ok = tratamentoGrupo(v, c, tj.tipo, n, tj.estilo);
   }
   /* o juntar ja repintou o inspetor com o grupo novo, e isso fechou a caixa */
@@ -2017,9 +2438,13 @@ function juntarDoTratamento(v, c){
 function mudaGrupo(v, c, val){
   var i = v.clips.indexOf(c); if(i < 0) return;
   var partes = val.split(":"), tipo = partes[0];
-  var n = (c.fotos || []).length, g = GRUPOS[tipo];
+  /* o limite e o do estilo escolhido, que no mergulho e outro (decisao 102) */
+  var estiloNovo = ESTILOS[tipo] ? (partes[1] || ESTILOS[tipo][0][0]) : "";
+  var n = (c.fotos || []).length, g = tipo === "lado" ? GRUPOS[tipo] : limitesGrupo(tipo, estiloNovo);
   if(!g || n < g.min || n > g.max){
-    avisar(g ? "A " + g.nome + " leva " + g.min + " a " + g.max + " fotografias, e este grupo tem " + n + "." : "Tratamento desconhecido.");
+    avisar(!g ? "Tratamento desconhecido." : tipo === "lado"
+      ? "A " + g.nome + " leva " + g.min + " a " + g.max + " fotografias, e este grupo tem " + n + "."
+      : fraseLimites(tipo, estiloNovo, "leva") + " Este grupo tem " + n + ".");
     pintaInspetor(); return;
   }
   /* No proprio clip, com o anular a repor so estes tres campos: com uma copia no lugar,
@@ -2031,7 +2456,16 @@ function mudaGrupo(v, c, val){
   if(ESTILOS[tipo]) novo.estilo = partes[1] || ESTILOS[tipo][0][0]; else delete novo.estilo;
   clipAtivo = i;
   pintaClips(); pintaInspetor(); marcar();
-  avisar("Passou a " + (tipo === "lado" ? "lado a lado, " + NOMES_LADO[novo.lay] : g.nome + " " + nomeEstilo(novo)) + ". Ctrl+Z para anular.");
+  /* PASSAR A MERGULHO NAO MUDA A DURACAO, diz-a (decisao 083): uma colagem de 20 tinha 35 s, e
+     num mergulho isso sao 26 s de grelha parada antes de mergulhar. */
+  var notaM = "";
+  if(tipo === "colagem" && novo.estilo === "mergulho"){
+    var pede = Math.ceil(duracaoDoMergulho(v, novo) * 10 - 1e-6) / 10, dM = +novo.d || 0;
+    notaM = " O mergulho com estas fotos pede " + s1(pede) + " s e o clip tem " + s1(dM) + " s" +
+      (porFotoApertada(v, novo) ? ": é curto de mais, aumenta a Duração." :
+       dM > pede + 0.05 ? ": o resto fica com a grelha parada. Muda a Duração se quiseres." : ".");
+  }
+  avisar("Passou a " + (tipo === "lado" ? "lado a lado, " + NOMES_LADO[novo.lay] : g.nome + " " + nomeEstilo(novo)) + "." + notaM + " Ctrl+Z para anular.");
 }
 function opcoesDeGrupo(c){
   var n = (c.fotos || []).length, o = [];
@@ -2039,11 +2473,12 @@ function opcoesDeGrupo(c){
     o.push('<option value="lado:' + k + '"' + (c.t === "lado" && c.lay === k ? " selected" : "") + '>lado a lado: ' + NOMES_LADO[k] + '</option>');
   });
   ["colagem", "pilha"].forEach(function(t){
-    if(n >= GRUPOS[t].min && n <= GRUPOS[t].max)
-      ESTILOS[t].forEach(function(e){
+    ESTILOS[t].forEach(function(e){
+      var g = limitesGrupo(t, e[0]);
+      if(n >= g.min && n <= g.max)
         o.push('<option value="' + t + ':' + e[0] + '"' + (c.t === t && estiloDe(c) === e[0] ? " selected" : "") + '>' +
                t + ' ' + e[1] + '</option>');
-      });
+    });
   });
   o.push('<option value="soltas">separar em fotos soltas</option>');
   return o.join("");
@@ -2094,6 +2529,15 @@ function planoReduzir(v, c, k){
       texto: "Reduzir passa o lado a lado a " + NOMES_LADO[lays[0]] + ", com " + s1(duracaoLado(m)) + " s."};
   }
   var i = v.clips.indexOf(c), e = encadeadosDe(v, i), vez = agendaDoClip(v, c).vez, d0 = +c.d || 0;
+  /* NO MERGULHO A DURACAO FICA (1 de outubro): cada foto a menos poupa so o intervalo de entrada,
+     uma fracao de segundo, e a vez da colagem nao existe. Diz-se se ja fica abaixo da minima. */
+  if(c.t === "colagem" && c.estilo === "mergulho"){
+    var restoM = {t: c.t, estilo: c.estilo, x: c.x, fotos: (c.fotos || []).slice(1)};
+    var dminM = Math.ceil(duracaoMinimaMergulho(m, e.entra, e.sai, cobreDoMergulho(restoM)) * 10) / 10;
+    return {pode: true, d: d0, texto: "Reduzir tira-a " + doGrupo(c) + ": fica com " + m + " fotos e a duração continua em " + s1(d0) + " s" +
+      (d0 < dminM - 0.001 ? ", abaixo da mínima do mergulho com " + m + " fotos, " + s1(dminM) + " s: aumenta-a."
+                          : ": no mergulho cada foto a menos poupa só uma fração de segundo.")};
+  }
   var dmin = Math.ceil(duracaoMinimaMonte(c.t, m, e.entra, e.sai) * 10) / 10;
   var d = Math.max(0.2, Math.round((d0 - vez) * 10) / 10, Math.min(dmin, d0));
   /* um clip que ja esta na duracao minima com uma foto a menos, ou abaixo dela, nao encolhe mais, e diz-se porque */
@@ -3090,10 +3534,22 @@ function validar(v){
        o validador apontava um clip onde ele depois nao encontrava aviso nenhum. */
     var cu = modoTextos(c) === "legenda" ? contaCurtos(c, v) : 0;
     if(cu) erro(i, avisoCurtos(cu));
+    /* e o mesmo numa pilha com o texto em cada foto, que se apaga quando a seguinte cai: a
+       mesma vez, o mesmo limite e o mesmo grau (1 de outubro, decisao 102) */
+    var cpilha = textosCurtosNaPilha(v, c);
+    if(cpilha.curtos) erro(i, avisoCurtosNaPilha(cpilha));
     var enq = avisoDoEnquadramento(c);
     if(enq) confirma(i, enq);
-    var mu = avisoTextoEmMuitas(c);
+    /* os textos dentro das fotos de uma colagem de mais de 20 nao se leem a 15 metros (1 de
+       outubro, decisao 102): "Está mal", como os textos curtos. O de muitas fotos com texto em
+       todas fica em "Confirma tu", e so quando este nao diz ja o mesmo. */
+    var tc = avisoTextosNaColagem(c), mu = tc ? "" : avisoTextoEmMuitas(c);
+    if(tc) erro(i, tc);
     if(mu) confirma(i, mu);
+    /* o mergulho de mais de 30 fotos (1 de outubro, decisao 102): numa tela de 2 metros a celula
+       passa a textura. Pode fazer-se ate 36, e e ele que confirma. */
+    var mg = c.t === "colagem" && estiloDe(c) === "mergulho" ? notaMuitas(c.t, (c.fotos || []).length, "mergulho") : "";
+    if(mg) confirma(i, mg);
     /* 2. O TEXTO A MAIS PARA O TEMPO, pela MESMA conta da etiqueta da lista de clips. Se aqui
           fosse outra, ele via um clip com sinal que o validador nao menciona, e a partir dai
           nao confiava em nenhum dos dois. Uma conta, um sitio. */
@@ -3240,7 +3696,7 @@ function pintaBarraClips(){
     (selClips.length >= 2 && selClips.length <= GRUPOS.lado.max && soFotos
       ? '<button class="bt pequeno" data-barra="lado">Lado a lado</button>' : '') +
     (selClips.length >= 2 && selClips.length <= GRUPOS.pilha.max && soFotos
-      ? '<button class="bt pequeno" data-barra="colagem" title="Junta ' + GRUPOS.colagem.min + ' a ' + GRUPOS.colagem.max + ' fotografias">Colagem</button>' : '') +
+      ? '<button class="bt pequeno" data-barra="colagem" title="' + esc(fraseLimites("colagem")) + '">Colagem</button>' : '') +
     (selClips.length >= 2 && selClips.length <= GRUPOS.pilha.max && soFotos
       ? '<button class="bt pequeno" data-barra="pilha" title="Junta ' + GRUPOS.pilha.min + ' a ' + GRUPOS.pilha.max + ' fotografias">Pilha</button>' : '') +
     '<button class="bt pequeno" data-barra="remover">Remover</button>' +
@@ -3537,7 +3993,7 @@ function pintaClips(){
                   (focoDe(c.i) ? "" : ", que não está marcado: acaba no meio da foto")
                 : "Enquadramento")+'">'+
               esc(c.e === "aproxima" ? "aproxima "+az1(azDe(c))+"x" : c.e)+'</span>' : '')+
-          (temTextosFotos(c) ? (modoTextos(c) === "legenda"
+          (temTextosFotos(c) && !textosForaDoFilme(c) ? (modoTextos(c) === "legenda"
             ? '<span class="etiq fiel" title="Os textos das fotos vão para a legenda de baixo, a mudar com cada foto">texto na legenda</span>'
             : '<span class="etiq fiel" title="Cada foto deste grupo leva o seu texto">texto nas fotos</span>') : '')+
           ((c.t === "colagem" || c.t === "pilha") && c.d < duracaoMinimaGrupo(v, idx) - 0.001
@@ -4565,17 +5021,27 @@ function pintaInspetor(){
             '<button data-ldesce="'+k+'" title="Entra mais tarde">▼</button>' +
             '<button class="tira" data-ltira="'+k+'" title="Tirar esta foto" aria-label="Tirar a foto '+(k+1)+'">×</button></div>' + campoXf(c, k, v);
         }).join("") + '</div>' +
-        '<div class="focoAjuda">' + (c.t === "colagem"
-          ? 'As fotos entram uma a uma, com moldura branca e ligeiramente tortas, e ficam. No fim o quadro inteiro respira (decisão 017). De ' + GRUPOS.colagem.min + ' a ' + GRUPOS.colagem.max + ' fotos. ' +
+        '<div class="focoAjuda">' + (c.t === "colagem" && estiloDe(c) === "mergulho"
+          /* A AJUDA DO MERGULHO DIZ O QUE O VIDEO FAZ (1 de outubro). Dizia "aparecem uma a uma" e
+             "a pre-visualizacao mostra a grelha", com a frase da colagem antes, a da moldura branca e
+             das fotos tortas, e a do fim, "aumentar a duracao aumenta o tempo de todas": nada disso
+             e verdade aqui, e a pre-visualizacao mostrava a colagem em filas. */
+          ? '<b>Em grelha, e mergulha na última:</b> as fotos aparecem numa grelha sem molduras, a grelha respira e a câmara mergulha na última até ela encher o ecrã; o clip seguinte entra a partir dela. A última é a que fica: escolhe-a bem. De ' +
+            limitesGrupo("colagem", "mergulho").min + ' a ' + limitesGrupo("colagem", "mergulho").max + ' fotos. A grelha enche em até ' + s1(MERGULHO.encheMax) +
+            ' s: com mais de 19 fotos aparecem mais depressa, e perto de 36 entram três a quatro ao mesmo tempo. Com legenda, a grelha fica acima dela, e no fim a legenda fica por cima da última, como numa foto sozinha. ' +
+            'Os textos de cada foto não entram neste estilo, só a legenda do clip. A pré-visualização mostra a grelha do vídeo e o mergulho aproximado. ' +
+            'Muda o estilo no Tratamento. O tempo que puseres a mais na Duração fica com a grelha parada antes do mergulho.'
+          : c.t === "colagem"
+          ? 'As fotos entram uma a uma, com moldura branca e ligeiramente tortas, e ficam. No fim o quadro inteiro respira (decisão 017). De ' + limitesGrupo("colagem", estiloDe(c)).min + ' a ' + limitesGrupo("colagem", estiloDe(c)).max + ' fotos. ' +
             (estiloDe(c) === "espalhada" ? '<b>Espalhada:</b> a primeira maior e as outras a descer de tamanho, como no ensaio.'
-              : estiloDe(c) === "mergulho" ? '<b>Em grelha, e mergulha na última:</b> aparecem uma a uma numa grelha sem molduras, e a câmara mergulha na última até ela encher o ecrã. A última é a que fica: escolhe-a bem. Os textos de cada foto não entram neste estilo, só a legenda do clip. A pré-visualização mostra a grelha, não o mergulho.'
               : '<b>Em filas:</b> arrumadas em filas, com as fotos maiores.')
           : 'As fotos caem umas sobre as outras, tortas, e nada desaparece (decisão 017). De ' + GRUPOS.pilha.min + ' a ' + GRUPOS.pilha.max + ' fotos. ' +
             (estiloDe(c) === "leque" ? '<b>Em leque:</b> abrem-se para as de baixo espreitarem sempre.' +
               ((c.fotos || []).length > PILHA_LEQUE_MAX ? ' <b>Mas só até ' + PILHA_LEQUE_MAX + ' fotos:</b> esta tem ' + (c.fotos || []).length + ', e vai ao filme em monte.' : '')
               : '<b>Em monte:</b> como no ensaio, as de baixo ficam quase tapadas.')) +
-          ' Muda o estilo no Tratamento. Cada foto fica a sua vez e a última fica o dobro: aumentar a duração aumenta o tempo de todas.</div>' +
-        (notaMuitas(c.t, (c.fotos || []).length) ? '<div class="focoAjuda" id="notaMuitas">' + esc(notaMuitas(c.t, (c.fotos || []).length)) + '</div>' : '') +
+          (c.t === "colagem" && estiloDe(c) === "mergulho" ? '' :
+           ' Muda o estilo no Tratamento. Cada foto fica a sua vez e a última fica o dobro: aumentar a duração aumenta o tempo de todas.') + '</div>' +
+        (notaMuitas(c.t, (c.fotos || []).length, estiloDe(c)) ? '<div class="focoAjuda" id="notaMuitas">' + esc(notaMuitas(c.t, (c.fotos || []).length, estiloDe(c))) + '</div>' : '') +
         (function(){
           var nm = notaMinimaGrupo(v, c);
           return '<div class="focoAjuda' + (nm.curta ? ' somAviso' : '') + '" id="notaMinima">' + nm.html + '</div>';
@@ -4763,7 +5229,7 @@ function ligaInspetor(){
     liga("tjN","keydown",function(e){
       if(e.key === "Enter"){ e.preventDefault(); juntarDoTratamento(versaoAtual(), c); }
     });
-    liga("tjEstilo","change",function(e){ if(tratJuntar) tratJuntar.estilo = e.target.value; });
+    liga("tjEstilo","change",function(e){ if(tratJuntar) tratJuntar.estilo = e.target.value; atualizaTratJuntar(versaoAtual(), c); });
     liga("tjLay","change",function(e){ if(tratJuntar) tratJuntar.lay = e.target.value; atualizaTratJuntar(versaoAtual(), c); });
     liga("tjJuntar","click",function(){ juntarDoTratamento(versaoAtual(), c); });
     liga("tjCancelar","click",function(){ tratJuntar = null; pintaInspetor(); });
@@ -4902,6 +5368,7 @@ function ligaInspetor(){
         /* a zona da faixa e as notas dos tempos seguem o que se escreve, no sitio */
         atualizaZonaFaixa(c, k);
         if(modoTextos(c) === "legenda") atualizaNotasTempo(c);
+        atualizaCurtosNaPilha(c);
         /* passou de vazio a escrito, ou o contrario: o bloco do foco aparece ou some quando
            ele largar o campo, que e quando se pode repintar sem lhe tirar o cursor */
         t.dataset.repinta = (tinha !== !!t.value.trim()) ? "1" : "";
@@ -5804,10 +6271,78 @@ function saltar(quanto){
   pintaHud(v);
   play.ultimo = performance.now();
 }
+/* A LEGENDA DO MERGULHO NO SITIO DO RENDER (revisao de 1 de outubro). Era a .legenda generica do
+   palco, a 13% do fundo e com a letra do browser, e ficava por cima do quarto de baixo da ultima
+   fila da grelha, onde esta a foto em que se mergulha: medido com 36 fotos, a legenda ia de 845 a
+   940 e a grelha acabava aos 892. No render a grelha acaba 2% acima da faixa, que e o defeito
+   corrigido nesse dia. Agora e a mesma conta da altura da grelha, legendaDoMergulho(): a faixa
+   escura da almofada ao LEGENDA_RENDER.fundo, e as linhas com a letra do render, a acabar a
+   LEGENDA_RENDER.texto do fundo. `k` e a escala da caixa, largura / 1920. */
+function legendaDoMergulhoNoPalco(c, k){
+  var leg = legendaDoMergulho(c);
+  if(!leg) return "";
+  var linha = Math.floor(leg.tam * 1.35);
+  return '<div class="mergulhoFaixa" style="top:' + (leg.topo * k) + 'px;height:' + ((1080 - LEGENDA_RENDER.fundo - leg.topo) * k) +
+    'px;background:rgba(0,0,0,' + (LEGENDA_RENDER.alfa / 255).toFixed(3) + ')"></div>' +
+    '<div class="mergulhoLegenda" style="bottom:' + (LEGENDA_RENDER.texto * k) + 'px;font-size:' + (leg.tam * k) +
+    'px;line-height:' + (linha * k) + 'px">' + leg.linhas.map(function(l){ return esc(l); }).join("<br>") + '</div>';
+}
 function mostraQuadro(qual, c){
   var el = document.getElementById("q" + qual), f = c.i ? porId[c.i] : null;
   el.style.transition = "none";
-  if(c.t === "colagem" || c.t === "pilha"){
+  if(c.t === "colagem" && estiloDe(c) === "mergulho"){
+    /* O MERGULHO COM A GRELHA DO RENDER (1 de outubro). Mostrava-se como a colagem em filas, com
+       moldura e tortas, e as tiras dos numeros primos nunca se viam na Mesa. Agora a grelha e a do
+       video, a mesma conta (grelhaMergulho, com a altura da legenda), cada foto a cobrir a sua
+       celula a partir da miniatura, pela agenda do render (temposDoMergulho). O mergulho e um zoom
+       com um ponto parado, o que o render faz: o centro da homotetia entre o ecra inteiro e a vista
+       em que a ultima cobre o ecra (mergulho_trocos). E uma aproximacao: as miniaturas sao
+       pequenas, o corte de cada foto e o do ponto de foco ou o do cobrir_alto a olho, e a grelha
+       nao respira antes nem a ultima aproxima depois. */
+    el.className = "quadro";
+    el.style.background = "#000"; el.style.backgroundSize = "";
+    var rM = el.getBoundingClientRect(), WM0 = rM.width || 960, HM0 = rM.height || 540;
+    var WM = Math.min(WM0, HM0 * 16 / 9), HM = WM * 9 / 16, kM = WM / 1920;
+    var fsM = (c.fotos || []).map(function(id){ return porId[id]; }), nM = fsM.length;
+    var celM = nM ? grelhaMergulho(nM, 1920, alturaMergulho(c)) : [];
+    var ultM = celM[nM - 1], cobreM = ultM ? cobreMergulho(ultM) : 1;
+    var vQM = versaoAtual();
+    var tM = vQM && vQM.clips.indexOf(c) >= 0 ? temposDoMergulho(vQM, c) : temposMergulho(nM, +c.d || 0, 0, 0, cobreM);
+    var qxM = 0, qyM = 0;
+    if(ultM && cobreM > 1){
+      var wfM = 1920 / cobreM, hfM = 1080 / cobreM;
+      qxM = (ultM[0] + ultM[2] / 2 - wfM / 2) * 1920 / (1920 - wfM);
+      qyM = (ultM[1] + ultM[3] / 2 - hfM / 2) * 1080 / (1080 - hfM);
+    }
+    el.innerHTML = '<div class="mergulhoCaixa" style="width:' + WM + 'px;height:' + HM + 'px">' +
+      '<div class="mergulhoGrelha" style="transform-origin:' + (qxM * kM) + 'px ' + (qyM * kM) + 'px">' +
+      celM.map(function(cel, k){
+        var ff = fsM[k], w = cel[2] * kM, h = cel[3] * kM, dentro = "";
+        if(ff){
+          /* a miniatura e a foto inteira encaixada num quadrado: cresce ate a foto cobrir a celula */
+          var a = ff.w && ff.h ? ff.w / ff.h : 4 / 3, pw = Math.min(1, a), ph = Math.min(1, 1 / a);
+          var q = Math.max(w / pw, h / ph), fw = q * pw, fh = q * ph, foco = focoDe(ff.id);
+          var ox = foco ? Math.min(Math.max(foco[0] * fw - w / 2, 0), fw - w) : (fw - w) / 2;
+          var oy = foco ? Math.min(Math.max(foco[1] * fh - h / 2, 0), fh - h) : (fh - h) * 0.32;
+          dentro = '<div class="fo' + ff.fo + '" style="position:absolute;left:' + (-((q - fw) / 2 + ox)) + 'px;top:' + (-((q - fh) / 2 + oy)) +
+            'px;width:' + q + 'px;height:' + q + 'px;background-repeat:no-repeat;' + posMini(ff, q) + '"></div>';
+        }
+        return '<div class="mergulhoCel" style="left:' + (cel[0] * kM) + 'px;top:' + (cel[1] * kM) + 'px;width:' + w + 'px;height:' + h +
+          'px;animation:grupoEntra ' + Math.max(0.01, tM.entra) + 's linear ' + (tM.atraso + k * tM.entre) + 's both">' + dentro + '</div>';
+      }).join("") + '</div>' +
+      legendaDoMergulhoNoPalco(c, kM) + '</div>';
+    var gM = el.querySelector(".mergulhoGrelha");
+    var quieto = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if(gM && gM.animate && !quieto && cobreM > 1){
+      /* a escala do render: geometrica, com o arranque e a travagem do suave() */
+      var passos = [];
+      for(var j = 0; j <= 12; j++){
+        var pj = j / 12, ej = pj * pj * (3 - 2 * pj);
+        passos.push({transform: "scale(" + Math.exp(ej * Math.log(cobreM)).toFixed(4) + ")", offset: pj});
+      }
+      gM.animate(passos, {duration: Math.max(1, tM.desce * 1000), delay: tM.comeca * 1000, fill: "both", easing: "linear"});
+    }
+  } else if(c.t === "colagem" || c.t === "pilha"){
     /* Aproximacao: as fotos com moldura branca e tortas, pela ordem de entrada. O
        movimento e a disposicao certos so existem no render. */
     el.className = "quadro";
@@ -5854,8 +6389,10 @@ function mostraQuadro(qual, c){
        espalhada com os centros da mesma grelha desencontrados, como o ensaio do render para 6 a
        12, com a largura a descer da primeira a ultima de 760 para 440; o monte aperta os desvios
        para caber no ecra ate 20. Ate 5 na colagem e ate 8 no monte fica tudo como estava. */
-    var nG = fsG.length, filasG = filasColagem(nG), contasG = [], centrosG = [], iniF = 0;
-    for(q = 0; q < filasG; q++){ var levaG = Math.ceil((nG - iniF) / (filasG - q)); contasG.push(levaG); iniF += levaG; }
+    var nG = fsG.length, filasG = filasColagem(nG), centrosG = [];
+    /* as fotos de cada fila: acima de 20 em filas as que o render mais provavelmente escolhe,
+       com as proporcoes das fotos (contasDasFilas, 1 de outubro); ate 20 as de sempre */
+    var contasG = contasDasFilas(c, fsG.map(function(ff){ return ff.w && ff.h ? ff.w / ff.h : 4 / 3; }));
     var colunasG = Math.max.apply(null, contasG.concat([1]));
     if(c.t === "colagem" && nG >= 6){
       /* a espalhada do ensaio: o mesmo numero de fotos por fila, as primeiras com as que sobram */
@@ -5888,8 +6425,8 @@ function mostraQuadro(qual, c){
           var fila = 0, antesF = 0;
           while(fila + 1 < contasG.length && k >= antesF + contasG[fila]){ antesF += contasG[fila]; fila++; }
           x = W * (0.04 + 0.92 * (k - antesF + 0.5) / contasG[fila]);
-          y = Hp * (0.05 + 0.90 * (fila + 0.5) / filasG);
-          t2 = Math.min(0.92 * W / colunasG, 0.90 * Hp / filasG) * 0.96;
+          y = Hp * (0.05 + 0.90 * (fila + 0.5) / contasG.length);
+          t2 = Math.min(0.92 * W / colunasG, 0.90 * Hp / contasG.length) * 0.96;
         }
         else if(c.t === "colagem"){ x = (0.2 + 0.6 * (n === 1 ? 0.5 : k / (n - 1))) * W; y = (k % 2 ? 0.62 : 0.38) * Hp; }
         else if(est2 === "leque"){
@@ -6679,7 +7216,8 @@ document.querySelector(".abas").addEventListener("click", function(e){
    num browser, que temposLegendaGrupo() e agendaMonte() dao o mesmo que o render.py. */
 window.MESA_CONTAS = {agendaMonte: agendaMonte, temposLegendaGrupo: temposLegendaGrupo,
                       duracaoMinimaGrupo: duracaoMinimaGrupo, linhasTextoFotoAprox: linhasTextoFotoAprox,
-                      planoReduzir: planoReduzir, GRUPOS: JSON.parse(JSON.stringify(GRUPOS)), layoutsPara: layoutsPara};
+                      planoReduzir: planoReduzir, GRUPOS: JSON.parse(JSON.stringify(GRUPOS)), layoutsPara: layoutsPara,
+                      grelhaMergulho: grelhaMergulho, temposMergulho: temposMergulho, alturaMergulho: alturaMergulho};
 
 /* ---------- arranque ---------- */
 var local = null;

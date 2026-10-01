@@ -391,8 +391,8 @@ def teste_leque_grande_fica_em_monte():
     """Uma pilha em leque com mais de render.PILHA_LEQUE_MAX fotos vai ao filme em monte, com aviso.
 
     O PORQUE (decisao 087): desenhado a serio, o leque so deixa ver as fotos de baixo (20% de cada
-    uma) ate 24 fotos; a 25 ja ha uma com 17,8%. A pilha em si vai ate 40, em monte. Guarda as
-    duas pontas: 24 em leque fica leque, 25 fica monte e diz-se.
+    uma) ate 24 fotos; a 25 ja ha uma com 17,8%. A pilha em si vai ate 60 (decisao 102), em monte.
+    Guarda as duas pontas: 24 em leque fica leque, 25 fica monte e diz-se.
     """
     import contextlib
     import io
@@ -2961,8 +2961,10 @@ def teste_v3_sem_vozes_igual_ao_byte():
 # ------------------------------------------------------------ colagem e pilha
 # As oito primeiras sao as de sempre, e as assinaturas dependem delas. As outras doze sao de
 # 17 de setembro, para a colagem de 12 e a pilha de 20: cada foto com uma cor que nenhuma
-# outra, nem a moldura, nem o fundo escuro, tem. As ultimas vinte sao de 28 de setembro, para
-# a pilha de 40 (decisao 087); nenhuma repete uma de cima.
+# outra, nem a moldura, nem o fundo escuro, tem. As vinte seguintes sao de 28 de setembro, para
+# a pilha de 40 (decisao 087), e as ultimas vinte e uma de 1 de outubro, para a pilha de 60 e
+# a de 61 que se recusa (decisao 102); nenhuma repete uma de cima, e o
+# teste_limites_dos_grupos_iguais prende que ha uma cor distinta para cada foto do maior grupo.
 CORES_MONTE = [(210, 40, 40), (40, 170, 60), (40, 70, 210), (220, 180, 30),
                (150, 50, 170), (30, 170, 170), (230, 110, 30), (120, 90, 60),
                (245, 160, 200), (100, 210, 100), (100, 140, 250), (250, 230, 120),
@@ -2972,7 +2974,13 @@ CORES_MONTE = [(210, 40, 40), (40, 170, 60), (40, 70, 210), (220, 180, 30),
                (100, 20, 160), (20, 130, 100), (200, 60, 120), (60, 200, 160),
                (160, 200, 60), (80, 60, 200), (200, 200, 80), (80, 200, 220),
                (220, 80, 80), (110, 170, 30), (30, 110, 170), (170, 30, 110),
-               (130, 60, 20), (20, 60, 130), (60, 130, 20), (230, 140, 90)]
+               (130, 60, 20), (20, 60, 130), (60, 130, 20), (230, 140, 90),
+               (255, 99, 71), (75, 0, 130), (0, 191, 255), (154, 205, 50),
+               (255, 140, 0), (199, 21, 133), (0, 128, 128), (218, 165, 32),
+               (65, 105, 225), (139, 69, 19), (46, 139, 87), (255, 20, 147),
+               (106, 90, 205), (210, 105, 30), (0, 250, 154), (128, 0, 0),
+               (25, 25, 112), (189, 183, 107), (233, 150, 122), (72, 61, 139),
+               (152, 251, 152)]
 
 
 def _monte_de_cores(tipo, aspetos, texto="", focos=None, estilo=None):
@@ -3349,9 +3357,11 @@ def teste_mesa_escreve_colagem_e_pilha():
     "|" e o foco de cada uma, senao o render recebe um clip que nao conhece e sai um
     cartao preto no lugar da colagem, sem aviso nenhum.
 
-    E OS LIMITES DE 17 DE SETEMBRO, escritos aqui: a colagem de 12 e a pilha de 20 entram, a
-    de 13 e a de 21 saltam com o aviso que diz os limites. O lado a lado de 6 entra com o 6g,
-    o de 5 salta, e uma disposicao de outro numero de fotos fica a do numero certo, com aviso.
+    E OS LIMITES, escritos aqui: desde 1 de outubro (decisao 102) a colagem de 30 entra e a de
+    31 salta com o aviso que diz os limites, a pilha de 60 entra e a de 61 salta, e o mergulho,
+    que tem limite proprio, entra com 36 e salta com 37: o limite e o do estilo que vai ao filme.
+    O lado a lado de 6 entra com o 6g, o de 5 salta, e uma disposicao de outro numero de fotos
+    fica a do numero certo, com aviso.
     """
     import contextlib
     import io
@@ -3374,10 +3384,12 @@ def teste_mesa_escreve_colagem_e_pilha():
         {"t": "pilha", "i": "", "f": "", "fotos": oito, "x": "", "d": 9.4, "c": 0.6, "r": "fiel", "orig": []},
         {"t": "colagem", "fotos": ["f0331", "f9999"], "d": 6, "c": 0.7, "r": "fiel"},
         {"t": "pilha", "fotos": ["f0331"], "d": 5, "c": 0.7, "r": "fiel"},
-        {"t": "colagem", "fotos": (oito * 3)[:21], "d": 6, "c": 0.7, "r": "fiel"},
-        {"t": "colagem", "fotos": (oito * 3)[:20], "d": 14, "c": 0.7, "r": "fiel"},
-        {"t": "pilha", "fotos": (oito * 5)[:40], "d": 26, "c": 0.7, "r": "fiel"},
-        {"t": "pilha", "fotos": (oito * 6)[:41], "d": 26, "c": 0.7, "r": "fiel"},
+        {"t": "colagem", "fotos": (oito * 4)[:31], "d": 6, "c": 0.7, "r": "fiel"},
+        {"t": "colagem", "fotos": (oito * 4)[:30], "d": 51, "c": 0.7, "r": "fiel"},
+        {"t": "pilha", "fotos": (oito * 8)[:60], "d": 36, "c": 0.7, "r": "fiel"},
+        {"t": "pilha", "fotos": (oito * 8)[:61], "d": 36, "c": 0.7, "r": "fiel"},
+        {"t": "colagem", "estilo": "mergulho", "fotos": (oito * 5)[:36], "d": 12, "c": 0.7, "r": "fiel"},
+        {"t": "colagem", "estilo": "mergulho", "fotos": (oito * 5)[:37], "d": 12, "c": 0.7, "r": "fiel"},
         {"t": "lado", "fotos": oito[:6], "d": 11, "c": 0.7, "r": "fiel"},
         {"t": "lado", "fotos": oito[:5], "d": 9, "c": 0.7, "r": "fiel"},
         {"t": "lado", "fotos": oito[:3], "lay": "2v", "d": 6, "c": 0.7, "r": "fiel"}]}]}
@@ -3396,7 +3408,7 @@ def teste_mesa_escreve_colagem_e_pilha():
     grupos = [l for l in linhas if l["tipo"] in ("colagem", "pilha")]
     texto = saida.getvalue()
     saltadas = texto.count("saltada")
-    certo = (len(grupos) == 4 and len([l for l in linhas if l["tipo"] != "lado"]) == 5 and saltadas == 4
+    certo = (len(grupos) == 5 and len([l for l in linhas if l["tipo"] != "lado"]) == 6 and saltadas == 5
              and grupos[0]["tipo"] == "colagem" and grupos[0]["id"].split("|") == tres
              and len(grupos[0]["ficheiro"].split("|")) == 3 and grupos[0]["texto_ecra"] == "Amigos"
              and grupos[0]["fonte_imagem"].split("|") == ["", "0.3000,0.2000", ""]
@@ -3406,14 +3418,17 @@ def teste_mesa_escreve_colagem_e_pilha():
     verifica("Mesa escreve colagem e pilha com as fotos por id", certo,
              "%d linhas, %s, %d saltadas" % (len(linhas), [g["tipo"] for g in grupos], saltadas))
     lados = [l for l in linhas if l["tipo"] == "lado"]
-    certo = (len(grupos) == 4 and grupos[2]["tipo"] == "colagem" and len(grupos[2]["id"].split("|")) == 20
-             and grupos[3]["tipo"] == "pilha" and len(grupos[3]["id"].split("|")) == 40
-             and "colagem saltada, pede 2 a 20 fotos e tem 21" in texto
-             and "pilha saltada, pede 2 a 40 fotos e tem 41" in texto
+    certo = (len(grupos) == 5 and grupos[2]["tipo"] == "colagem" and len(grupos[2]["id"].split("|")) == 30
+             and grupos[3]["tipo"] == "pilha" and len(grupos[3]["id"].split("|")) == 60
+             and grupos[4]["tipo"] == "colagem" and grupos[4]["tratamento"] == "mergulho"
+             and len(grupos[4]["id"].split("|")) == 36
+             and "colagem saltada, pede 2 a 30 fotos e tem 31" in texto
+             and "colagem em mergulho saltada, pede 2 a 36 fotos e tem 37" in texto
+             and "pilha saltada, pede 2 a 60 fotos e tem 61" in texto
              and [(l["tratamento"], len(l["id"].split("|"))) for l in lados] == [("6g", 6), ("3v", 3)]
              and "lado a lado saltado, tem 5 fotos" in texto
              and "lado a lado com a disposicao '2v' para 3 fotos, fica 3v" in texto)
-    verifica("Mesa: colagem ate 20, pilha ate 40 e lado a lado de 6, e salta o que passa com aviso", certo,
+    verifica("Mesa: colagem ate 30, mergulho ate 36, pilha ate 60 e lado a lado de 6, e salta o que passa com aviso", certo,
              "grupos %s, lados %s, avisos %s" % ([(g["tipo"], len(g["id"].split("|"))) for g in grupos],
                                                 [(l["tratamento"], len(l["id"].split("|"))) for l in lados],
                                                 [l.strip() for l in texto.splitlines() if "salta" in l or "disposicao" in l]))
@@ -3582,14 +3597,22 @@ def teste_monte_espera_o_encadeado():
 
 
 def teste_limites_dos_grupos_iguais():
-    """Colagem de 2 a 12, pilha de 2 a 20 e as disposicoes do lado a lado, iguais no render, no montar_da_mesa e na Mesa.
+    """Colagem de 2 a 30, mergulho de 2 a 36, pilha de 2 a 60, leque ate 24 e as disposicoes do lado a lado, iguais no render, no montar_da_mesa e na Mesa.
 
     O PEDIDO, do Tiago a 17 de setembro: "aumenta a quantidade das fotos possiveis nas
-    diferentes opcoes no tratamento, em especial a colagem e a pilha". Os limites vivem em
-    tres sitios: a Mesa nao deixa juntar mais, o montar_da_mesa.py salta o clip com aviso e o
-    render recusa-o. Um que mudasse sozinho dava na Mesa uma colagem de 12 que o video deitava
-    fora. Os numeros estao escritos aqui, e a Mesa le-se como texto: o GRUPOS e o LADO_N do
-    scripts/editor_base.html, que e de onde a pagina publicada e montada.
+    diferentes opcoes no tratamento, em especial a colagem e a pilha". Subiram a 20 e 40 a 28
+    de setembro (decisao 087), e a 1 de outubro (decisao 102) a pilha a 60, so em monte, e a
+    colagem a 30, em filas e espalhada. Os limites vivem em tres sitios: a Mesa nao deixa juntar
+    mais, o montar_da_mesa.py salta o clip com aviso e o render recusa-o. Um que mudasse sozinho
+    dava na Mesa uma colagem de 12 que o video deitava fora. Os numeros estao escritos aqui, e a
+    Mesa le-se como texto: o GRUPOS, o GRUPOS_ESTILO e o LADO_N do scripts/editor_base.html, que
+    e de onde a pagina publicada e montada.
+    UM LIMITE POR ESTILO, desde a decisao 102: o mergulho na grelha e um estilo da colagem mas vai
+    ate 36. Vive no render.LIMITES_ESTILO, no montar_da_mesa.LIMITES_ESTILO e no GRUPOS_ESTILO da
+    Mesa, e o limite de cada estilo pergunta-se ao limites_do_grupo() do render e do montar, que
+    tem de dar o mesmo em todos os estilos, o "fiel" das montagens de antes incluido.
+    E os testes desenhados pintam cada foto do maior grupo com uma cor de CORES_MONTE: com o
+    limite acima das cores que ha, o teste desenhado da pilha rebentava com IndexError.
     """
     import re
     import montar_da_mesa
@@ -3600,15 +3623,45 @@ def teste_limites_dos_grupos_iguais():
     if m:
         for tipo, minimo, maximo in re.findall(r"(\w+)\s*:\s*\{\s*min\s*:\s*(\d+)\s*,\s*max\s*:\s*(\d+)", m.group(1)):
             grupos[tipo] = (int(minimo), int(maximo))
-    escritos = {"colagem": (2, 20), "pilha": (2, 40)}
+    escritos = {"colagem": (2, 30), "pilha": (2, 60)}
     na_mesa = {t: grupos.get(t) for t in escritos}
     # e o leque, que so vai ate 24 (decisao 087), igual na Mesa e no render
     m_leque = re.search(r"var PILHA_LEQUE_MAX\s*=\s*(\d+)", html)
     if not m_leque or int(m_leque.group(1)) != render.PILHA_LEQUE_MAX or render.PILHA_LEQUE_MAX != 24:
         na_mesa["leque"] = m_leque.group(1) if m_leque else None
-    verifica("colagem ate 20 e pilha ate 40, iguais no render, no montar_da_mesa e na Mesa",
+    verifica("colagem ate 30 e pilha ate 60, iguais no render, no montar_da_mesa e na Mesa",
              render.LIMITES_MONTE == escritos and montar_da_mesa.LIMITES_MONTE == escritos and na_mesa == escritos,
              "render %s, montar_da_mesa %s, Mesa %s" % (render.LIMITES_MONTE, montar_da_mesa.LIMITES_MONTE, na_mesa))
+    # O LIMITE DE CADA ESTILO (decisao 102). Na Mesa, `mergulho: {tipo: "colagem", min: 2, max: 36,
+    # ...}` no GRUPOS_ESTILO. E pelo limites_do_grupo(), em todos os estilos de cada tipo, e nos que
+    # nao conhece: o mergulho com os seus, e os outros com os do tipo.
+    estilos_escritos = {("colagem", "mergulho"): (2, 36)}
+    estilos_mesa = {}
+    m = re.search(r"var GRUPOS_ESTILO\s*=\s*\{(.*?)\};", html, re.S)
+    if m:
+        for estilo, tipo, minimo, maximo in re.findall(
+                r"(\w+)\s*:\s*\{\s*tipo\s*:\s*\"(\w+)\"\s*,\s*min\s*:\s*(\d+)\s*,\s*max\s*:\s*(\d+)", m.group(1)):
+            estilos_mesa[(tipo, estilo)] = (int(minimo), int(maximo))
+    pedidos = {("colagem", "filas"): (2, 30), ("colagem", "espalhada"): (2, 30), ("colagem", "mergulho"): (2, 36),
+               ("colagem", "fiel"): (2, 30), ("colagem", ""): (2, 30), ("colagem", None): (2, 30),
+               ("colagem", " mergulho "): (2, 36), ("pilha", "monte"): (2, 60), ("pilha", "leque"): (2, 60),
+               ("pilha", "mergulho"): (2, 60)}
+    errados = ["%s %r: render %s, montar_da_mesa %s, escrito %s"
+               % (t, e, render.limites_do_grupo(t, e), montar_da_mesa.limites_do_grupo(t, e), certo)
+               for (t, e), certo in sorted(pedidos.items(), key=str)
+               if not (render.limites_do_grupo(t, e) == montar_da_mesa.limites_do_grupo(t, e) == certo)]
+    verifica("mergulho ate 36, com limite proprio, igual no render, no montar_da_mesa e na Mesa",
+             render.LIMITES_ESTILO == estilos_escritos and montar_da_mesa.LIMITES_ESTILO == estilos_escritos
+             and estilos_mesa == estilos_escritos and not errados,
+             "render %s, montar_da_mesa %s, Mesa %s; %s" % (render.LIMITES_ESTILO, montar_da_mesa.LIMITES_ESTILO,
+                                                          estilos_mesa, "; ".join(errados[:3])))
+    # UMA COR PARA CADA FOTO DO MAIOR GRUPO, e mais uma para o que se recusa: o
+    # teste_colagem_e_pilha_com_muitas_fotos desenha o maximo de cada um pelas cores. O maior
+    # grupo conta tambem os limites dos estilos.
+    maior = max(m for _n, m in list(render.LIMITES_MONTE.values()) + list(render.LIMITES_ESTILO.values()))
+    verifica("uma cor distinta em CORES_MONTE para cada foto do maior grupo",
+             len(set(CORES_MONTE)) == len(CORES_MONTE) >= maior + 1,
+             "%d cores, %d distintas, o maior grupo leva %d" % (len(CORES_MONTE), len(set(CORES_MONTE)), maior))
     lado_n = {}
     m = re.search(r"var LADO_N\s*=\s*\{(.*?)\};", html, re.S)
     if m:
@@ -3727,7 +3780,7 @@ def teste_lado_6g():
 
 
 def teste_colagem_e_pilha_com_muitas_fotos():
-    """A colagem de 6 a 12 e a pilha de 9 a 20, nos dois estilos: dentro do ecra, acima da legenda, e com as garantias de cada um.
+    """A colagem de 6 a 30 e a pilha de 9 a 60, nos dois estilos: dentro do ecra, acima da legenda, e com as garantias de cada um.
 
     O PEDIDO, do Tiago a 17 de setembro: mais fotos na colagem e na pilha. Os testes de antes
     medem ate 5 e 8. Aqui, para todos os numeros novos, deitadas e misturadas, com legenda de
@@ -3780,8 +3833,10 @@ def teste_colagem_e_pilha_com_muitas_fotos():
         return None
 
     # 16 e 20 desde 28 de setembro, decisao 087: o maximo novo da colagem e um do meio, que a
-    # espalhada de 20 leva seis segundos por disposicao e a suite nao precisa de todos.
-    for n in list(range(6, 13)) + [16, 20]:
+    # espalhada de 20 leva seis segundos por disposicao e a suite nao precisa de todos. 25 e 30
+    # desde 1 de outubro, decisao 102: as filas novas de colagem_particoes(). Com proporcoes
+    # reais mede-as o teste_colagem_de_21_a_30_com_proporcoes_reais.
+    for n in list(range(6, 13)) + [16, 20, 25, 30]:
         for forma, aspetos, legenda, estilos in [
                 (forma, aspetos, legenda, ("filas", "espalhada") if (legenda is None) == (n % 2 == 1) else ("filas",))
                 for forma, aspetos in (("deitadas", [4 / 3.0] * n), ("misturadas", _formas_monte(n)["misturadas"]))
@@ -3829,7 +3884,10 @@ def teste_colagem_e_pilha_com_muitas_fotos():
                  10: "55 433 343 334 3322 3232 3223 2332 2323 2233",
                  11: "65 56 443 434 344 3332 3323 3233 2333",
                  12: "66 444 3333",
-                 20: "5555"}
+                 20: "5555",
+                 # acima de 24 (decisao 102): de 4 a 6 filas equilibradas de ate 10 fotos
+                 25: "7666 6766 6676 6667 55555 544444 454444 445444 444544 444454 444445",
+                 30: "8877 8787 8778 7887 7878 7788 66666 555555"}
     for n, esperadas in sorted(particoes.items()):
         # a ordem conta: e ela que desempata quando duas particoes dao a mesma area. Uma fila
         # com mais de 9 fotos escreve-se com dois algarismos e nunca bate com nenhuma destas.
@@ -3853,7 +3911,8 @@ def teste_colagem_e_pilha_com_muitas_fotos():
                 if total < chao:
                     problemas.append("colagem em filas de %d %s%s: todas juntas com %.1f%% do ecra, o chao e %d%%"
                                      % (n, forma, " com legenda" if legenda else "", total, chao))
-    for n in list(range(9, 21)) + [24, 30, 40]:
+    # 50 e 60 desde 1 de outubro, decisao 102: a pilha vai ate 60, so em monte.
+    for n in list(range(9, 21)) + [24, 30, 40, 50, 60]:
         for forma, aspetos in (("deitadas", [4 / 3.0] * n), ("misturadas", _formas_monte(n)["misturadas"])):
             legenda = livre if n % 2 == 0 else None
             for estilo in ("monte", "leque"):
@@ -3886,7 +3945,7 @@ def teste_colagem_e_pilha_com_muitas_fotos():
         nome = "%s %s de %d desenhada" % (tipo, estilo, n)
         # A DURACAO QUE O RENDER PEDE PARA ESTE NUMERO, e nunca menos de 20 s: com a pilha a 40
         # (decisao 087) os 20 s de sempre ficavam abaixo do minimo e o teste media uma agenda
-        # apertada que a Mesa nunca propoe.
+        # apertada que a Mesa nunca propoe. Com a pilha a 60 (decisao 102) sao 33,65 s.
         dur = max(20.0, render.duracao_minima_monte(tipo, n) + 2.0)
         limite = pronto["capa"][1].getbbox()[1] - render.MONTE_LEGENDA_FOLGA * A
         fora = None
@@ -3914,12 +3973,21 @@ def teste_colagem_e_pilha_com_muitas_fotos():
         poses_fim, zoom = render.poses_monte(pronto, fim, dur)
         if tipo == "colagem":
             miolo = 0.5 - render.MONTE_PISA - 0.02
+            # UM ABAIXO NAO E TAPADO. No fim a camada do conjunto e escalada em RGBa
+            # pre-multiplicado, e cerca de 1% dos pixeis de cada cor sai um abaixo, (30, 170, 170)
+            # a (29, 169, 169), com 20 fotos como com 30 (medido a 1 de outubro: 5834 pixeis com
+            # 20, 8552 com 30). Com 20 os nove pontos nunca calhavam num deles; com a colagem a 30
+            # (decisao 102) calharam dois, sem nenhuma foto por cima. As cores de CORES_MONTE distam
+            # pelo menos 9 num canal umas das outras, 80 da moldura e 25 do fundo desfocado, e por
+            # isso 2 de folga nao confunde nenhuma.
+            def da_cor(px, cor):
+                return max(abs(a - b) for a, b in zip(px, cor)) <= 2
             for k, x, y, tam, _a, _p in poses_fim:
                 f = pronto["fotos"][k]
                 w, h = f["tamanho"]
                 tapados = sum(1 for a in (-1, 0, 1) for b in (-1, 0, 1)
-                              if tela_fim.getpixel(tuple(int(v) for v in render.cantos(
-                                  x, y, a * miolo * w * tam, b * miolo * h * tam, f["angulo"])[2])) != CORES_MONTE[k])
+                              if not da_cor(tela_fim.getpixel(tuple(int(v) for v in render.cantos(
+                                  x, y, a * miolo * w * tam, b * miolo * h * tam, f["angulo"])[2])), CORES_MONTE[k]))
                 if tapados:
                     problemas.append("%s: foto %d com %d de 9 pontos do miolo tapados no fim" % (nome, k + 1, tapados))
         else:
@@ -3941,10 +4009,125 @@ def teste_colagem_e_pilha_com_muitas_fotos():
                     ve = _visivel(tela_fim, CORES_MONTE[k]) / (w * zoom * h * zoom)
                     if ve < render.PILHA_LEQUE_VE:
                         problemas.append("%s: foto %d com %.0f%% a vista no fim" % (nome, k + 1, 100 * ve))
-    verifica("colagem ate 12 e pilha ate 20: dentro do ecra, acima da legenda, com as garantias de cada estilo",
+    verifica("colagem ate 30 e pilha ate 60: dentro do ecra, acima da legenda, com as garantias de cada estilo",
              not problemas,
              ("; ".join(problemas[:3]) + (" (+%d)" % (len(problemas) - 3) if len(problemas) > 3 else ""))
              if problemas else "%d disposicoes e %d desenhadas pelas cores" % (casos, desenhadas))
+
+
+def teste_colagem_de_21_a_30_com_proporcoes_reais():
+    """A colagem de 21 a 30 com as proporcoes do inventario, em filas e espalhada: nenhuma rebenta, sai do ecra ou pisa um miolo.
+
+    O PEDIDO, do Tiago a 1 de outubro (decisao 102): "A colagem: ate 30 fotos."
+    OS DEFEITOS QUE ISTO APANHA:
+      - com 25 ou mais em filas nao havia particao nenhuma em colagem_particoes(), e o
+        colagem_disposicao() rebentava com ValueError (o max de uma lista vazia). Uma fatia que
+        morre para o render inteiro;
+      - com as filas novas mas sem o filtro das particoes que assentaram, o colagem_afastar() de
+        algumas nao chega a parar de empurrar e a garantia do miolo falha: medido a 1 de outubro,
+        10 em 240 colagens de 25 a 30 com proporcoes do inventario tinham uma foto a entrar 3 a 12
+        px no miolo de outra. As formas sinteticas do teste_colagem_e_pilha_com_muitas_fotos nao
+        davam por isso, e por isso aqui as proporcoes sao as verdadeiras: as larguras e alturas do
+        data/inventario.csv, sorteadas com sementes fixas, e dois casos escritos aqui, tirados
+        desse sorteio, que sem o filtro pisam 10,1 e 12,2 px;
+      - de 21 a 24 as particoes sao as de sempre, ate 4 filas de 6, mas so com o limite a 30 podem
+        ir ao filme, e o filtro so valia acima de 24: na revisao de 1 de outubro 3 em 256 com
+        proporcoes reais pisavam um miolo 1,1 a 1,6 px. Dois desses sao o sorteio 0 de 21 e o 7
+        de 22, que entram aqui; o filtro vale agora acima de render.COLAGEM_SO_ASSENTADAS_ACIMA.
+    Em filas, de 21 a 30 com 16 sorteios cada, sem legenda, com uma e com duas linhas, e um foco
+    marcado na foto 4 dos impares: nenhuma excecao, dentro do ecra a respirar e acima da legenda,
+    nenhum miolo nem foco pisado, os angulos do ensaio, e de 1 a COLAGEM_MUITAS_LINHAS filas ate 24
+    e de 4 a COLAGEM_MAIS_LINHAS acima (uma fila nova comeca onde o centro volta para a esquerda).
+    Na espalhada, que leva cerca de 11 s por disposicao, 25 e 30 com dois sorteios: o mesmo, e a
+    primeira e a maior, sem nenhuma a crescer em relacao a anterior.
+    """
+    import random
+    import render
+    L, A = render.L, render.A
+    proporcoes = []
+    for r in csv.DictReader(open(os.path.join(REPO, "data", "inventario.csv"), encoding="utf-8-sig")):
+        try:
+            w, h = float(r["largura"]), float(r["altura"])
+        except (TypeError, ValueError):
+            continue
+        if w > 0 and h > 0:
+            proporcoes.append(round(w / h, 4))
+    legendas = (None,
+                render.faixa_texto("Verao de 2014")[1].getbbox()[1] - render.MONTE_LEGENDA_FOLGA * A,
+                render.faixa_texto("Verao de 2014\nParis com os amigos")[1].getbbox()[1]
+                - render.MONTE_LEGENDA_FOLGA * A)
+    zoom = 1.0 + render.COLAGEM_RESPIRA
+
+    def fora(fotos, limite):
+        for k, f in enumerate(fotos):
+            for px, py in render.contorno_monte(f):
+                x, y = L / 2.0 + (px - L / 2.0) * zoom, A / 2.0 + (py - A / 2.0) * zoom
+                if x < -0.5 or y < -0.5 or x > L + 0.5 or y > A + 0.5:
+                    return "foto %d fora do ecra, em (%.0f, %.0f)" % (k + 1, x, y)
+                if limite is not None and y > limite + 0.5:
+                    return "foto %d desce a %.0f, a legenda comeca em %.0f" % (k + 1, y, limite)
+        return None
+
+    def miolo_pisado(fotos, focos):
+        for j in range(1, len(fotos)):
+            for i in range(j):
+                for zona in render.colagem_guardado(fotos, focos, i):
+                    d = render.afastar(zona, render.contorno_monte(fotos[j]))
+                    if d and math.hypot(d[0], d[1]) - 1.0 > 1.0:
+                        return "a foto %d entra %.1f px no miolo da %d" % (j + 1, math.hypot(d[0], d[1]) - 1.0, i + 1)
+        return None
+
+    # Os dois casos escritos: 30 fotos do sorteio de 1 de outubro, com legenda de uma e de duas
+    # linhas, que sem o filtro das particoes que assentaram pisam um miolo.
+    casos = [("escrito 1", [1.5, 1.4673, 1.3311, 0.75, 0.6647, 1.3333, 1.504, 0.45, 1.3333, 1.3333, 0.7708, 0.75,
+                            1.8153, 1.5009, 1.3333, 0.5625, 0.75, 0.75, 0.6487, 0.75, 1.4167, 1.4943, 0.75, 0.6498,
+                            0.75, 0.75, 1.3333, 1.4872, 1.5, 1.3353], legendas[1], False, ("filas",)),
+             ("escrito 2", [1.3333, 0.6762, 0.75, 0.75, 0.75, 1.4987, 0.6696, 0.75, 0.3449, 1.3333, 1.3337, 0.6667,
+                            1.3333, 1.497, 1.3333, 0.75, 1.3333, 1.497, 1.018, 0.75, 1.3333, 0.6649, 0.7502, 1.09,
+                            1.497, 0.75, 1.2676, 1.3333, 1.3333, 1.3333], legendas[2], False, ("filas",))]
+    for n in range(21, 31):
+        for c in range(16):
+            rnd = random.Random(1001 * n + c)
+            estilos = ("filas", "espalhada") if n in (25, 30) and c < 2 else ("filas",)
+            casos.append(("%d sorteio %d" % (n, c), [rnd.choice(proporcoes) for _ in range(n)],
+                          legendas[c % 3], c % 2 == 1, estilos))
+    problemas, contas = [], 0
+    for nome, aspetos, legenda, com_foco, estilos in casos:
+        n = len(aspetos)
+        focos = [None] * n
+        if com_foco:
+            focos[3] = (0.5, 0.2)
+        for estilo in estilos:
+            contas += 1
+            caso = "%s de %d, %s%s%s" % (estilo, n, nome, " com legenda" if legenda else "", " e foco" if com_foco else "")
+            funcao = render.colagem_disposicao if estilo == "filas" else render.colagem_espalhada
+            try:
+                fotos = funcao(list(aspetos), list(focos), legenda)
+            except Exception as erro:
+                problemas.append("%s: rebentou com %r" % (caso, erro))
+                continue
+            erro = fora(fotos, legenda) or miolo_pisado(fotos, focos)
+            if erro:
+                problemas.append("%s: %s" % (caso, erro))
+            if [f[4] for f in fotos] != [render.COLAGEM_ANGULOS[k % 5] for k in range(n)]:
+                problemas.append("%s: angulos %s" % (caso, [f[4] for f in fotos]))
+            if estilo == "filas":
+                filas = 1 + sum(1 for k in range(1, n) if fotos[k][0] < fotos[k - 1][0])
+                if n <= render.COLAGEM_MUITAS_LINHAS * render.COLAGEM_MUITAS_POR_LINHA:
+                    de, ate = 1, render.COLAGEM_MUITAS_LINHAS
+                else:
+                    de, ate = render.COLAGEM_MUITAS_LINHAS, render.COLAGEM_MAIS_LINHAS
+                if not de <= filas <= ate:
+                    problemas.append("%s: %d filas" % (caso, filas))
+            else:
+                areas = [f[2] * f[3] for f in fotos]
+                if any(areas[k + 1] > areas[k] * 1.0001 for k in range(n - 1)):
+                    problemas.append("%s: a primeira nao e a maior ou ha uma a crescer" % caso)
+    verifica("colagem de 21 a 30 com proporcoes reais: nenhuma rebenta, sai do ecra ou pisa um miolo",
+             not problemas,
+             ("; ".join(problemas[:3]) + (" (+%d)" % (len(problemas) - 3) if len(problemas) > 3 else ""))
+             if problemas else "%d disposicoes, %d em filas e %d espalhadas"
+             % (contas, len(casos), sum(1 for c in casos if "espalhada" in c[4])))
 
 
 def teste_agenda_nova_na_legenda_e_nas_tapadas():
@@ -4116,19 +4299,36 @@ def teste_colagem_e_pilha_pelo_preparar():
         if preparar(clip(tipo, em_falta)) is not None:
             problemas.append("%s com uma foto em falta nao devolve None" % tipo)
         minimo, maximo = render.LIMITES_MONTE[tipo]
-        if preparar(clip(tipo, (ficheiros * 6)[:maximo + 1])) is not None:
+        # AS FOTOS REPETEM-SE ATE PASSAR O MAXIMO, seja ele qual for: com (ficheiros * 6), 48, a
+        # pilha de 60 (decisao 102) nunca chegava ao maximo nem ao maximo mais um.
+        repetidas = ficheiros * (maximo // len(ficheiros) + 2)
+        if preparar(clip(tipo, repetidas[:maximo + 1])) is not None:
             problemas.append("%s com %d fotos nao devolve None" % (tipo, maximo + 1))
         # OS DOIS LIMITES ACEITES CHEGAM AO DESENHO. So se via o maximo mais um recusado: com o
         # `<=` do preparar() trocado por `<`, a colagem de 12 e a pilha de 20 que a Mesa e o
         # montar_da_mesa aceitam saiam do video sem aviso, e a suite inteira passava.
         for conta in (minimo, maximo):
-            aceite = preparar(clip(tipo, (ficheiros * 6)[:conta]))
+            aceite = preparar(clip(tipo, repetidas[:conta]))
             if not aceite or aceite.get("tipo") != tipo or len(aceite.get("fotos", [])) != conta:
                 problemas.append("%s de %d fotos, dentro dos limites, nao chega ao desenho" % (tipo, conta))
         if preparar(clip(tipo, ficheiros[:minimo - 1])) is not None:
             problemas.append("%s com %d fotos nao devolve None" % (tipo, minimo - 1))
+    # O MERGULHO TEM LIMITE PROPRIO (decisao 102): com o tratamento "mergulho" o preparar() aceita
+    # ate ao maximo do estilo e recusa um a mais, e a colagem em filas com esse numero, acima do
+    # maximo dela, e recusada. Antes o limite era o do tipo, e o mergulho de 36 que a Mesa e o
+    # montar_da_mesa aceitam saia do video sem aviso.
+    minimo_m, maximo_m = render.limites_do_grupo("colagem", render.MERGULHO_ESTILO)
+    repetidas = ficheiros * (maximo_m // len(ficheiros) + 2)
+    aceite = preparar(clip("colagem", repetidas[:maximo_m], tratamento=render.MERGULHO_ESTILO))
+    if not aceite or aceite.get("tipo") != "mergulho" or aceite.get("n") != maximo_m:
+        problemas.append("mergulho de %d fotos, dentro do limite dele, nao chega ao desenho" % maximo_m)
+    if preparar(clip("colagem", repetidas[:maximo_m + 1], tratamento=render.MERGULHO_ESTILO)) is not None:
+        problemas.append("mergulho com %d fotos nao devolve None" % (maximo_m + 1))
+    if maximo_m > render.LIMITES_MONTE["colagem"][1] and preparar(clip("colagem", repetidas[:maximo_m])) is not None:
+        problemas.append("colagem em filas com %d fotos, acima do limite dela, nao devolve None" % maximo_m)
     verifica("colagem e pilha: pelo preparar do render, com legenda e encadeados", not problemas,
-             "; ".join(problemas[:3]) if problemas else "colagem de 5 e pilha de 8 a partir de ficheiros, os limites aceites e recusados")
+             "; ".join(problemas[:3]) if problemas else
+             "colagem de 5 e pilha de 8 a partir de ficheiros, os limites aceites e recusados, o do mergulho incluido")
     verifica("colagem e pilha: limites iguais no render e no montar_da_mesa",
              render.LIMITES_MONTE == montar_da_mesa.LIMITES_MONTE,
              "%s e %s" % (render.LIMITES_MONTE, montar_da_mesa.LIMITES_MONTE))
@@ -4182,6 +4382,343 @@ def teste_colagem_e_pilha_pelo_preparar():
              and agendas[1][0] == (0.9, 2.5) and abs(agendas[1][2] - (2 * (6.0 - 0.9 - 2.5) / 3 - 0.32 + 2.5)) < 2e-3)
     verifica("render: o primeiro clip do corpo entra sem encadeado e o ultimo sai no fade", certo,
              "encadeados %s, parcial %s, agendas da primeira e da ultima %s" % (encadeados, parcial, agendas))
+
+
+def _recomposta(render, pronto, t, dur):
+    """O fotograma da colagem ou da pilha com o fundo e todas as fotos compostos de novo, sem camada nenhuma."""
+    poses, _zoom = render.poses_monte(pronto, t, dur)
+    inicios, entrada, _z = render.estado_monte(pronto, t, dur)
+    tela = pronto["fundo"].copy()
+    for k, x, y, tam, alfa, _pousada in poses:
+        render.compor(tela, render.sprite_no_instante(pronto, k, t, inicios, entrada)[0],
+                      x, y, tam / pronto["cresce"], alfa)
+    render.colar_legenda(tela, pronto, t, dur, inicios)
+    return tela
+
+
+def teste_camada_das_pousadas_igual_a_recomposta():
+    """A camada das pousadas, feita sobre a de baixo, da os bytes de recompor tudo, em todos os fotogramas.
+
+    O DEFEITO QUE ISTO GUARDA (1 de outubro): a camada das fotos pousadas refazia-se do zero
+    cada vez que mais uma pousava, n(n+1)/2 composicoes por fatia, e com o texto que some
+    ainda mais; numa pilha de 60 com textos eram minutos de render em cada fatia. Passou a
+    guardar a camada de baixo, com as pousadas que ja nao mudam, e a por por cima so as
+    outras. Um erro nisso, uma foto de baixo guardada ainda com o texto ou uma camada de baixo
+    usada depois de um fotograma para tras, via-se no filme como um texto que volta ou uma
+    foto que falta, e os outros testes pedem dois ou tres instantes e nao o apanhavam.
+
+    A referencia compoe o fundo e todas as fotos em cada fotograma, sem camada nenhuma. Cada
+    fotograma com o conjunto parado tem de ser igual ao byte: na pilha e na colagem, sem
+    textos, com o texto que some e com o que fica, na legenda de baixo e num clip apertado em
+    que a entrada e mais curta do que o desvanecer; com os fotogramas pedidos por ordem, como
+    o render, so os de uma fatia, e de tras para a frente. E a camada de baixo tem de chegar a
+    ter as pousadas todas menos as de cima, senao estava tudo a ser recomposto como antes.
+    """
+    import contextlib
+    import io
+    import render
+    textos = ["NATAL", "2019", "Verao", "Porto", "Paris", "Sintra", "Avo", "1995"]
+    casos = [("pilha monte sem textos", "pilha", "monte", 6, None, None, ""),
+             ("pilha monte com o texto que some", "pilha", "monte", 6, textos[:6], None, ""),
+             ("pilha leque com o texto que fica", "pilha", "leque", 5, textos[:5], {"tapadas": "fica"}, ""),
+             ("pilha na legenda de baixo", "pilha", "monte", 5, textos[:5], {"modo": "legenda"}, "Amigos"),
+             ("colagem em filas com textos e legenda", "colagem", "filas", 5, textos[:5], None, "Amigos"),
+             ("colagem espalhada sem textos", "colagem", "espalhada", 4, None, None, ""),
+             ("pilha apertada com o texto que some", "pilha", "monte", 8, ["NATAL"] * 8, None, "")]
+    ordens = (("por ordem", lambda qs: qs),
+              ("uma fatia de 3", lambda qs: [q for q in qs if q % 3 == 1]),
+              ("de tras para a frente", lambda qs: qs[::-1]))
+    guardado = _resolucao(render, 480, 270)
+    original = render.compor
+    problemas, comparados, poucas = [], 0, []
+    contas = {"agora": 0, "antes": 0}
+
+    def contar(*args, **kwargs):
+        contas["agora"] += 1
+        return original(*args, **kwargs)
+
+    try:
+        for nome, tipo, estilo, n, txt, opcoes, legenda in casos:
+            dur = 2.0 if "apertada" in nome else (3 + 1.6 * n if tipo == "colagem" else 2.6 + 0.85 * n)
+            imagens = [_foto_gradiente(k, a, 240) for k, a in enumerate(_formas_monte(n)["misturadas"])]
+
+            def preparar():
+                with contextlib.redirect_stdout(io.StringIO()):
+                    return render.preparar_monte(tipo, imagens, None, legenda, 0.7, 0.7, estilo,
+                                                 textos=txt, opcoes=opcoes, duracao=dur)
+            ref = preparar()
+            todos = list(range(int(round(dur * render.FPS))))
+            for ordem, escolher in ordens:
+                pronto = preparar()
+                de_baixo, chave_antes = 0, None
+                for q in escolher(todos):
+                    t = q / float(render.FPS)
+                    parado = render.estado_monte(pronto, t, dur)[2] == 1.0
+                    if parado and ordem == "por ordem":
+                        # O que o desenho de antes compunha neste fotograma: as pousadas todas
+                        # quando a chave da camada mudava, e as que estao a entrar sempre.
+                        poses, _z = render.poses_monte(ref, t, dur)
+                        inicios, entrada, _z = render.estado_monte(ref, t, dur)
+                        assentes = 0
+                        while assentes < len(poses) and poses[assentes][5]:
+                            assentes += 1
+                        topo = (render.sprite_no_instante(ref, poses[assentes - 1][0], t, inicios, entrada)[1]
+                                if assentes else None)
+                        chave = (round(dur, 4), assentes, topo)
+                        contas["antes"] += (assentes if chave != chave_antes else 0) + len(poses) - assentes
+                        chave_antes = chave
+                        render.compor = contar
+                    try:
+                        tela = render.desenhar_monte(pronto, t, dur)
+                    finally:
+                        render.compor = original
+                    if not parado:
+                        continue
+                    comparados += 1
+                    if tela.tobytes() != _recomposta(render, ref, t, dur).tobytes():
+                        problemas.append("%s, %s: o fotograma %d (%.2f s) difere da recomposta"
+                                         % (nome, ordem, q, t))
+                        break
+                    if ordem == "por ordem":
+                        de_baixo = max(de_baixo, len((pronto.get("_baixo") or {}).get("fotos", [])))
+                if ordem == "por ordem" and de_baixo < n - 2:
+                    poucas.append("%s: a de baixo so chegou a %d de %d" % (nome, de_baixo, n))
+    finally:
+        render.compor = original
+        render.L, render.A = guardado
+    problemas += poucas
+    if contas["agora"] >= contas["antes"]:
+        problemas.append("com o conjunto parado compos %d vezes, e antes eram %d" % (contas["agora"], contas["antes"]))
+    verifica("colagem e pilha: a camada das pousadas igual a recompor tudo", not problemas,
+             "; ".join(problemas[:3]) if problemas else
+             "%d fotogramas de %d grupos em 3 ordens iguais ao byte; com o conjunto parado, por ordem, "
+             "%d composicoes em vez de %d" % (comparados, len(casos), contas["agora"], contas["antes"]))
+
+
+def teste_grupo_abre_uma_foto_de_cada_vez():
+    """A colagem, a pilha e o mergulho abrem cada foto uma vez e uma de cada vez, com os sprites de antes.
+
+    O DEFEITO (1 de outubro): o preparar() abria as fotos todas do grupo em resolucao total
+    antes de fazer os sprites, em cada uma das 7 fatias, e no render dessa madrugada a pilha
+    de 15 deixou o PC com 84 MB livres. Agora o tamanho vem do cabecalho e cada foto abre-se
+    na sua vez. Com ficheiros como os da FINAIS, JPEG com o EXIF a rodar 3, 6 e 8, um PNG
+    RGBA e um WEBP, e uma TIFF com a orientacao 6, pelo preparar() do render:
+      - cada foto abre-se uma so vez, e quando abre nenhuma outra do grupo esta aberta. Com o
+        texto que some cada foto da pilha faz dois sprites: abri-la no resize abria-a duas
+        vezes e dobrava o tempo de preparar;
+      - os sprites, o fundo, a grelha do mergulho e tres fotogramas sao os mesmos, ao byte, que
+        com as fotos abertas todas antes pela abertura de antes,
+        ImageOps.exif_transpose(Image.open(c)).convert("RGB");
+      - o tamanho do cabecalho e o da foto aberta, de pe, e o abrir_foto() da os mesmos pixeis.
+        A TIFF e a armadilha: a Pillow ja a da de pe ao abrir, e trocar a largura com a altura
+        outra vez (como o JPEG pede) dispunha-a deitada e o sprite saia esticado (revisao de 1
+        de outubro).
+    """
+    import contextlib
+    import hashlib
+    import io
+    import json
+    import tempfile
+    import weakref
+    from PIL import ImageOps
+    import render
+    pasta = tempfile.mkdtemp(prefix="teste_uma_de_cada_vez_")
+    ficheiros = []
+    for k, (a, orientacao, ext) in enumerate(((4 / 3.0, 6, "jpg"), (3 / 4.0, 1, "jpg"), (16 / 9.0, 8, "jpg"),
+                                              (2 / 3.0, 3, "jpg"), (1.0, 1, "png"), (3 / 2.0, 1, "webp"),
+                                              (2 / 3.0, 6, "tif"))):
+        im = _foto_gradiente(k, a)
+        caminho = os.path.join(pasta, "foto%d.%s" % (k, ext))
+        if ext == "png":
+            im.putalpha(Image.linear_gradient("L").resize(im.size))
+            im.save(caminho)
+        elif ext == "webp":
+            im.save(caminho, quality=90)
+        elif ext == "tif":
+            exif = Image.Exif()
+            exif[render.ORIENTACAO_EXIF] = orientacao
+            im.save(caminho, format="TIFF", exif=exif.tobytes())
+        else:
+            exif = Image.Exif()
+            if orientacao != 1:
+                exif[render.ORIENTACAO_EXIF] = orientacao
+            im.save(caminho, quality=92, exif=exif.tobytes())
+        ficheiros.append(caminho)
+    problemas = []
+    for c in ficheiros:
+        antes = ImageOps.exif_transpose(Image.open(c)).convert("RGB")
+        agora = render.abrir_foto(c)
+        if render.tamanho_da_foto(c) != antes.size or agora.mode != "RGB" or agora.tobytes() != antes.tobytes():
+            problemas.append("%s: cabecalho %s, aberta %s %s, de antes %s"
+                             % (os.path.basename(c), render.tamanho_da_foto(c), agora.mode, agora.size, antes.size))
+    with Image.open(ficheiros[0]) as guardada:
+        if render.tamanho_da_foto(ficheiros[0]) != guardada.size[::-1]:
+            problemas.append("a foto com a orientacao 6 nao troca a largura com a altura")
+
+    class TodasAbertas(render.FotoPorAbrir):
+        """As fotos como antes de 1 de outubro: todas abertas a cabeca, pela abertura de antes."""
+
+        def __init__(self, caminho):
+            self.caminho = caminho
+            self.im = ImageOps.exif_transpose(Image.open(caminho)).convert("RGB")
+            self.width, self.height = self.im.size
+            self.size = self.im.size
+
+        def abrir(self):
+            return self.im
+
+    def assinatura(p, dur):
+        if p["tipo"] == "mergulho":
+            pecas = [p["grande"], p["alvo"]] + [cel for cel, _onde in p["pequenas"]]
+        else:
+            pecas = ([p["fundo"]] + [f["sprite"] for f in p["fotos"]]
+                     + [f["sprite_sem"] for f in p["fotos"] if f.get("sprite_sem") is not None])
+        md5 = hashlib.md5()
+        for im in pecas:
+            md5.update(im.tobytes())
+        for t in (0.9, dur / 2.0, dur - 0.04):
+            md5.update(render.desenhar(p, t, dur).tobytes())
+        return md5.hexdigest(), len(pecas)
+
+    textos = json.dumps(["NATAL", "2019", "Verao", "Porto", "Paris", "Sintra", "Faro"])
+    casos = [("pilha com o texto que some", "pilha", "monte", "", textos),
+             ("colagem em filas com legenda", "colagem", "filas", "Amigos", textos),
+             ("mergulho", "colagem", render.MERGULHO_ESTILO, "", "")]
+    abertas, vivas, nomes = [], [], []
+    original_abrir, original_classe = render.abrir_foto, render.FotoPorAbrir
+
+    def espia(caminho):
+        vivas.append(sum(1 for r in abertas if r() is not None))
+        im = original_abrir(caminho)
+        abertas.append(weakref.ref(im))
+        nomes.append(caminho)
+        return im
+
+    dur = 9.0
+    pecas_vistas = []
+    for nome, tipo, tratamento, legenda, txt in casos:
+        clip = {"tipo": tipo, "texto_ecra": legenda, "tratamento": tratamento, "fonte_imagem": "",
+                "ficheiro": "", "id": "", "transicao_s": "0.7", "_caminhos": list(ficheiros),
+                "duracao_s": str(dur), "textos_fotos": txt}
+        del abertas[:], vivas[:], nomes[:]
+        render.abrir_foto = espia
+        try:
+            with contextlib.redirect_stdout(io.StringIO()):
+                agora = render.preparar(dict(clip), {})
+        finally:
+            render.abrir_foto = original_abrir
+        render.FotoPorAbrir = TodasAbertas
+        try:
+            with contextlib.redirect_stdout(io.StringIO()):
+                antes = render.preparar(dict(clip), {})
+        finally:
+            render.FotoPorAbrir = original_classe
+        if not agora or not antes:
+            problemas.append("%s nao chega ao desenho" % nome)
+            continue
+        if sorted(nomes) != sorted(ficheiros):
+            problemas.append("%s: abriu %d vezes as %d fotos" % (nome, len(nomes), len(ficheiros)))
+        if max(vivas or [0]) > 0:
+            problemas.append("%s: ao abrir uma foto chegou a haver %d outras abertas" % (nome, max(vivas)))
+        novo, n_pecas = assinatura(agora, dur)
+        if novo != assinatura(antes, dur)[0]:
+            problemas.append("%s: sprites ou fotogramas diferentes de abrir as fotos todas antes" % nome)
+        pecas_vistas.append(n_pecas)
+        if tipo == "pilha" and sum(1 for f in agora["fotos"] if f.get("sprite_sem") is not None) != len(ficheiros) - 1:
+            problemas.append("%s: as fotos tapadas nao tem o sprite sem texto" % nome)
+    verifica("colagem, pilha e mergulho: uma foto aberta de cada vez", not problemas,
+             "; ".join(problemas[:3]) if problemas else
+             "%d fotos (EXIF 3, 6 e 8, PNG RGBA, WEBP, TIFF rodada) abertas uma vez cada, %s pecas iguais ao byte "
+             "com as fotos todas abertas antes" % (len(ficheiros), "+".join(str(p) for p in pecas_vistas)))
+
+
+def teste_aviso_de_memoria_conta_os_pixeis():
+    """O aviso de memoria do render conta os pixeis verdadeiros do grupo mais pesado e dispara pelo valor.
+
+    O DEFEITO (1 de outubro): contava 0,021 GB por foto, que sao 5 MP, e so disparava acima de
+    20 fotos. A pilha de 15 da madrugada de 1 de outubro, com 519 MB de fotos, deixou o PC com
+    84 MB livres sem aviso nenhum; e com a abertura uma a uma uma pilha de 8 com uma foto de
+    48 MP rodada pede mais a cada fatia do que uma de 25 fotos pequenas. Agora:
+      - a conta le os pixeis do cabecalho, e uma foto que o EXIF roda conta a copia de a rodar;
+      - os textos que somem contam um segundo sprite por foto;
+      - uma pilha de 8 com uma foto de 48 MP rodada dispara com 7 fatias, diz qual e onde, e o
+        numero de fatias que propoe ja nao dispara, e uma a mais sim;
+      - uma pilha de 25 fotos pequenas, que o aviso de antes apanhava, nao dispara, e uma foto
+        que nao abre nao o faz rebentar;
+      - com uma fatia so, ou sem grupos, nao ha aviso;
+      - DUAS PILHAS SEGUIDAS somam-se (revisao de 1 de outubro): a segunda prepara-se com os
+        sprites da primeira ainda na fatia, ate ao libertar_prontos() seguinte. Duas pilhas de
+        60 que sozinhas cabem com 7 fatias disparam juntas, e dizem qual estava antes; afastadas
+        mais do que LIMPEZA_A_CADA fotogramas, nao.
+    """
+    import tempfile
+    import render
+    pasta = tempfile.mkdtemp(prefix="teste_aviso_memoria_")
+    rodada = Image.Exif()
+    rodada[render.ORIENTACAO_EXIF] = 6
+    grande = os.path.join(pasta, "grande_rodada.jpg")
+    Image.new("RGB", (8000, 6000), (120, 90, 60)).save(grande, quality=75, exif=rodada.tobytes())
+    de_pe = os.path.join(pasta, "grande_de_pe.jpg")
+    Image.new("RGB", (8000, 6000), (60, 90, 120)).save(de_pe, quality=75)
+    pequenas = []
+    for k in range(7):
+        c = os.path.join(pasta, "pequena%d.jpg" % k)
+        Image.new("RGB", (800, 600), CORES_MONTE[k]).save(c)
+        pequenas.append(c)
+    problemas = []
+    px = 8000 * 6000 * render.MEMORIA_POR_PIXEL
+    if render.memoria_ao_abrir(grande) != 2 * px or render.memoria_ao_abrir(de_pe) != px:
+        problemas.append("ao abrir: a rodada %d e a de pe %d, em vez de %d e %d"
+                         % (render.memoria_ao_abrir(grande), render.memoria_ao_abrir(de_pe), 2 * px, px))
+    ecras = render.MEMORIA_ECRAS * render.MEMORIA_POR_PIXEL * render.L * render.A
+    pilha = {"tipo": "pilha", "_caminhos": pequenas + [grande], "inicio_s": "551.26",
+             "textos_fotos": '["a", "b", "c", "d", "e", "f", "g", "h"]'}
+    sem_textos = dict(pilha, textos_fotos="")
+    for clip, sprites in ((pilha, 16), (sem_textos, 8)):
+        esperado = 2 * px + sprites * render.MEMORIA_SPRITE + ecras
+        if abs(render.memoria_do_grupo(clip) - esperado) > 1:
+            problemas.append("pilha de 8 com %d sprites: %d em vez de %d" % (sprites, render.memoria_do_grupo(clip), esperado))
+    # Uma foto que nao abre fica para o preparar(), como sempre: o aviso nao pode parar o render.
+    estragada = os.path.join(pasta, "estragada.jpg")
+    with open(estragada, "wb") as f:
+        f.write(b"isto nao e uma fotografia")
+    vinte_e_cinco = {"tipo": "pilha", "_caminhos": (pequenas * 4)[:24] + [estragada], "inicio_s": "100"}
+    clips = [{"tipo": "foto"}, vinte_e_cinco, pilha]
+    aviso = render.aviso_de_memoria(clips, 7)
+    if not aviso or "pilha de 8 fotos aos 9:11" not in aviso or "--fatias" not in aviso:
+        problemas.append("pilha de 8 com uma foto de 48 MP, 7 fatias: %r" % aviso)
+    else:
+        propostas = int(re.search(r"--fatias (\d+)", aviso).group(1))
+        if render.aviso_de_memoria(clips, propostas) is not None or render.aviso_de_memoria(clips, propostas + 1) is None:
+            problemas.append("propoe --fatias %d, e nao e o maior numero que cabe" % propostas)
+    if render.aviso_de_memoria([{"tipo": "foto"}, vinte_e_cinco], 7) is not None:
+        problemas.append("25 fotos pequenas disparam o aviso")
+    if render.aviso_de_memoria(clips, 1) is not None or render.aviso_de_memoria([{"tipo": "foto"}], 7) is not None:
+        problemas.append("aviso com uma fatia so, ou sem grupos")
+    # Duas pilhas de 60 seguidas, com encadeado de 0,7 s, como as medidas a 1 de outubro.
+    sessenta = (pequenas * 9)[:60]
+    primeira = {"tipo": "pilha", "_caminhos": sessenta, "inicio_s": "100.0", "fim_s": "132.8"}
+    segunda = dict(primeira, inicio_s="132.1", fim_s="164.9")
+    longe = dict(primeira, inicio_s="%.1f" % (132.8 + render.LIMPEZA_A_CADA / float(render.FPS) + 0.1),
+                 fim_s="250.0")
+    sozinha = render.memoria_do_grupo(primeira)
+    if not (sozinha * 7 <= render.MEMORIA_AVISO < 2 * sozinha * 7):
+        problemas.append("as duas pilhas de 60 nao servem a prova: %.0f MB cada" % (sozinha / 1e6))
+    juntas = render.aviso_de_memoria([{"tipo": "foto"}, primeira, segunda], 7)
+    if not juntas or "com a pilha de 60 fotos de antes ainda em memoria" not in juntas:
+        problemas.append("duas pilhas de 60 seguidas, 7 fatias: %r" % juntas)
+    # com uma foto de 3 s entre as duas a primeira pode ainda nao ter saido: a limpeza e de 8 em 8 s
+    depois_de_uma_foto = dict(primeira, inicio_s="135.8", fim_s="168.6")
+    if not render.aviso_de_memoria([primeira, depois_de_uma_foto], 7):
+        problemas.append("duas pilhas de 60 com uma foto de 3 s entre elas nao disparam")
+    if (render.aviso_de_memoria([primeira], 7) or render.aviso_de_memoria([segunda], 7)
+            or render.aviso_de_memoria([primeira, longe], 7)):
+        problemas.append("uma pilha de 60 sozinha, ou duas afastadas, disparam o aviso")
+    verifica("render: o aviso de memoria conta os pixeis verdadeiros", not problemas,
+             "; ".join(problemas[:3]) if problemas else
+             "a pilha de 8 com 48 MP rodada pede %.0f MB por fatia e dispara com 7; 25 fotos pequenas, %.0f MB, "
+             "nao; duas pilhas de 60 seguidas, %.0f MB cada, so juntas"
+             % (render.memoria_do_grupo(pilha) / 1e6, render.memoria_do_grupo(vinte_e_cinco) / 1e6, sozinha / 1e6))
 
 
 def teste_monte_acima_da_legenda():
@@ -4944,7 +5481,8 @@ def teste_mesa_no_sitio_do_clip():
     CROSS_DEPOIS = {"video": 0.0, "foto": 0.9}
     casos = []
     for sitio, (antes, depois) in sorted(sitios.items()):
-        for tipo, ns in (("colagem", (2, 3, 7, 12)), ("pilha", (2, 9, 20)), ("lado", (2, 3, 4, 6))):
+        # a pilha de 60 desde 1 de outubro (decisao 102): a nota tem de dizer quanto fica cada foto
+        for tipo, ns in (("colagem", (2, 3, 7, 12)), ("pilha", (2, 9, 20, 60)), ("lado", (2, 3, 4, 6))):
             for n in ns:
                 for cc in (0.0, 0.35, 0.7, 2.5):
                     minima = render.duracao_minima_monte("pilha" if tipo == "lado" else tipo, n, cc, 0.7)
@@ -5909,6 +6447,397 @@ def teste_mesa_avisa_legenda_curta():
              avisos2 == [("1", "0.8"), ("2", "%.1f" % (1.25 - 0.8))], "%s" % avisos2)
 
 
+def teste_mesa_avisa_textos_curtos_na_pilha():
+    """Numa pilha com o texto em cada foto, a Mesa avisa o texto que fica menos de 1,5 s, com a conta do render.
+
+    O PEDIDO, do Tiago a 1 de outubro (decisao 102): a pilha ate 60, em monte. Na duracao
+    minima cada foto fica cerca de 0,5 s, e com o texto "em cada foto" e a omissao das de
+    baixo, "desaparece quando outra cai por cima", cada texto so esta no ecra desde que a sua
+    foto comeca a cair ate a seguinte comecar (render.alfa_texto_pilha), e o da ultima ate ao
+    fim do clip. Abaixo de render.LEGENDA_MINIMO_S nao se le a 15 metros.
+
+    O DEFEITO QUE ISTO APANHA: so a opcao "na legenda de baixo" tinha esta conta. Em cada foto
+    nenhum aviso dizia o tempo, e uma pilha de 60 com um texto em cada foto passava calada.
+    Corre no node o textosCurtosNaPilha() da Mesa, em pilhas de 5 a 60 no primeiro clip do
+    corpo, no meio e a fechar o filme, e compara com o render: os inicios de agenda_monte() com
+    os encadeados de encadeados_do_corpo(), e o legendas_curtas(), que junta os textos iguais
+    seguidos. A duracao que o aviso propoe tem de chegar no render, e uma decima a menos nao.
+    Com "fica a vista", na legenda de baixo (que tem a sua conta) e na colagem nao avisa. E o
+    validador e o inspetor chamam-no. A Mesa avisa e nao corrige: nada aqui muda o clip. Sem
+    node, diz-se e nao conta.
+    """
+    import json
+    import shutil
+    import subprocess
+    import tempfile
+    import render
+    node = shutil.which("node")
+    if not node:
+        salta("Mesa avisa o texto curto em cada foto da pilha", "sem node neste PC")
+        return
+    html = open(os.path.join(REPO, "scripts", "editor_base.html"), encoding="utf-8").read()
+    problemas = []
+    minimo = _numero_do_editor(html, "LEGENDA_MINIMO_S", problemas)
+    if minimo is not None and minimo != render.LEGENDA_MINIMO_S:
+        problemas.append("LEGENDA_MINIMO_S na Mesa %s, no render %s" % (minimo, render.LEGENDA_MINIMO_S))
+    marcas = ["var MONTE = ", "function clipsDoCorpo(", "function encadeadosDe(",
+              # o encadeadosDe pergunta ao encadeadoDoClip, que precisa de saber ler um contador
+              "function encadeadoDoClip(", "function contadoresSeguidos(", "function pontoDoContador(",
+              "function lerContador(", "function eDataContador(", "function dataParaIso(", "function d2(",
+              "function agendaMonte(", "function agendaDeAntes(", "function agendaDoClip(",
+              "function modoTextos(", "function tapadasFicam(", "function textosDasFotos(", "function s1(",
+              "function textosCurtosNaPilha(", "function avisoCurtosNaPilha("]
+    js = ("var LEGENDA_MINIMO_S = %r;\n" % minimo
+          + "\n".join(_bloco_do_editor(html, m, problemas) for m in marcas))
+    # QUEM O CHAMA: o validador, com o grau da legenda de baixo, o inspetor e a nota que se
+    # refaz quando ele escreve a duracao. Le-se o corpo de cada funcao.
+    for funcao, chamada in (("function validar(", "erro(i, avisoCurtosNaPilha("),
+                            ("function blocoTextosFotos(", "textosCurtosNaPilha(v, c)"),
+                            ("function atualizaPorFoto(", "atualizaCurtosNaPilha(c)")):
+        if chamada not in _bloco_do_editor(html, funcao, problemas):
+            problemas.append("o %s) nao chama %s" % (funcao.split()[1], chamada))
+
+    # OS SITIOS, com o encadeado que muda: o primeiro do corpo entra sem encadeado, porque o
+    # video vai antes com corte seco, e o ultimo sai no fade a preto do fim.
+    sitios = {"primeiro": (["video"], ["foto"]), "meio": (["foto"], ["foto"]), "ultimo": (["foto"], [])}
+    cross = {"video": 0.0, "foto": 0.9}
+
+    def textos(variante, n):
+        if variante == "distintos":
+            return ["T%d" % k for k in range(n)]
+        if variante == "pares":
+            return [("Natal" if (k // 2) % 2 == 0 else "2019") for k in range(n)]
+        return [("T%d" % k if k % 2 == 0 else "") for k in range(n)]      # "vazios": so as pares
+
+    casos = []
+    for sitio, (antes, depois) in sorted(sitios.items()):
+        for n in (5, 15, 40, 60):
+            for variante in ("distintos", "pares", "vazios"):
+                minima = render.duracao_minima_monte("pilha", n, 0.7, 0.9)
+                # 1,47 s por foto no meio do filme: o mais curto fica a uma unha do limite, e
+                # arredondado dizia "menos de 1,5 s, o mais curto 1,5 s"
+                for d in (minima, minima + 3, 1.47 * (n + 1) + 1.6, 1.5 * (n + 1) + 2.0, 2 * minima + 9.3):
+                    d = math.floor(d * 10 + 0.5) / 10.0
+                    for extra in ({}, {"vt": "fica"}, {"vm": "legenda"}, {"t": "colagem"}):
+                        if extra and variante != "distintos":
+                            continue
+                        grupo = dict({"t": "pilha", "fotos": list(range(100, 100 + n)), "d": d, "c": 0.7,
+                                      "vf": True, "xf": textos(variante, n)}, **extra)
+                        clips = [{"t": t, "i": 1, "d": 4, "c": cross[t]} for t in antes]
+                        i = len(clips)
+                        clips.append(grupo)
+                        clips += [{"t": t, "i": 2, "d": 4, "c": cross[t]} for t in depois]
+                        casos.append({"clips": clips, "i": i, "sitio": sitio, "variante": variante})
+    programa = js + "\nvar casos = %s;\n" % json.dumps(casos) + """
+process.stdout.write(JSON.stringify(casos.map(function(m){
+  var v = {clips: m.clips}, c = m.clips[m.i], r = textosCurtosNaPilha(v, c);
+  /* a duracao que o aviso propoe, no mesmo clip e no mesmo sitio */
+  var com = function(d){
+    var o = JSON.parse(JSON.stringify(c)), w = {clips: m.clips.slice()};
+    o.d = d; w.clips[m.i] = o;
+    return textosCurtosNaPilha(w, o);
+  };
+  return {r: r, aviso: avisoCurtosNaPilha(r), e: encadeadosDe(v, m.i), chega: r.curtos ? com(r.precisa) : null};
+})));
+"""
+    pasta = tempfile.mkdtemp(prefix="teste_mesa_textos_pilha_")
+    caminho = os.path.join(pasta, "textos_pilha.js")
+    open(caminho, "w", encoding="utf-8").write(programa)
+    saida = None
+    if not problemas:
+        r = subprocess.run([node, caminho], capture_output=True, text=True, encoding="utf-8", timeout=300)
+        if r.returncode != 0:
+            problemas.append("o node nao correu as contas da Mesa: %s" % r.stderr.strip()[:300])
+        else:
+            saida = json.loads(r.stdout)
+    contas = {"avisados": 0, "calados": 0, "fora do caso": 0}
+    sessenta = None
+    if saida:
+        for m, o in zip(casos, saida):
+            clips, i = m["clips"], m["i"]
+            c = clips[i]
+            n, d = len(c["fotos"]), c["d"]
+            inicio_do_filme, _resto = render.partir_em_fanfarra_e_corpo([{"tipo": x["t"]} for x in clips])
+            corpo = clips[len(inicio_do_filme):]
+            entra, sai = render.encadeados_do_corpo([{"transicao_s": x["c"]} for x in corpo])[corpo.index(c)]
+            nome = "%s de %d em %s s, %s, %s%s" % (c["t"], n, d, m["sitio"], m["variante"],
+                                                  "".join(" %s=%s" % (k, c[k]) for k in ("vt", "vm") if k in c))
+            if abs(o["e"]["entra"] - entra) > 1e-12 or abs(o["e"]["sai"] - sai) > 1e-12:
+                problemas.append("%s: encadeados da Mesa %s, do render %.2f/%.2f" % (nome, o["e"], entra, sai))
+                continue
+            if c["t"] != "pilha" or c.get("vt") == "fica" or c.get("vm") == "legenda":
+                contas["fora do caso"] += 1
+                if o["r"]["curtos"] or o["aviso"]:
+                    problemas.append("%s: avisou %r, e aqui o texto nao desaparece ou tem outra conta"
+                                     % (nome, o["aviso"]))
+                continue
+
+            def curtas(duracao):
+                inicios, _entrada = render.agenda_monte(n, duracao, render.PILHA_ENTRADA,
+                                                        cross_entra=entra, cross_sai=sai)
+                tempos = [(inicios[k], inicios[k + 1] if k + 1 < n else duracao) for k in range(n)]
+                return render.legendas_curtas(c["xf"], tempos, render.LEGENDA_MINIMO_S)
+
+            esperadas = curtas(d)
+            r = o["r"]
+            if r["curtos"] != len(esperadas):
+                problemas.append("%s: a Mesa conta %d textos curtos, o render %d" % (nome, r["curtos"], len(esperadas)))
+                continue
+            if not esperadas:
+                contas["calados"] += 1
+                if o["aviso"]:
+                    problemas.append("%s: avisou %r sem texto curto" % (nome, o["aviso"]))
+                continue
+            contas["avisados"] += 1
+            menor = max(0.0, min(x[2] for x in esperadas))
+            if abs(r["menor"] - menor) > 1e-9:
+                problemas.append("%s: o mais curto %.3f s na Mesa, %.3f s no render" % (nome, r["menor"], menor))
+            # o mais curto arredondado como o "cerca de X s por foto", e para baixo so quando
+            # isso dava o proprio limite: 1,46 s nao pode aparecer como "1,5 s"
+            dito = _js_s1(menor)
+            if math.floor(menor * 10 + 0.5) / 10.0 >= render.LEGENDA_MINIMO_S - 1e-9:
+                dito = _js_s1(math.floor(menor * 10 + 1e-6) / 10.0)
+            if dito == _js_s1(render.LEGENDA_MINIMO_S):
+                problemas.append("%s: o mais curto %.3f s aparece como %s s" % (nome, menor, dito))
+            comeco = ("1 texto fica só %s s no ecrã" % dito if len(esperadas) == 1 else
+                      "%d textos ficam menos de 1,5 s no ecrã, o mais curto %s s" % (len(esperadas), dito))
+            if not o["aviso"].startswith(comeco) or ("Com %s s de duração" % _js_s1(r["precisa"])) not in o["aviso"]:
+                problemas.append("%s: o aviso diz %r" % (nome, o["aviso"]))
+            # A DURACAO PROPOSTA CHEGA, no render e na Mesa; uma decima a menos, com textos
+            # todos diferentes, ja deixa um curto.
+            if curtas(r["precisa"]) or (o["chega"] or {}).get("curtos"):
+                problemas.append("%s: com os %.1f s propostos ainda ha textos curtos" % (nome, r["precisa"]))
+            if m["variante"] == "distintos" and not curtas(round(r["precisa"] - 0.1, 1)):
+                problemas.append("%s: com %.1f s, uma decima abaixo dos propostos, ja chegava"
+                                 % (nome, r["precisa"] - 0.1))
+            minima = math.floor(render.duracao_minima_monte("pilha", n, 0.7, 0.9) * 10 + 0.5) / 10.0
+            if n == 60 and m["sitio"] == "meio" and m["variante"] == "distintos" and abs(d - minima) < 1e-9:
+                sessenta = o["aviso"]
+        if not sessenta:
+            problemas.append("a pilha de 60 na duracao minima, com um texto em cada foto, nao avisou")
+    verifica("Mesa avisa o texto em cada foto da pilha que fica menos de 1,5 s, com a conta do render",
+             not problemas and saida is not None,
+             "; ".join(problemas[:3]) if problemas else
+             "%d pilhas no node: %d avisadas, %d caladas, %d fora do caso; a de 60 na minima: %s"
+             % (len(casos), contas["avisados"], contas["calados"], contas["fora do caso"], sessenta))
+
+
+def teste_mesa_colagem_ate_30():
+    """A Mesa com a colagem ate 30: as filas que o render escolhe, o aviso dos textos nas fotos, o tempo por foto e o limite do mergulho.
+
+    O PEDIDO, do Tiago a 1 de outubro (decisao 102): "A colagem: ate 30 fotos." O que a Mesa
+    tinha escrito para ate 20 e enganava acima disso:
+      - AS FILAS. A pre-visualizacao e a zona da faixa (tamanhoPousado) punham as fotos em
+        filasColagem() filas, as de cima mais cheias: a 25 sempre 7666 e a 30 cinco filas de 6,
+        quando o render escolhe 6667, 6676 ou 6766 a 25 e quase sempre 4 filas a 30. Agora, acima
+        de 20 em filas, as particoes do render.colagem_particoes(), enchidas como agua e escolhidas
+        pela regra do render. O colagem_afastar() nao se porta, e por isso e uma aproximacao: com
+        proporcoes do inventario, contra o render.colagem_disposicao() desenhado ao numero, o
+        numero de filas tem de bater em pelo menos 95% dos casos e a particao inteira em 70%
+        (medido a 1 de outubro em 360 casos: 99% e 82%; a reparticao de antes dava 72% e 23%).
+        Ate 20, no mergulho e na espalhada fica a reparticao de sempre, conta a conta.
+      - OS TEXTOS DENTRO DAS FOTOS. De 21 fotos para cima cada foto fica com 60 a 200 pixeis de
+        lado e a faixa de um texto tem pelo menos 65: o avisoTextosNaColagem() avisa com qualquer
+        texto em cada foto, nao so com texto em todas, e sugere a legenda de baixo. Nao avisa com
+        20, no mergulho (onde os textos de cada foto nao entram), na legenda de baixo, nem com os
+        textos desligados. O validador da-o em "Está mal", e o inspetor e o lembrete ao ligar os
+        textos mostram-no. Nada muda sozinho (decisao 083).
+      - O TEMPO POR FOTO AO JUNTAR. A duracao proposta fica (3 + 1,6 x n, 51 s a 30), e o aviso do
+        juntar diz quanto fica cada foto, a conta do textoPorFoto(). No mergulho nao ha tempo por
+        foto: desde a etapa do mergulho (1 de outubro) diz o tempo do mergulho, a grelha a encher,
+        a espera e o mergulho, ver teste_mesa_mergulho.
+      - O LIMITE DO MERGULHO. O limitesGrupo() da 36 no mergulho e 30 nos outros estilos da
+        colagem, e o juntar, o tratamento e a troca de estilo perguntam-lhe a ele.
+    Corre no node. Sem node, diz-se e nao conta.
+    """
+    import json
+    import random
+    import re
+    import shutil
+    import subprocess
+    import tempfile
+    import render
+    node = shutil.which("node")
+    if not node:
+        salta("Mesa: a colagem ate 30", "sem node neste PC")
+        return
+    html = open(os.path.join(REPO, "scripts", "editor_base.html"), encoding="utf-8").read()
+    problemas = []
+    # o tamanho da letra: a declaracao inteira, com o TT_MIN e o TT_MAX, lida da Mesa
+    tt = re.search(r"var TT_OMISSAO\s*=[^;]*;", html)
+    if not tt:
+        problemas.append("nao encontrei o TT_OMISSAO no editor_base.html")
+    filas_mesa = _numero_do_editor(html, "COLAGEM_FILAS_MESA", problemas)
+    texto_max = _numero_do_editor(html, "COLAGEM_TEXTO_MAX", problemas)
+    marcas = ["var ESTILOS = ", "function estiloDe(", "var GRUPOS = ", "var GRUPOS_ESTILO = ", "function limitesGrupo(",
+              "function fraseLimites(", "var MUITAS = ", "function modoTextos(", "function tamanhoValido(",
+              "function tamanhoTextos(", "function textosDasFotos(", "function textoEmMuitas(",
+              "function avisoTextoEmMuitas(", "function textosNaColagemGrande(", "function avisoTextosNaColagem(",
+              "function avisoDosTextosDasFotos(", "function tamanhoPousado(", "function filasColagem(",
+              "function medidasDaColagem(", "function alturasDasFilas(", "var COLAGEM_PARTICOES = ",
+              "var COLAGEM_ESCOLHA = ", "function combinacoes(", "function particoesColagem(",
+              "function filasComoORender(", "function contasDasFilas(", "function notaTempoJuntar(",
+              "var MONTE = ", "function clipsDoCorpo(", "function encadeadosDe(",
+              "function encadeadoDoClip(", "function contadoresSeguidos(", "function pontoDoContador(",
+              "function lerContador(", "function eDataContador(", "function dataParaIso(", "function d2(",
+              "function duracaoMinimaMonte(", "function duracaoMinimaGrupo(", "function agendaMonte(",
+              "function agendaDeAntes(", "function agendaDoClip(", "function textoPorFoto(",
+              "function porFotoApertada(", "function minimaArredondada(", "function s1(",
+              # o mergulho tem a sua nota de tempo desde a etapa do mergulho (1 de outubro), ver
+              # teste_mesa_mergulho: o textoPorFoto() passa por estas
+              "var MERGULHO = ", "var LEGENDA_RENDER = ", "function grelhaMergulho(", "function alturaMergulho(",
+              "function linhasNaLegendaAprox(", "function linhasDaLegendaAprox(", "function legendaDoMergulho(",
+              "function quebrarAprox(", "function larguraTexto(",
+              "function cobreMergulho(", "function cobreReferenciaMergulho(", "function entreMergulho(",
+              "function desceMergulho(", "function partesMergulho(", "function temposMergulho(",
+              "function duracaoMergulho(", "function duracaoMinimaMergulho(", "function cobreDoMergulho(",
+              "function temposDoMergulho(", "function textoDoMergulho("]
+    js = ("var porId = {}, medidor = null, COLAGEM_FILAS_MESA = %r, COLAGEM_TEXTO_MAX = %r;\n%s\n"
+          % (filas_mesa, texto_max, tt.group(0) if tt else "")
+          + "\n".join(_bloco_do_editor(html, m, problemas) for m in marcas))
+    # QUEM CHAMA: o validador, o inspetor, o lembrete ao ligar os textos, o juntar e o
+    # tratamento, e as funcoes que decidem pelo limite do estilo.
+    for funcao, chamada in (("function validar(", "avisoTextosNaColagem(c)"), ("function validar(", "erro(i, tc)"),
+                            ("function blocoTextosFotos(", "avisoDosTextosDasFotos(c)"),
+                            ("function mostraRepete(", "avisoDosTextosDasFotos(c)"),
+                            ("function ligaTextosFotos(", "avisoDosTextosDasFotos(c)"),
+                            ("function juntarGrupo(", "notaTempoJuntar(v, novo)"),
+                            ("function juntarGrupo(", "limitesGrupo(tipo, estilo)"),
+                            ("function tratamentoGrupo(", "limitesGrupo(tipo, estilo)"),
+                            ("function notaTratJuntar(", "limitesGrupo(tipo, estilo)"),
+                            ("function mudaGrupo(", "limitesGrupo(tipo, estiloNovo)"),
+                            ("function opcoesDeGrupo(", "limitesGrupo(t, e[0])"),
+                            ("function tamanhoPousado(", "contasDasFilas(c, aspetos)"),
+                            ("function mostraQuadro(", "contasDasFilas(c, ")):
+        if chamada not in _bloco_do_editor(html, funcao, problemas):
+            problemas.append("o %s) nao chama %s" % (funcao.split()[1], chamada))
+
+    # AS PROPORCOES DO INVENTARIO, pelas mesmas sementes de sempre, e a particao do render: uma
+    # fila nova comeca onde o centro volta para a esquerda.
+    proporcoes = []
+    for r in csv.DictReader(open(os.path.join(REPO, "data", "inventario.csv"), encoding="utf-8-sig")):
+        try:
+            w, h = float(r["largura"]), float(r["altura"])
+        except (TypeError, ValueError):
+            continue
+        if w > 0 and h > 0:
+            proporcoes.append(round(w / h, 4))
+    livre = render.faixa_texto("Amigos")[1].getbbox()[1] - render.MONTE_LEGENDA_FOLGA * render.A
+    filas_casos = []
+    for n in range(21, 31):
+        for c in range(12):
+            rnd = random.Random(7001 * n + c)
+            aspetos = [rnd.choice(proporcoes) for _ in range(n)]
+            fotos = render.colagem_disposicao(list(aspetos), [None] * n, livre if c % 2 else None)
+            contas, k0 = [], 0
+            for k in range(1, n + 1):
+                if k == n or fotos[k][0] < fotos[k - 1][0]:
+                    contas.append(k - k0)
+                    k0 = k
+            filas_casos.append({"n": n, "a": aspetos, "x": "Amigos" if c % 2 else "", "render": contas})
+
+    def antigas(n):
+        nf = 1 if n <= 3 else max(2, int(math.floor(math.sqrt(n / (4 / 3.0)) + 0.5)))
+        contas, ini = [], 0
+        for q in range(nf):
+            leva = -(-(n - ini) // (nf - q))
+            contas.append(leva)
+            ini += leva
+        return contas
+
+    de_sempre = [{"n": n, "estilo": e} for n in range(2, 31) for e in ("filas", "espalhada", "mergulho")
+                 if n <= 20 or e != "filas"]
+    textos = [  # (nome, tipo, estilo, n, vf, vm, quantos textos, avisa)
+        ("filas de 20 com texto em todas", "colagem", "filas", 20, True, None, 20, False),
+        ("filas de 21 com um texto", "colagem", "filas", 21, True, None, 1, True),
+        ("espalhada de 30 com texto em todas", "colagem", "espalhada", 30, True, None, 30, True),
+        ("mergulho de 30 com texto em todas", "colagem", "mergulho", 30, True, None, 30, False),
+        ("filas de 30 na legenda de baixo", "colagem", "filas", 30, True, "legenda", 30, False),
+        ("filas de 30 com os textos desligados", "colagem", "filas", 30, False, None, 30, False),
+        ("filas de 30 sem texto nenhum", "colagem", "filas", 30, True, None, 0, False),
+        ("pilha de 30 com texto em todas", "pilha", "monte", 30, True, None, 30, False)]
+    porid = {str(100 + k): {"w": 4000 if k % 3 else 3000, "h": 3000 if k % 3 else 4000} for k in range(40)}
+    programa = js + "\nporId = %s;\nvar filasCasos = %s, deSempre = %s, textos = %s;\n" % (
+        json.dumps(porid), json.dumps(filas_casos), json.dumps(de_sempre), json.dumps(textos)) + """
+function grupo(t, estilo, n, extra){
+  var c = {t: t, estilo: estilo, fotos: [], d: 3 + 1.6 * n, c: 0.7};
+  for(var k = 0; k < n; k++) c.fotos.push(String(100 + k));
+  for(var p in (extra || {})) c[p] = extra[p];
+  return c;
+}
+process.stdout.write(JSON.stringify({
+  filas: filasCasos.map(function(m){ return contasDasFilas({t: "colagem", estilo: "filas", x: m.x}, m.a); }),
+  deSempre: deSempre.map(function(m){
+    var a = []; for(var k = 0; k < m.n; k++) a.push(k % 3 ? 4 / 3 : 3 / 4);
+    return contasDasFilas({t: "colagem", estilo: m.estilo}, a);
+  }),
+  textos: textos.map(function(m){
+    var xf = []; for(var k = 0; k < m[3]; k++) xf.push(k < m[6] ? "Natal de 2019 em casa" : "");
+    var c = grupo(m[1], m[2], m[3], {vf: m[4], xf: xf});
+    if(m[5]) c.vm = m[5];
+    return {conta: textosNaColagemGrande(c), aviso: avisoTextosNaColagem(c), dos: avisoDosTextosDasFotos(c)};
+  }),
+  tempo: ["filas", "espalhada", "mergulho"].map(function(e){
+    var c = grupo("colagem", e, 30), v = {clips: [{t: "foto", i: 1, d: 4, c: 0.7}, c, {t: "foto", i: 2, d: 4, c: 0.7}]};
+    c.d = Math.round(c.d * 10) / 10;
+    return {nota: notaTempoJuntar(v, c), porFoto: textoPorFoto(v, c)};
+  }),
+  limites: [["colagem", "filas"], ["colagem", "espalhada"], ["colagem", "mergulho"], ["colagem", undefined],
+            ["colagem", "fiel"], ["pilha", "monte"], ["pilha", "mergulho"]].map(function(p){
+    var g = limitesGrupo(p[0], p[1]); return [g.min, g.max];
+  }),
+  frases: [fraseLimites("colagem"), fraseLimites("colagem", "mergulho"), fraseLimites("pilha", "monte", "leva")]
+}));
+"""
+    pasta = tempfile.mkdtemp(prefix="teste_mesa_colagem_30_")
+    caminho = os.path.join(pasta, "mesa_colagem_30.js")
+    open(caminho, "w", encoding="utf-8").write(programa)
+    saida = None
+    if not problemas:
+        r = subprocess.run([node, caminho], capture_output=True, text=True, encoding="utf-8", timeout=300)
+        if r.returncode != 0:
+            problemas.append("o node nao correu as contas da Mesa: %s" % r.stderr.strip()[:300])
+        else:
+            saida = json.loads(r.stdout)
+    filas_ok = exatas = 0
+    if saida:
+        for m, contas in zip(filas_casos, saida["filas"]):
+            if sum(contas) != m["n"]:
+                problemas.append("%d fotos: a Mesa reparte %s" % (m["n"], contas))
+            filas_ok += len(contas) == len(m["render"])
+            exatas += contas == m["render"]
+        total = len(filas_casos)
+        if filas_ok < 0.95 * total or exatas < 0.70 * total:
+            problemas.append("a Mesa acerta o numero de filas do render em %d de %d e a particao em %d (chao 95%% e 70%%)"
+                             % (filas_ok, total, exatas))
+        for m, contas in zip(de_sempre, saida["deSempre"]):
+            if contas != antigas(m["n"]):
+                problemas.append("%s de %d: a Mesa reparte %s, a de sempre e %s" % (m["estilo"], m["n"], contas, antigas(m["n"])))
+        for m, t in zip(textos, saida["textos"]):
+            certo = (t["conta"] == m[6] and bool(t["aviso"]) and "legenda de baixo" in t["aviso"]
+                     and ("colagem de %d fotos" % m[3]) in t["aviso"] and t["dos"] == t["aviso"]) if m[7] else \
+                (t["conta"] == 0 and not t["aviso"])
+            if not certo:
+                problemas.append("%s: conta %s, aviso %r" % (m[0], t["conta"], t["aviso"][:80]))
+        filas_t, espalhada_t, mergulho_t = saida["tempo"]
+        if not (filas_t["porFoto"] and filas_t["porFoto"] in filas_t["nota"] and "Fica com 51 s" in filas_t["nota"]
+                and espalhada_t["nota"] and "tempo do mergulho" in mergulho_t["nota"]
+                and "mergulho leva" in mergulho_t["porFoto"] and "por foto" not in mergulho_t["nota"]):
+            problemas.append("a nota do tempo ao juntar: filas %r, espalhada %r, mergulho %r"
+                             % (filas_t["nota"], espalhada_t["nota"], mergulho_t["nota"]))
+        if saida["limites"] != [[2, 30], [2, 30], [2, 36], [2, 30], [2, 30], [2, 60], [2, 60]]:
+            problemas.append("limitesGrupo da %s" % saida["limites"])
+        if saida["frases"] != ["A colagem junta 2 a 30 fotografias; em grelha, com mergulho, 2 a 36.",
+                               "A colagem em grelha, com mergulho, junta 2 a 36 fotografias; nos outros estilos, 2 a 30.",
+                               "A pilha leva 2 a 60 fotografias."]:
+            problemas.append("as frases dos limites: %s" % saida["frases"])
+    verifica("Mesa: colagem ate 30, com as filas do render, o aviso dos textos, o tempo por foto e o mergulho ate 36",
+             not problemas and saida is not None,
+             "; ".join(problemas[:3]) if problemas else
+             "filas do render em %d de %d, particao em %d; %d reparticoes de sempre; %d casos de textos"
+             % (filas_ok, len(filas_casos), exatas, len(de_sempre), len(textos)))
+
+
 def teste_mesa_avisa_legenda_comprida_e_foto_depois_do_fim():
     """Na opcao legenda, um texto que parte em varias linhas avisa, e uma foto que entra depois do fim do clip tambem.
 
@@ -6131,9 +7060,10 @@ def teste_mergulho_na_grelha():
     cores = [(30 * k, 200 - 20 * k, 90) for k in range(8)] + [(230, 20, 20)]
     ims = [Image.new("RGB", (600, 400), c) for c in cores]
     p = render.preparar_mergulho(ims, [None] * 9, "", 0.7, 0.7, 6.0)
-    atraso, entra, entre, espera, desce, fica = p["tempos"]
-    todas = atraso + entra + entre * 8
-    grelha = render.desenhar_mergulho(p, todas + espera / 2.0, 6.0)
+    tr = dict((nome, (de, ate)) for nome, de, ate in p["tempos"]["trocos"])
+    todas, comeca = tr["espera"]
+    desce = tr["desce"][1] - tr["desce"][0]
+    grelha = render.desenhar_mergulho(p, (todas + comeca) / 2.0, 6.0)
     for k, (x, y, w, h) in enumerate(p["celulas"]):
         px = grelha.getpixel((int(x + w / 2), int(y + h / 2)))
         if max(abs(a - b) for a, b in zip(px, cores[k])) > 12:
@@ -6143,7 +7073,7 @@ def teste_mergulho_na_grelha():
                                         (render.L - 3, render.A - 3), (render.L // 2, render.A // 2))]
     if any(max(abs(a - b) for a, b in zip(c, cores[-1])) > 12 for c in cantos):
         problemas.append("no fim o ecra nao e so a ultima foto: %s" % cantos)
-    meio = render.desenhar_mergulho(p, todas + espera + desce / 2.0, 6.0)
+    meio = render.desenhar_mergulho(p, comeca + desce / 2.0, 6.0)
     if max(abs(a - b) for a, b in zip(meio.getpixel((render.L // 2, render.A // 2)), cores[-1])) > 12:
         problemas.append("a meio do mergulho o centro nao e a ultima foto")
     # da Mesa ao CSV
@@ -6169,6 +7099,679 @@ def teste_mergulho_na_grelha():
     verifica("mergulho na grelha, da Mesa ao render", not problemas,
              "; ".join(problemas)[:240] if problemas else
              "9 celulas certas, o centro e a ultima a meio do mergulho, no fim so ela; CSV com mergulho")
+
+
+def _grelha_do_mergulho_de_antes(n, larg, alt, folga=8):
+    """A mergulho_grelha() de 30 de setembro, a letra: menos vazias primeiro, depois o mais perto de 3:2."""
+    melhor = None
+    for cols in range(1, n + 1):
+        filas = int(math.ceil(n / float(cols)))
+        vazias = cols * filas - n
+        aspeto = (larg / float(cols)) / (alt / float(filas))
+        nota = (vazias, abs(math.log(aspeto / 1.5)))
+        if melhor is None or nota < melhor[0]:
+            melhor = (nota, cols, filas)
+    _, cols, filas = melhor
+    cw = (larg - folga * (cols + 1)) / float(cols)
+    ch = (alt - folga * (filas + 1)) / float(filas)
+    celulas = []
+    for k in range(n):
+        f, c = divmod(k, cols)
+        na_fila = min(cols, n - f * cols)
+        desvio = (cols - na_fila) * (cw + folga) / 2.0
+        celulas.append((folga + c * (cw + folga) + desvio, folga + f * (ch + folga), cw, ch))
+    return celulas
+
+
+def teste_mergulho_grelha_sem_tiras():
+    """Nenhuma grelha do mergulho de 2 a 36 fotos sai em tiras: a celula tem formato de fotografia.
+
+    O DEFEITO (1 de outubro, decisao 102): a mergulho_grelha() de 30 de setembro escolhia primeiro
+    as colunas com menos celulas vazias, e com 3, 5, 7, 11, 13, 14, 17, 19, 22, 23, 26 e 29 fotos
+    dava tiras em pe de 0,26 a 0,59 de proporcao (5 numa fila so de 374 x 1064), e com 8, 10, 18,
+    21, 27 e 31 a 34 celulas entre 0,6 e 1. Agora, com a regra nova:
+      - de 3 a 36 fotos, sem legenda e com legenda de uma linha, todas as celulas ficam entre
+        MERGULHO_ASPETO_MIN e MERGULHO_ASPETO_MAX; com 2 fotos e o 2 por 1 (0,89 sem legenda), que
+        e a grelha menos fora;
+      - o 9, o 12, o 16 e o 20 sem legenda ficam como estavam, celula a celula, contra a regra de
+        antes escrita aqui ao lado;
+      - as celulas tem todas o mesmo tamanho, nenhuma sai da altura da grelha nem da largura do
+        ecra, nenhuma pisa outra, e a ultima fila, se tiver menos, fica centrada.
+    Com duas linhas de legenda o 3 fica a 2,33, a menos fora das que ha; diz-se no detalhe.
+    """
+    import render
+    L, A = render.L, render.A
+    lo, hi = render.MERGULHO_ASPETO_MIN, render.MERGULHO_ASPETO_MAX
+    problemas = []
+    alturas = {"sem legenda": float(A), "uma linha": render.mergulho_altura(render.faixa_texto("Os amigos")),
+               "duas linhas": render.mergulho_altura(render.faixa_texto(
+                   "Os amigos de sempre, no Porto, na praia e nas festas de Natal todos juntos outra vez"))}
+    fora_duas = []
+    tiras_antes = []
+    for nome, alt in alturas.items():
+        for n in range(2, 37):
+            cel = render.mergulho_grelha(n, L, alt)
+            w, h = cel[0][2], cel[0][3]
+            a = w / h
+            if any(abs(c[2] - w) > 1e-9 or abs(c[3] - h) > 1e-9 for c in cel):
+                problemas.append("%s, %d: celulas de tamanhos diferentes" % (nome, n))
+            if any(c[0] < -1e-9 or c[1] < -1e-9 or c[0] + c[2] > L + 1e-9 or c[1] + c[3] > alt + 1e-9 for c in cel):
+                problemas.append("%s, %d: uma celula sai da grelha" % (nome, n))
+            if len(set((round(c[0], 6), round(c[1], 6)) for c in cel)) != n:
+                problemas.append("%s, %d: duas celulas no mesmo sitio" % (nome, n))
+            ys = sorted(set(round(c[1], 6) for c in cel))
+            ultima = [c for c in cel if round(c[1], 6) == ys[-1]]
+            if abs((min(c[0] for c in ultima) - 0) - (L - max(c[0] + c[2] for c in ultima))) > 1e-6:
+                problemas.append("%s, %d: a ultima fila nao fica centrada" % (nome, n))
+            dentro = lo - 1e-9 <= a <= hi + 1e-9
+            if nome == "duas linhas":
+                if not dentro:
+                    fora_duas.append("%d a %.2f" % (n, a))
+            elif n >= 3 and not dentro:
+                problemas.append("%s, %d fotos: celula de %.2f, fora de %.1f a %.1f" % (nome, n, a, lo, hi))
+            elif n == 2 and nome == "sem legenda" and not (len(ys) == 1 and abs(a - 0.8966) < 0.01):
+                problemas.append("2 fotos sem legenda: %d filas, %.2f, e devia ser o 2 por 1" % (len(ys), a))
+            if nome == "sem legenda" and n >= 3:
+                antes = _grelha_do_mergulho_de_antes(n, L, A)
+                if antes[0][2] / antes[0][3] < 1.0:
+                    tiras_antes.append(n)
+    for n in (9, 12, 16, 20):
+        if render.mergulho_grelha(n, L, A) != _grelha_do_mergulho_de_antes(n, L, A):
+            problemas.append("o %d mudou de grelha" % n)
+    verifica("mergulho: nenhuma grelha de 2 a 36 em tiras, o 9, o 12, o 16 e o 20 como estavam", not problemas,
+             "; ".join(problemas[:4]) if problemas else
+             "celulas de %.1f a %.1f de 3 a 36, sem legenda e com uma linha; antes em tiras: %s; com duas "
+             "linhas fica fora so %s" % (lo, hi, ", ".join(str(n) for n in tiras_antes), ", ".join(fora_duas) or "nada"))
+
+
+def teste_mergulho_camara_presa_a_grelha():
+    """Em nenhum fotograma do mergulho aparece o que esta fora da grelha, mergulhe-se em que celula for.
+
+    O DEFEITO (1 de outubro): a camara levava o centro da celula ao centro do ecra em linha reta e
+    a escala em progressao geometrica, e a meio do mergulho saia da grelha: 80 pixeis seguidos de
+    preto na borda direita com 9 fotos e 149 com 20. A camara e agora uma mistura de duas vistas
+    dentro da grelha (mergulho_trocos). Prova-se com grelhas de 9, 20 e 36 sem legenda e a de 20
+    com legenda, mergulhando em CADA celula (hoje so se mergulha na ultima; com mais de um mergulho
+    sera em qualquer uma):
+      - pela conta, em todos os fotogramas a 25 por segundo, do inicio da espera ao fim do
+        encadeado de saida: os cantos da grelha nunca entram no ecra, e com legenda o fundo dela
+        nunca sobe acima de onde estava, so desce para o lugar da legenda, que ja estava livre;
+      - pelos pixeis, a 25, 50 e 75% do mergulho, com a grelha grande pintada de branco e o lugar
+        da legenda de magenta: nenhum pixel do fotograma e escuro (fora da imagem a Pillow devolve
+        preto), e acima do lugar da legenda sao todos brancos;
+      - com o sprite da foto do mergulho por cima (na primeira, na do meio e na ultima celula), a
+        foto fica toda clara e o escuro so aparece na linha preta a volta da celula, onde o render
+        tem a linha da propria grelha: e a margem preta do com_margem() e o fio de sub-pixel da
+        composicao, ate 2 pixeis do sprite, contra os 8 da linha vezes a escala.
+    """
+    from PIL import ImageDraw
+    import render
+    L, A, FPS = render.L, render.A, render.FPS
+    d = render.MERGULHO_DOBRO
+    problemas = []
+    quadros = pixeis = 0
+    for n, texto in ((9, ""), (20, ""), (36, ""), (20, "Os amigos")):
+        ims = [Image.new("RGB", (60, 40), (40 + 5 * k, 90, 120)) for k in range(n)]
+        p = render.preparar_mergulho(ims, [None] * n, texto, 0.7, 0.7, 10.0)
+        alt = p["altura"]
+        branca = Image.new("RGB", (L * d, A * d), (255, 255, 255))
+        if alt < A:
+            branca.paste((255, 0, 255), (0, int(round(alt * d)), L * d, A * d))
+        p["grande"], p["capa"] = branca, None
+        for k, cel in enumerate(p["celulas"]):
+            cobre = render.mergulho_cobre(cel)
+            tempos = render.mergulho_tempos(n, 10.0, 0.7, 0.7, cobre)
+            p["tempos"], p["trocos"] = tempos, render.mergulho_trocos(tempos, cel, k)
+            fim = p["trocos"][-1]["ate"] + 0.7
+            q = int(math.floor(p["trocos"][0]["de"] * FPS))
+            while q <= fim * FPS:
+                (x0, y0, s), _k = render.mergulho_camara(p, q / float(FPS))
+                quadros += 1
+                folgas = (-x0 * s, -y0 * s, L - (L - x0) * s, alt - (alt - y0) * s)
+                if max(folgas) > 1e-6:
+                    problemas.append("%d fotos%s, celula %d, %.2f s: a grelha entra %.1f px no ecra"
+                                     % (n, " com legenda" if texto else "", k + 1, q / float(FPS), max(folgas)))
+                    break
+                q += 1
+            w, h = cel[2], cel[3]
+            # O sprite da foto do mergulho como o do render: com a margem preta do com_margem(), que
+            # no ecra cai na linha preta da grelha a volta da celula.
+            alvo = render.com_margem(Image.new("RGB", (int(math.ceil(w * cobre)), int(math.ceil(h * cobre))),
+                                               (255, 255, 255)), "preto")
+            de, ate = p["trocos"][1]["de"], p["trocos"][1]["ate"]
+            for f in (0.25, 0.5, 0.75):
+                t = de + f * (ate - de)
+                (x0, y0, s), _k = render.mergulho_camara(p, t)
+                quem = "%d fotos%s, celula %d, %d%% do mergulho" % (n, " com legenda" if texto else "", k + 1, int(100 * f))
+                # so a camara, sem o sprite: nenhum pixel escuro em todo o ecra
+                p["alvos"] = {}
+                tela = render.desenhar_mergulho(p, t, 10.0)
+                pixeis += 1
+                if tela.convert("L").getextrema()[0] < 90:
+                    problemas.append(quem + ": ha pixeis de fora da grelha")
+                cima = tela.crop((0, 0, L, int(alt) - 3)).getextrema()
+                if min(b[0] for b in cima) < 250:
+                    problemas.append(quem + ": acima da legenda ha pixeis que nao sao da grelha")
+                # com o sprite: a foto inteira clara, e o escuro so na linha preta a volta da celula,
+                # MERGULHO_FOLGA vezes a escala, onde o render tem a linha preta da propria grelha
+                if k in (0, n // 2, n - 1):
+                    p["alvos"] = {k: alvo}
+                    tela = render.desenhar_mergulho(p, t, 10.0)
+                    cx0, cy0 = (cel[0] - x0) * s, (cel[1] - y0) * s
+                    cx1, cy1 = (cel[0] + w - x0) * s, (cel[1] + h - y0) * s
+                    caixa = (max(0, int(math.ceil(cx0)) + 1), max(0, int(math.ceil(cy0)) + 1),
+                             min(L, int(math.floor(cx1)) - 1), min(A, int(math.floor(cy1)) - 1))
+                    if tela.crop(caixa).convert("L").getextrema()[0] < 250:
+                        problemas.append(quem + ": a foto do mergulho tem pixeis escuros")
+                    linha = render.MERGULHO_FOLGA * s
+                    ImageDraw.Draw(tela).rectangle([cx0 - linha, cy0 - linha, cx1 + linha, cy1 + linha], fill=(255, 255, 255))
+                    if tela.convert("L").getextrema()[0] < 90:
+                        problemas.append(quem + ": o sprite deixa escuro fora da linha preta da celula")
+            if len(problemas) > 4:
+                break
+    verifica("mergulho: a camara fica presa a grelha em todos os fotogramas, em qualquer celula", not problemas,
+             "; ".join(problemas[:3]) if problemas else
+             "%d fotogramas pela conta e %d desenhados, grelhas de 9, 20 e 36 e a de 20 com legenda, "
+             "em todas as celulas" % (quadros, pixeis))
+
+
+def teste_mergulho_legenda_nao_tapa_a_ultima():
+    """Com legenda, a grelha deixa o lugar dela livre, e no fim a legenda fica por cima da ultima a encher o ecra.
+
+    O DEFEITO (1 de outubro): a grelha ocupava o ecra inteiro e a faixa da legenda (y de 922 a
+    1047, alfa 165) tapava 36% da ultima celula com 9 fotos, 48% com 20 e 73% com 36: a foto onde
+    se mergulha. Agora a grelha acaba MONTE_LEGENDA_FOLGA acima da faixa, como a colagem em filas:
+      - de 2 a 36 fotos, com legenda de uma e de duas linhas, a ultima celula, mesmo na maior
+        respiracao antes do mergulho, acaba acima do topo da faixa;
+      - no fotograma do fim, com a ultima a encher o ecra, a faixa esta por cima dela como numa
+        foto sozinha: na faixa a cor da foto escurecida pelo alfa da legenda, acima dela a cor da
+        foto.
+    """
+    import render
+    L, A = render.L, render.A
+    problemas = []
+    for texto in ("Os amigos", "Os amigos de sempre, no Porto, na praia e nas festas de Natal todos juntos outra vez"):
+        capa = render.faixa_texto(texto)
+        topo = capa[1].getbbox()[1]
+        alt = render.mergulho_altura(capa)
+        for n in range(2, 37):
+            x, y, w, h = render.mergulho_grelha(n, L, alt)[-1]
+            py = y + h / 2.0
+            fundo = py + (y + h - py) * (1.0 + render.MERGULHO_RESPIRA)
+            if fundo >= topo:
+                problemas.append("%d fotos, legenda %r: a ultima celula acaba em %.0f e a faixa comeca em %d"
+                                 % (n, texto[:12], fundo, topo))
+    cor = (40, 160, 220)
+    ims = [Image.new("RGB", (600, 400), (90, 90, 90)) for _ in range(19)] + [Image.new("RGB", (600, 400), cor)]
+    p = render.preparar_mergulho(ims, [None] * 20, "Os amigos", 0.7, 0.7, 9.0)
+    fim = render.desenhar_mergulho(p, 9.0 - 0.01, 9.0)
+    topo = p["capa"][1].getbbox()[1]
+    na_faixa = fim.getpixel((6, topo + 4))
+    acima = fim.getpixel((6, topo - 30))
+    escura = tuple(int(round(c * (255 - render.LEGENDA_ALFA) / 255.0)) for c in cor)
+    if max(abs(a - b) for a, b in zip(acima, cor)) > 6:
+        problemas.append("no fim, acima da faixa, %s e devia ser a foto %s" % (acima, cor))
+    if max(abs(a - b) for a, b in zip(na_faixa, escura)) > 6:
+        problemas.append("no fim, na faixa, %s e devia ser a foto escurecida %s" % (na_faixa, escura))
+    verifica("mergulho: a legenda nao tapa a ultima foto, e no fim fica por cima dela", not problemas,
+             "; ".join(problemas[:3]) if problemas else
+             "de 2 a 36 com uma e duas linhas a ultima acaba acima da faixa; no fim a faixa sobre a foto")
+
+
+def teste_mergulho_tempos_cabem():
+    """Os tempos do mergulho cabem na duracao, encolhem pela ordem certa, e o montar avisa pela conta do mergulho.
+
+    1 de outubro, decisao 102: o mergulho vai ate 36 fotos. Com os tempos de 30 de setembro 36
+    fotos levavam 6,7 s a aparecer, o mergulho tinha 1,2 s fosse o zoom 3 ou 6 vezes, e um clip
+    curto encolhia tudo por igual, o mergulho incluido. E o montar pedia a um mergulho a duracao
+    minima da colagem, 11,1 s com 20 fotos, quando ele cabe inteiro em 8,2. Prende-se:
+      - na duracao_mergulho() nada encolhe nem sobra: a entrada de cada foto 0,35 s, a espera 1 s,
+        a ultima sozinha 0,8 s, o mergulho o do zoom; a grelha enche em ate MERGULHO_ENCHE_MAX, com
+        0,18 s entre fotos ate 19, 0,174 com 20 e 0,094 com 36;
+      - o mergulho dura 1,2 s ate ao 3 por 3, e na velocidade dele nos maiores: 1,74 com 20 e 1,96
+        com 36;
+      - de 2 a 36 fotos, com os encadeados 0, 0,7 e o fade do fim, a partir da
+        duracao_minima_mergulho() a camara para antes do encadeado de saida; entre a minima e a
+        duracao sem sobra so encolhem o encher e a espera, e o mergulho e a ultima ficam inteiros;
+        com tempo a mais a sobra vai toda para a espera;
+      - o montar_da_mesa.py avisa um mergulho de 20 com 4 s, com a conta do mergulho, e nao avisa
+        o de 20 com 9 s, que a conta da colagem dava por curto.
+    """
+    import contextlib
+    import io
+    import json
+    import tempfile
+    import montar_da_mesa
+    import render
+    L, A = render.L, render.A
+    problemas = []
+    for n, entre in ((9, 0.18), (19, 0.18), (20, 0.1737), (36, 0.0943)):
+        if abs(render.mergulho_entre(n) - entre) > 5e-4:
+            problemas.append("com %d fotos o intervalo e %.4f e devia ser %.4f" % (n, render.mergulho_entre(n), entre))
+    for n, desce in ((4, 1.2), (9, 1.2), (20, 1.74), (36, 1.96)):
+        dd = render.mergulho_desce(render.mergulho_cobre(render.mergulho_grelha(n, L, A)[-1]))
+        if abs(dd - desce) > 0.01:
+            problemas.append("o mergulho de %d dura %.2f s e devia durar %.2f" % (n, dd, desce))
+    casos = 0
+    for n in range(2, 37):
+        cobre = render.mergulho_cobre(render.mergulho_grelha(n, L, A)[-1])
+        for entra, sai in ((0.0, 0.7), (0.7, 0.7), (0.7, render.FADE_FIM_IMAGEM)):
+            nominal = render.duracao_mergulho(n, entra, sai, cobre)
+            minima = render.duracao_minima_mergulho(n, entra, sai, cobre)
+            t = render.mergulho_tempos(n, nominal, entra, sai, cobre)
+            enche = t["trocos"][0][2]
+            if (abs(t["entra"] - render.MERGULHO_ENTRA) > 1e-9 or abs(t["espera"] - render.MERGULHO_ESPERA) > 1e-9
+                    or abs(t["fica"] - render.MERGULHO_FICA) > 1e-9
+                    or abs(t["desce"] - render.mergulho_desce(cobre)) > 1e-9
+                    or enche > render.MERGULHO_ENCHE_MAX + 1e-9):
+                problemas.append("%d fotos na duracao sem sobra: %s" % (n, {k: round(v, 3) for k, v in t.items() if k != "trocos"}))
+            mais = render.mergulho_tempos(n, nominal + 3.0, entra, sai, cobre)
+            if abs(mais["espera"] - render.MERGULHO_ESPERA - 3.0) > 1e-9:
+                problemas.append("%d fotos com 3 s a mais: a espera fica %.2f" % (n, mais["espera"]))
+            passos = 12
+            for j in range(passos + 1):
+                dur = minima + (nominal - minima) * j / float(passos)
+                t = render.mergulho_tempos(n, dur, entra, sai, cobre)
+                casos += 1
+                para = t["trocos"][-1][2]
+                if para > dur - sai + 1e-6:
+                    problemas.append("%d fotos em %.2f s: a camara para aos %.2f, depois do encadeado de saida (%.2f)"
+                                     % (n, dur, para, dur - sai))
+                if abs(t["desce"] - render.mergulho_desce(cobre)) > 1e-9 or abs(t["fica"] - render.MERGULHO_FICA) > 1e-9:
+                    problemas.append("%d fotos em %.2f s, acima da minima: o mergulho ou a ultima encolheram" % (n, dur))
+            curto = render.mergulho_tempos(n, minima - 0.5, entra, sai, cobre)
+            if not (curto["fica"] < render.MERGULHO_FICA - 1e-9 and curto["espera"] <= render.MERGULHO_MINIMO * render.MERGULHO_ESPERA + 1e-9):
+                problemas.append("%d fotos abaixo da minima: a ultima nao encolhe depois do encher e da espera" % n)
+            if len(problemas) > 4:
+                break
+    # o montar, com a conta do mergulho
+    pasta = tempfile.mkdtemp(prefix="teste_mergulho_tempos_")
+    ids = [r["id"] for r in csv.DictReader(open(os.path.join(REPO, "data", "inventario.csv"), encoding="utf-8-sig"))][:40]
+    estado = {"versoes": [{"id": "t", "nome": "t", "clips": [
+        {"t": "colagem", "fotos": ids[:20], "d": 4, "c": 0.7, "estilo": "mergulho"},
+        {"t": "colagem", "fotos": ids[20:], "d": 9, "c": 0.7, "estilo": "mergulho"}]}]}
+    caminho = os.path.join(pasta, "estado.json")
+    json.dump(estado, open(caminho, "w", encoding="utf-8"))
+    guardado = (montar_da_mesa.ESTADO, montar_da_mesa.DESTINO, sys.argv)
+    montar_da_mesa.ESTADO, montar_da_mesa.DESTINO = caminho, pasta
+    sys.argv = ["montar_da_mesa.py", "t", "--nome", "t"]
+    saida = io.StringIO()
+    try:
+        with contextlib.redirect_stdout(saida):
+            montar_da_mesa.main()
+    finally:
+        montar_da_mesa.ESTADO, montar_da_mesa.DESTINO, sys.argv = guardado
+    texto = saida.getvalue()
+    if "colagem em mergulho de 20 fotos com 4.0 s e curta" not in texto:
+        problemas.append("o montar nao avisou o mergulho de 20 com 4 s")
+    if "com 9.0 s e curta" in texto or "colagem de 20 fotos" in texto:
+        problemas.append("o montar pediu ao mergulho de 9 s a duracao da colagem")
+    minima20 = render.duracao_minima_mergulho(20, 0.0, 0.7, render.mergulho_cobre(render.mergulho_grelha(20, L, A)[-1]))
+    verifica("mergulho: os tempos cabem na duracao, encolhem pela ordem certa, e o montar avisa pela conta dele",
+             not problemas,
+             "; ".join(problemas[:3]) if problemas else
+             "%d duracoes de 2 a 36 fotos; enche em ate %.0f s; mergulho de 1,2 a 1,96 s; a minima de 20 e %.1f s, "
+             "e nao os 11,1 da colagem" % (casos, render.MERGULHO_ENCHE_MAX, minima20))
+
+
+def teste_auditar_mede_o_mergulho():
+    """O auditar_nitidez.py mede o mergulho em vez de rebentar, e diz quanto a ultima e esticada a encher o ecra.
+
+    O DEFEITO (1 de outubro): o pronto do mergulho nao tem a lista "fotos" da colagem e da pilha,
+    e qualquer mergulho na montagem parava a auditoria com um KeyError. Agora:
+      - o medidas_do_grupo() de um mergulho devolve uma medida por foto: cada uma a cobrir a sua
+        celula com a respiracao, e a ultima a cobrir o ecra, mais MERGULHO_FICA_ZOOM, marcada como
+        a que enche o ecra;
+      - o main() corre de ponta a ponta numa montagem com um mergulho de fotos reais da FINAIS,
+        numa copia dos dados numa pasta temporaria (nada escreve em data/), lista a foto que enche o
+        ecra e a origem dela, que pela decisao 090 e "lanczos" ou "original".
+    """
+    import contextlib
+    import io
+    import json
+    import shutil
+    import tempfile
+    import auditar_nitidez
+    import montar_da_mesa
+    import render
+    L, A = render.L, render.A
+    problemas = []
+    pasta = tempfile.mkdtemp(prefix="teste_auditar_mergulho_")
+    caminhos = []
+    for k, (w, h) in enumerate(((1200, 800), (800, 1200), (2000, 1500), (640, 480), (3000, 2000), (900, 600))):
+        c = os.path.join(pasta, "f%d.jpg" % k)
+        Image.new("RGB", (w, h), (30 * k, 100, 160)).save(c)
+        caminhos.append(c)
+    clip = {"tipo": "colagem", "tratamento": "mergulho", "texto_ecra": "", "fonte_imagem": "", "ficheiro": "",
+            "id": "", "transicao_s": "0.7", "duracao_s": "8", "_caminhos": caminhos}
+    try:
+        medidas = auditar_nitidez.medidas_do_grupo(clip, {})
+    except Exception as e:     # noqa: BLE001 - e isto que o teste guarda
+        medidas = []
+        problemas.append("o medidas_do_grupo rebentou: %s %s" % (type(e).__name__, e))
+    if medidas:
+        celulas = render.mergulho_grelha(6, L, A)
+        if len(medidas) != 6 or [len(m) > 4 and m[4] for m in medidas] != [False] * 5 + [True]:
+            problemas.append("medidas %s" % [m[:1] + m[3:] for m in medidas])
+        k, lw, la = medidas[-1][:3]
+        z = render.mergulho_cobre(celulas[-1]) * (1 + render.MERGULHO_FICA_ZOOM)
+        if abs(lw - celulas[-1][2] * z) > 1e-6 or lw < L * 1.0299 or la < A * 1.0299:
+            problemas.append("a ultima mede %.0f x %.0f, e devia cobrir o ecra com %.2f" % (lw, la, z))
+        if abs(medidas[0][1] - celulas[0][2] * (1 + render.MERGULHO_RESPIRA)) > 1e-6:
+            problemas.append("a primeira mede %.0f de largura" % medidas[0][1])
+    # o main(), de ponta a ponta, numa copia dos dados
+    repo = os.path.join(pasta, "repo")
+    os.makedirs(os.path.join(repo, "data", "montagens"))
+    for nome in ("inventario.csv", "finais.csv"):
+        shutil.copy(os.path.join(REPO, "data", nome), os.path.join(repo, "data", nome))
+    finais = list(csv.DictReader(open(os.path.join(REPO, "data", "finais.csv"), encoding="utf-8-sig")))
+    ids = [r["id"] for r in finais if os.path.exists(os.path.join(render.FINAIS, r["final"]))][:6]
+    estado = {"versoes": [{"id": "t", "nome": "t", "clips": [
+        {"t": "colagem", "fotos": ids, "d": 8, "c": 0.7, "estilo": "mergulho"}]}]}
+    caminho = os.path.join(pasta, "estado.json")
+    json.dump(estado, open(caminho, "w", encoding="utf-8"))
+    guardado = (montar_da_mesa.ESTADO, montar_da_mesa.DESTINO, sys.argv)
+    montar_da_mesa.ESTADO, montar_da_mesa.DESTINO = caminho, os.path.join(repo, "data", "montagens")
+    sys.argv = ["montar_da_mesa.py", "t", "--nome", "t"]
+    try:
+        with contextlib.redirect_stdout(io.StringIO()):
+            montar_da_mesa.main()
+    finally:
+        montar_da_mesa.ESTADO, montar_da_mesa.DESTINO, sys.argv = guardado
+    guardado = (auditar_nitidez.REPO, sys.argv)
+    auditar_nitidez.REPO = repo
+    sys.argv = ["auditar_nitidez.py", "--montagem", "t"]
+    saida = io.StringIO()
+    try:
+        with contextlib.redirect_stdout(saida):
+            auditar_nitidez.main()
+    except Exception as e:     # noqa: BLE001
+        problemas.append("o main() rebentou: %s %s" % (type(e).__name__, e))
+    finally:
+        auditar_nitidez.REPO, sys.argv = guardado
+    texto = saida.getvalue()
+    casos = []
+    if os.path.exists(os.path.join(repo, "data", "auditoria_nitidez.json")):
+        casos = json.load(open(os.path.join(repo, "data", "auditoria_nitidez.json"), encoding="utf-8"))
+    enche = [x for x in casos if x.get("enche")]
+    if "NO MERGULHO, A FOTO QUE ENCHE O ECRA" not in texto or "foto 6 de 6" not in texto:
+        problemas.append("o main() nao listou a foto que enche o ecra")
+    if len(casos) != 6 or len(enche) != 1 or enche[0]["id"] != ids[-1]:
+        problemas.append("o json tem %d casos e %d a encher o ecra" % (len(casos), len(enche)))
+    elif enche[0]["origem"] not in auditar_nitidez.ORIGENS_PERMITIDAS:
+        problemas.append("a foto que enche o ecra vem de %r" % enche[0]["origem"])
+    verifica("auditar_nitidez: mede o mergulho e diz quanto estica a foto que enche o ecra", not problemas,
+             "; ".join(problemas[:3]) if problemas else
+             "6 medidas, a ultima a cobrir o ecra; o main() com fotos reais lista a %s esticada %.2fx, origem %s"
+             % (enche[0]["id"], enche[0]["ampliacao"], enche[0]["origem"]))
+
+
+def teste_mergulho_textos_das_fotos_nao_contam():
+    """Num mergulho os textos de cada foto nao vao ao filme, e nem a Mesa nem o montar lhes contam o tempo.
+
+    O DEFEITO (revisao de 1 de outubro): o render.preparar() so passa ao preparar_mergulho() a
+    legenda do clip (decisao 101), mas com os textos "na legenda de baixo" a Mesa contava-lhes o
+    tempo pela agenda da colagem. Um mergulho de 9 em 7 s dizia "Fica so 0,6 s no ecra" em oito
+    fotos, o Validar punha-os em "Esta mal" e o montar_da_mesa.py escrevia oito avisos, todos de
+    textos que o video nao mostra. Aqui:
+      - o montar, com um mergulho de 9 e a mesma colagem em filas, so avisa a colagem, e o
+        legendas_curtas_da_linha() de um mergulho e vazio;
+      - na Mesa, no node, o contaCurtos() de um mergulho da 0 e o da mesma colagem em filas da
+        os textos todos, com um notaTempo() que os diz todos curtos; o avisoLongo() cala-se no
+        mergulho;
+      - o inspetor (blocoTextosFotos e campoXf), as notas ao escrever (atualizaNotasTempo) e a
+        etiqueta da lista de clips passam pelo textosForaDoFilme().
+    Os textos ficam guardados no clip: nada aqui muda o que ele escreveu (decisao 083). Sem node,
+    a parte da Mesa diz-se e nao conta.
+    """
+    import json
+    import re
+    import shutil
+    import subprocess
+    import tempfile
+    import montar_da_mesa
+    import render
+    problemas = []
+    inv = {r["id"] for r in csv.DictReader(open(os.path.join(REPO, "data", "inventario.csv"),
+                                                encoding="utf-8-sig"))}
+    tres = ["f0331", "f0334", "f0336"]
+    if not all(i in inv for i in tres):
+        verifica("mergulho: os textos das fotos nao contam", False, "fotos do ensaio fora do inventario")
+        return
+    nove, textos = tres * 3, ["Natal %d" % k for k in range(9)]
+    grupo = {"t": "colagem", "fotos": nove, "d": 7.0, "c": 0.7, "x": "", "r": "fiel",
+             "vf": True, "vm": "legenda", "xf": textos}
+    linhas, _, saida, _ = _mesa_de_ensaio([dict(grupo, estilo="mergulho"), dict(grupo, estilo="filas")],
+                                          "teste_mergulho_textos_")
+    curtos = re.findall(r"o texto da foto \d+ fica so [\d.]+ s na legenda de baixo.*\(clip (\d+)\)", saida)
+    if "1" in curtos or "2" not in curtos:
+        problemas.append("o montar avisa %d textos do mergulho e %d da colagem em filas"
+                         % (curtos.count("1"), curtos.count("2")))
+    if len(linhas) != 2 or linhas[0]["tratamento"] != render.MERGULHO_ESTILO:
+        problemas.append("o montar escreveu %d linhas, a primeira com %r"
+                         % (len(linhas), linhas[0]["tratamento"] if linhas else None))
+    else:
+        for linha, esperado in ((linhas[0], False), (linhas[1], True)):
+            if bool(montar_da_mesa.legendas_curtas_da_linha(linha, 0.0, 0.7, render)) != esperado:
+                problemas.append("legendas_curtas_da_linha de %s" % linha["tratamento"])
+    node = shutil.which("node")
+    if not node:
+        salta("mergulho: os textos das fotos na Mesa", "sem node neste PC")
+    else:
+        html = open(os.path.join(REPO, "scripts", "editor_base.html"), encoding="utf-8").read()
+        js = "\n".join(_bloco_do_editor(html, m, problemas) for m in
+                       ("var ESTILOS = ", "function estiloDe(", "function textosForaDoFilme(", "function contaCurtos(",
+                        "function avisoLongo("))
+        js += """
+function notaTempo(){ return {texto: "", aviso: true, primeira: true}; }
+var xf = %s, fotos = %s;
+function grupo(estilo){ return {t: "colagem", estilo: estilo, fotos: fotos, d: 7, c: 0.7, vf: true, vm: "legenda", xf: xf}; }
+var v = {clips: [grupo("mergulho"), grupo("filas")]};
+process.stdout.write(JSON.stringify({mergulho: contaCurtos(grupo("mergulho"), v), filas: contaCurtos(grupo("filas"), v),
+  longo: avisoLongo("Um texto comprido de mais para a faixa de uma foto pequena", grupo("mergulho"))}));
+""" % (json.dumps(textos), json.dumps(nove))
+        pasta = tempfile.mkdtemp(prefix="teste_mergulho_textos_mesa_")
+        caminho = os.path.join(pasta, "mesa.js")
+        open(caminho, "w", encoding="utf-8").write(js)
+        if not problemas:
+            r = subprocess.run([node, caminho], capture_output=True, text=True, encoding="utf-8", timeout=120)
+            if r.returncode != 0:
+                problemas.append("o node nao correu: %s" % r.stderr.strip()[:300])
+            else:
+                mesa = json.loads(r.stdout)
+                if mesa != {"mergulho": 0, "filas": 9, "longo": ""}:
+                    problemas.append("na Mesa %s" % mesa)
+        for funcao in ("function blocoTextosFotos(", "function campoXf(", "function atualizaNotasTempo(",
+                       "function pintaClips("):
+            if "textosForaDoFilme(c)" not in _bloco_do_editor(html, funcao, problemas):
+                problemas.append("o %s) nao pergunta ao textosForaDoFilme()" % funcao.split()[1])
+    verifica("mergulho: os textos das fotos nao contam, nem na Mesa nem no montar", not problemas,
+             "; ".join(problemas[:3]) if problemas else
+             "o montar avisa %d textos da colagem em filas e nenhum do mergulho" % curtos.count("2"))
+
+
+def teste_mesa_mergulho():
+    """A Mesa desenha e conta o mergulho como o render: a grelha, a altura com legenda, os tempos e as duracoes.
+
+    O PEDIDO, do Tiago a 1 de outubro (decisao 102): corrigir os defeitos do mergulho. Os da Mesa:
+      - A PRE-VISUALIZACAO mostrava o mergulho como a colagem em filas, tortas e com moldura, e a
+        ajuda dizia "A pre-visualizacao mostra a grelha, nao o mergulho". Agora o mostraQuadro()
+        desenha a grelhaMergulho(), a do render ao pixel, e o mergulho aproximado; a ajuda diz o
+        que o video faz.
+      - A DURACAO. O juntar propunha a da colagem (3 + 1,6 x n), que deixava a grelha parada 12,6 s
+        com 9 fotos e 28,2 s com 20, e o Validar e o inspetor pediam a duracao minima da colagem,
+        11,1 s com 20. Agora sao as do render: duracaoMergulho() e duracaoMinimaMergulho(), no
+        sitio do clip.
+      - AS NOTAS DE TEMPO diziam "cerca de X s por foto, a ultima o dobro", que no mergulho nao
+        existe; agora dizem quanto a grelha leva a encher, quanto espera e quanto dura o mergulho.
+      - acima de 30 fotos avisa-se a tela, e nao o aviso da colagem acima de 8, no juntar, no
+        inspetor e no Validar, em "Confirma tu".
+      - A LEGENDA DA PRE-VISUALIZACAO (revisao de 1 de outubro) era a do palco, a 13% do fundo, e
+        tapava a ultima fila da grelha, onde se mergulha. Agora e a do render, da mesma conta da
+        altura da grelha (legendaDoMergulho), com a faixa e a letra do render.
+    Compara-se no node, contra o render: as constantes, a grelha de 2 a 36 sem legenda e com uma e
+    duas linhas, a altura com legenda, os tempos e as duas duracoes numa grelha de casos, e a
+    duracao minima do Validar com os encadeados do sitio. Sem node, diz-se e nao conta.
+    """
+    import json
+    import re
+    import shutil
+    import subprocess
+    import tempfile
+    import render
+    node = shutil.which("node")
+    if not node:
+        salta("Mesa: o mergulho como o render", "sem node neste PC")
+        return
+    L, A = render.L, render.A
+    html = open(os.path.join(REPO, "scripts", "editor_base.html"), encoding="utf-8").read()
+    problemas = []
+    marcas = ["var MERGULHO = ", "var LEGENDA_RENDER = ", "function grelhaMergulho(", "function alturaMergulho(",
+              "function linhasNaLegendaAprox(", "function linhasDaLegendaAprox(", "function legendaDoMergulho(",
+              "function quebrarAprox(", "function larguraTexto(",
+              "function cobreMergulho(", "function cobreReferenciaMergulho(", "function entreMergulho(",
+              "function desceMergulho(", "function partesMergulho(", "function temposMergulho(",
+              "function duracaoMergulho(", "function duracaoMinimaMergulho(", "function cobreDoMergulho(",
+              "function temposDoMergulho(", "function duracaoDoMergulho(", "function textoDoMergulho(",
+              "var ESTILOS = ", "function estiloDe(", "var MUITAS = ", "var MUITAS_ESTILO = ", "function notaMuitas(",
+              "var MONTE = ", "function clipsDoCorpo(", "function encadeadosDe(", "function encadeadoDoClip(",
+              "function contadoresSeguidos(", "function pontoDoContador(", "function lerContador(",
+              "function eDataContador(", "function dataParaIso(", "function d2(", "function duracaoMinimaMonte(",
+              "function duracaoMinimaGrupo(", "function agendaMonte(", "function agendaDeAntes(",
+              "function agendaDoClip(", "function textoPorFoto(", "function porFotoApertada(",
+              "function minimaArredondada(", "function notaMinimaGrupo(", "function notaTempoJuntar(",
+              "function nomeDoGrupo(", "function oGrupo(", "function doGrupo(", "function nomeDaFoto(",
+              "var GRUPOS = ", "var LADO_N = ", "var NOMES_LADO = ", "function layoutsPara(", "function duracaoLado(",
+              "function planoReduzir(", "function s1("]
+    js = "var porId = {}, medidor = null;\n" + "\n".join(_bloco_do_editor(html, m, problemas) for m in marcas)
+    # QUEM CHAMA: o juntar propoe a duracao do mergulho, a pre-visualizacao desenha a grelha dele,
+    # o Validar e a etiqueta "curta" passam pela duracaoMinimaGrupo(), e a ajuda ja nao diz o que
+    # nao e verdade.
+    for funcao, chamada in (("function juntarGrupo(", "duracaoDoMergulho(v, novo)"),
+                            ("function juntarGrupo(", "notaMuitas(tipo, n, novo.estilo)"),
+                            ("function mostraQuadro(", "grelhaMergulho(nM, 1920, alturaMergulho(c))"),
+                            ("function mostraQuadro(", "legendaDoMergulhoNoPalco(c, kM)"),
+                            ("function legendaDoMergulhoNoPalco(", "legendaDoMergulho(c)"),
+                            ("function mostraQuadro(", "temposDoMergulho(vQM, c)"),
+                            ("function validar(", "duracaoMinimaGrupo(v, i)"),
+                            ("function validar(", 'notaMuitas(c.t, (c.fotos || []).length, "mergulho")'),
+                            ("function mudaGrupo(", "duracaoDoMergulho(v, novo)")):
+        if chamada not in _bloco_do_editor(html, funcao, problemas):
+            problemas.append("o %s) nao chama %s" % (funcao.split()[1], chamada))
+    if "A pré-visualização mostra a grelha, não o mergulho" in html:
+        problemas.append("a ajuda ainda diz que a pre-visualizacao nao mostra o mergulho")
+    alturas = [float(A), render.mergulho_altura(render.faixa_texto("Os amigos")),
+               render.mergulho_altura(render.faixa_texto(
+                   "Os amigos de sempre, no Porto, na praia e nas festas de Natal todos juntos outra vez"))]
+    grelhas = [{"n": n, "alt": alt, "render": render.mergulho_grelha(n, L, alt)} for alt in alturas for n in range(2, 37)]
+    tempos = []
+    for n in (2, 5, 9, 13, 20, 29, 36):
+        cobre = render.mergulho_cobre(render.mergulho_grelha(n, L, A)[-1])
+        for entra, sai in ((0.0, 0.7), (0.7, 0.7), (0.7, 2.5)):
+            nominal = render.duracao_mergulho(n, entra, sai, cobre)
+            minima = render.duracao_minima_mergulho(n, entra, sai, cobre)
+            for dur in (1.0, minima - 0.4, minima, (minima + nominal) / 2.0, nominal, nominal + 4.0):
+                t = render.mergulho_tempos(n, dur, entra, sai, cobre)
+                tempos.append({"n": n, "dur": dur, "entra": entra, "sai": sai, "cobre": cobre, "nominal": nominal,
+                               "minima": minima, "t": [t[k] for k in ("atraso", "entra", "entre", "espera", "desce", "fica")]})
+    # a duracao minima no sitio do clip: entre duas fotos com 0,7 de encadeado, com e sem legenda
+    sitio = []
+    for n, x in ((9, ""), (20, ""), (20, "Os amigos"), (36, "")):
+        _alt, cobre = render.mergulho_do_texto(n, x)
+        sitio.append({"n": n, "x": x, "minima": render.duracao_minima_mergulho(n, 0.7, 0.7, cobre),
+                      "nominal": render.duracao_mergulho(n, 0.7, 0.7, cobre)})
+    constantes = {"folga": render.MERGULHO_FOLGA, "atraso": render.MERGULHO_ATRASO, "entra": render.MERGULHO_ENTRA,
+                  "entre": render.MERGULHO_ENTRE, "espera": render.MERGULHO_ESPERA, "desce": render.MERGULHO_DESCE,
+                  "fica": render.MERGULHO_FICA, "respira": render.MERGULHO_RESPIRA, "ficaZoom": render.MERGULHO_FICA_ZOOM,
+                  "aspetoMin": render.MERGULHO_ASPETO_MIN, "aspetoMax": render.MERGULHO_ASPETO_MAX,
+                  "aspetoAlvo": render.MERGULHO_ASPETO_ALVO, "encheMax": render.MERGULHO_ENCHE_MAX,
+                  "minimo": render.MERGULHO_MINIMO}
+    legenda = {"tamanho": render.LEGENDA_TAMANHO, "minimo": render.LEGENDA_MIN, "linhas": render.LEGENDA_LINHAS,
+               "texto": render.LEGENDA_TEXTO, "almofada": render.LEGENDA_ALMOFADA,
+               "folgaMonte": render.MONTE_LEGENDA_FOLGA, "fundo": render.LEGENDA_FUNDO, "alfa": render.LEGENDA_ALFA}
+    programa = js + "\nvar grelhas = %s, tempos = %s, sitio = %s;\n" % (
+        json.dumps([{"n": g["n"], "alt": g["alt"]} for g in grelhas]), json.dumps(tempos), json.dumps(sitio)) + """
+function grupo(n, x, d){
+  var c = {t: "colagem", estilo: "mergulho", fotos: [], x: x || "", d: d, c: 0.7};
+  for(var k = 0; k < n; k++) c.fotos.push(String(100 + k));
+  return c;
+}
+function versao(c){ return {clips: [{t: "foto", i: 1, d: 4, c: 0.7}, c, {t: "foto", i: 2, d: 4, c: 0.7}]}; }
+var notas = sitio.map(function(m){
+  var c = grupo(m.n, m.x, Math.ceil(m.nominal * 10 - 1e-6) / 10), v = versao(c), curto = grupo(m.n, m.x, Math.floor(m.minima * 10) / 10 - 0.2), vc = versao(curto);
+  var colagem = {t: "colagem", estilo: "filas", fotos: c.fotos, x: c.x, d: c.d, c: 0.7}, vf = versao(colagem);
+  return {minima: duracaoMinimaGrupo(v, 1), texto: textoPorFoto(v, c), juntar: notaTempoJuntar(v, c),
+          apertada: porFotoApertada(v, c), curtoApertada: porFotoApertada(vc, curto), curtoNota: notaMinimaGrupo(vc, curto),
+          curtoTexto: textoPorFoto(vc, curto), proposta: Math.ceil(duracaoDoMergulho(v, c) * 10 - 1e-6) / 10,
+          reduzir: planoReduzir(v, c, 0), colagemMinima: duracaoMinimaGrupo(vf, 1)};
+});
+process.stdout.write(JSON.stringify({
+  constantes: MERGULHO, legenda: LEGENDA_RENDER,
+  grelhas: grelhas.map(function(g){ return grelhaMergulho(g.n, 1920, g.alt); }),
+  alturas: [alturaMergulho({x: ""}), alturaMergulho({x: "Os amigos"})],
+  tempos: tempos.map(function(m){
+    var t = temposMergulho(m.n, m.dur, m.entra, m.sai, m.cobre);
+    return {t: [t.atraso, t.entra, t.entre, t.espera, t.desce, t.fica], nominal: duracaoMergulho(m.n, m.entra, m.sai, m.cobre),
+            minima: duracaoMinimaMergulho(m.n, m.entra, m.sai, m.cobre)};
+  }),
+  notas: notas,
+  muitas: [notaMuitas("colagem", 9, "mergulho"), notaMuitas("colagem", 30, "mergulho"), notaMuitas("colagem", 31, "mergulho"),
+           notaMuitas("colagem", 9, "filas"), notaMuitas("colagem", 9)]
+}));
+"""
+    pasta = tempfile.mkdtemp(prefix="teste_mesa_mergulho_")
+    caminho = os.path.join(pasta, "mesa_mergulho.js")
+    open(caminho, "w", encoding="utf-8").write(programa)
+    saida = None
+    if not problemas:
+        r = subprocess.run([node, caminho], capture_output=True, text=True, encoding="utf-8", timeout=300)
+        if r.returncode != 0:
+            problemas.append("o node nao correu as contas da Mesa: %s" % r.stderr.strip()[:300])
+        else:
+            saida = json.loads(r.stdout)
+    if saida:
+        if saida["constantes"] != constantes:
+            problemas.append("as constantes do mergulho na Mesa %s, no render %s" % (saida["constantes"], constantes))
+        if saida["legenda"] != legenda:
+            problemas.append("as da legenda na Mesa %s, no render %s" % (saida["legenda"], legenda))
+        for g, mesa in zip(grelhas, saida["grelhas"]):
+            if len(mesa) != len(g["render"]) or any(abs(a - b) > 1e-6 for cm, cr in zip(mesa, g["render"]) for a, b in zip(cm, cr)):
+                problemas.append("a grelha de %d com altura %.1f difere do render" % (g["n"], g["alt"]))
+                break
+        if any(abs(a - b) > 1e-6 for a, b in zip(saida["alturas"], alturas[:2])):
+            problemas.append("a altura da grelha na Mesa %s, no render %s" % (saida["alturas"], alturas[:2]))
+        for m, mesa in zip(tempos, saida["tempos"]):
+            if (any(abs(a - b) > 1e-9 for a, b in zip(mesa["t"], m["t"])) or abs(mesa["nominal"] - m["nominal"]) > 1e-9
+                    or abs(mesa["minima"] - m["minima"]) > 1e-9):
+                problemas.append("%d fotos em %.2f s: a Mesa %s, o render %s" % (m["n"], m["dur"], mesa, m["t"]))
+                break
+        for m, nt in zip(sitio, saida["notas"]):
+            quem = "%d fotos%s" % (m["n"], " com legenda" if m["x"] else "")
+            if abs(nt["minima"] - m["minima"]) > 1e-6:
+                problemas.append("%s: a minima do Validar e %.2f e a do render %.2f" % (quem, nt["minima"], m["minima"]))
+            if nt["minima"] >= nt["colagemMinima"]:
+                problemas.append("%s: a minima do mergulho nao e menor do que a da colagem" % quem)
+            if "mergulho leva" not in nt["texto"] or "grelha enche" not in nt["texto"] or nt["apertada"]:
+                problemas.append("%s: a nota de tempo %r" % (quem, nt["texto"]))
+            if "tempo do mergulho" not in nt["juntar"]:
+                problemas.append("%s: a nota do juntar %r" % (quem, nt["juntar"]))
+            if abs(nt["proposta"] - math.ceil(m["nominal"] * 10 - 1e-6) / 10.0) > 1e-9:
+                problemas.append("%s: o juntar propoe %.1f s e o mergulho pede %.2f" % (quem, nt["proposta"], m["nominal"]))
+            if not (nt["curtoApertada"] and "mergulho fica apressado" in nt["curtoNota"]["html"]
+                    and nt["curtoNota"]["curta"] and "curta de mais" in nt["curtoTexto"]):
+                problemas.append("%s abaixo da minima: %s" % (quem, nt["curtoNota"]))
+            red = nt["reduzir"]
+            if not (red["pode"] and abs(red["d"] - nt["proposta"]) < 1e-9 and "continua" in red["texto"]):
+                problemas.append("%s: o Reduzir %s" % (quem, red))
+        nove, trinta, trinta_e_um, filas, sem = saida["muitas"]
+        if nove or trinta or "tela" not in trinta_e_um or not filas or filas != sem:
+            problemas.append("os avisos de muitas fotos: %s" % saida["muitas"])
+    verifica("Mesa: o mergulho com a grelha, a altura, os tempos e as duracoes do render", not problemas and saida is not None,
+             "; ".join(problemas[:3]) if problemas else
+             "%d grelhas, %d tempos e %d sitios iguais ao render; o juntar propoe %s s com 20 fotos e o Validar "
+             "pede %.1f, contra %.1f da colagem" % (len(grelhas), len(tempos), len(sitio),
+                                                    _js_s1(saida["notas"][1]["proposta"]),
+                                                    saida["notas"][1]["minima"], saida["notas"][1]["colagemMinima"]))
 
 
 # ------------------------------------------- «aproxima ao ponto de foco», 18 de setembro
@@ -12346,6 +13949,11 @@ def main():
     teste_fim_em_fade_a_preto()
     teste_enquadramento_afastada_e_parada()
     teste_mergulho_na_grelha()
+    teste_mergulho_grelha_sem_tiras()
+    teste_mergulho_camara_presa_a_grelha()
+    teste_mergulho_legenda_nao_tapa_a_ultima()
+    teste_mergulho_tempos_cabem()
+    teste_auditar_mede_o_mergulho()
     teste_aproxima_comeca_igual_e_acaba_no_foco()
     teste_aproxima_entre_os_encadeados()
     teste_aproxima_nunca_descobre_borda()
@@ -12378,6 +13986,7 @@ def main():
     teste_limites_dos_grupos_iguais()
     teste_lado_6g()
     teste_colagem_e_pilha_com_muitas_fotos()
+    teste_colagem_de_21_a_30_com_proporcoes_reais()
     teste_agenda_nova_na_legenda_e_nas_tapadas()
     teste_monte_acima_da_legenda()
     teste_linhas_texto_foto()
@@ -12393,6 +14002,9 @@ def main():
     teste_borda_da_colagem_nao_pisca()
     teste_colagem_e_pilha_deterministicas()
     teste_colagem_e_pilha_pelo_preparar()
+    teste_grupo_abre_uma_foto_de_cada_vez()
+    teste_camada_das_pousadas_igual_a_recomposta()
+    teste_aviso_de_memoria_conta_os_pixeis()
     teste_mesa_escreve_colagem_e_pilha()
     teste_agenda_da_mesa_igual_ao_render()
     teste_mesa_no_sitio_do_clip()
@@ -12405,6 +14017,10 @@ def main():
     teste_textos_das_fotos_chegam_ao_render()
     teste_mesa_escreve_textos_opcoes()
     teste_mesa_avisa_legenda_curta()
+    teste_mesa_avisa_textos_curtos_na_pilha()
+    teste_mesa_colagem_ate_30()
+    teste_mesa_mergulho()
+    teste_mergulho_textos_das_fotos_nao_contam()
     teste_mesa_avisa_legenda_comprida_e_foto_depois_do_fim()
     teste_textos_opcoes_chegam_ao_render()
     teste_estado_das_fotos()

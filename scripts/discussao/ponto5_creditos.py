@@ -2,7 +2,7 @@
 """Exemplo do ponto 5: o fim do filme e os creditos, como na proposta de 28 de setembro e com o que o
 Tiago pediu a 30 (DISCUSSAO.md, ponto 5). Nao muda nada; escreve em saida/discussao/ponto5/.
 
-    py -3.11 scripts/discussao/ponto5_creditos.py [--so-dizer | --quadros | --colar]
+    py -3.11 scripts/discussao/ponto5_creditos.py [--so-dizer | --quadros | --colar] [--filme <render.mp4>]
 
 --so-dizer so faz as contas; --quadros tira sete fotogramas soltos; --colar, alem do exemplo, cola os
 creditos no fim do render mais recente e faz a copia do telemovel do filme inteiro (abaixo de 30 MB).
@@ -239,6 +239,15 @@ def fotos_marcadas():
     return [finais[i] for i in ids if i not in em_falta], fonte
 
 
+def apagar(caminho):
+    """Um temporario que o Windows ainda tenha preso fica para tras, em vez de parar o exemplo
+    (1 de outubro: o _som.m4a preso parou o --colar depois de os creditos estarem feitos)."""
+    try:
+        os.remove(caminho)
+    except OSError as erro:
+        print("  (nao apaguei %s: %s)" % (os.path.basename(caminho), erro))
+
+
 def sem_acentos(texto):
     import unicodedata
     return "".join(c for c in unicodedata.normalize("NFKD", texto or "")
@@ -350,12 +359,16 @@ def main():
 
     # o fim do filme: os ultimos 5 s do render de ensaio antes do fade, e a musica a continuar
     renders = sorted(glob.glob(r"C:\casamento-video-media\saida\v3_*[0-9].mp4"), key=os.path.getmtime)
-    final = renders[-1]
+    # --filme <caminho> escolhe o render; sem ele, o mais recente com nome de filme inteiro. Um render
+    # a meia resolucao (--escala) chama-se ..._parcial.mp4 e so entra pelo --filme.
+    final = sys.argv[sys.argv.index("--filme") + 1] if "--filme" in sys.argv else renders[-1]
+    print("filme: %s" % final)
     fim_filme = C.duracao(final) - render.FADE_FIM_IMAGEM
     antes = 5.0
     # os fotogramas do fim do filme leem-se um a um por um tubo: 5 s em memoria eram 780 MB
     leitor = subprocess.Popen([C.FF, "-v", "error", "-ss", "%.3f" % (fim_filme - antes), "-t", "%.3f" % antes,
-                               "-i", final, "-an", "-vf", "fps=%d" % FPS, "-f", "rawvideo", "-pix_fmt", "rgb24", "-"],
+                               "-i", final, "-an", "-vf", "fps=%d,scale=%d:%d" % (FPS, L, A),   # um render --escala tambem serve
+                               "-f", "rawvideo", "-pix_fmt", "rgb24", "-"],
                               stdout=subprocess.PIPE)
     ultimo = None
     # a musica do fim continua de onde o filme a deixa, e acaba com os creditos. O relogio do som e o do
@@ -374,6 +387,15 @@ def main():
               "subida": render.SUBIDA_NUM_INICIO, "cruza": 0.0})
     som_saida = os.path.join(pasta, "_som.m4a")
     render.construir_som(render.ffmpeg(), [e], total, som_saida, render.FADE_FIM_SOM)
+    # A MUSICA PODE ACABAR ANTES DOS CREDITOS (1 de outubro: os Queen acabam 2 s antes de o titulo se
+    # apagar). O encoder corta a imagem pelo som (-shortest), e perdia-se o fim a desvanecer para o
+    # preto, que e o que diz a sala que acabou: o som completa-se com silencio ate ao ultimo fotograma.
+    if C.duracao(som_saida) < total - 0.05:
+        cheio = os.path.join(pasta, "_som_cheio.m4a")
+        subprocess.run([C.FF, "-v", "error", "-y", "-i", som_saida, "-af", "apad=whole_dur=%.3f" % total,
+                        "-c:a", "aac", "-b:a", "192k", cheio], check=True)
+        apagar(som_saida)
+        som_saida = cheio
 
     saida = os.path.join(pasta, "exemplo_creditos.mp4")
     enc = C.encoder(saida, total, som_saida)
@@ -394,7 +416,7 @@ def main():
     enc.wait()
     leitor.stdout.close()
     leitor.wait()
-    os.remove(som_saida)
+    apagar(som_saida)
     leve = os.path.join(pasta, "exemplo_creditos_telemovel.mp4")
     subprocess.run([C.FF, "-v", "error", "-y", "-i", saida, "-vf", "scale=1280:720", "-c:v", "libx264", "-crf", "24",
                     "-preset", "medium", "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart", leve], check=True)
@@ -415,14 +437,18 @@ def colar_no_filme(final, corte, creditos, pasta):
     total = corte + C.duracao(creditos)
     alvo, som_kbps = 28 * 1048576, 96
     video_kbps = max(80, int(alvo * 8 / total / 1000.0) - som_kbps)
-    filtro = ("[0:v]trim=0:%.3f,setpts=PTS-STARTPTS[v0];[0:a]atrim=0:%.3f,asetpts=PTS-STARTPTS[a0];"
-              "[1:v]setpts=PTS-STARTPTS[v1];[1:a]asetpts=PTS-STARTPTS[a1];"
-              "[v0][a0][v1][a1]concat=n=2:v=1:a=1[v][a];[v]scale=960:540:flags=lanczos[vs]" % (corte, corte))
+    # as duas partes passam a 960x540 antes de se juntarem: o filme pode vir de um render --escala
+    filtro = ("[0:v]trim=0:%.3f,setpts=PTS-STARTPTS,scale=960:540:flags=lanczos,setsar=1[v0];"
+              "[0:a]atrim=0:%.3f,asetpts=PTS-STARTPTS[a0];"
+              "[1:v]setpts=PTS-STARTPTS,scale=960:540:flags=lanczos,setsar=1[v1];[1:a]asetpts=PTS-STARTPTS[a1];"
+              "[v0][a0][v1][a1]concat=n=2:v=1:a=1[vs][a]" % (corte, corte))
     passlog = os.path.join(pasta, "_passlog_colar")
     comum = [C.FF, "-hide_banner", "-loglevel", "error", "-y", "-i", final, "-i", creditos,
              "-filter_complex", filtro, "-map", "[vs]", "-c:v", "libx264", "-preset", "medium",
              "-b:v", "%dk" % video_kbps, "-pix_fmt", "yuv420p", "-passlogfile", passlog]
-    subprocess.run(comum + ["-pass", "1", "-an", "-f", "mp4", os.devnull], check=True)
+    # Na primeira passagem o som tambem sai: com o -an a saida [a] do concat ficava sem destino e o
+    # ffmpeg recusava o filtro inteiro (1 de outubro).
+    subprocess.run(comum + ["-map", "[a]", "-c:a", "aac", "-pass", "1", "-f", "mp4", os.devnull], check=True)
     subprocess.run(comum + ["-map", "[a]", "-pass", "2", "-c:a", "aac", "-b:a", "%dk" % som_kbps,
                             "-movflags", "+faststart", movel], check=True)
     for sobra in (passlog + "-0.log", passlog + "-0.log.mbtree"):

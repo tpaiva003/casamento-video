@@ -667,6 +667,11 @@ Construído no `ponto5_creditos.py`:
 - **A alternativa por decidir:** as fotos ao alto mais pequenas (600 px de altura em vez de cortadas a
   900) dariam cerca de 137 s.
 
+**Depois** (1 de outubro): *"Eu as fotos dos créditos ainda vou ajustar depois."* A duração dos créditos
+depende de quantas fotos ficarem, por isso a escolha entre as fotos ao alto como estão e mais pequenas
+espera por isso. Quando ele disser que estão prontas: ler a base, correr o `--so-dizer` para dar a
+duração, e fazer o exemplo com `--colar`.
+
 **Pedidos de 1 de outubro fora dos cinco pontos:** *"Estava a pensar se conseguimos aumentar o número
 de fotos no mergulho, bem como o número de fotos a que fazemos o zoom in. Queria também aumentar o
 número de fotos em que podemos fazer colagem ou pilha."* Hoje:
@@ -714,6 +719,72 @@ texto inteiro está em `saida/discussao/propostas_1001/`, fora do Git.
   - Numa pilha de 60 cada foto é um relance (0,5 s) e os textos por foto não se leem.
 - **As regras fixas** ("máximo 4 ou 5 fotos seguidas do mesmo evento", "nunca menos de 3 s por foto")
   chocam com grupos grandes. A rajada é o precedente; diz-se-lhe.
+
+**Ele decidiu** (1 de outubro): *"Avança com estes: o mergulho: corrigir os defeitos que já tem,
+deixá-lo ir até 36 fotos e escolher como mergulha em mais do que uma, a partir de prévias. A colagem:
+até 30 fotos. A pilha: até 60 fotos em monte, depois da correção de memória. Se houver mais alguma ideia
+interessante em transições giras, criativas e diferentes diz-me."* Decisão 102. A construir:
+- a correção de memória;
+- a pilha até 60;
+- a colagem até 30;
+- as correções do mergulho e o limite de 36.
+
+As prévias do mergulho em mais do que uma foto vêm a seguir, e as ideias de transições estão a ser
+procuradas à parte.
+
+**As ideias de transições** (1 de outubro): três agentes propuseram e um juiz filtrou-as pelas regras e
+pelo que ele recusou a 30 de setembro. Tudo está em `saida/discussao/propostas_1001/ideias_transicoes.json`.
+- **As três para prévia:**
+  - **a grelha das duas vidas:** no encontro, as fotos dele à esquerda e as dela à direita acendem numa
+    grelha, e o mergulho acaba na primeira foto dos dois. A primeira versão faz-se já na Mesa, sem
+    código;
+  - **a cara no mesmo sítio:** nos penteados, as fotos em corte seco com a cara dela sempre no mesmo
+    ponto e tamanho;
+  - **a fita até hoje:** antes dos créditos, o contador do princípio a andar para a frente até
+    «4 de outubro de 2026». Sem código.
+- **Ficaram atrás:**
+  - rebobinar as fotos dele para ir buscar o nascimento dela;
+  - a foto dentro da palavra, na primeira viagem;
+  - o grande plano dentro da foto;
+  - o corte no compasso, nos blocos com batida;
+  - «Adivinham quem?», no bloco dos cães.
+- **Deitadas fora,** com a razão no ficheiro: a passagem de foco, as metades que se juntam, as duas fitas,
+  os diapositivos, a íris, o mosaico, a página de álbum e o carimbo.
+
+**O pedido para o fim da construção** (1 de outubro, 18:04): *"Depois de tudo valida e faz render de
+um vídeo incluindo os créditos."* Pela ordem:
+1. Publicar a Mesa nova, com o retrato e o `montagem/publicacao`; ler o `estado2` e confirmar.
+2. Juntar e montar a versão dele (rev 1042 ou a que houver), ver os avisos do montar e correr o
+   `ponto3_3_frases.py --so-dizer`. Os textos marcados ficam como estão ("ajusto no fim"), mas
+   diz-se-lhe quais são.
+3. Fazer o render com `--so-telemovel`, e com as fatias que o aviso de memória propuser.
+4. Correr `ponto5_creditos.py --colar`, para ter o filme com os créditos numa só cópia do telemóvel.
+
+**O render rápido de 1 de outubro, à noite** (pedido dele, em paralelo com a revisão):
+`saida/discussao/ponto5/v3_2026-10-01_2103_parcial_com_creditos_telemovel.mp4`.
+- **Como se fez:** a Mesa na rev 1042, com 169 clips, montada numa pasta à parte
+  (`saida/render_rapido_1001/montagens`, para não mexer nos ficheiros que os testes leem). O render foi
+  a meia resolução (`--escala 0.5 --fatias 4`), e os créditos colaram-se com
+  `ponto5_creditos.py --colar --filme`.
+- **Duração:** 11:33 de filme mais 2:32 de créditos, 14:03 no total.
+- **A ordem das músicas mudou:** o bloco do trabalho (Taking Care of Business) passou para antes dos
+  Filhos do Dragão e dos Queen. O filme acaba agora nos Queen, e os créditos continuam-nos; a música
+  acaba no fim verdadeiro dela, cerca de 2 s antes do último fotograma.
+- **As trocas de música:**
+  - só duas mantêm o fim de frase medido: Clair para Who Let The Dogs Out, e Filhos do Dragão para
+    Queen;
+  - cinco descem no corte até se medirem outra vez;
+  - cinco são pares novos, por causa da ordem dele e da troca Steppenwolf e Fome de Viagem, e
+    cruzam-se como antes da 096.
+
+**A troca de músicas** (1 de outubro): *"Estava a pensar trocar a música do Fome de Viagem com esta
+música: Steppenwolf - Born To Be Wild (Lyrics). Não precisamos de fazer os ajustes todos de quando
+começa e acaba, pois isso ainda vai ser ajustado mais tarde."* Feito na Mesa (rev 991), trocando as duas
+de lugar:
+- o cartão «Viagens» (clip 113) passa a ter o Steppenwolf, a entrar aos 0,55 s;
+- a pilha do clip 137 passa a ter a Fome de Viagem, a entrar aos 2,7 s.
+
+As trocas à volta das duas descem no corte até se medirem outra vez (096).
 
 **A verificação do render de 1 de outubro:**
 - **Som:** só ficam dois buracos de silêncio nas trocas (Clair para Who Let The Dogs Out, 0,25 s;
@@ -855,3 +926,30 @@ Com o vídeo "All Daniel Craig 007 Gunbarrels (2006-2021).mp4" dos Downloads del
   fotos não andam.
 - **Mexe em decisões fechadas se substituir a Marvel:** 097 (passagem da intro para o contador) e 084
   (o Impact aparece uma vez, no letreiro da intro).
+
+**1 de outubro, ele:** *"Ou seja não consegues tu criar com base nas nossas imagens, mesmo que seja aquela
+opção mais escura"*. Fez-se a prévia sem filmagem: `py -3.11 scripts/discussao/intro_007.py` escreve
+`saida/discussao/intro_007/previa_intro_007.mp4` (12,7 s; `--quadros` tira só fotogramas soltos).
+- Silhuetas recortadas da f0166 (`30Abril18_125.jpg`) com o GrabCut, espelhadas para o Tiago ficar à
+  esquerda. Deslizam com balanço de passo; as pernas não andam. No fim encostam as cabeças (2,4°).
+- Som do próprio vídeo de referência: No Time To Die dos 51,10 aos 57,15 s (pára antes do tiro, que
+  está aos 57,2) e Quantum of Solace dos 13,20 aos 19,85 s (depois do tiro, que está aos 12,5). Ganho
+  direto para -21,9 LUFS.
+- Sem sangue: o círculo fica vermelho e apaga-se. Os arcos fecham-se em duas alianças, e o título
+  "HISTÓRIA DA CLARA / E DO TIAGO" entra em escada pela direita, no letreiro do render.
+
+**1 de outubro, ele, depois da prévia 1:** *"Para já mantemos a da Marvel, mas ainda assim acho que esta tem
+potencial para aparecer antes dos créditos, mas para isso tínhamos de a melhorar, consegues acrescentar
+efeitos e movimento que se assemelhe o máximo possível à qualidade dos originais? Sabendo que estamos
+apenas a fazer um demo, mas acredito no potencial."*
+- **A intro da Marvel fica.** Esta passa a ser candidata para antes dos créditos, ou seja, ponto 5.
+- **Prévia 2:** `py -3.11 scripts/discussao/intro_007_v2.py` escreve `previa_intro_007_v2.mp4` (12,7 s,
+  17,6 MB; `--quadros` tira só fotogramas soltos). A prévia 1 fica como estava, para se poder comparar.
+  O que tem a mais: o cano calculado em perspetiva (estrias em hélice, textura de metal, luz que vem
+  da boca), a câmara a entrar no cano, as pernas dele a levantar e a saia dela a balançar, o reflexo
+  no chão, o clarão quente no beijo, a cortina vermelha ondulada, os arcos em 3D com rasto, um brilho
+  a passar no título e o título a fechar numa linha. Tem também desfoque de movimento, brilho, grão e
+  barras 2,39:1.
+- **As silhuetas passaram a ser simétricas,** cada uma feita do lado que se vê inteiro na f0166: na
+  foto o braço dela tapa a manga dele, e o corte direito deixava uma aresta a pique. As pernas dele
+  foram refeitas linha a linha, porque o muro entre as pernas tinha ficado meio dentro do recorte.

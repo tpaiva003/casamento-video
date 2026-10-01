@@ -1391,13 +1391,54 @@ MOLDURA_COR = (240, 240, 242)     # a do ensaio
 #            pequena desce a cerca de 0,8% do ecra, na ordem do pior caso aceite para 12. O
 #            colagem_particoes() so vai ate 24 (4 filas de 6), e por isso 20 tem folga.
 #   pilha    o monte nao parte com nenhum numero; o que trava e o leque, que a partir de
-#            ~20 ocupa a largura toda e encolhe as fotos: a 40 a mais pequena tem 1,15% do
-#            ecra e cada uma fica 23% a vista, a 60 a garantia de PILHA_LEQUE_VE fica por 0,1
-#            ponto e a 80 parte. E a memoria: cada fatia abre as fotos todas em resolucao
-#            total, e uma pilha de 40 fotos de 5 MP pede cerca de 850 MB por processo, 6 GB
-#            com as 7 fatias. O main() avisa quando isso pode acontecer.
-LIMITES_MONTE = {"colagem": (2, 20), "pilha": (2, 40)}
-MONTE_ATRASO = 0.35               # a primeira espera o encadeado, como no lado a lado
+#            ~20 ocupa a largura toda e encolhe as fotos (desenhado a serio, so ate 24, ver
+#            PILHA_LEQUE_MAX). E a memoria: cada fatia abria as fotos todas em resolucao
+#            total, e uma pilha de 40 fotos de 5 MP pedia cerca de 850 MB por processo, 6 GB
+#            com as 7 fatias.
+# 1 DE OUTUBRO: o preparar() ja nao abre as fotos todas, abre uma de cada vez (ver FotoPorAbrir),
+# e o aviso do main() conta os pixeis verdadeiros, ver aviso_de_memoria().
+#
+# 1 DE OUTUBRO, decisao 102: a pilha sobe a 60, so em monte; o leque fica em 24. O Tiago: "A
+# pilha: ate 60 fotos em monte, depois da correcao de memoria." Medido antes de subir:
+#   o monte desenhado ate 80 fica sempre dentro do quadro e a foto de cima com 10 a 31% do
+#   ecra; mais fotos so alongam o clip. O travao era a memoria. Com a abertura uma a uma, o
+#   pico de uma fatia (preparar e desenhar os seus fotogramas) com 60 fotos da FINAIS foi de
+#   247 MB sem textos, 404 MB com um texto em cada foto e 395 MB com as 60 maiores, a de 48
+#   MP incluida: 2,8 GB com 7 fatias no pior caso. O aviso_de_memoria() conta por cima, e com
+#   textos ja propoe menos fatias. A camada das pousadas passou a incremental, ver
+#   camada_das_pousadas(): refeita do zero eram cerca de 3245 composicoes por fatia.
+#   O PRECO: com 60 fotos e encadeados de 0,7 s a minima e de 32,7 s, e cada foto fica 0,5 s,
+#   um relance como na rajada; um texto em cada foto nao se le (LEGENDA_MINIMO_S), e a Mesa
+#   avisa. Medido a 1 de outubro.
+#
+# 1 DE OUTUBRO, decisao 102: a colagem sobe a 30, em filas e espalhada. O Tiago: "A colagem: ate
+# 30 fotos." Medido antes de subir, com as proporcoes do inventario e da FINAIS: de 25 a 30, com
+# as filas novas de colagem_particoes() (4 a COLAGEM_MAIS_LINHAS filas de ate
+# COLAGEM_MAIS_POR_LINHA) e so as particoes em que o colagem_afastar() assentou (acima de 20, ver
+# COLAGEM_SO_ASSENTADAS_ACIMA), nenhuma foto sai
+# do ecra nem pisa o miolo de outra, e a mais pequena fica como com 20 (mediana de 1,0 a 1,2% do
+# ecra, 12 em 30 casos abaixo de 100 px de lado). A 36 e a 40 cai para 0,7 a 0,8% e 23 em 30
+# abaixo de 100 px: a 15 metros as fotos de grupo passam a textura, e por isso fica nos 30.
+# Antes disto uma colagem de 25 em filas rebentava com ValueError e parava o render.
+LIMITES_MONTE = {"colagem": (2, 30), "pilha": (2, 60)}
+# O LIMITE DE UM ESTILO, quando nao e o do tipo. O mergulho na grelha (decisao 101) e um estilo da
+# colagem, mas a grelha aguenta mais do que as filas: ate 36, decisao 102, medido a 1 de outubro
+# (36 fotos dao uma grelha de 6 por 6 com celulas de 311 por 171 px). Os mesmos numeros estao no
+# montar_da_mesa.LIMITES_ESTILO e no GRUPOS_ESTILO da Mesa, e o teste_limites_dos_grupos_iguais le
+# os tres. Quem pergunta pelo limite de um grupo passa por limites_do_grupo().
+LIMITES_ESTILO = {("colagem", "mergulho"): (2, 36)}
+
+
+def limites_do_grupo(tipo, estilo=None):
+    """(minimo, maximo) de fotos de um grupo deste tipo, no estilo da coluna tratamento.
+
+    O do estilo em LIMITES_ESTILO se o houver, senao o do tipo em LIMITES_MONTE. Um estilo
+    desconhecido, o "fiel" das montagens de antes ou nenhum dao o do tipo, que e o da omissao.
+    """
+    return LIMITES_ESTILO.get((tipo, (estilo or "").strip()), LIMITES_MONTE[tipo])
+
+
+MONTE_ATRASO = 0.35              # a primeira espera o encadeado, como no lado a lado
 MONTE_FOLGA = 1.4                 # a duracao minima: segundos com todas pousadas, ver duracao_minima_monte()
 MONTE_FRACAO_FIM = 0.3            # so no aperto e na agenda de antes, ver _agenda_de_antes()
 COLAGEM_ENTRADA = 0.32            # do ensaio
@@ -1447,6 +1488,12 @@ COLAGEM_MENOR_BANDA = 0.95        # ...mas so entre as que dao quase a melhor fo
 COLAGEM_POUCAS = 5                # ate aqui experimentam-se todas as particoes, como sempre
 COLAGEM_MUITAS_LINHAS = 4         # com mais fotos, filas equilibradas: ate 4 filas...
 COLAGEM_MUITAS_POR_LINHA = 6      # ...de ate 6 fotos cada
+COLAGEM_MAIS_LINHAS = 6           # acima de 24 (4 x 6), de 4 ate 6 filas equilibradas...
+COLAGEM_MAIS_POR_LINHA = 10       # ...de ate 10 fotos cada, ver colagem_particoes()
+# Acima disto a colagem_disposicao() so escolhe entre as particoes que assentaram. E o limite da
+# colagem ate 1 de outubro: de 2 a 20 as disposicoes ficam iguais ao byte as de antes, e de 21
+# para cima nenhuma colagem podia ter ido ao filme. Ver colagem_disposicao().
+COLAGEM_SO_ASSENTADAS_ACIMA = 20
 
 
 def vez_do_monte(n, duracao, cross_entra=0.0, cross_sai=0.0):
@@ -1784,7 +1831,40 @@ def colagem_particoes(n):
     panoramicas, a troco da mais pequena passar de 2% para 4 a 10% do ecra; e 12 verticais
     passam de tres filas de 4 com 40% do ecra para duas de 6 com 61%. E sao no maximo umas
     dezenas de particoes, em vez de pesar as 2048 de 12 fotos.
+
+    ACIMA DE COLAGEM_MUITAS_LINHAS x COLAGEM_MUITAS_POR_LINHA (24), MAIS FILAS. Ate 24 tudo fica
+    como estava, ao byte. Com 25 ou mais nao havia particao nenhuma, e o colagem_disposicao()
+    rebentava com ValueError (o max de uma lista vazia) e parava o render. Agora, como acima, so
+    filas equilibradas, de COLAGEM_MUITAS_LINHAS ate COLAGEM_MAIS_LINHAS filas de ate
+    COLAGEM_MAIS_POR_LINHA fotos: com 30, 8877, 7887 e as outras de 4 filas, 66666 e as de 6 filas.
+    Medido a 1 de outubro de 25 a 30 com proporcoes reais: as fotos ficam do tamanho das de 20.
+    Para nunca voltar a nao haver particao nenhuma, com mais fotos do que COLAGEM_MAIS_LINHAS x
+    COLAGEM_MAIS_POR_LINHA (60, que nenhum limite deixa chegar) ha uma so, com as filas que forem
+    precisas e as fotos a mais nas de cima.
     """
+    teto = COLAGEM_MUITAS_LINHAS * COLAGEM_MUITAS_POR_LINHA
+    if n > teto:
+        for filas in range(COLAGEM_MUITAS_LINHAS, COLAGEM_MAIS_LINHAS + 1):
+            base, resto = divmod(n, filas)
+            if base + (1 if resto else 0) > COLAGEM_MAIS_POR_LINHA:
+                continue
+            for mais in itertools.combinations(range(filas), resto):
+                linhas, k = [], 0
+                for f in range(filas):
+                    conta = base + (1 if f in mais else 0)
+                    linhas.append(list(range(k, k + conta)))
+                    k += conta
+                yield linhas
+        if n > COLAGEM_MAIS_LINHAS * COLAGEM_MAIS_POR_LINHA:
+            filas = -(-n // COLAGEM_MAIS_POR_LINHA)
+            base, resto = divmod(n, filas)
+            linhas, k = [], 0
+            for f in range(filas):
+                conta = base + (1 if f < resto else 0)
+                linhas.append(list(range(k, k + conta)))
+                k += conta
+            yield linhas
+        return
     if n <= COLAGEM_POUCAS:
         for cortes in itertools.product((False, True), repeat=n - 1):
             linhas = [[0]]
@@ -1867,23 +1947,40 @@ def colagem_disposicao(aspetos, focos=None, livre_ate=None):
             else:
                 lo = meio
         alturas = [min(t, lo * p) for t, p in zip(tetos, pesos)]
-        fotos = _colagem_assentar(aspetos, focos, linhas, alturas, (mx, my, g, alt_util, baixo))
+        fotos, assentou = _colagem_assentar(aspetos, focos, linhas, alturas, (mx, my, g, alt_util, baixo))
         areas = [f[2] * f[3] for f in fotos]
-        opcoes.append((sum(areas), min(areas), fotos))
+        opcoes.append((sum(areas), min(areas), fotos, assentou))
+    # ACIMA DE 20 FOTOS, SO AS PARTICOES QUE ASSENTARAM. Com as filas novas de
+    # colagem_particoes() a escolha de sempre ficava por vezes com uma em que o colagem_afastar()
+    # nao chegou a parar de empurrar em dez voltas, e ai a garantia do miolo nao vale: medido a 1
+    # de outubro, 6 em 30 colagens de 30 com proporcoes reais tinham a foto 25 ou a 20 a entrar
+    # 4 a 13 px no miolo da 18 ou da 13. So com as que assentaram, 0 em 30 a 25, a 30, a 36 e a 40.
+    # De 21 a 24 as particoes sao as de sempre, mas so passaram a poder ir ao filme com o limite
+    # a 30, e acontece o mesmo: na revisao de 1 de outubro, 3 em 256 colagens de 21 e 22 com
+    # proporcoes reais pisavam um miolo 1,1 a 1,6 px, e com o filtro nenhuma, com a foto mais
+    # pequena quase igual. Ate COLAGEM_SO_ASSENTADAS_ACIMA fica como estava, com todas, para as
+    # disposicoes de antes sairem iguais ao byte; e se nenhuma assentar fica a escolha de sempre
+    # entre todas, que e melhor do que nada.
+    if n > COLAGEM_SO_ASSENTADAS_ACIMA:
+        opcoes = [o for o in opcoes if o[3]] or opcoes
     # Uma foto minuscula ao lado de uma enorme nao e colagem, e engano: das que dao quase
     # tanta area como a melhor, fica a de maior foto mais pequena.
     # Mas nao a troco de nada: o maximo estrito da mais pequena chegava a abdicar de 5 a
     # 10% da area para a mais pequena crescer 0,5%. Dentro da banda, ficam as que chegam a
     # COLAGEM_MENOR_BANDA da melhor foto mais pequena, e dessas a de maior area.
-    topo = max(total for total, _menor, _fotos in opcoes)
+    topo = max(o[0] for o in opcoes)
     banda = [o for o in opcoes if o[0] >= COLAGEM_TOLERANCIA * topo - 1e-6]
-    melhor_menor = max(menor for _total, menor, _fotos in banda)
+    melhor_menor = max(o[1] for o in banda)
     finalistas = [o for o in banda if o[1] >= COLAGEM_MENOR_BANDA * melhor_menor - 1e-9]
     return max(finalistas, key=lambda o: o[0])[2]
 
 
 def _colagem_assentar(aspetos, focos, linhas, alturas, medidas):
-    """Uma particao da colagem ja assente: empurrada para nao tapar caras e encaixada no ecra."""
+    """Uma particao da colagem ja assente: empurrada para nao tapar caras e encaixada no ecra.
+
+    Devolve (fotos, assentou): assentou e o que o colagem_afastar() devolve, True quando a
+    ultima volta ja nao empurrou ninguem, que e quando a garantia do miolo vale.
+    """
     mx, my, g, alt_util, baixo = medidas
     n = len(aspetos)
     fotos = [None] * n
@@ -1898,8 +1995,8 @@ def _colagem_assentar(aspetos, focos, linhas, alturas, medidas):
                         COLAGEM_ANGULOS[i % len(COLAGEM_ANGULOS)]]
             x += w + g
         y += h + g
-    colagem_afastar(fotos, focos, (mx, my, L - mx, baixo))
-    return fotos
+    assentou = colagem_afastar(fotos, focos, (mx, my, L - mx, baixo))
+    return fotos, assentou
 
 
 def colagem_guardado(fotos, focos, i):
@@ -2005,6 +2102,11 @@ ESPALHADA_PRIMEIRA_MIN = 0.07     # do ecra a respirar, a primeira, para a prefe
 # nunca mais de 4% do ecra abaixo. Com metade das razoes tambem, uma de 6 deitadas com
 # legenda caia de 40% para 21% do ecra. O que se garante esta no
 # teste_colagem_e_pilha_com_muitas_fotos.
+# DE 13 A 30 (decisoes 087 e 102) sao as mesmas contas, sem nada de novo. Medido a 1 de outubro em
+# 48 espalhadas de 25 a 30 com proporcoes do inventario, com e sem legenda e foco: nenhuma fora do
+# ecra, nenhum miolo pisado, a mais pequena com pelo menos 0,56% do ecra, e cerca de 11 s de CPU por
+# disposicao (ate 17 s), que cada fatia faz ao preparar o clip. Nenhuma passa no espalhada_preferida():
+# com tantas fotos le-se como filas desencontradas, e nao como uma colagem solta.
 ESPALHADA_ABERTURAS_MUITAS = ESPALHADA_ABERTURAS[::2]
 ESPALHADA_SEGUNDA = 660.0         # de 6 fotos para cima: a primeira e a do ensaio, 760...
 ESPALHADA_ULTIMA = 440.0          # ...e as outras descem de 660 ate isto, pela mesma razao
@@ -2213,12 +2315,13 @@ PILHA_LEQUE_VE = 0.20             # cada foto de baixo com pelo menos isto da ar
 PILHA_LEQUE_FOLGA = 0.06          # a disposicao procura esta margem a mais, contra o esbatido
 PILHA_LEQUE_SOBES = (0.035, 0.06, 0.09)   # desvios de cima para baixo que se experimentam, fracao de A
 PILHA_LEQUE_ABRE = 90.0 / 1920.0  # entre lugares vizinhos, fracao de L: o que o monte desvia, no minimo
-# O LEQUE SO ATE 24 FOTOS, decisao 087. A pilha vai ate 40, mas so em monte, onde as de baixo
-# ficam tapadas de proposito. No leque cada foto de baixo tem de ficar com PILHA_LEQUE_VE a vista
-# no fim, e desenhado a serio (e nao so pela geometria, que dizia 23% a 40) isso cumpre-se em
-# todas as formas ate 24 e falha a partir de 25 (17,8% com fotos misturadas) e a 40 (16,6%):
-# a moldura de 6 pixeis e o esbatido comem a tira de fora quando as fotos encolhem. Medido a 28
-# de setembro; o montar_da_mesa.py poe em monte um leque com mais do que isto, e diz-lo.
+# O LEQUE SO ATE 24 FOTOS, decisao 087. A pilha vai ate 60 (decisao 102), mas so em monte,
+# onde as de baixo ficam tapadas de proposito. No leque cada foto de baixo tem de ficar com
+# PILHA_LEQUE_VE a vista no fim, e desenhado a serio (e nao so pela geometria, que dizia 23% a
+# 40) isso cumpre-se em todas as formas ate 24 e falha a partir de 25 (17,8% com fotos
+# misturadas) e a 40 (16,6%): a moldura de 6 pixeis e o esbatido comem a tira de fora quando as
+# fotos encolhem. Medido a 28 de setembro e confirmado desenhado a 1 de outubro; o
+# montar_da_mesa.py poe em monte um leque com mais do que isto, e diz-lo.
 PILHA_LEQUE_MAX = 24
 
 
@@ -2439,9 +2542,213 @@ def sitio_da_faixa_na_colagem(lugares, k, texto, foco, pisa, sobe, tamanho=None)
     return False, baixo
 
 
+# ---------------------------------------------------------------- as fotos de um grupo
+# UMA FOTO ABERTA DE CADA VEZ (1 de outubro). O preparar() abria as fotos todas de uma colagem
+# ou pilha em resolucao total antes de fazer os sprites, e as 7 fatias preparam o mesmo clip ao
+# mesmo tempo. No render da madrugada de 1 de outubro a pilha de 15 levou cada fatia de 310 para
+# 910 MB e deixou o PC com 84 MB livres; com as 40 maiores fotos da FINAIS seriam cerca de
+# 3,6 GB por fatia. O preparar_monte() so precisa do tamanho de todas para as dispor e de cada
+# uma aberta para lhe fazer os sprites: o tamanho le-se do cabecalho, e cada foto abre-se na sua
+# vez e sai antes de a seguinte abrir. Os sprites sao os mesmos, ao byte.
+ORIENTACAO_EXIF = 0x0112                 # a etiqueta que o ImageOps.exif_transpose() le
+ORIENTACOES_DE_LADO = (5, 6, 7, 8)       # as que rodam um quarto de volta e trocam largura e altura
+
+
+def tamanho_da_foto(caminho):
+    """(largura, altura) da foto como o render a abre, lidas do cabecalho, sem a descodificar.
+
+    E o tamanho DEPOIS do exif_transpose(): as orientacoes 5 a 8 rodam a foto um quarto de
+    volta. A orientacao le-se como ele a le, pelo getexif(); num PNG sem EXIF no cabecalho
+    isso descodifica a foto, e na FINAIS ha um.
+
+    A TIFF JA VEM RODADA (1 de outubro). Na Pillow 12.3 o TiffImageFile._setup() ja da o
+    tamanho de pe quando a orientacao e 5 a 8, e o load() roda os pixeis; trocar outra vez
+    dispunha uma TIFF de 1200x800 com a orientacao 6 como deitada, e o sprite_monte() esticava
+    a foto de pe para esse lugar. Hoje nao ha nenhuma TIFF na FINAIS, mas o inventario.py
+    aceita-as e o consolidar.py copia o original tal como esta.
+    """
+    with Image.open(caminho) as im:
+        w, h = im.size
+        if im.format == "TIFF":
+            return (w, h)
+        orientacao = im.getexif().get(ORIENTACAO_EXIF, 1)
+    return (h, w) if orientacao in ORIENTACOES_DE_LADO else (w, h)
+
+
+def abrir_foto(caminho):
+    """A foto de pe e em RGB, com os pixeis do ImageOps.exif_transpose(Image.open(c)).convert("RGB").
+
+    SEM AS DUAS COPIAS DE ANTES. O exif_transpose() de omissao devolve uma copia mesmo quando
+    nao roda nada, e o convert("RGB") de uma foto que ja e RGB outra: no instante de abrir uma
+    foto de 48 MP havia 384 MB dela em memoria em vez de 192, em cada fatia. Aqui roda-se no
+    sitio e so se converte o que nao e RGB, como a foto RGBA da FINAIS. Os pixeis sao os
+    mesmos, ao byte, nas 719 fotos da FINAIS (1 de outubro).
+    """
+    im = Image.open(caminho)
+    ImageOps.exif_transpose(im, in_place=True)
+    if im.mode != "RGB":
+        im = im.convert("RGB")
+    return im
+
+
+class FotoPorAbrir:
+    """Uma foto de um grupo que so se abre quando lhe chega a vez: o tamanho vem do cabecalho.
+
+    Tem o width e o height de uma imagem aberta, que e tudo o que o preparar_monte() e o
+    preparar_mergulho() usam antes de fazer os sprites, e abre-se com aberta().
+    """
+
+    def __init__(self, caminho):
+        self.caminho = caminho
+        self.width, self.height = tamanho_da_foto(caminho)
+        self.size = (self.width, self.height)
+
+    def abrir(self):
+        im = abrir_foto(self.caminho)
+        if im.size != self.size:
+            # Nao acontece em nenhuma foto da FINAIS. Se acontecer, o grupo foi disposto com a
+            # forma do cabecalho e esta foto sai esticada: diz-se, nao se corrige sozinho.
+            print("  AVISO: a foto %s abriu com %dx%d e o cabecalho dizia %dx%d; no grupo sai "
+                  "esticada" % (os.path.basename(self.caminho), im.width, im.height,
+                                self.width, self.height))
+        return im
+
+
+def aberta(foto):
+    """A imagem aberta: uma FotoPorAbrir abre-se agora, uma imagem ja aberta passa como esta."""
+    return foto.abrir() if isinstance(foto, FotoPorAbrir) else foto
+
+
+# O AVISO DE MEMORIA DO main() CONTA OS PIXEIS VERDADEIROS (1 de outubro). Contava 0,021 GB por
+# foto, que sao 5 MP, e so disparava acima de 20 fotos; as fotos da FINAIS tem em media 7 MP e
+# ate 48, e a pilha de 15 da madrugada de 1 de outubro, com 519 MB de fotos, nao disparou nada.
+# Com a abertura uma a uma, o que cada fatia chega a ter de um grupo e a maior foto aberta, os
+# sprites que ficam e os ecras inteiros do desenho; medido com fotos reais, ver memoria_do_grupo().
+MEMORIA_POR_PIXEL = 4                    # a Pillow guarda uma foto RGB em 4 bytes por pixel
+ORIENTACOES_QUE_RODAM = (2, 3, 4, 5, 6, 7, 8)   # as que o exif_transpose() vira ou roda
+MEMORIA_SPRITE = 3.5e6                   # um sprite de pilha: medidos 2,8 a 3,3 MB em media
+MEMORIA_ECRAS = 4                        # o fundo, a camada, a de baixo e a tela do fotograma
+# O LIMITE DO AVISO, somado nas fatias. A pilha de 15 juntou 3,6 GB as 7 fatias e deixou o PC
+# com 84 MB livres: 3 GB deixa margem. E o nivel a que o aviso de antes disparava com 7 fatias,
+# 20 fotos x 0,021 GB x 7 = 2,9 GB.
+MEMORIA_AVISO = 3.0e9
+
+
+def memoria_ao_abrir(caminho):
+    """Bytes que a foto chega a ter em memoria no abrir_foto(): ela, mais a copia se a roda ou converte.
+
+    Rodar no sitio ainda faz uma copia, e converter tambem: uma foto de 48 MP com a orientacao
+    6 chega a 384 MB no instante de abrir, e de pe so a 192 (medido a 1 de outubro). Pelo
+    cabecalho, sem a descodificar.
+    """
+    with Image.open(caminho) as im:
+        w, h = im.size
+        copia = im.getexif().get(ORIENTACAO_EXIF, 1) in ORIENTACOES_QUE_RODAM or im.mode != "RGB"
+    return MEMORIA_POR_PIXEL * w * h * (2 if copia else 1)
+
+
+def memoria_do_grupo(clip):
+    """Os bytes que preparar e desenhar este grupo chegam a pedir a cada fatia.
+
+    A maior foto aberta, que e a unica em resolucao total de cada vez; os sprites que ficam,
+    um por foto e dois na pilha com o texto que some; e os ecras inteiros do desenho. Medido
+    a 1 de outubro, so o preparar() com fotos reais: a pilha de 8 da v3 com a foto de 48 MP
+    rodada 394 MB (a conta da 445), a de 15 com textos 165 MB (a conta da 187), 40 sorteadas
+    da FINAIS com textos 333 MB (a conta da 441) e as 40 maiores 396 MB (a conta da 557). A
+    conta fica por cima de proposito: a maior pode abrir depois de os sprites estarem feitos.
+    """
+    aberta, fica = memoria_do_grupo_em_partes(clip)
+    return aberta + fica
+
+
+def memoria_do_grupo_em_partes(clip):
+    """(a maior foto aberta, o que fica preparado): as duas partes de memoria_do_grupo(), em bytes.
+
+    O que fica sao os sprites e os ecras inteiros, que vivem no pronto do grupo enquanto ele
+    nao sai da fatia; a foto aberta so existe enquanto se prepara. Sem fotos que abram, (0, 0).
+    """
+    caminhos = [c for c in (clip.get("_caminhos") or []) if c and os.path.exists(c)]
+    ao_abrir = []
+    for c in caminhos:
+        try:
+            ao_abrir.append(memoria_ao_abrir(c))
+        except OSError:
+            pass        # uma foto que nao abre fica para o preparar(), como sempre: o aviso nao para nada
+    if not ao_abrir:
+        return 0, 0
+    textos = ler_textos_fotos(clip.get("textos_fotos"))
+    opcoes = ler_textos_opcoes(clip.get("textos_opcoes"))
+    dois = (clip.get("tipo") == "pilha" and textos is not None and opcoes["modo"] != "legenda"
+            and opcoes["tapadas"] == "some")
+    return (max(ao_abrir),
+            len(caminhos) * (2 if dois else 1) * MEMORIA_SPRITE + MEMORIA_ECRAS * MEMORIA_POR_PIXEL * L * A)
+
+
+def _segundos_ou_nada(valor):
+    """O valor de uma coluna de segundos como float, ou None se estiver vazio ou nao for numero."""
+    try:
+        return float(valor)
+    except (TypeError, ValueError):
+        return None
+
+
+def aviso_de_memoria(clips, fatias):
+    """O aviso do main() se o grupo mais pesado, com estas fatias, passa de MEMORIA_AVISO; senao None.
+
+    As fatias preparam o mesmo clip ao mesmo tempo, e por isso o pico soma-se nelas. Diz-se
+    antes de comecar, com o remedio, e nao se muda nada sozinho: uma fatia que morre por falta
+    de memoria para o render inteiro a meio, e uma maquina a paginar fica muito mais lenta.
+
+    DOIS GRUPOS SEGUIDOS SOMAM-SE (revisao de 1 de outubro). Numa fatia o pronto de um grupo so
+    sai no libertar_prontos() do primeiro bloco de LIMPEZA_A_CADA fotogramas em que ja nao esta
+    ativo, ate 8 s depois de acabar: um grupo que comece antes disso prepara-se e desenha-se com
+    os sprites e os ecras do anterior ainda em memoria. Medido com duas pilhas de 60 seguidas,
+    sem textos: 256 MB por fatia so com a primeira e 492 MB com as duas, 3,44 GB com 7 fatias,
+    e o aviso, que contava cada grupo sozinho, calava-se nos 2,6 GB. Conta-se por isso, a cada
+    grupo, o que fica dos que comecaram antes e podem ainda nao ter saido, por cima como o
+    resto da conta: a limpeza pode calhar mais cedo (a v3 tem duas pilhas seguidas, a 139 e a
+    140, e com elas a conta passa de 3,1 para 3,5 GB com 7 fatias; continua a propor 6). Sem
+    inicio_s e fim_s, um grupo conta sozinho.
+    """
+    grupos = []
+    for c in clips:
+        if c.get("tipo") not in LIMITES_MONTE:
+            continue
+        aberta, fica = memoria_do_grupo_em_partes(c)
+        grupos.append({"clip": c, "pede": aberta + fica, "fica": fica,
+                       "inicio": _segundos_ou_nada(c.get("inicio_s")), "fim": _segundos_ou_nada(c.get("fim_s"))})
+    if not grupos:
+        return None
+    sai_depois = LIMPEZA_A_CADA / float(FPS)
+    pico, grupo, antes = 0, None, []
+    for g in grupos:
+        presos = [o for o in grupos if o is not g and None not in (g["inicio"], o["inicio"], o["fim"])
+                  and o["inicio"] < g["inicio"] < o["fim"] + sai_depois]
+        pede = g["pede"] + sum(o["fica"] for o in presos)
+        if grupo is None or pede > pico:
+            pico, grupo, antes = pede, g, presos
+    if pico * fatias <= MEMORIA_AVISO:
+        return None
+    clip = grupo["clip"]
+    onde = "" if grupo["inicio"] is None else " aos %d:%02d" % (int(grupo["inicio"]) // 60, int(grupo["inicio"]) % 60)
+    if len(antes) == 1:
+        junto = (", com a %s de %d fotos de antes ainda em memoria,"
+                 % (antes[0]["clip"].get("tipo"), len(antes[0]["clip"].get("_caminhos") or [])))
+    elif antes:
+        junto = ", com %d grupos de antes ainda em memoria," % len(antes)
+    else:
+        junto = ""
+    return ("  ATENCAO: a %s de %d fotos%s%s pede ate %s GB a cada fatia, %s GB com %d fatias, "
+            "acima dos %s GB de folga (no render de 1 de outubro, 3,6 GB a mais deixaram o PC "
+            "com 84 MB livres). Se tiver pouca memoria livre, corre com --fatias %d."
+            % (clip.get("tipo"), len(clip.get("_caminhos") or []), onde, junto,
+               ("%.2f" % (pico / 1e9)).replace(".", ","), ("%.1f" % (pico * fatias / 1e9)).replace(".", ","),
+               fatias, ("%.0f" % (MEMORIA_AVISO / 1e9)), max(1, int(MEMORIA_AVISO // pico))))
+
+
 def preparar_monte(tipo, imagens, focos, texto, cross_entra=0.0, cross_sai=None, estilo=None,
                    textos=None, opcoes=None, duracao=None):
-    """Colagem ou pilha, a partir das imagens ja abertas.
+    """Colagem ou pilha, a partir das imagens, abertas ou por abrir (FotoPorAbrir).
 
     `cross_entra` e o encadeado com o clip de antes e `cross_sai` o do seguinte; sem
     este, conta o mesmo que o de entrada. Ver agenda_monte(). `estilo` e o da coluna
@@ -2494,9 +2801,7 @@ def preparar_monte(tipo, imagens, focos, texto, cross_entra=0.0, cross_sai=None,
         else:
             lugares = colagem_disposicao(aspetos, focos, livre_ate)
         cresce = 1.0 + COLAGEM_RESPIRA      # no fim, a respirar, fica a 1:1
-        fundo = cobrir(imagens[0], max(1, L // 4), max(1, A // 4))
-        fundo = fundo.filter(ImageFilter.GaussianBlur(15)).resize((L, A), Image.BICUBIC)
-        fundo = Image.blend(Image.new("RGB", (L, A), (8, 8, 10)), fundo, 0.28)
+        fundo = None                        # a primeira foto desfocada, feita no ciclo com ela aberta
     else:
         if estilo == "leque":
             lugares = pilha_leque(aspetos, livre_ate)
@@ -2505,7 +2810,7 @@ def preparar_monte(tipo, imagens, focos, texto, cross_entra=0.0, cross_sai=None,
         cresce = 1.0                        # a pilha so recua, nunca cresce
         fundo = Image.new("RGB", (L, A), (10, 10, 12))
     fotos = []
-    for k, (im, (cx, cy, w, h, ang)) in enumerate(zip(imagens, lugares)):
+    for k, (foto, (cx, cy, w, h, ang)) in enumerate(zip(imagens, lugares)):
         moldura = moldura_monte(w, h)
         chegada = (cx, cy)
         if tipo == "colagem":
@@ -2541,6 +2846,13 @@ def preparar_monte(tipo, imagens, focos, texto, cross_entra=0.0, cross_sai=None,
             em_cima, pisado = sitio_da_faixa_na_colagem(lugares, k, texto_foto, foco, pisa, sobe, tamanho)
             if not em_cima and pisado > TEXTO_FOTO_PISADA:
                 avisar_texto_pisado(k, texto_foto, pisado)
+        # A FOTO SO ABRE AQUI, para os seus dois sprites, e sai antes de a seguinte abrir: ver
+        # FotoPorAbrir. O fundo da colagem e a primeira desfocada, e faz-se com ela aberta.
+        im = aberta(foto)
+        if fundo is None:
+            fundo = cobrir(im, max(1, L // 4), max(1, A // 4))
+            fundo = fundo.filter(ImageFilter.GaussianBlur(15)).resize((L, A), Image.BICUBIC)
+            fundo = Image.blend(Image.new("RGB", (L, A), (8, 8, 10)), fundo, 0.28)
         sprite = sprite_monte(im, w * cresce, h * cresce, int(round(moldura * cresce)), ang,
                               texto_foto, w, foco, pisa, sobe, tamanho, em_cima)
         sprite_sem = None
@@ -2560,6 +2872,7 @@ def preparar_monte(tipo, imagens, focos, texto, cross_entra=0.0, cross_sai=None,
                                       [contorno_monte(lugares[j]) for j in range(k + 1, len(lugares))])
                 if tapado > TEXTO_FOTO_TAPADO:
                     avisar_texto_tapado(k, texto_foto, tapado)
+        im = None
         fotos.append({"centro": (cx, cy), "chegada": chegada, "tamanho": (w, h),
                       "angulo": ang, "moldura": moldura, "sprite": sprite, "texto": texto_foto,
                       "sprite_sem": sprite_sem})
@@ -2705,6 +3018,51 @@ def conjunto_monte(pronto):
     return pronto["_conjunto"]
 
 
+def camada_das_pousadas(pronto, pousadas, t_rel, duracao, inicios, entrada):
+    """O fundo com as fotos pousadas por cima, pela ordem: ao byte, o mesmo que compo-las todas de novo.
+
+    PORQUE (1 de outubro): a camada das pousadas refazia-se do zero cada vez que mais uma
+    pousava, n(n+1)/2 composicoes por fatia, e com textos e o "some" ainda mais, porque a
+    chave muda durante o desvanecer. Numa pilha de 60 com textos eram cerca de 3245
+    composicoes por fatia, de 4 a 18 minutos com a maquina carregada (estimativa da
+    verificacao de 1 de outubro). Agora guarda-se tambem a camada DE BAIXO, com as pousadas
+    que ja nao mudam, e cada camada nova e essa mais as de cima: uma composicao por foto.
+
+    O QUE JA NAO MUDA: uma pousada cujo sprite ja e o do fim, o de sempre, ou com o "some" o
+    sem texto. Uma pousada com outra pousada por cima esta sempre assim, que o texto dela
+    acabou de desaparecer antes de a seguinte pousar, ver alfa_texto_pilha(); a de cima so
+    quando nao tem texto a desaparecer. Nao se presume: o sprite_no_instante() de cada uma
+    tem de o dizer, e a primeira que ainda nao estiver no fim compoe-se de novo, com as de
+    cima dela, em cada camada nova.
+
+    A de baixo serve enquanto o tempo anda para a frente, com a mesma duracao e as mesmas
+    fotos por baixo, que e como o render e cada fatia pedem os fotogramas: uma foto no fim
+    fica no fim. Um fotograma para tras, ou outra duracao, refaz a de baixo a partir do
+    fundo: da o mesmo, mais devagar. A composicao e sempre a mesma, as mesmas fotos pela
+    mesma ordem sobre o mesmo fundo, so feita em dois tempos, e por isso os bytes sao os
+    mesmos.
+    """
+    cresce = pronto["cresce"]
+    dur = round(duracao, 4)
+    baixo = pronto.get("_baixo")
+    if (baixo is None or baixo["duracao"] != dur or t_rel < baixo["desde"]
+            or baixo["fotos"] != [p[0] for p in pousadas[:len(baixo["fotos"])]]):
+        baixo = {"duracao": dur, "desde": float("-inf"), "fotos": [], "tela": pronto["fundo"].copy()}
+        pronto["_baixo"] = baixo
+    while len(baixo["fotos"]) < len(pousadas):
+        k, x, y, tam, alfa, _ = pousadas[len(baixo["fotos"])]
+        sprite, texto = sprite_no_instante(pronto, k, t_rel, inicios, entrada)
+        if texto not in (None, 0.0):
+            break
+        compor(baixo["tela"], sprite, x, y, tam / cresce, alfa)
+        baixo["fotos"].append(k)
+        baixo["desde"] = t_rel
+    tela = baixo["tela"].copy()
+    for k, x, y, tam, alfa, _ in pousadas[len(baixo["fotos"]):]:
+        compor(tela, sprite_no_instante(pronto, k, t_rel, inicios, entrada)[0], x, y, tam / cresce, alfa)
+    return tela
+
+
 def desenhar_monte(pronto, t_rel, duracao, por_foto=False):
     """Um fotograma da colagem ou da pilha. `por_foto` desliga a camada do conjunto, para os testes."""
     poses, zoom = poses_monte(pronto, t_rel, duracao)
@@ -2717,6 +3075,8 @@ def desenhar_monte(pronto, t_rel, duracao, por_foto=False):
     # AS QUE JA ESTAO PARADAS COMPOEM-SE UMA VEZ. Enquanto as outras entram e o
     # conjunto ainda nao se mexe, as pousadas nao mudam de um fotograma para o
     # seguinte: guarda-se essa camada e so a que esta a chegar e composta de novo.
+    # E a camada nova faz-se sobre a de baixo, sem recompor as de baixo, ver
+    # camada_das_pousadas().
     # A chave inclui a duracao, e a camada so se usa quando nada mais se mexe,
     # por isso a ordem por que se pedem os fotogramas nao muda nenhum pixel.
     #
@@ -2730,11 +3090,8 @@ def desenhar_monte(pronto, t_rel, duracao, por_foto=False):
             alfa_topo = sprite_no_instante(pronto, poses[assentes - 1][0], t_rel, inicios, entrada)[1]
         chave = (round(duracao, 4), assentes, alfa_topo)
         if pronto.get("_camada") is None or pronto["_camada"][0] != chave:
-            base = pronto["fundo"].copy()
-            for k, x, y, tam, alfa, _ in poses[:assentes]:
-                compor(base, sprite_no_instante(pronto, k, t_rel, inicios, entrada)[0],
-                       x, y, tam / cresce, alfa)
-            pronto["_camada"] = (chave, base)
+            pronto["_camada"] = (chave, camada_das_pousadas(pronto, poses[:assentes], t_rel, duracao,
+                                                            inicios, entrada))
         tela = pronto["_camada"][1].copy()
     elif assentes == len(fotos) and not por_foto:
         topo, (ox, oy), camada = conjunto_monte(pronto)
@@ -2769,33 +3126,58 @@ MERGULHO_ESTILO = "mergulho"
 MERGULHO_FOLGA = 8          # linha preta entre as fotos, a do lado a lado
 MERGULHO_ATRASO = 0.35      # a primeira espera que o encadeado de entrada acabe
 MERGULHO_ENTRA = 0.35       # segundos que cada foto leva a aparecer
-MERGULHO_ENTRE = 0.18       # atraso entre uma foto e a seguinte
+MERGULHO_ENTRE = 0.18       # atraso entre uma foto e a seguinte, ver mergulho_entre()
 MERGULHO_ESPERA = 1.0       # a grelha inteira no ecra, antes de mergulhar
-MERGULHO_DESCE = 1.2        # o mergulho
+MERGULHO_DESCE = 1.2        # o mergulho na grelha de 3 por 3, ver mergulho_desce()
 MERGULHO_FICA = 0.8         # a ultima sozinha, antes do encadeado de saida
 MERGULHO_RESPIRA = 0.03     # o que a grelha aproxima enquanto espera
 MERGULHO_FICA_ZOOM = 0.03   # o que a ultima aproxima depois do mergulho
 MERGULHO_DOBRO = 2          # a grelha desenha-se a esta escala do ecra
+# A CELULA TEM FORMATO DE FOTOGRAFIA (1 de outubro, decisao 102). A regra de 30 de setembro punha
+# primeiro as celulas vazias, e todo o numero com poucos divisores dava tiras em pe: 5 fotos numa
+# fila so de 374 x 1064 (0,35), 13 em 139 x 528 (0,26), 3, 7, 11, 14, 17, 19, 22, 23, 26 e 29 entre
+# 0,26 e 0,59. Agora o formato da celula vem primeiro, entre MERGULHO_ASPETO_MIN e _MAX, e so depois
+# as vazias, com a ultima fila centrada; por fim o mais perto de 3:2. O 9, o 12, o 16 e o 20 ficam
+# como estavam. O TETO E 2,2 E NAO 2,1 por causa da legenda: com uma legenda de uma linha a grelha
+# fica com 900 de altura, e com 2,1 o 9 passava a 4, 4 e 1 e o 4 a 3 e 1; com 2,2 ficam 3 por 3 e
+# 2 por 2, com celulas de 2,17 e 2,16. Com 2 fotos nao ha nenhuma dentro e fica a menos fora, 2 por
+# 1, de 0,89.
+MERGULHO_ASPETO_MIN = 1.0
+MERGULHO_ASPETO_MAX = 2.2
+MERGULHO_ASPETO_ALVO = 1.5  # 3:2, o formato da maior parte das fotos
+# A GRELHA ENCHE EM ATE 4 S (1 de outubro). Com os 0,18 s entre fotos de sempre, 36 levavam 6,7 s a
+# aparecer. Ate 19 fotos fica como estava; acima o intervalo encolhe para a grelha encher em
+# MERGULHO_ENCHE_MAX, contando a espera da primeira e a entrada da ultima: 0,174 s com 20 e 0,094 s
+# com 36. Com 36 aparecem tres a quatro ao mesmo tempo, e ja nao e uma a uma.
+MERGULHO_ENCHE_MAX = 4.0
+# NADA ENCOLHE ABAIXO DE 40% do que devia. Quando o clip e curto encolhe por esta ordem: o encher, a
+# espera, a ultima sozinha e so por fim o mergulho, que e o que se veio ver (1 de outubro; antes
+# encolhia tudo por igual, o mergulho incluido).
+MERGULHO_MINIMO = 0.4
 
 
 def mergulho_grelha(n, larg, alt, folga=MERGULHO_FOLGA):
     """As celulas da grelha de n fotos: [(x, y, w, h)] em pixeis, pela ordem das fotos.
 
-    Escolhe o numero de colunas com menos celulas vazias e, entre esses, a celula mais
-    perto de 3:2, que e o formato da maior parte das fotos. A ultima fila, se tiver menos
-    fotos, fica centrada: uma celula preta vazia num canto lia-se como uma foto em falta.
+    `alt` e a altura que a grelha ocupa a partir do cimo do ecra: o ecra inteiro, ou ate a legenda
+    do clip, ver mergulho_altura(). As colunas escolhem-se pela nota (fora, vazias, longe de 3:2):
+    primeiro a celula dentro do formato de fotografia, MERGULHO_ASPETO_MIN a MERGULHO_ASPETO_MAX, ou
+    a menos fora dele; depois as menos celulas vazias; depois a mais perto de 3:2. A ultima fila,
+    se tiver menos fotos, fica centrada: uma celula preta vazia num canto lia-se como uma foto em
+    falta. A Mesa tem a mesma conta, em grelhaMergulho().
     """
     melhor = None
     for cols in range(1, n + 1):
         filas = int(math.ceil(n / float(cols)))
         vazias = cols * filas - n
-        aspeto = (larg / float(cols)) / (alt / float(filas))
-        nota = (vazias, abs(math.log(aspeto / 1.5)))
+        cw = (larg - folga * (cols + 1)) / float(cols)
+        ch = (alt - folga * (filas + 1)) / float(filas)
+        aspeto = cw / ch
+        fora = max(0.0, math.log(MERGULHO_ASPETO_MIN / aspeto), math.log(aspeto / MERGULHO_ASPETO_MAX))
+        nota = (fora, vazias, abs(math.log(aspeto / MERGULHO_ASPETO_ALVO)))
         if melhor is None or nota < melhor[0]:
-            melhor = (nota, cols, filas)
-    _, cols, filas = melhor
-    cw = (larg - folga * (cols + 1)) / float(cols)
-    ch = (alt - folga * (filas + 1)) / float(filas)
+            melhor = (nota, cols, filas, cw, ch)
+    _, cols, filas, cw, ch = melhor
     celulas = []
     for k in range(n):
         f, c = divmod(k, cols)
@@ -2805,23 +3187,188 @@ def mergulho_grelha(n, larg, alt, folga=MERGULHO_FOLGA):
     return celulas
 
 
-def mergulho_tempos(n, duracao, entra=0.0, sai=0.0):
-    """(atraso, entra_foto, entre, espera, desce, fica) do mergulho, a caber na duracao.
+def mergulho_altura(capa):
+    """A altura da grelha: o ecra inteiro, ou com legenda ate MONTE_LEGENDA_FOLGA acima da faixa dela.
 
-    Com tempo a mais, a sobra vai para a espera, com a grelha inteira no ecra. Com tempo a
-    menos, tudo encolhe por igual, e nada fica abaixo de 40% do que devia: um clip curto
-    de mais mergulha depressa, mas mergulha.
+    O LUGAR DA LEGENDA FICA LIVRE (1 de outubro), como na colagem em filas. A faixa de uma linha
+    vai de 922 a 1047, com alfa 165, e com a grelha no ecra inteiro tapava 36% da ultima celula
+    com 9 fotos, 48% com 20 e 73% com 36: justamente a foto onde se mergulha. Durante o mergulho a
+    grelha desce para o lugar da legenda, e no fim a legenda fica por cima da ultima a encher o
+    ecra, como numa foto sozinha. `capa` e a de faixa_texto(), ou None sem legenda.
+    """
+    if capa is None:
+        return float(A)
+    caixa = capa[1].getbbox()
+    return float(caixa[1] - MONTE_LEGENDA_FOLGA * A) if caixa else float(A)
+
+
+def mergulho_cobre(celula):
+    """Quanto a celula tem de crescer para cobrir o ecra: e a escala da camara no fim do mergulho."""
+    _x, _y, w, h = celula
+    return max(L / float(w), A / float(h))
+
+
+# A VELOCIDADE DO MERGULHO E A DA GRELHA DE 3 POR 3 (1 de outubro). Numa grelha maior a celula e
+# mais pequena e o zoom maior: em 1,2 s, o mergulho numa de 36 (6,3 vezes) parecia o dobro da
+# velocidade do de 9 (3,1 vezes). Dura em proporcao ao logaritmo do zoom, que e o que o olho le
+# numa escala geometrica: 1,74 s com 20 e 1,96 s com 36. Abaixo de 9 fica nos 1,2 s de sempre.
+MERGULHO_COBRE_REF = mergulho_cobre(mergulho_grelha(9, L, A)[-1])
+
+
+def mergulho_entre(n):
+    """O intervalo entre uma foto e a seguinte: MERGULHO_ENTRE, ou menos para encher em MERGULHO_ENCHE_MAX."""
+    if n < 2:
+        return MERGULHO_ENTRE
+    return min(MERGULHO_ENTRE, (MERGULHO_ENCHE_MAX - MERGULHO_ATRASO - MERGULHO_ENTRA) / float(n - 1))
+
+
+def mergulho_desce(cobre):
+    """Quanto dura o mergulho ate a celula cobrir o ecra, ver MERGULHO_COBRE_REF."""
+    return MERGULHO_DESCE * max(1.0, math.log(cobre) / math.log(MERGULHO_COBRE_REF))
+
+
+def _mergulho_partes(n, cobre):
+    """O que cada parte pede, pela ordem em que encolhe: encher, espera, a ultima sozinha e o mergulho."""
+    return [MERGULHO_ENTRA + mergulho_entre(n) * (n - 1), MERGULHO_ESPERA, MERGULHO_FICA,
+            mergulho_desce(cobre or MERGULHO_COBRE_REF)]
+
+
+def mergulho_tempos(n, duracao, entra=0.0, sai=0.0, cobre=None):
+    """Os tempos do mergulho a caber na duracao, e os trocos em que a camara se move.
+
+    Devolve {atraso, entra, entre, espera, desce, fica, trocos}: `entra` e o que cada foto leva a
+    aparecer, `entre` o intervalo entre fotos, e `trocos` a lista [(nome, inicio, fim)] em segundos
+    do clip: encher, espera, desce e fica. `cobre` e o da celula onde se mergulha, que da a duracao
+    do mergulho (mergulho_desce); sem ele, o da grelha de 3 por 3.
+
+    Com tempo a mais, a sobra vai para a espera, com a grelha inteira no ecra. Com tempo a menos
+    encolhe primeiro o encher (a entrada e o intervalo pelo mesmo fator), depois a espera, depois a
+    ultima sozinha e por fim o mergulho, cada um ate MERGULHO_MINIMO do que pedia. Abaixo disso o
+    clip acaba antes de a camara parar, e e por isso que o montar_da_mesa.py e a Mesa avisam abaixo
+    de duracao_minima_mergulho().
     """
     atraso = min(MERGULHO_ATRASO, max(entra, 0.0))
-    partes = [MERGULHO_ENTRA, MERGULHO_ENTRE * (n - 1), MERGULHO_ESPERA, MERGULHO_DESCE,
-              MERGULHO_FICA]
+    partes = _mergulho_partes(n, cobre)
     livre = max(0.0, duracao - atraso - max(sai, 0.0))
-    f = min(1.0, max(0.4, livre / sum(partes)))
-    entra_foto, entre, espera, desce, fica = (MERGULHO_ENTRA * f, MERGULHO_ENTRE * f,
-                                              MERGULHO_ESPERA * f, MERGULHO_DESCE * f,
-                                              MERGULHO_FICA * f)
-    espera += max(0.0, livre - (entra_foto + entre * (n - 1) + espera + desce + fica))
-    return atraso, entra_foto, entre, espera, desce, fica
+    falta = sum(partes) - livre
+    ficam = []
+    for p in partes:
+        tira = min(max(falta, 0.0), p * (1.0 - MERGULHO_MINIMO))
+        ficam.append(p - tira)
+        falta -= tira
+    encher, espera, fica, desce = ficam
+    f = encher / partes[0] if partes[0] else 1.0
+    espera += max(0.0, -falta)
+    entra_foto, entre = MERGULHO_ENTRA * f, mergulho_entre(n) * f
+    todas = atraso + entra_foto + entre * (n - 1)
+    comeca = todas + espera
+    return {"atraso": atraso, "entra": entra_foto, "entre": entre, "espera": espera, "desce": desce,
+            "fica": fica, "trocos": [("encher", 0.0, todas), ("espera", todas, comeca),
+                                     ("desce", comeca, comeca + desce),
+                                     ("fica", comeca + desce, comeca + desce + fica)]}
+
+
+def duracao_mergulho(n, entra=0.0, sai=0.0, cobre=None):
+    """A duracao em que nada encolhe nem sobra: a que a Mesa propoe ao juntar."""
+    return min(MERGULHO_ATRASO, max(entra, 0.0)) + sum(_mergulho_partes(n, cobre)) + max(sai, 0.0)
+
+
+def duracao_minima_mergulho(n, entra=0.0, sai=0.0, cobre=None):
+    """Abaixo disto avisa-se: o encher e a espera ja estao no minimo, e o mergulho ou a ultima encolhem.
+
+    Nao e a duracao_minima_monte() da colagem, que conta cada foto a entrar e a pousar com a sua
+    pausa: num mergulho de 20 pedia 11,1 s, quando o mergulho cabe inteiro em 8,2 (1 de outubro).
+    """
+    encher, espera, fica, desce = _mergulho_partes(n, cobre)
+    return (min(MERGULHO_ATRASO, max(entra, 0.0)) + MERGULHO_MINIMO * (encher + espera) + fica + desce
+            + max(sai, 0.0))
+
+
+def mergulho_do_texto(n, texto):
+    """(altura da grelha, cobre da ultima) de um mergulho de n fotos com esta legenda, sem abrir fotos.
+
+    Para quem precisa dos tempos antes do render, o montar_da_mesa.py: com legenda a grelha e mais
+    baixa, a celula muda e o mergulho dura outro tanto.
+    """
+    alt = mergulho_altura(faixa_texto(texto))
+    return alt, mergulho_cobre(mergulho_grelha(n, L, alt)[-1])
+
+
+# A CAMARA PRESA A GRELHA (1 de outubro). A camara de 30 de setembro levava o centro da celula ao
+# centro do ecra em linha reta enquanto a escala crescia em progressao geometrica, e a meio do
+# mergulho saia da grelha: 80 pixeis seguidos de preto na borda direita com 9 fotos e 149 com 20.
+# Agora a camara e uma VISTA, (x0, y0, s): o ecra mostra a regiao da grelha de (x0, y0) a
+# (x0 + L/s, y0 + A/s), em pixeis do ecra a escala 1. Cada troco vai de uma vista a outra, e as do
+# meio sao a mistura das duas com o mesmo peso na posicao e no tamanho, com o peso tirado da
+# escala. Uma mistura de dois retangulos dentro da grelha fica dentro da grelha, por isso nenhum
+# fotograma mostra o que esta fora dela. E o mesmo que um zoom com um ponto parado no ecra: a
+# celula cresce do sitio onde esta ate encher o ecra. Com legenda, a grelha so desce para o lugar
+# dela, que no inicio ja estava livre.
+def mergulho_vista_cobre(celula):
+    """A vista em que a celula cobre o ecra, centrada nela: a do fim do mergulho."""
+    x, y, w, h = celula
+    s = mergulho_cobre(celula)
+    return (x + w / 2.0 - L / (2.0 * s), y + h / 2.0 - A / (2.0 * s), s)
+
+
+def mergulho_vista_aproxima(vista, celula, fator):
+    """A vista com mais `fator` de zoom, com o centro da celula parado no ecra."""
+    x0, y0, s = vista
+    x, y, w, h = celula
+    px, py = x + w / 2.0, y + h / 2.0
+    return (px - (px - x0) / fator, py - (py - y0) / fator, s * fator)
+
+
+def mergulho_trocos(tempos, celula, k):
+    """Os trocos da camara para um mergulho na celula k: [{de, ate, v0, v1, modo, celula}].
+
+    A grelha respira em torno da celula, a camara mergulha da vista inteira para a vista em que
+    ela cobre o ecra, e a foto continua a aproximar devagar. Mais do que um mergulho seria mais
+    trocos nesta lista, com a sua celula cada um.
+    """
+    trocos = dict((nome, (de, ate)) for nome, de, ate in tempos["trocos"])
+    inteira = (0.0, 0.0, 1.0)
+    respira = mergulho_vista_aproxima(inteira, celula, 1.0 + MERGULHO_RESPIRA)
+    cobre = mergulho_vista_cobre(celula)
+    fim = mergulho_vista_aproxima(cobre, celula, 1.0 + MERGULHO_FICA_ZOOM)
+    return [{"de": trocos["espera"][0], "ate": trocos["espera"][1], "v0": inteira, "v1": respira,
+             "modo": "linear", "celula": k},
+            {"de": trocos["desce"][0], "ate": trocos["desce"][1], "v0": respira, "v1": cobre,
+             "modo": "suave", "celula": k},
+            {"de": trocos["fica"][0], "ate": trocos["fica"][1], "v0": cobre, "v1": fim,
+             "modo": "linear", "celula": k}]
+
+
+def mergulho_vista_no_troco(troco, t):
+    """A vista (x0, y0, s) da camara no instante t, dentro do troco ou segura nas pontas dele."""
+    de, ate = troco["de"], troco["ate"]
+    p = min(1.0, max(0.0, (t - de) / (ate - de))) if ate > de else float(t >= de)
+    v0, v1 = troco["v0"], troco["v1"]
+    s0, s1 = v0[2], v1[2]
+    if troco["modo"] == "suave":
+        # Em escala geometrica: um zoom de 1 a 4 que anda em linha reta parece acelerar no fim.
+        s = s0 * math.exp(suave(p) * math.log(s1 / s0))
+    else:
+        s = s0 + (s1 - s0) * p
+    w0, w1 = L / s0, L / s1
+    # o peso de v0 tirado da largura da vista; sem mudar de escala, anda com o tempo
+    peso = (L / s - w1) / (w0 - w1) if abs(w0 - w1) > 1e-9 else 1.0 - p
+    return (v1[0] + (v0[0] - v1[0]) * peso, v1[1] + (v0[1] - v1[1]) * peso, s)
+
+
+def mergulho_camara(pronto, t):
+    """A vista (x0, y0, s) da camara no instante t, e a celula do troco em que esta.
+
+    Antes do primeiro troco a camara esta na vista inteira; depois do ultimo segura-se nele, ate
+    ao fim do encadeado de saida.
+    """
+    trocos = pronto["trocos"]
+    troco = trocos[-1]
+    for tr in trocos:
+        if t < tr["ate"]:
+            troco = tr
+            break
+    return mergulho_vista_no_troco(troco, t), troco["celula"]
 
 
 def preparar_mergulho(imagens, focos, texto, entra=0.0, sai=0.0, duracao=4.0):
@@ -2829,24 +3376,36 @@ def preparar_mergulho(imagens, focos, texto, entra=0.0, sai=0.0, duracao=4.0):
     n = len(imagens)
     focos = list(focos) + [None] * (n - len(focos))
     d = MERGULHO_DOBRO
-    celulas = mergulho_grelha(n, L, A)
+    capa = faixa_texto(texto)
+    altura = mergulho_altura(capa)
+    celulas = mergulho_grelha(n, L, altura)
+    mergulhos = [n - 1]       # as celulas onde se mergulha: hoje so a ultima
     grande = Image.new("RGB", (L * d, A * d), (0, 0, 0))
     pequenas = []
-    for (x, y, w, h), im, foco in zip(celulas, imagens, focos):
+    alvos = {}
+    for k, ((x, y, w, h), foto, foco) in enumerate(zip(celulas, imagens, focos)):
+        # Uma foto aberta de cada vez, ver FotoPorAbrir: a anterior sai antes de esta abrir.
+        im = None
+        im = aberta(foto)
         W, H = max(1, int(round(w * d))), max(1, int(round(h * d)))
         cel = cobrir_foco(im, W, H, foco) or cobrir_alto(im, W, H)
         grande.paste(cel, (int(round(x * d)), int(round(y * d))))
         pequenas.append((cel.resize((max(1, int(round(w))), max(1, int(round(h)))), Image.LANCZOS),
                          (int(round(x)), int(round(y)))))
-    # A ULTIMA, no tamanho com que acaba o mergulho: a celula a cobrir o ecra inteiro.
-    x, y, w, h = celulas[-1]
-    cobre = max(L / w, A / h)
-    Wf, Hf = int(math.ceil(w * cobre)), int(math.ceil(h * cobre))
-    alvo = cobrir_foco(imagens[-1], Wf, Hf, focos[-1]) or cobrir_alto(imagens[-1], Wf, Hf)
-    return {"tipo": "mergulho", "n": n, "celulas": celulas, "grande": grande,
-            "pequenas": pequenas, "alvo": com_margem(alvo, "preto"), "cobre": cobre,
-            "tempos": mergulho_tempos(n, duracao, entra, sai), "capa": faixa_texto(texto),
-            "_camada": None}
+        if k in mergulhos:
+            # A FOTO DO MERGULHO, no tamanho com que acaba: a celula a cobrir o ecra inteiro, feita
+            # do ficheiro enquanto esta aberto. So esta fica, nunca a foto em resolucao total.
+            cobre = mergulho_cobre((x, y, w, h))
+            Wf, Hf = int(math.ceil(w * cobre)), int(math.ceil(h * cobre))
+            alvos[k] = com_margem(cobrir_foco(im, Wf, Hf, foco) or cobrir_alto(im, Wf, Hf), "preto")
+    im = None
+    ultima = mergulhos[-1]
+    cobre = mergulho_cobre(celulas[ultima])
+    tempos = mergulho_tempos(n, duracao, entra, sai, cobre)
+    return {"tipo": "mergulho", "n": n, "celulas": celulas, "altura": altura, "grande": grande,
+            "pequenas": pequenas, "alvos": alvos, "alvo": alvos[ultima], "cobre": cobre,
+            "tempos": tempos, "trocos": mergulho_trocos(tempos, celulas[ultima], ultima),
+            "capa": capa, "_camada": None}
 
 
 def suave(p):
@@ -2855,28 +3414,10 @@ def suave(p):
     return p * p * (3.0 - 2.0 * p)
 
 
-def mergulho_camara(pronto, t):
-    """(escala, cx, cy) da camara no instante t: a escala da grelha e onde fica o centro da ultima celula."""
-    atraso, entra_foto, entre, espera, desce, fica = pronto["tempos"]
-    n = pronto["n"]
-    x, y, w, h = pronto["celulas"][-1]
-    px, py = x + w / 2.0, y + h / 2.0
-    todas = atraso + entra_foto + entre * (n - 1)
-    comeca = todas + espera
-    respira = 1.0 + MERGULHO_RESPIRA * min(1.0, max(0.0, (t - todas) / espera)) if espera else 1.0
-    e = suave((t - comeca) / desce) if desce else float(t >= comeca)
-    fim = pronto["cobre"]
-    # Depois do mergulho a ultima continua a aproximar devagar, e a escala da grelha anda com ela.
-    depois = max(0.0, min(1.0, (t - comeca - desce) / fica)) if fica else 0.0
-    fim *= 1.0 + MERGULHO_FICA_ZOOM * depois
-    # Em escala geometrica: um zoom de 1 a 4 que anda em linha reta parece acelerar no fim.
-    s = respira * math.exp(e * math.log(fim / respira))
-    return s, px + (L / 2.0 - px) * e, py + (A / 2.0 - py) * e
-
-
 def desenhar_mergulho(pronto, t_rel, duracao):
     """Um fotograma do mergulho."""
-    atraso, entra_foto, entre, espera, desce, fica = pronto["tempos"]
+    tempos = pronto["tempos"]
+    atraso, entra_foto, entre = tempos["atraso"], tempos["entra"], tempos["entre"]
     n = pronto["n"]
     todas = atraso + entra_foto + entre * (n - 1)
     if t_rel < todas:
@@ -2899,17 +3440,16 @@ def desenhar_mergulho(pronto, t_rel, duracao):
             tela.paste(Image.blend(tela.crop((pos[0], pos[1], pos[0] + cel.width, pos[1] + cel.height)),
                                    cel, min(1.0, a)), pos)
     else:
-        s, cx, cy = mergulho_camara(pronto, t_rel)
-        x, y, w, h = pronto["celulas"][-1]
-        px, py = x + w / 2.0, y + h / 2.0
+        (x0, y0, s), k = mergulho_camara(pronto, t_rel)
         d = MERGULHO_DOBRO
-        # ponto do ecra (X, Y) -> ponto da grelha grande: d * (P + (X - C) / s)
+        # ponto do ecra (X, Y) -> ponto da grelha grande: d * (x0 + X / s, y0 + Y / s)
         tela = pronto["grande"].transform(
-            (L, A), Image.AFFINE,
-            (d / s, 0.0, d * (px - cx / s), 0.0, d / s, d * (py - cy / s)),
-            resample=Image.BICUBIC)
-        # A ultima por cima da sua celula, no sitio exato, a partir do sprite do fim.
-        compor(tela, pronto["alvo"], cx, cy, s / pronto["cobre"])
+            (L, A), Image.AFFINE, (d / s, 0.0, d * x0, 0.0, d / s, d * y0), resample=Image.BICUBIC)
+        alvo = pronto["alvos"].get(k)
+        if alvo is not None:
+            # A foto do mergulho por cima da sua celula, no sitio exato, a partir do sprite do fim.
+            x, y, w, h = pronto["celulas"][k]
+            compor(tela, alvo, (x + w / 2.0 - x0) * s, (y + h / 2.0 - y0) * s, s / mergulho_cobre((x, y, w, h)))
     if pronto["capa"] is not None:
         cor, mascara = pronto["capa"]
         tela.paste(cor, (0, 0), mascara)
@@ -3549,15 +4089,16 @@ def preparar(clip, inv_por_nome):
                              duracao_do_clip(clip))
 
     if clip["tipo"] in LIMITES_MONTE:
-        minimo, maximo = LIMITES_MONTE[clip["tipo"]]
+        # o limite do estilo, que no mergulho e outro (decisao 102), ver limites_do_grupo()
+        minimo, maximo = limites_do_grupo(clip["tipo"], clip.get("tratamento"))
         caminhos = clip.get("_caminhos") or []
         if not (minimo <= len(caminhos) <= maximo):
             return None
-        imagens = []
-        for c in caminhos:
-            if not c or not os.path.exists(c):
-                return None
-            imagens.append(ImageOps.exif_transpose(Image.open(c)).convert("RGB"))
+        if not all(c and os.path.exists(c) for c in caminhos):
+            return None
+        # POR ABRIR: so o tamanho, do cabecalho. Cada uma abre-se na sua vez dentro do
+        # preparar_monte() ou do preparar_mergulho(), ver FotoPorAbrir (1 de outubro).
+        imagens = [FotoPorAbrir(c) for c in caminhos]
         focos = [ler_foco(p) for p in (clip.get("fonte_imagem") or "").split("|")]
         # Os encadeados vem do main, por ligar_transicoes: _transicao_entrada, que e
         # zero no primeiro clip do corpo, e _transicao_seguinte, que e o do clip
@@ -4844,17 +5385,13 @@ def main():
         correr_fatia(estado, fatia[0], fatia[1], canal)
         return
 
-    # UMA PILHA GRANDE PEDE MEMORIA EM CADA FATIA (decisao 087). O preparar() abre as fotos
-    # todas do clip em resolucao total, e as fatias preparam o mesmo clip ao mesmo tempo:
-    # uma pilha de 40 fotos de 5 MP pede cerca de 850 MB por processo, 6 GB com 7 fatias. Uma
-    # fatia que morre por falta de memoria para o render inteiro a meio. Diz-se antes de
-    # comecar, com o remedio, e nao se muda nada sozinho.
-    maior = max([len(c.get("_caminhos") or []) for c in estado["clips"]
-                 if c.get("tipo") in LIMITES_MONTE] or [0])
-    if maior > 20 and fatias > 4:
-        print("  ATENCAO: ha um grupo com %d fotos. Com %d fatias o pico de memoria pode "
-              "passar dos %.0f GB; se a maquina tiver pouca livre, corre com --fatias 4."
-              % (maior, fatias, 0.021 * maior * fatias))
+    # UM GRUPO GRANDE PEDE MEMORIA EM CADA FATIA (decisao 087), e as fatias preparam o mesmo
+    # clip ao mesmo tempo. Conta-se pelos pixeis verdadeiros do grupo mais pesado, com o que
+    # fica dos grupos de antes que ainda nao sairam, e dispara pelo valor, ver
+    # aviso_de_memoria() (1 de outubro).
+    aviso = aviso_de_memoria(estado["clips"], fatias)
+    if aviso:
+        print(aviso)
 
     if estado["sem_indice"]:
         sem_indice = estado["sem_indice"]

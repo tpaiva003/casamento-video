@@ -28,6 +28,8 @@ expressoes do render.desenhar(), escritas aqui ao lado de onde vem:
   lado a lado          cobre a celula de lado_celulas(), mais LADO_ZOOM de respiracao
   pilha e colagem      a foto inteira no tamanho do lugar que a disposicao lhe da;
                        a colagem ainda respira COLAGEM_RESPIRA no fim
+  mergulho             cobre a celula da grelha, mais MERGULHO_RESPIRA; a foto onde se
+                       mergulha cobre o ecra, mais MERGULHO_FICA_ZOOM (medidas_do_mergulho)
 
 Acima de 1,00 o render estica pixeis do ficheiro da FINAIS. A proposta e sempre o enquadramento
 mais apertado que fica dentro da TOLERANCIA, com os nomes que a Mesa mostra. O numero do clip e a
@@ -62,6 +64,10 @@ FIM_ZOOM = 1.0 + render.ZOOM
 FIM_AFASTADA = render.AFASTADA + render.AFASTADA_RESPIRA
 NA_MESA = {"Zoom in": "a encher, com zoom lento", "Parada": "parada, sem zoom",
            "Afastada": "afastada", "Aproxima": "aproxima ao ponto de foco"}
+# As origens que o finais.csv pode ter desde a decisao 090: so o Lanczos e o original. A rede
+# neuronal e o restauro de caras inventam pixeis; o mergulho, que mostra a foto a encher o ecra,
+# di-lo se alguma la estiver.
+ORIGENS_PERMITIDAS = ("lanczos", "original")
 
 
 def tamanho_real(caminho):
@@ -124,10 +130,40 @@ def medidas_do_grupo(clip, inv_por_nome):
             else:
                 saida.append((k, w * (1 + render.LADO_ZOOM), h * (1 + render.LADO_ZOOM), True))
         return saida
+    if pronto["tipo"] == "mergulho":
+        return medidas_do_mergulho(pronto)
     cresce = pronto.get("cresce", 1.0)
     for k, f in enumerate(pronto["fotos"]):
         w, h = f["tamanho"]
         saida.append((k, w * cresce, h * cresce, False))
+    return saida
+
+
+def medidas_do_mergulho(pronto):
+    """[(indice da foto, largura no ecra, altura no ecra, cobre?[, enche])] do mergulho (decisao 101).
+
+    REBENTAVA (1 de outubro): o pronto do mergulho nao tem a lista "fotos" da colagem e da pilha, e
+    qualquer mergulho na montagem parava a auditoria inteira com um KeyError. Agora mede-se como o
+    render.desenhar_mergulho() desenha:
+      - cada foto cobre a sua celula da grelha, e a grelha respira ate 1 + MERGULHO_RESPIRA antes
+        de mergulhar;
+      - a foto onde se mergulha acaba a cobrir o ecra inteiro e ainda aproxima MERGULHO_FICA_ZOOM:
+        a celula vezes o cobre do render, vezes 1,03. E a que mais estica: e por isso que se mede.
+    A foto do mergulho leva um quinto valor, True: enche o ecra. O sprite do fim e feito do
+    ficheiro que o finais.csv escolhe, com Lanczos, como o resto do filme (decisao 090): a conta e
+    quanto o render estica esse ficheiro, e a origem dele (lanczos ou original) vai na tabela. As
+    vizinhas a meio do mergulho saem da grelha desenhada ao dobro, e nao do ficheiro, e por isso
+    nao entram aqui.
+    """
+    saida = []
+    respira = 1.0 + render.MERGULHO_RESPIRA
+    fim = 1.0 + render.MERGULHO_FICA_ZOOM
+    for k, (_x, _y, w, h) in enumerate(pronto["celulas"]):
+        if k in pronto["alvos"]:
+            z = render.mergulho_cobre((_x, _y, w, h)) * fim
+            saida.append((k, w * z, h * z, True, True))
+        else:
+            saida.append((k, w * respira, h * respira, True))
     return saida
 
 
@@ -187,7 +223,8 @@ def main():
         ids = [i for i in (c.get("id") or "").split("|")]
         medidas = medidas_do_grupo(c, inv_por_nome)
         caminhos = c.get("_caminhos") or []
-        for k, lw, la, cobre in medidas:
+        for medida in medidas:
+            k, lw, la, cobre = medida[:4]
             if k >= len(ids) or k >= len(caminhos) or not caminhos[k]:
                 continue
             tam = tamanho_real(caminhos[k])
@@ -200,7 +237,8 @@ def main():
                               ficheiro=fin.get(ident, {}).get("ficheiro", ""),
                               origem=fin.get(ident, {}).get("origem", ""), px="%dx%d" % (w, h),
                               enquadramento="", fator=1.0, zoom=1.0, ampliacao=amp,
-                              largura_no_ecra=amp * w, cobre=cobre, proposta=None))
+                              largura_no_ecra=amp * w, cobre=cobre, proposta=None,
+                              enche=len(medida) > 4 and bool(medida[4])))
 
     for x in casos:
         x["detalhe_cara"] = float(caras[x["id"]]["detalhe_cara"]) if x["id"] in caras else None
@@ -275,8 +313,24 @@ def main():
                  x["ampliacao"], x["origem"], x["px"], x["ficheiro"][:34]))
     if not grupos:
         print("  nenhum")
+    print()
+    # O MERGULHO NA GRELHA (decisao 101): a foto onde se mergulha acaba a encher o ecra, e e a
+    # unica foto de um grupo que chega a esse tamanho. Lista-se sempre, esticada ou nao, com a
+    # origem: pela decisao 090 so pode ser "lanczos" ou "original", nunca a rede neuronal.
+    print("NO MERGULHO, A FOTO QUE ENCHE O ECRA (trocar a ultima do grupo por outra com mais pixeis)")
+    enchem = sorted([x for x in casos if x.get("enche")], key=lambda x: x["clip"])
+    for x in enchem:
+        aviso = "" if x["origem"] in ORIGENS_PERMITIDAS else "  <- ORIGEM FORA DA DECISAO 090"
+        print("  %4d   %s  foto %d de %d  %5.2fx  %-11s %s  %s%s"
+              % (x["clip"], minuto(x["t"]), x["foto"], x["de"], x["ampliacao"], x["origem"], x["px"],
+                 x["ficheiro"][:34], aviso))
+    if not enchem:
+        print("  nenhum mergulho na montagem")
     for x in casos:
         x.pop("cobre", None)
+        # so a foto que enche o ecra leva o campo: sem mergulho o json sai como antes
+        if not x.get("enche"):
+            x.pop("enche", None)
     json.dump(casos, open(os.path.join(REPO, "data", "auditoria_nitidez.json"), "w",
                           encoding="utf-8"), ensure_ascii=False, indent=1)
     print()

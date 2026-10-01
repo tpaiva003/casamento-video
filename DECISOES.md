@@ -3562,6 +3562,99 @@ neste estilo, só a legenda do clip. Teste novo: `teste_mergulho_na_grelha`.
 
 ---
 
+### 2026-10-01 | 102 | Grupos maiores: mergulho até 36 e corrigido, colagem até 30, pilha até 60 em monte
+
+**O que ele pediu:** *"Estava a pensar se conseguimos aumentar o número de fotos no mergulho, bem como o
+número de fotos a que fazemos o zoom in. Queria também aumentar o número de fotos em que podemos fazer
+colagem ou pilha."* Depois das medidas: *"Avança com estes: o mergulho: corrigir os defeitos que já tem,
+deixá-lo ir até 36 fotos e escolher como mergulha em mais do que uma, a partir de prévias. A colagem:
+até 30 fotos. A pilha: até 60 fotos em monte, depois da correção de memória."*
+
+**Porquê estes números** (medidos por quatro agentes e verificados por outros quatro a 1 de outubro;
+o texto inteiro está em `saida/discussao/propostas_1001/`):
+- **Colagem até 30, e não 40:** de 25 a 30, com filas de 4 a 6 e até 10 por fila, a foto mais pequena fica
+  como hoje com 20. A partir de 36 cai para textura a 15 m. Acima de 24 em filas o render rebentava.
+- **Pilha até 60 em monte:** o monte não parte até 80, e o travão é a memória. Cada fatia abria todas as
+  fotos em resolução total, e a pilha de 15 do render de 1 de outubro deixou o PC com 84 MB livres.
+  Abrir uma foto de cada vez dá os mesmos sprites. O leque fica em 24 (decisão 091, confirmado
+  desenhado).
+- **Mergulho até 36, com limite próprio:** a grelha aguenta. Antes há que corrigir os defeitos que já
+  tinha dentro dos 2 a 20:
+  - as tiras com 3, 5, 7, 11, 13, 14, 17 e 19 fotos;
+  - o preto na borda a meio do mergulho;
+  - a legenda a tapar a última foto;
+  - o `auditar_nitidez.py`, que rebentava;
+  - a Mesa, que não mostrava a grelha do render e propunha durações da colagem.
+
+**O mergulho em mais do que uma foto** escolhe-se por prévias. Há quatro maneiras:
+- mergulha, volta à grelha e mergulha na seguinte;
+- desliza de perto entre vizinhas;
+- voa entre fotos;
+- sem código, vários grupos em mergulho seguidos.
+
+**Para ele saber:** grupos grandes chocam com as regras fixas "máximo 4 ou 5 fotos seguidas do mesmo
+evento" e "nunca menos de 3 s por foto". Numa pilha de 60 cada foto é um relance de 0,5 s, como na
+rajada (017 a 021), e os textos por foto não se leem.
+
+**Quem:** o Tiago decidiu; os agentes mediram, construíram e reviram.
+
+---
+
+### 2026-10-01 | 103 | A construção da 102, e o que a revisão corrigiu
+
+**Construído** (sem commits, porque ele não pediu):
+- **A memória dos grupos:** cada foto de uma colagem, pilha ou mergulho abre-se uma só vez e sai antes
+  de a seguinte abrir; o tamanho lê-se do cabeçalho. Os sprites e os fotogramas das 5 pilhas da v3 saem
+  iguais ao byte. A camada das fotos pousadas passou a incremental: na pilha de 15 da v3, 885
+  composições passam a 248.
+- **O aviso de memória do render** conta os píxeis verdadeiros e dispara acima de 3 GB somados nas
+  fatias (`render.MEMORIA_AVISO`). Os 3 GB são escolha de um agente, pela razão medida: no render de 1
+  de outubro, 3,6 GB a mais deixaram o PC com 84 MB livres. Pode ser preciso afinar. **Na v3 de hoje,
+  com as 7 fatias de omissão, já dispara:** a pilha de 8 aos 9:11 tem a f0430, de 48 MP e rodada pelo
+  EXIF, e começa com a pilha de 6 de antes ainda em memória. A conta dá 3,5 GB e propõe `--fatias 6`.
+- **A pilha até 60 em monte**, o leque em 24.
+- **A colagem até 30:** filas novas acima de 24 fotos, e acima de 20 só as partições em que as fotos
+  assentaram. A Mesa estima as filas que o render escolhe.
+- **O mergulho até 36, com limite próprio** nos três sítios. As células passam a ter formato de
+  fotografia (acabam as tiras), a grelha enche em até 4 s e a câmara fica presa à grelha (acaba o
+  preto na borda). A legenda tem o seu lugar. O `auditar_nitidez.py` mede o mergulho, e a Mesa mostra
+  a grelha do render e propõe as durações do mergulho. Acima de 30 fotos, «Confirma tu».
+- **Avisos novos no Validar, em «Está mal»:**
+  - um texto em cada foto de uma pilha que fica menos de 1,5 s no ecrã;
+  - os textos dentro das fotos de uma colagem de mais de 20.
+
+  Na demo_v3 dele acendem as pilhas 79, 110 e 114, com o texto em cada foto a cerca de 0,9 s. Pela
+  082 são textos marcados: pergunta-se-lhe antes do render, e não se corrigem sem ele dizer.
+
+**A revisão** (três revisores e um corretor) encontrou e corrigiu:
+- **Uma TIFF rodada pelo EXIF saía esticada** num grupo: a Pillow já a dá de pé ao abrir, e o tamanho
+  pelo cabeçalho trocava a largura com a altura outra vez. Hoje não há nenhuma TIFF na FINAIS.
+- **Dois grupos seguidos não somavam no aviso de memória.** Numa fatia o grupo de antes só sai na
+  limpeza seguinte, até 8 s depois. Duas pilhas de 60 seguidas mediram 3,44 GB com 7 fatias, e o aviso
+  calava-se. Agora somam.
+- **As colagens de 21 a 24 ficavam sem o filtro das partições que assentaram:** 3 em 256 pisavam um
+  miolo 1,1 a 1,6 px. O filtro vale agora acima de 20, o limite antigo. Até 20 nada muda.
+- **Na pré-visualização do mergulho, a legenda tapava a última fila da grelha.** Agora tem o sítio, a
+  faixa e a letra do render.
+- **Os textos das fotos num mergulho contavam tempo** na Mesa e no montar, que avisavam de textos que o
+  vídeo não mostra. Já não contam; ficam guardados e voltam noutro estilo.
+- **A caixa do Tratamento reabria em erro** depois de um mergulho de mais de 30, com um número acima do
+  limite do estilo de omissão. Agora abre com o número cortado ao limite.
+
+**Ficou como está:** na Mesa, a altura da grelha do mergulho com legenda é aproximada. Em 1 das 277
+legendas reais parte numa linha a menos do que o render, e o montar avisa com a conta do render.
+
+**Por fazer:** as prévias do mergulho em mais do que uma foto, que estão a ser feitas à parte
+(`scripts/discussao/previa_mergulho_varias.py`). Às prévias vão a A (mergulha, volta à grelha e
+mergulha na seguinte), a C e os grupos em mergulho seguidos, sem código; a B mostra-se com cautela.
+Ao mostrá-las, diz-se-lhe:
+- a foto mergulhada fica 0,8 s sozinha, contra a regra dos 3 s;
+- cada mergulho a mais custa 4,9 a 5,3 s;
+- os fins de frase medem-se outra vez (096).
+
+**Quem:** o Tiago decidiu (102); os agentes construíram, reviram e corrigiram.
+
+---
 ## Em aberto
 
 Não assumir nenhuma destas sem decisão explícita do Tiago.

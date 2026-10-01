@@ -256,8 +256,20 @@ nunca o último fotograma, onde ela já se apagou. Um leitor novo do texto da fi
   corte noutro sítio, o montar avisa "fim de frase por medir outra vez" e a música desce no corte, como
   antes.
 
-**A pilha vai até 40 em monte, e só até 24 em leque** (decisão 091): desenhado a sério, o leque
-deixa de mostrar 20% de cada foto de baixo a partir de 25. O montar põe em monte um leque maior.
+**A pilha vai até 60 em monte, e só até 24 em leque** (decisões 091 e 102): desenhado a sério, o
+leque deixa de mostrar 20% de cada foto de baixo a partir de 25. O montar põe em monte um leque
+maior.
+
+**A colagem vai até 30, e o mergulho até 36, com limite próprio** (decisões 102 e 103). Os limites
+são iguais nos três sítios:
+- `render.LIMITES_MONTE` e `LIMITES_ESTILO`;
+- o `montar_da_mesa.py`;
+- o `GRUPOS` e o `GRUPOS_ESTILO` da Mesa.
+
+O `teste_limites_dos_grupos_iguais` lê os três.
+
+**Cada foto de um grupo abre-se uma de cada vez** (103), e o aviso de memória conta os píxeis
+verdadeiros. Uma foto de 48 MP rodada pelo EXIF faz o aviso propor `--fatias 6`.
 
 ---
 

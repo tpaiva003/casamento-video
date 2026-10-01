@@ -101,8 +101,18 @@ EXT_MUSICA = (".mp3", ".wav", ".m4a", ".wma", ".flac", ".ogg")
 # Quantas fotos cada tratamento de varias fotos aceita. Os mesmos limites que o
 # render.py, que recusa o clip fora deles, e que o GRUPOS da Mesa: o Tiago pediu a 17 de
 # setembro mais fotos na colagem e na pilha, e o teste_limites_dos_grupos_iguais le os tres.
-# A 28 de setembro subiram a 20 e 40, decisao 087; as medidas estao no render.py.
-LIMITES_MONTE = {"colagem": (2, 20), "pilha": (2, 40)}
+# A 28 de setembro subiram a 20 e 40, decisao 087, e a 1 de outubro a pilha subiu a 60, so em
+# monte, e a colagem a 30, decisao 102; as medidas estao no render.py.
+LIMITES_MONTE = {"colagem": (2, 30), "pilha": (2, 60)}
+# O limite de um estilo, quando nao e o do tipo: o mergulho na grelha vai ate 36 (decisao 102),
+# como o render.LIMITES_ESTILO e o GRUPOS_ESTILO da Mesa. Conta o estilo que vai ao filme, o
+# que fica escrito na coluna tratamento, ver limites_do_grupo().
+LIMITES_ESTILO = {("colagem", "mergulho"): (2, 36)}
+
+
+def limites_do_grupo(tipo, estilo=None):
+    """(minimo, maximo) de fotos de um grupo deste tipo e estilo: o do estilo, ou o do tipo."""
+    return LIMITES_ESTILO.get((tipo, (estilo or "").strip()), LIMITES_MONTE[tipo])
 
 # O DIA DE CADA NASCIMENTO NA FITA DE 1995, (dia, mes). Sao as duas datas confirmadas pelo
 # Tiago na decisao 030, e sao a unica coisa do marco que nao muda: o texto e dele, e pode
@@ -264,7 +274,14 @@ def legendas_curtas_da_linha(linha, entra, sai, render):
     render.encadeados_do_corpo(), os mesmos que a agenda da colagem e da pilha conta: com
     outros, os inicios das fotos, e com eles os tempos, andavam. O texto do grupo entra no
     lugar dos vazios, como o render faz ao mostrar.
+
+    NO MERGULHO A LISTA E VAZIA (revisao de 1 de outubro): o render.preparar() so passa ao
+    preparar_mergulho() a legenda do clip, e os textos de cada foto nao vao ao filme (decisao
+    101). Contava-os com a agenda da colagem, e um mergulho de 9 em 7 s dava oito avisos de
+    textos que ninguem ve.
     """
+    if linha["tipo"] == "colagem" and (linha["tratamento"] or "").strip() == render.MERGULHO_ESTILO:
+        return []
     try:
         opcoes = json.loads(linha["textos_opcoes"] or "{}")
         textos = json.loads(linha["textos_fotos"] or "[]")
@@ -1214,25 +1231,28 @@ def main():
             # e o ficheiro da linha com as varias separadas por "|". Uma foto que
             # falte salta o clip inteiro com aviso, em vez de sair uma colagem com
             # buraco que ninguem pediu.
-            minimo, maximo = LIMITES_MONTE[tipo]
+            # O ESTILO VAI NA COLUNA TRATAMENTO, que e o que o render le nestes dois tipos.
+            # Antes ia o "r" do clip, "fiel", que o render ignorava. Um estilo que o render
+            # nao conhece dava la a omissao sem ninguem saber: fica a omissao escrita e o
+            # aviso aqui, depois dos limites, que sao os do estilo que vai ao filme (o mergulho
+            # tem os seus, decisao 102).
+            estilos = ESTILOS_MONTE[tipo] + ESTILOS_EXTRA.get(tipo, ())
+            pedido = str(c.get("estilo") or "").strip()
+            estilo = pedido if pedido in estilos else estilos[0]
+            minimo, maximo = limites_do_grupo(tipo, estilo)
             pedidas = c.get("fotos") or []
             fotos = [por_id.get(i) for i in pedidas]
             if not (minimo <= len(fotos) <= maximo) or not all(fotos):
                 faltam = [i for i, r in zip(pedidas, fotos) if not r]
-                avisos.append("%s saltada, pede %d a %d fotos e tem %d%s: %s"
-                              % (tipo, minimo, maximo, len(pedidas),
+                # o estilo diz-se quando tem limite proprio: "colagem em mergulho saltada"
+                avisos.append("%s%s saltada, pede %d a %d fotos e tem %d%s: %s"
+                              % (tipo, (" em " + estilo) if (tipo, estilo) in LIMITES_ESTILO else "",
+                                 minimo, maximo, len(pedidas),
                                  (", em falta " + ", ".join(faltam)) if faltam else "",
                                  pedidas))
                 continue
             ident = "|".join(r["id"] for r in fotos)
             ficheiro = "|".join(r["ficheiro"] for r in fotos)
-            # O ESTILO VAI NA COLUNA TRATAMENTO, que e o que o render le nestes dois tipos.
-            # Antes ia o "r" do clip, "fiel", que o render ignorava. Um estilo que o render
-            # nao conhece dava la a omissao sem ninguem saber: fica a omissao escrita e o
-            # aviso aqui.
-            estilos = ESTILOS_MONTE[tipo] + ESTILOS_EXTRA.get(tipo, ())
-            pedido = str(c.get("estilo") or "").strip()
-            estilo = pedido if pedido in estilos else estilos[0]
             if pedido and pedido not in estilos:
                 avisos.append("%s com estilo %r desconhecido, fica %s (clip %d): os estilos sao %s"
                               % (tipo, pedido, estilo, len(linhas) + 1, " e ".join(estilos)))
@@ -1455,7 +1475,23 @@ def main():
         import render
         for k, (l, (entra, sai)) in enumerate(zip(corpo_m, render.encadeados_do_corpo(corpo_m))):
             n_fotos = len(l["id"].split("|"))
-            if l["tipo"] in LIMITES_MONTE:
+            if l["tipo"] == "colagem" and l["tratamento"] == render.MERGULHO_ESTILO:
+                # O MERGULHO NAO E A COLAGEM (1 de outubro): a duracao_minima_monte() conta cada
+                # foto a entrar e a pousar com a sua pausa, e num mergulho de 20 pedia 11,1 s
+                # quando ele cabe inteiro em 8,2. Abaixo da duracao_minima_mergulho() o encher e
+                # a espera ja estao no minimo e e o proprio mergulho que fica apressado. A
+                # legenda conta: com ela a grelha e mais baixa e o mergulho dura outro tanto.
+                _alt, cobre = render.mergulho_do_texto(n_fotos, l["texto_ecra"])
+                minimo = render.duracao_minima_mergulho(n_fotos, entra, sai, cobre)
+                if l["duracao_s"] < minimo - 0.005:
+                    avisos.append("colagem em mergulho de %d fotos com %s s e curta: precisa de pelo "
+                                  "menos %.1f s para o mergulho e a ultima foto ficarem inteiros "
+                                  "antes %s (clip %d)"
+                                  % (n_fotos, segundos(l["duracao_s"]),
+                                     math.ceil(minimo * 10 - 1e-6) / 10.0,
+                                     "do fade do fim" if k + 1 == len(corpo_m) else "do encadeado",
+                                     l["ordem"]))
+            elif l["tipo"] in LIMITES_MONTE:
                 minimo = render.duracao_minima_monte(l["tipo"], n_fotos, entra, sai)
                 if l["duracao_s"] < minimo - 0.005:
                     # A duracao vai com as casas que tem e o minimo arredondado para cima.
