@@ -436,9 +436,26 @@ assim."*
 4. **Na construção, o `montar_da_mesa.py` passa a avisar** quando uma troca com fim de frase chega ao
    corte noutro sítio do ficheiro, e diz qual (avisa, nunca corrige, 083).
 
+**O que ele disse depois do render de ensaio** (30 de setembro, `v3_2026-09-30_0206`): *"Não adorei
+as separações que há nas músicas agora, mas isso não é para resolver agora."* Fica em aberto, para
+voltar a ele. Antes, perguntar-lhe em que trocas o sentiu mais, e se é o silêncio curto entre as duas
+músicas (o respiro) ou a descida rápida da que sai.
+
 **Os números em vigor** estão em `data/fins_de_frase.csv`, que é o que a montagem e o render usam, e
 o que a revisão lê. A tabela da 096 é a de 29 de setembro. A 30 mudaram duas trocas: o Rei Leão para o
 Lang Lang e a Ana Faria para a Clair (decisão 100).
+
+**A 1 de outubro, com a revisão 966 da Mesa** (186 clips, 19 a menos do que no render de 30 de
+setembro), seis das doze trocas chegam ao corte noutro sítio e descem no corte, como antes da 096:
+- Rei Leão para Lang Lang;
+- Ana Faria para Clair;
+- Tokyo Drift para Tiago Celebration;
+- Tiago Celebration para António Variações;
+- Já Sei Namorar para Steppenwolf;
+- Queen para Taking Care of Business.
+
+O render de ensaio de 1 de outubro saiu assim. Medem-se outra vez antes do render final, ou quando ele
+der a ordem por fechada; medir agora era trabalho perdido se ele ainda mexer.
 
 **Duas coisas a dizer-lhe:**
 - **A primeira troca depende do 3.4.** Se o primeiro Lang Lang passar a entrar aos 5,45 s, o buraco
@@ -585,6 +602,120 @@ para o fecho."*
   filtro do colega conservador. Ele escolhe, porque o texto no ecrã é dele;
 - os três cargos têm de ficar claros e visíveis no fecho.
 
+**Ele marcou e mandou** (30 de setembro): *"Já te marquei umas fotos para créditos e dei os
+convidados, mostra-me um exemplo?"* As fotos são as do grupo "Créditos" da Mesa (11 a 30/09). Os
+convidados estão na folha `C:\casamento-video-media\Convidados\convidados-*.xlsx`, que **não vai para
+o Git** (são dados de 140 pessoas).
+
+**O exemplo de 30 de setembro:** `py -3.11 scripts/discussao/ponto5_creditos.py` escreve
+`saida/discussao/ponto5/exemplo_creditos.mp4` e a cópia do telemóvel. `--so-dizer` só faz as contas e
+`--quadros` tira sete fotogramas soltos. Lê tudo pelo nome: o grupo "Créditos" na leitura mais recente da
+base, a versão de cada foto no `data/finais.csv`, a folha de convidados mais recente e a última música
+do `v3.som.csv`. Leva:
+- os últimos 5 s do render de ensaio antes do fade, a desfazer-se em 1,5 s nos créditos, sem preto;
+- os nomes a subir a 150 px/s à direita, Arial Bold 58, um agregado (a coluna Família) por linha, a
+  quebrar só entre pessoas; os títulos no letreiro da 098 a 60 px, e o lado da família ou o sítio dos
+  amigos em champanhe por baixo;
+- as fotos marcadas numa coluna à esquerda, a subir ao mesmo tempo;
+- os três cargos, 4,2 s cada, com os que o juiz recomendou (abaixo);
+- "CLARA & TIAGO" e a data, 7 s, até ao preto;
+- a música do fim a continuar de onde o filme a deixa, e a desvanecer nos últimos 4 s.
+
+Dá 90 s de créditos, e o filme fica em cerca de 880 s.
+
+**Só entram as etiquetas de grupo** (`GRUPOS` no script, pela ordem dos créditos). Nunca vão ao ecrã as
+etiquetas dos convites e dos contactos, as que dizem onde alguém não pode ficar sentado, as notas, nem
+os "Noivos". A 30/09 as 136 pessoas (138 menos os noivos) tinham todas uma etiqueta de grupo; as quatro
+com "Irmão" também têm outra, e entram por essa.
+
+**Os cargos** (dois agentes escreveram, um juiz filtrou pelo colega conservador, 30/09):
+
+| | Recomendado | Alternativas |
+|---|---|---|
+| Mãe da Clara | Ideia, textos, música e horas sem conta | Ideia original, argumento e horas extraordinárias; Argumento original: sem ela não havia filme |
+| Tiago | Montagem, estrutura e «só mais uma versão» | Assistente de realização, promovido a montador; Montagem e cortes, todos com dor de alma |
+| Clara | Aprovação final e direito de veto | Validação final e o sim mais importante; Controlo de qualidade. Nada passou sem ela |
+
+Eliminados pelo juiz: "Efeitos especiais em Windows Movie Maker" e "Realização original, versão alargada
+de 23,5 minutos" (diminuem o trabalho dela), "Argumento adaptado, com a devida autorização" (piada de
+sogra), "Supervisão final e o famoso hmm, não" (faz da noiva a do contra).
+
+**O que ele disse do exemplo** (30 de setembro): *"Não desgosto destes créditos, mas claro que há alguns
+ajustes que quero fazer seja nos labels sejam nas fotos, mas acredito que no conceito possa funcionar."*
+O conceito fica; os ajustes são dele. Os grupos e os nomes mudam-se na folha de convidados (as
+etiquetas) e as fotos no grupo "Créditos" da Mesa; o script lê as duas outra vez em cada corrida. Os
+títulos de cada grupo estão em `GRUPOS`, no script.
+
+**Por decidir por ele:** os ajustes aos grupos e às fotos, os cargos, como se chama a mãe da Clara no
+ecrã e a letra do título final.
+
+**1 de outubro:** *"Acrescentei mais algumas fotos aos créditos na mesa. Uma questão importante é como
+é que está a ficar ordenado a aparecer no ecrã."* Passaram a ser 27 fotos (rev 990). O script ordenava
+as fotos pelo número da Mesa (`sorted` dos ids), que não é a ordem dele nem a das datas. Com 27, a
+coluna de ontem subia a mais de 200 px/s. O filme encolheu para cerca de 732 s, e há folga até aos
+900 s. A medir e a propor: a ordem e a maneira de as mostrar.
+
+**Pedidos de 1 de outubro fora dos cinco pontos:** *"Estava a pensar se conseguimos aumentar o número
+de fotos no mergulho, bem como o número de fotos a que fazemos o zoom in. Queria também aumentar o
+número de fotos em que podemos fazer colagem ou pilha."* Hoje:
+- o mergulho usa os limites da colagem e mergulha só na última;
+- a colagem vai até 20 e a pilha até 40, com o leque só até 24 (decisões 087 e 091).
+
+Estão a ser medidos antes de qualquer proposta.
+
+**O que as medidas de 1 de outubro dizem** (oito agentes, quatro a medir e quatro a verificar). O
+texto inteiro está em `saida/discussao/propostas_1001/`, fora do Git.
+- **Créditos:**
+  - Com 27 fotos a coluna sobe a 286 px/s, e cada foto fica 1,5 s inteira: não serve.
+  - Recomenda-se uma versão "Créditos" na Mesa, onde ele põe a ordem, com cartões opcionais a ligar as
+    fotos aos grupos de nomes. As fotos ficam paradas, a trocar no mesmo sítio, 3,5 s cada.
+  - Os créditos ficam com cerca de 116 s e o filme com cerca de 845 s.
+  - Muda o conceito que ele aprovou (a coluna a subir): pergunta-se.
+  - 17 das 27 fotos estão no vídeo da mãe, com secção, e isso dá uma primeira ordem.
+  - A duração dos créditos decide onde acaba o Taking Care of Business (096).
+- **Mergulho:**
+  - Já hoje, dentro dos 2 a 20, há defeitos:
+    - a grelha sai em tiras com 3, 5, 7, 11, 13, 14, 17 e 19 fotos;
+    - a meio do mergulho aparecem 80 a 149 px de preto na borda;
+    - a legenda tapa 36 a 48% da última foto;
+    - o `auditar_nitidez.py` rebenta;
+    - a Mesa não mostra a grelha do render e propõe durações da colagem.
+  - Proposta: corrigir isto primeiro, e depois um limite próprio de 36.
+  - Para mergulhar em mais fotos há três maneiras, nenhuma vista por ele:
+    - A, mergulha, volta à grelha e mergulha na seguinte;
+    - B, desliza de perto entre vizinhas;
+    - C, voa entre fotos.
+  - Há também a alternativa sem código: vários grupos em mergulho seguidos.
+  - Cada foto mergulhada fica 0,8 s a encher o ecrã.
+  - Escolhe-se por prévias.
+- **Colagem:**
+  - Acima de 24 em filas o render rebenta (ValueError).
+  - Proposta: subir a 30, com partições até 6 filas de 10 e o filtro de convergência só acima de 24.
+    De 25 a 30 a foto mais pequena fica como hoje com 20; a partir de 36 cai.
+  - Alternativa barata: 24, que já tem partições.
+  - Os textos por foto não cabem acima de 20.
+- **Pilha:**
+  - O monte não parte até 80. O limite é a memória: cada fatia abre todas as fotos em resolução total,
+    e a pilha de 15 deixou o PC com 84 MB livres no render desta noite.
+  - Abrir uma foto de cada vez dá sprites iguais ao byte. Recomenda-se fazê-lo já, e subir o monte a 60.
+  - O leque fica em 24, confirmado desenhado.
+  - Numa pilha de 60 cada foto é um relance (0,5 s) e os textos por foto não se leem.
+- **As regras fixas** ("máximo 4 ou 5 fotos seguidas do mesmo evento", "nunca menos de 3 s por foto")
+  chocam com grupos grandes. A rajada é o precedente; diz-se-lhe.
+
+**A verificação do render de 1 de outubro:**
+- **Som:** só ficam dois buracos de silêncio nas trocas (Clair para Who Let The Dogs Out, 0,25 s;
+  Steppenwolf para Filhos do Dragão, 0,18 s); no de 30 de setembro havia cinco. São as "separações" de
+  que ele não gostou? As seis que descem no corte não têm buraco, mas as duas músicas soam juntas 1,5 a
+  2 s.
+- **Para ele confirmar:**
+  - "um família" (1:54), "periodo" (5:21) e "Advinham" (4:18);
+  - a pilha "O primeiro veículo" com a legenda de baixo repetida, como a "Sintra" que ele tirou;
+  - os textos das pilhas com 0,9 s cada;
+  - a foto IMG_20260922 com a borda do papel à vista.
+- **A legenda está no corpo 46,** abaixo do mínimo de 58 da 084. É informação nova sobre a 070, e
+  diz-se-lhe.
+
 **O que a referência ensina:** os modelos do vídeo dele são texto sobre imagem com letra de 21 a 27
 px, e a 15 m nenhum se lê. Aproveita-se o movimento, não os tamanhos.
 
@@ -690,7 +821,8 @@ Pela ordem:
   já não está na montagem, e a `DSC02953` está num lado a lado com a `DSC_0149`. Confirmar com ele.
 - **A largura da tela:** pergunta para o DJ ou para a quinta (ver o ponto 4).
 - **Os textos marcados pela Mesa (082):** *"Para já ficam como estão, ajusto no fim."*
-- **O trabalho destes dias não está em nenhum commit.** Só se faz commit quando ele pedir.
+- **Commits:** o trabalho até à decisão 100 está no `aa74fd7`, e o mergulho da outra sessão (101) no
+  `68c18b7`, trazido para o `main` a 30 de setembro a pedido dele. Só se faz commit quando ele pedir.
 
 ---
 

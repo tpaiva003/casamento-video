@@ -1448,7 +1448,9 @@ def teste_cartao_da_bebe_com_acento():
         montar_da_mesa.ESTADO, montar_da_mesa.DESTINO, sys.argv = guardado
     notas = [r["nota"] for r in csv.DictReader(open(os.path.join(pasta, "teste_bebe.som.csv"), encoding="utf-8-sig"))]
     verifica("cartao da bebe encontrado com ou sem acento",
-             any("primeiro texto da Clara" in n for n in notas) and montar_da_mesa.sem_acentos(None) == "",
+             # a nota chamava-se "foguetes, no primeiro texto da Clara" ate a decisao 093
+             any("primeiro texto da Clara" in n or "foguetes, nascimento da Clara" in n for n in notas)
+             and montar_da_mesa.sem_acentos(None) == "",
              "%d faixas no som de ensaio" % len(notas))
 
 
