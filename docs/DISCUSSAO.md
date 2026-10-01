@@ -655,6 +655,18 @@ as fotos pelo número da Mesa (`sorted` dos ids), que não é a ordem dele nem a
 coluna de ontem subia a mais de 200 px/s. O filme encolheu para cerca de 732 s, e há folga até aos
 900 s. A medir e a propor: a ordem e a maneira de as mostrar.
 
+**Ele respondeu** (1 de outubro): *"Sobre os créditos eu gosto da coluna a subir. Ajustar a ordem é
+que ainda não percebi como posso fazer."* A coluna fica.
+
+Construído no `ponto5_creditos.py`:
+- **A ordem:** se houver na Mesa uma versão chamada "Créditos", a coluna segue a ordem dos clips dela.
+  Os cartões são ignorados. As fotos marcadas que não estejam lá vão para o fim, com aviso.
+- **A velocidade:** a coluna não passa dos 150 px/s; os créditos esticam e os nomes abrandam para
+  acabarem juntos. Com 27 fotos dá 152,5 s de créditos, com os nomes a 79 px/s, e o filme fica em
+  cerca de 882 s.
+- **A alternativa por decidir:** as fotos ao alto mais pequenas (600 px de altura em vez de cortadas a
+  900) dariam cerca de 137 s.
+
 **Pedidos de 1 de outubro fora dos cinco pontos:** *"Estava a pensar se conseguimos aumentar o número
 de fotos no mergulho, bem como o número de fotos a que fazemos o zoom in. Queria também aumentar o
 número de fotos em que podemos fazer colagem ou pilha."* Hoje:

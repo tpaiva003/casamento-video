@@ -8,8 +8,9 @@ Tiago pediu a 30 (DISCUSSAO.md, ponto 5). Nao muda nada; escreve em saida/discus
 creditos no fim do render mais recente e faz a copia do telemovel do filme inteiro (abaixo de 30 MB).
 
 O QUE ENTRA:
-- as fotos que ele marcou na Mesa com o grupo "Creditos" (lidas da copia da base em
-  data/mesa_estado.json, ou da leitura mais recente em saida/leitura_mesa_N);
+- as fotos que ele marcou na Mesa com o grupo "Creditos" (lidas da leitura mais recente da base em
+  saida/leitura_mesa_N, ou da copia em data/mesa_estado.json). A ORDEM e a de uma versao da Mesa
+  chamada "Creditos", se existir (ver fotos_marcadas); senao, a do numero da Mesa;
 - os convidados da folha dele em C:\\casamento-video-media\\Convidados\\ (a mais recente), por grupos
   (as etiquetas de familia e de amigos) e por agregado (a coluna Familia), um agregado por linha. A
   folha NAO vai para o Git: sao dados de 140 pessoas;
@@ -61,6 +62,11 @@ CARGOS = [  # (cargo, quem): o texto e dele; estes sao os que o juiz recomendou 
 ]
 TITULO, DATA = "CLARA & TIAGO", "4 DE OUTUBRO DE 2026"
 VELOCIDADE_NOMES = 150.0      # px/s: cada linha fica ~7 s no ecra, e o filme fica abaixo dos 900 s
+# A COLUNA DAS FOTOS NAO PASSA DISTO. Com as 11 fotos de 30/09 subia a 108 px/s; com as 27 de 1/10
+# subia a 286 px/s, e cada foto ficava 1,5 s inteira no ecra. Ele gosta da coluna, por isso fica a
+# coluna: quando ela precisa de mais tempo, os creditos esticam e os nomes abrandam para acabarem
+# juntos (a 150 px/s cada linha fica ~7 s; mais devagar, fica mais).
+VELOCIDADE_FOTOS_MAX = 150.0
 COR_NOME = (246, 238, 226)
 COR_SUB = (226, 196, 160)
 NOME_CORPO, SUB_CORPO = 58, 58
@@ -197,17 +203,46 @@ def fotos_marcadas():
                       key=os.path.getmtime)
     fonte = leituras[-1] if leituras else os.path.join(C.REPO, "data", "mesa_estado.json")
     est = json.load(open(fonte, encoding="utf-8"))
-    pid = next((p["id"] for p in est.get("pessoas", []) if p.get("nome", "").strip().lower() == "créditos"), None)
-    if pid is None:
-        raise SystemExit("Nao ha nenhum grupo \"Creditos\" na Mesa (%s)" % fonte)
-    ids = [fid for fid, t in est.get("tags", {}).items() if pid in t]
+    pid = next((p["id"] for p in est.get("pessoas", []) if sem_acentos(p.get("nome", "")) == "creditos"), None)
+    marcadas = sorted(fid for fid, t in est.get("tags", {}).items() if pid and pid in t)
+    # A ORDEM E A DELE, 1 de outubro: "Ajustar a ordem e que ainda nao percebi como posso fazer".
+    # Uma versao da Mesa chamada "Creditos" (com ou sem acento, maiusculas ou nao) manda na ordem:
+    # as fotos pela ordem dos clips, e as de um grupo (lado a lado, colagem, pilha) pela ordem de
+    # dentro. Os cartoes nao contam. Uma foto com a etiqueta Creditos que nao esteja na versao vai
+    # para o fim, com aviso: nada do que ele marcou desaparece calado. Sem versao, a ordem e a do
+    # numero da Mesa, que e a ordem em que as fotos entraram na biblioteca.
+    versao = next((v for v in est.get("versoes", []) if sem_acentos(v.get("nome", "")) == "creditos"), None)
+    if versao:
+        ids, vistos = [], set()
+        for c in versao.get("clips", []):
+            for i in ([c["i"]] if c.get("t") == "foto" and c.get("i") else []) + list(c.get("fotos") or []):
+                if i not in vistos:
+                    vistos.add(i)
+                    ids.append(i)
+        fora = [i for i in marcadas if i not in vistos]
+        if fora:
+            print("  AVISO: com a etiqueta Creditos mas fora da versao \"%s\", vao no fim: %s"
+                  % (versao.get("nome"), ", ".join(fora)))
+        ids += fora
+        print("  ordem das fotos: a da versao \"%s\" da Mesa (%d fotos)" % (versao.get("nome"), len(ids)))
+    elif pid:
+        ids = marcadas
+        print("  ordem das fotos: a do numero da Mesa (nao ha versao \"Creditos\")")
+    else:
+        raise SystemExit("Nao ha grupo nem versao \"Creditos\" na Mesa (%s)" % fonte)
     # a versao de cada foto e a do data/finais.csv, mais ninguem a escolhe (decisao 090)
     finais = {r["id"]: os.path.join(render.FINAIS, r["final"])
               for r in csv.DictReader(open(os.path.join(C.REPO, "data", "finais.csv"), encoding="utf-8-sig"))}
     em_falta = [i for i in ids if i not in finais or not os.path.exists(finais[i])]
     if em_falta:
         print("  AVISO: sem ficheiro na FINAIS, ficam de fora: %s" % ", ".join(sorted(em_falta)))
-    return [finais[i] for i in sorted(ids) if i not in em_falta], fonte
+    return [finais[i] for i in ids if i not in em_falta], fonte
+
+
+def sem_acentos(texto):
+    import unicodedata
+    return "".join(c for c in unicodedata.normalize("NFKD", texto or "")
+                   if not unicodedata.combining(c)).strip().lower()
 
 
 def coluna_de_fotos(caminhos):
@@ -255,12 +290,14 @@ def main():
     rolo = rolo_de_nomes(blocos)
     coluna = coluna_de_fotos(fotos)
     # tempos
-    t_rolo = (rolo.height + A * 0.55) / VELOCIDADE_NOMES      # do primeiro titulo a meio do ecra ate sair tudo
+    # do primeiro titulo a meio do ecra ate sair tudo; o que for mais lento, nomes ou fotos, manda
+    t_rolo = max((rolo.height + A * 0.55) / VELOCIDADE_NOMES, (coluna.height + A * 0.4) / VELOCIDADE_FOTOS_MAX)
+    vel_nomes = (rolo.height + A * 0.55) / t_rolo
     vel_fotos = (coluna.height + A * 0.4) / t_rolo
     t_cargo, t_titulo, t_entrada = 4.2, 7.0, 1.5
     dur = t_entrada + t_rolo + len(CARGOS) * t_cargo + t_titulo
-    print("rolo de nomes %d px, %.1f s; coluna de fotos %d px a %.0f px/s; creditos %.1f s"
-          % (rolo.height, t_rolo, coluna.height, vel_fotos, dur))
+    print("rolo de nomes %d px a %.0f px/s; coluna de fotos %d px a %.0f px/s; rolo %.1f s; creditos %.1f s"
+          % (rolo.height, vel_nomes, coluna.height, vel_fotos, t_rolo, dur))
     if "--so-dizer" in sys.argv:
         return
 
@@ -278,7 +315,7 @@ def main():
         tr = t - t_entrada
         tela = preto.copy()
         if tr < t_rolo + 1.0:
-            y0 = int(A * 0.45 - tr * VELOCIDADE_NOMES)         # o primeiro titulo comeca a meio do ecra
+            y0 = int(A * 0.45 - tr * vel_nomes)                # o primeiro titulo comeca a meio do ecra
             tela.paste(rolo, (PAINEL_NOMES[0] - MARGEM_BRILHO, y0))
             yf = int(A * 0.10 - tr * vel_fotos)
             tela.paste(coluna, (CENTRO_FOTOS - coluna.width // 2, yf))
