@@ -193,6 +193,27 @@ def alteracao(original, tratado, lado=700):
     return 100.0 * media / 255.0
 
 
+def mudanca(caminho_original, caminho_versao):
+    """A alteracao() entre o original (ja rodado pelo EXIF) e uma versao tratada, pelos caminhos.
+
+    Esta fora do main() desde 3 de outubro, como a copiar() mais abaixo, para o
+    scripts/entrada_rapida.py guardar a medida de cada foto e nao voltar a medir as 741 por
+    causa de tres novas. Aqui nao ha cache nenhuma: o consolidar.py mede tudo, como sempre.
+    """
+    with Image.open(caminho_original) as o, Image.open(caminho_versao) as t:
+        o = ImageOps.exif_transpose(o)
+        return alteracao(o, t)
+
+
+def copiar(escolha, destino, origem):
+    """Poe a versao escolhida na FINAIS: copia tal e qual, ou reescreve em JPEG se nao for JPEG."""
+    if origem == "original" or escolha.lower().endswith((".jpg", ".jpeg")):
+        shutil.copy2(escolha, destino)
+    else:
+        with Image.open(escolha) as im:
+            im.convert("RGB").save(destino, "JPEG", quality=95, optimize=True)
+
+
 def caras_do_original(caminho, cache, ident):
     """Onde estao as caras no ORIGINAL, uma vez por fotografia. [] quando nao ha detector."""
     if ident in cache:
@@ -317,9 +338,7 @@ def main():
             if not caminho:
                 continue
             try:
-                with Image.open(r["caminho"]) as o, Image.open(caminho) as t:
-                    o = ImageOps.exif_transpose(o)
-                    mudou = alteracao(o, t)
+                mudou = mudanca(r["caminho"], caminho)
             except Exception as e:
                 erros.append((r["ficheiro"], str(e)))
                 continue
@@ -354,11 +373,7 @@ def main():
             continue
         destino = os.path.join(FINAIS, nome_final)
         try:
-            if origem == "original" or escolha.lower().endswith((".jpg", ".jpeg")):
-                shutil.copy2(escolha, destino)
-            else:
-                with Image.open(escolha) as im:
-                    im.convert("RGB").save(destino, "JPEG", quality=95, optimize=True)
+            copiar(escolha, destino, origem)
             copiadas += 1
         except Exception as e:
             erros.append((r["ficheiro"], str(e)))

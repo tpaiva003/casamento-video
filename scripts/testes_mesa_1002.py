@@ -600,12 +600,42 @@ def teste_nomes_dos_convidados_so_na_mesa_montada():
     nomes = {nome for nome in nomes if nome not in material}
     r = subprocess.run(["git", "ls-files", "--", "data", "scripts", "docs"], cwd=REPO, capture_output=True,
                        text=True, encoding="utf-8")
+    # O NOME QUE ELE ESCREVEU NUMA LEGENDA (3 de outubro). Uma legenda com o nome inteiro de um convidado vai com o estado
+    # para o data/mesa_estado.json e para as montagens (data/montagens/). Esse nome nao veio da folha pelos creditos: foi
+    # ele que o pos no ecra do filme, como os das legendas do material da mae da Clara, e o teste falhava por um texto
+    # dele, sem defeito nenhum na Mesa. Vale so o texto de ecra de um clip (x, xf e o nome do destaque), e so nos
+    # ficheiros que saem do estado. Em qualquer outro sitio (um script, os creditos do estado, outra pasta) o mesmo nome
+    # continua a contar. Diz-se sempre em que clip esta, sem dizer o nome: se a legenda fica assim, e se estes ficheiros
+    # entram no Git com ela, e ele que decide.
+    onde, escritos_por_ele = [], set()
+    try:
+        e = json.load(io.open(ESTADO_MONTADO, encoding="utf-8"))
+        for v in (e.get("data", e).get("versoes") or []):
+            for i, c in enumerate(v.get("clips") or []):
+                zd = c.get("zd") if isinstance(c.get("zd"), dict) else {}
+                texto_dele = json.dumps([c.get("x"), c.get("xf"), zd.get("t"), zd.get("texto"), zd.get("nome")], ensure_ascii=False)
+                dele = {nome for nome in nomes if nome in texto_dele}
+                if dele:
+                    escritos_por_ele |= dele
+                    onde.append("clip %d da %s" % (i + 1, v.get("id")))
+    except (OSError, ValueError):
+        pass
+    do_estado = ("data/mesa_estado.json", "data/montagens/")
+
+    def com_nomes_que_contam(rel):
+        try:
+            texto = io.open(os.path.join(REPO, rel), encoding="utf-8").read()
+        except (UnicodeDecodeError, OSError):
+            return 0
+        fora = escritos_por_ele if rel.replace("\\", "/").startswith(do_estado) else set()
+        return sum(1 for nome in nomes if nome not in fora and nome in texto)
+
     com_nomes = []
     for rel in r.stdout.splitlines():
         caminho = os.path.join(REPO, rel)
         if not os.path.isfile(caminho) or os.path.getsize(caminho) > 20 * 1024 * 1024:
             continue
-        n = com_nomes_em(caminho)
+        n = com_nomes_que_contam(rel)
         if n:
             com_nomes.append("%s (%d)" % (rel, n))
     for rel in ("scripts/creditos_para_mesa.py", "scripts/testes_mesa_1002.py"):
@@ -616,7 +646,9 @@ def teste_nomes_dos_convidados_so_na_mesa_montada():
         problemas.append("ficheiros com nomes da folha: %s" % ", ".join(com_nomes[:6]))
     verifica("Mesa: os nomes dos convidados so na Mesa montada", not problemas,
              "; ".join(problemas)[:300] if problemas else
-             "%d nomes, %d etiquetas de fora, nenhum num ficheiro do Git" % (len(nomes), len(proibidas)))
+             "%d nomes, %d etiquetas de fora, nenhum num ficheiro do Git%s" % (len(nomes), len(proibidas),
+             "; POR DECIDIR POR ELE: %d nome(s) inteiro(s) de convidados numa legenda que ele escreveu (%s), que vai com o "
+             "estado e a montagem para o Git" % (len(escritos_por_ele), ", ".join(onde[:4])) if onde else ""))
 
 
 def teste_script_da_mesa_compila():
@@ -1724,7 +1756,9 @@ FUNCOES_PALCO = ["function palcoSuave(", "function palcoQuemNasce(", "function p
                  "function somAtaque(", "function somSonoridade(", "function somAssinatura(", "function fmtS(",
                  # a musica dos creditos (2 de outubro, a tarde): o passo 11 do palcoSomPlano
                  "function credMusicaJuncao(", "function credMusicaEscolha(", "function credMusicaEntrada(",
-                 "function credMusicaFim("]
+                 "function credMusicaFim(",
+                 # o contador parado no fim (clip.cp, 3 de outubro): o palcoBate e o palcoFilme perguntam por ele
+                 "function cpDo(", "function cpNoFilme("]
 PRELUDE_PALCO = """
 var window = {PALCO: %(palco)s, SOM_RENDER: %(som)s};
 var PALCO = window.PALCO, SR = window.SOM_RENDER, AUDIO = %(audio)s, AUDIO_INFO = %(info)s, VIDS = [], CRED = null;
@@ -1738,6 +1772,26 @@ function palcoIntroDoEstilo(c){ return INTRO_FALSA ? INTRO_FALSA(c) : null; }
 def _estado_montado():
     e = json.load(io.open(ESTADO_MONTADO, encoding="utf-8"))
     return e.get("data", e)
+
+
+def _intro_da_montagem_js(filme):
+    """O palcoIntroDoEstilo() com o estilo com que se montou, em JavaScript, para por a frente do corpo de um teste.
+
+    Desde 3 de outubro a montagem traz a intro das cores dele ("intro_clara_tiago_5 sem preto_81ad6d igualado.mp4") no
+    lugar da intro 5 da Mesa. O palco so junta as duas quando o Estilo de agora pede essa intro; nos testes o
+    palcoIntroDoEstilo() e um falso, e este e o falso que diz o que o verdadeiro diria com o estilo que se montou
+    (o verdadeiro testa-se no teste_palco_intro_do_estilo). Sem intro de outras cores na montagem, nada.
+    """
+    for l in (filme or {}).get("linhas") or []:
+        if l.get("t") != "video" or not str(l.get("chave", "")).startswith("video:"):
+            continue
+        f = re.sub(r"#\d+$", "", l["chave"][len("video:"):])
+        m = re.match(r"^intro_clara_tiago_5( sem preto)?_[0-9a-f]{6}(?:_[a-z0-9]+)?( igualado)?\.mp4$", f, re.I)
+        if m:
+            base = "intro_clara_tiago_5%s%s.mp4" % (m.group(1) or "", m.group(2) or "")
+            return ("INTRO_FALSA = function(c){ return c && c.t === 'video' && String(c.f || '').trim() === %s ? "
+                    "{nome: '', f: %s, feita: true} : null; };\n" % (json.dumps(base), json.dumps(f)))
+    return ""
 
 
 def _correr_palco(palco, som, audio, corpo_js, problemas, info=None):
@@ -1810,7 +1864,7 @@ var C = palcoFilme(v);
 saida.comCreditos = {ini: C.cred && C.cred.ini, total: C.total, fim: C.fim};
 console.log(JSON.stringify(saida));
 """ % {"v": json.dumps(versao, ensure_ascii=False), "palco": json.dumps({"filme": filme}, ensure_ascii=False)}
-    r = _correr_palco({"filme": filme}, som, None, corpo_js, problemas)
+    r = _correr_palco({"filme": filme}, som, None, _intro_da_montagem_js(filme) + corpo_js, problemas)
     if r:
         linhas = filme["linhas"]
         segs = r["exato"]
@@ -1921,7 +1975,7 @@ saida.H = resumo(palcoFilme(w)); saida.Fsem = resumo(palcoFilme(v));
 console.log(JSON.stringify(saida));
 """ % {"v": json.dumps(versao, ensure_ascii=False), "sem": json.dumps({"filme": sem_md}, ensure_ascii=False)}
     audio, info = _som_da_mesa()
-    r = _correr_palco({"filme": filme}, som, audio, corpo_js, problemas, info)
+    r = _correr_palco({"filme": filme}, som, audio, _intro_da_montagem_js(filme) + corpo_js, problemas, info)
     detalhe = ""
     if r:
         foto, pilha, cross = r["foto"], r["pilha"], r["cross"]
@@ -2238,8 +2292,20 @@ def teste_palco_toca_o_som_no_instante_da_montagem():
     videos, fim, entradas = _entradas_do_render()
     est = _estado_montado()
     versao = [v for v in est["versoes"] if v["id"] == filme["versao"]][0]
-    marcada = next(fx for fx in som["faixas"] if fx["origem"] == "mesa" and fx["clip"].startswith("foto:"))
-    clair = next(fx for fx in som["faixas"] if fx["origem"] == "mesa" and fx["f"].startswith("Gilbert"))
+    # AS MUSICAS SAO AS DA MONTAGEM QUE HOUVER (3 de outubro: ele trocou quase todas, e o teste procurava o Clair e a Ana
+    # Faria pelo nome). A marcada que anda com a foto e a primeira marca dele numa foto; a que se tira e uma marca dele cujo
+    # ficheiro so toca uma vez no filme; a nova e uma musica com copia que o filme nao usa, posta a meio do leito mais comprido.
+    vezes = {}
+    for fx in som["faixas"]:
+        vezes[fx["f"]] = vezes.get(fx["f"], 0) + 1
+    marcada = next((fx for fx in som["faixas"] if fx["origem"] == "mesa" and fx["clip"].startswith("foto:")), None)
+    clair = next((fx for fx in reversed(som["faixas"]) if fx["origem"] == "mesa" and vezes[fx["f"]] == 1 and fx is not marcada), None)
+    usadas = set(vezes)
+    nova = next((k for k in sorted(audio) if (audio[k].get("tipo") or "musica") == "musica" and k not in usadas
+                 and not k.lower().startswith(("candidato a vereador", "rebobinar")) and (audio[k].get("duracao") or 0) > 60), None)
+    if marcada is None or clair is None or nova is None:
+        salta("Mesa: o som toca como o render", "a montagem nao tem uma musica marcada numa foto, outra que so toque uma vez, e uma copia por usar")
+        return
     corpo_js = """
 var v = %(v)s, F = palcoFilme(v), p = palcoSomPlano(F);
 var limpa = function(l){ return l.map(function(x){ return {k: x.k, tipo: x.tipo, f: x.f, ini: x.ini, "in": x["in"], dura: x.dura, subida: x.subida,
@@ -2250,19 +2316,21 @@ var chaves = chavesDaVersao(v), k = chaves.indexOf(%(clip)s);
 var w = JSON.parse(JSON.stringify(v)), c = w.clips.splice(k, 1)[0]; w.clips.splice(k + 6, 0, c);
 var G = palcoFilme(w);
 saida.movida = {ini: G.porI[k + 6].ini, plano: limpa(palcoSomPlano(G).plano)};
-/* uma marca nova a meio do bloco da Ana Faria, e a do Clair tirada */
-var x = JSON.parse(JSON.stringify(v)), kc = chaves.indexOf(%(clair)s), alvo = -1;
-for(var i = 0; i < x.clips.length; i++){ var s = F.porI[i]; if(s && s.t === "foto" && s.ini > F.videos + 140 && s.ini < F.videos + 170){ alvo = i; break; } }
-x.clips[alvo].m = {f: "Pharrell Williams - Happy (Lyrics)", "in": 0};
+/* uma marca nova a meio do leito mais comprido do filme (era o bloco da Ana Faria), e outra marca dele tirada (era o Clair) */
+var x = JSON.parse(JSON.stringify(v)), kc = chaves.indexOf(%(clair)s), alvo = -1, leito = null;
+p.plano.forEach(function(e){ if(e.tipo === "leito" && e.f !== %(clair_f)s && e.clip !== %(clair)s && (!leito || e.dura > leito.dura)) leito = e; });
+for(var i = 0; i < x.clips.length; i++){ var s = F.porI[i]; if(s && s.t === "foto" && i !== kc && !x.clips[i].m && s.ini > leito.ini + 8 && s.ini < leito.ini + leito.dura - 12){ alvo = i; break; } }
+x.clips[alvo].m = {f: %(nova)s, "in": 0};
 delete x.clips[kc].m;
 var H = palcoFilme(x), ph = palcoSomPlano(H);
-saida.nova = {ini: H.porI[alvo].ini, plano: limpa(ph.plano), notas: ph.notas};
+saida.nova = {ini: H.porI[alvo].ini, plano: limpa(ph.plano), notas: ph.notas, leito: {f: leito.f, ini: leito.ini}};
 CRED_FALSO = {dur: 60};
 var C = palcoFilme(v), q = palcoSomPlano(C);
 saida.creditos = {ini: C.cred.ini, total: C.total, plano: limpa(q.plano)};
 console.log(JSON.stringify(saida));
-""" % {"v": json.dumps(versao, ensure_ascii=False), "clip": json.dumps(marcada["clip"]), "clair": json.dumps(clair["clip"])}
-    r = _correr_palco({"filme": filme}, som, audio, corpo_js, problemas, info)
+""" % {"v": json.dumps(versao, ensure_ascii=False), "clip": json.dumps(marcada["clip"]), "clair": json.dumps(clair["clip"]),
+       "clair_f": json.dumps(clair["f"], ensure_ascii=False), "nova": json.dumps(nova, ensure_ascii=False)}
+    r = _correr_palco({"filme": filme}, som, audio, _intro_da_montagem_js(filme) + corpo_js, problemas, info)
     alvo = info["r"]["alvo"]
     if r:
         plano = r["plano"]
@@ -2307,18 +2375,18 @@ console.log(JSON.stringify(saida));
                                  % (ult["ini"] + ult["dura"] - ult["cruza"], ini_m))
         # a marca nova entra no clip marcado e corta o leito de antes, a cruzar; a tirada deixa de tocar
         n = r["nova"]
-        happy = [x for x in n["plano"] if x["f"].startswith("Pharrell") and abs(x["ini"] - n["ini"]) < 0.011]
+        happy = [x for x in n["plano"] if x["f"] == nova and abs(x["ini"] - n["ini"]) < 0.011]
         if not happy or not happy[0]["nova"]:
             problemas.append("a marca nova nao entrou no clip marcado (aos %.2f s)" % n["ini"])
         else:
-            ana = [x for x in n["plano"] if x["f"].startswith("Ana Faria")]
+            ana = [x for x in n["plano"] if x["f"] == n["leito"]["f"] and abs(x["ini"] - n["leito"]["ini"]) < 0.011]
             if not ana or abs(ana[0]["ini"] + ana[0]["dura"] - ana[0]["cruza"] - happy[0]["ini"]) > 0.011 or abs(ana[0]["cruza"] - 2.2) > 0.011:
-                problemas.append("a Ana Faria nao acaba na marca nova com o cruzamento: %s" % (ana[:1],))
+                problemas.append("o leito onde a marca nova entra nao acaba nela com o cruzamento: %s" % (ana[:1],))
             seguinte = [x for x in n["plano"] if x["tipo"] == "leito" and x["ini"] > happy[0]["ini"] + 0.05]
             if seguinte and abs(happy[0]["ini"] + happy[0]["dura"] - happy[0]["cruza"] - min(x["ini"] for x in seguinte)) > 0.011:
                 problemas.append("a marca nova nao acaba onde entra a seguinte")
-        if any(x["f"].startswith("Gilbert") for x in n["plano"]):
-            problemas.append("a marca do Clair foi tirada e o Clair continua a tocar")
+        if any(x["f"] == clair["f"] for x in n["plano"]):
+            problemas.append("uma marca dele foi tirada e a musica continua a tocar")
         if not any("marca" in t for t in n["notas"]):
             problemas.append("o palco nao diz que a marca nova so chega ao render depois de montar: %s" % n["notas"])
         # os creditos: a ultima musica continua ate ao fim deles (ou ate ao fim do ficheiro)
@@ -3493,8 +3561,10 @@ console.log(JSON.stringify(r));
 #  19. a Mesa montada traz os fins de linha (0 ficheiros novos), e o {} sem ficheiro avisa nos dois lados.
 FUNCOES_PASSAGEM = ["function credMusicaZonas(", "function credMusicaOndeCai(", "function credS2(", "function credMusicaDuracaoPara(",
                     "function credMusicaClipNaFrase(", "function credMusicaPassagem(", "function credMusicaPassagemHtml(",
-                    "function credMusicaNome(", "function nomeDoClip("]
-DECLARACOES_PASSAGEM = ["var CRED_PASSAGEM = "]
+                    "function credMusicaNome(", "function nomeDoClip(",
+                    # o ultimo clip do filme e um contador desde 3 de outubro, e o nome dele diz as duas pontas
+                    "function dataCurta("]
+DECLARACOES_PASSAGEM = ["var CRED_PASSAGEM = ", "var MESES_CURTOS = "]
 # a janela do juncao_creditos.main() a volta do corte (nc - 3,0 a nc + 4,5), escrita la dentro do main
 JANELA_DO_JUNCAO = (3.0, 4.5)
 
@@ -3669,9 +3739,10 @@ console.log(JSON.stringify(r));
              "%d cortes em 4 musicas (voz e verificada, so batidas, nada): as mesmas zonas, o certo, o depois e o antes" % n)
 
 
-def _passagem_no_palco(versoes, mf, escolha, problemas, dur=179.88, sem_fins=False):
+def _passagem_no_palco(versoes, mf, escolha, problemas, dur=179.88, sem_fins=False, fins=None):
     """Corre a passagem do palco (credMusicaPassagem sobre o palcoFilme e o palcoSomPlano) com a montagem, para cada
-    versao de `versoes` ({nome: versao}); de cada uma, tambem a passagem depois de por a duracao que ela pede."""
+    versao de `versoes` ({nome: versao}); de cada uma, tambem a passagem depois de por a duracao que ela pede.
+    `fins` sao fins de frase verificados de ensaio ([{sai, sai_s}]) no lugar dos do data/fins_de_frase.csv."""
     import palco_para_mesa
     import som_para_mesa
     filme = palco_para_mesa.linhas_do_filme()
@@ -3694,10 +3765,11 @@ function marcar(){ MARCAS++; }
 var VS = %(vs)s, r = {};
 MUSICA_FIM = %(mf)s; CRED_FALSO = {dur: %(dur)s};
 if(%(sem_fins)s) AUDIO_INFO = Object.assign({}, AUDIO_INFO, {fins: []});
+if(%(fins)s !== null) AUDIO_INFO = Object.assign({}, AUDIO_INFO, {fins: %(fins)s});
 est = {creditos: {musica: %(esc)s}};
 if(%(esc)s === null) est = {};
 function conta(v){ var F = palcoFilme(v), sp = palcoSomPlano(F); return {v: v, F: F, J: sp.creditos, plano: sp.plano}; }
-function resumo(P){ return P ? JSON.parse(JSON.stringify({noCorte: P.noCorte, onde: P.onde, clip: P.clip, n: P.zonas.length, medida: P.medida})) : null; }
+function resumo(P){ return P ? JSON.parse(JSON.stringify({f: P.f, noCorte: P.noCorte, onde: P.onde, clip: P.clip, n: P.zonas.length, medida: P.medida})) : null; }
 Object.keys(VS).forEach(function(k){
   var v = VS[k], antes = JSON.stringify(v), C = conta(v), P = credMusicaPassagem(C);
   r[k] = {P: resumo(P), html: credMusicaPassagemHtml(P), mudou: JSON.stringify(v) !== antes, marcas: MARCAS};
@@ -3712,8 +3784,9 @@ Object.keys(VS).forEach(function(k){
 });
 console.log(JSON.stringify(r));
 """ % {"extra": extra, "vs": json.dumps(versoes, ensure_ascii=False), "mf": json.dumps(mf, ensure_ascii=False), "dur": dur,
-       "esc": json.dumps(escolha, ensure_ascii=False), "sem_fins": "true" if sem_fins else "false"}
-    r = None if meus else _correr_palco({"filme": filme}, som, audio, corpo_js, meus, info)
+       "esc": json.dumps(escolha, ensure_ascii=False), "sem_fins": "true" if sem_fins else "false",
+       "fins": json.dumps(fins, ensure_ascii=False)}
+    r = None if meus else _correr_palco({"filme": filme}, som, audio, _intro_da_montagem_js(filme) + corpo_js, meus, info)
     problemas.extend(meus)
     return r
 
@@ -3722,47 +3795,63 @@ def teste_passagem_no_palco_e_o_que_falta():
     """No palco, a duracao que a Mesa pede poe o corte no fim da frase; a Mesa nao muda nada; sem passagem nao diz nada.
 
     O DEFEITO QUE ISTO APANHA: a Mesa a pedir uma duracao que nao chega ao fim da frase (o corte nao anda com o ultimo
-    clip como se conta, uma fita parada, o clip errado), a mudar a versao dele ao fazer as contas (083), a oferecer um
-    encurtar que deixa a foto abaixo dos 3 s, ou a falar da passagem em «Como está», na mesma musica no mesmo sitio, ou
-    numa escolha mal escrita. Com a montagem (o filme de 1/10, corte aos 95,00 s, numa pausa) e com a leitura de 2 de
-    outubro (68,70 s, faltam 2,58 s, de 4 s para 6,58 s), como o Tiago a vai abrir.
+    clip como se conta, uma fita parada, o clip errado, um contador com parado no fim), a mudar a versao dele ao fazer as
+    contas (083), a oferecer um encurtar que deixa a foto abaixo dos 3 s, ou a falar da passagem em «Como está», na mesma
+    musica no mesmo sitio, ou numa escolha mal escrita.
+
+    COM A MONTAGEM QUE HOUVER (3 de outubro). Ate aqui o teste contava com os Queen no corte aos 95,00 s, da montagem de
+    1 de outubro; ele trocou as musicas e o ultimo clip passou a ser o contador do fim, com parado. Agora pergunta-se ao
+    palco que musica esta no corte e em que segundo (nc), e poem-se fins de frase de ensaio a volta dele, com as
+    distancias de antes: a voz cala-se 0,05 s antes do corte (era 94,95 contra 95,00) e ha um fim verificado 2,5 s depois
+    (era 97,50). Os fins de linha verdadeiros conferem-se no teste_passagem_fins_de_linha_como_o_juncao.
     """
     if not shutil.which("node"):
         salta("Mesa: a passagem no palco e o que falta", "sem node neste PC")
         return
     import palco_para_mesa
-    import musica_creditos as mc
     problemas = []
     filme = palco_para_mesa.linhas_do_filme()
-    linhas = _linhas_guardadas([QUEEN])
-    if not filme or not linhas.get(QUEEN):
-        salta("Mesa: a passagem no palco e o que falta", "sem a montagem ou sem os fins de linha dos Queen")
+    if not filme:
+        salta("Mesa: a passagem no palco e o que falta", "sem a montagem")
         return
     est = _estado_montado()
     v = [x for x in est["versoes"] if x["id"] == filme["versao"]][0]
     ult = len(v["clips"]) - 1
     d0 = float(v["clips"][ult]["d"])
+    # 1. a musica que esta no corte, e onde: com o Taking Care of Business nos creditos (ou os Queen, se for ele a do corte)
+    M = {"ficheiro": TCOB, "inicio": "fim"}
+    sonda = _passagem_no_palco({"v": v}, {}, M, problemas, fins=[])
+    if sonda is None and not problemas:
+        salta("Mesa: a passagem no palco e o que falta", "sem a montagem ou sem as copias do som")
+        return
+    P0 = sonda and sonda["v"]["P"]
+    if P0 and P0["f"] == TCOB:
+        M = {"ficheiro": QUEEN, "inicio": "fim"}
+        sonda = _passagem_no_palco({"v": v}, {}, M, problemas, fins=[])
+        P0 = sonda and sonda["v"]["P"]
+    if not P0:
+        problemas.append("com outra musica nos creditos a Mesa nao diz a passagem: %s" % (sonda and sonda["v"]))
+        verifica("Mesa: a passagem no palco e o que falta", False, "; ".join(problemas)[:500])
+        return
+    SAI, nc0 = P0["f"], P0["noCorte"]
+    # sem frases medidas diz-se isso, e nao ha «Ir ao clip»
+    if "não tem as frases medidas" not in sonda["v"]["html"] or "data-cmclip" in sonda["v"]["html"]:
+        problemas.append("sem frases medidas: %s" % re.sub("<[^>]+>", "", sonda["v"]["html"])[:200])
+    # 2. os fins de ensaio: a voz cala-se 0,05 s antes do corte e a linha seguinte entra 0,9 s depois; um verificado a 2,5 s
+    mf = {SAI: {"fim": nc0 + 60.0, "linhas": [[round(nc0 - 0.05, 2), round(nc0 + 0.9, 2)]]}}
+    fins = [{"sai": SAI, "sai_s": round(nc0 + 2.5, 2)}]
     versoes = {"montagem": v}
     for nome, mais in (("menos2", -2.0), ("mais1", 1.0)):
         w = json.loads(json.dumps(v))
         w["clips"][ult]["d"] = d0 + mais
         versoes[nome] = w
-    leitura = os.path.join(REPO, "saida", "leitura_mesa_64", "montagem", "estado2.json")
-    if os.path.exists(leitura):
-        e64 = json.load(io.open(leitura, encoding="utf-8"))
-        versoes["leitura64"] = [x for x in e64["versoes"] if x["id"] == filme["versao"]][0]
-    mf = {QUEEN: {"fim": 239.34, "linhas": linhas[QUEEN], "frases": [list(x) for x in mc.frases_medidas(QUEEN)]}}
-    M = {"ficheiro": TCOB, "inicio": "fim"}
-    r = _passagem_no_palco(versoes, mf, M, problemas)
-    if r is None and not problemas:
-        salta("Mesa: a passagem no palco e o que falta", "sem a montagem ou sem as copias do som")
-        return
+    r = _passagem_no_palco(versoes, mf, M, problemas, fins=fins)
     if r:
         for k, x in r.items():
             if x["mudou"] or x["marcas"]:
                 problemas.append("%s: as contas da passagem mudaram a versao ou marcaram uma mudanca" % k)
             if not x["P"]:
-                problemas.append("%s: com o Taking Care of Business nos creditos a Mesa nao diz a passagem" % k)
+                problemas.append("%s: com outra musica nos creditos a Mesa nao diz a passagem" % k)
                 continue
             for q in ("depois", "antes"):
                 y = x.get(q)
@@ -3778,14 +3867,16 @@ def teste_passagem_no_palco_e_o_que_falta():
                 if y["sai"] and y["ult"] and abs(y["ult"]["ini"] + y["sai"]["dura"] - (y["ini"] + 2.2)) > 0.011:
                     problemas.append("%s: a que sai nao chega ao corte novo: %s" % (k, y))
         P = r["montagem"]["P"] if r.get("montagem") else None
-        if P and (abs(P["noCorte"] - 95.0) > 0.011 or not P["onde"]["certo"] or abs(P["onde"]["certo"]["fim"] - 94.95) > 0.011):
-            problemas.append("a montagem de 1/10: o corte aos %s devia estar na pausa dos 94,95" % (P and P["noCorte"]))
+        if P and (abs(P["noCorte"] - nc0) > 0.011 or not P["onde"]["certo"] or abs(P["onde"]["certo"]["fim"] - (nc0 - 0.05)) > 0.011):
+            problemas.append("a montagem: o corte aos %s devia estar na pausa dos %.2f" % (P and P["noCorte"], nc0 - 0.05))
         if P and ("está certo" not in r["montagem"]["html"] or "data-cmclip" in r["montagem"]["html"]):
-            problemas.append("a montagem de 1/10: a Mesa devia dizer que esta certo, sem «Ir ao clip»")
+            problemas.append("a montagem: a Mesa devia dizer que esta certo, sem «Ir ao clip»")
+        if P and (P["clip"]["n"] != ult + 1 or abs(P["clip"]["escrita"] - d0) > 0.011):
+            problemas.append("o ultimo clip e o %d, com %s s escritos, e a Mesa diz o %s com %s s" % (ult + 1, d0, P["clip"]["n"], P["clip"]["escrita"]))
         P = r["menos2"]["P"] if r.get("menos2") else None
         if P:
             d = P["onde"]["depois"]
-            if P["onde"]["certo"] or abs(P["noCorte"] - 93.0) > 0.011 or abs(d["zona"]["fim"] - 94.95) > 0.011 \
+            if P["onde"]["certo"] or abs(P["noCorte"] - (nc0 - 2.0)) > 0.011 or abs(d["zona"]["fim"] - (nc0 - 0.05)) > 0.011 \
                     or abs(d["falta"] - 1.95) > 0.011 or abs(d["d"] - (d0 - 2.0 + 1.95)) > 0.011 or not d["ok"]:
                 problemas.append("dois segundos a menos: %s" % P)
             h = r["menos2"]["html"]
@@ -3795,54 +3886,43 @@ def teste_passagem_no_palco_e_o_que_falta():
                 if texto not in h:
                     problemas.append("dois segundos a menos, a linha nao diz %r: %s" % (texto, re.sub("<[^>]+>", "", h)[:300]))
             if "Ou tira-lhe" in h:
-                problemas.append("dois segundos a menos: o encurtar deixava a foto com menos de 3 s, e oferece-se")
+                problemas.append("dois segundos a menos: nao ha frase de antes, e oferece-se o encurtar")
             if re.search(r"<(input|select)|data-cm(?!clip)[a-z]*=", h):
                 problemas.append("a linha da passagem tem um controlo que muda alguma coisa (083)")
         P = r["mais1"]["P"] if r.get("mais1") else None
         if P:
             a, d = P["onde"]["antes"], P["onde"]["depois"]
-            if P["onde"]["certo"] or abs(a["zona"]["fim"] - 94.95) > 0.011 or abs(d["zona"]["fim"] - 97.5) > 0.011 \
+            if P["onde"]["certo"] or abs(a["zona"]["fim"] - (nc0 - 0.05)) > 0.011 or abs(d["zona"]["fim"] - (nc0 + 2.5)) > 0.011 \
                     or d["zona"]["tipo"] != "verificada":
                 problemas.append("um segundo a mais: %s" % P)
-            if "Ou tira-lhe 1,05 s" not in r["mais1"]["html"]:
-                problemas.append("um segundo a mais: devia oferecer tirar 1,05 s (a frase de antes esta mais perto)")
+            # tirar 1,05 s so se oferece se o clip ficar com 3 s ou mais (nunca menos de 3 s por foto)
+            if ("Ou tira-lhe 1,05 s" in r["mais1"]["html"]) != (d0 + 1.0 - 1.05 >= 3.0):
+                problemas.append("um segundo a mais com %s s escritos: o tirar 1,05 s %s" % (d0, re.sub("<[^>]+>", "", r["mais1"]["html"])[:300]))
             if "verificado" not in (r["mais1"].get("depois") or {}).get("html", ""):
-                problemas.append("na frase verificada (97,50) a Mesa devia dizer que e verificada")
-        P = r["leitura64"]["P"] if r.get("leitura64") else None
-        if P:
-            d = P["onde"]["depois"]
-            if abs(P["noCorte"] - 68.70) > 0.011 or abs(d["falta"] - 2.58) > 0.011 or abs(d["d"] - 6.58) > 0.011 \
-                    or P["clip"]["n"] != 169 or "IMG_4098" not in P["clip"]["frase"] or abs(d["ate"] - 7.08) > 0.011:
-                problemas.append("a leitura de 2 de outubro: %s" % P)
-            # a frase de antes (66,59 s) esta mais perto, mas a foto ficava com 1,89 s: nao se oferece
-            if "Ou tira-lhe" in r["leitura64"]["html"]:
-                problemas.append("a leitura de 2 de outubro: oferece tirar 2,11 s a uma foto de 4 s")
-    # a frase de antes mais perto (2,2 s contra 2,5), mas a foto ficava abaixo dos 3 s: so o para a frente (fins de
-    # ensaio a volta do corte da montagem, sem a verificada; a foto da montagem tem 5 s, e ficava com 2,8)
-    nc0 = r["montagem"]["P"]["noCorte"] if r and r.get("montagem") and r["montagem"]["P"] else 95.0
-    x = _passagem_no_palco({"v": v}, {QUEEN: {"fim": 239.34, "linhas": [[round(nc0 - 2.2, 2), round(nc0 - 1.4, 2)],
-                                                                          [round(nc0 + 2.5, 2), round(nc0 + 3.5, 2)]]}},
-                           M, problemas, sem_fins=True)
+                problemas.append("na frase verificada a Mesa devia dizer que e verificada")
+    # a frase de antes mais perto (2,2 s contra 2,5), mas o clip ficava abaixo dos 3 s: so o para a frente (so se ve com um
+    # ultimo clip de menos de 5,2 s; com o contador do fim, de 13 s, o encurtar cabe e oferece-se)
+    x = _passagem_no_palco({"v": v}, {SAI: {"fim": nc0 + 60.0, "linhas": [[round(nc0 - 2.2, 2), round(nc0 - 1.4, 2)],
+                                                                         [round(nc0 + 2.5, 2), round(nc0 + 3.5, 2)]]}},
+                           M, problemas, fins=[])
     P = x and x["v"]["P"]
-    if d0 - 2.2 < 3 and (not P or abs(P["onde"]["antes"]["falta"] + 2.2) > 0.011 or abs(P["onde"]["depois"]["falta"] - 2.5) > 0.011
-                         or "Ou tira-lhe" in x["v"]["html"] or "faltam <b>2,5 s</b>" not in x["v"]["html"]):
-        problemas.append("a frase de antes a 2,2 s com uma foto de %s s: %s" % (d0, x and re.sub("<[^>]+>", "", x["v"]["html"])[:300]))
-    # sem passagem: «Como está», a mesma musica no mesmo sitio, uma escolha mal escrita, uma que nao chega a tocar; e sem
-    # as frases medidas
+    if not P or abs(P["onde"]["antes"]["falta"] + 2.2) > 0.011 or abs(P["onde"]["depois"]["falta"] - 2.5) > 0.011 \
+            or "faltam <b>2,5 s</b>" not in x["v"]["html"] or ("Ou tira-lhe" in x["v"]["html"]) != (d0 - 2.2 >= 3.0):
+        problemas.append("a frase de antes a 2,2 s com um clip de %s s: %s" % (d0, x and re.sub("<[^>]+>", "", x["v"]["html"])[:300]))
+    # sem passagem: «Como está», a mesma musica no mesmo sitio, uma escolha mal escrita, uma que nao chega a tocar
     caladas = {}
-    for nome, esc in (("como", None), ("erro", {"inicio": "fim"}), ("mesma", {"ficheiro": QUEEN, "inicio": 95.0}),
-                      ("naoToca", {"ficheiro": TCOB, "inicio": 291.6}), ("semMedidas", M)):
-        x = _passagem_no_palco({"v": v}, {} if nome == "semMedidas" else mf, esc, problemas, sem_fins=nome == "semMedidas")
+    for nome, esc in (("como", None), ("erro", {"inicio": "fim"}), ("mesma", {"ficheiro": SAI, "inicio": nc0}),
+                      # (0,2 s antes de a musica se calar: o Taking Care of Business cala-se aos 291,81 s, os Queen aos 239,34)
+                      ("naoToca", {"ficheiro": M["ficheiro"], "inicio": 291.6 if M["ficheiro"] == TCOB else 239.14})):
+        x = _passagem_no_palco({"v": v}, mf, esc, problemas, fins=fins)
         caladas[nome] = x and x["v"]
     for nome in ("como", "erro", "mesma", "naoToca"):
         if not caladas[nome] or caladas[nome]["P"] or caladas[nome]["html"]:
             problemas.append("%s: a Mesa fala da passagem sem haver passagem (%s)" % (nome, caladas[nome] and caladas[nome]["P"]))
-    s = caladas.get("semMedidas")
-    if not s or not s["P"] or "não tem as frases medidas" not in s["html"] or "data-cmclip" in s["html"]:
-        problemas.append("sem frases medidas: %s" % (s and re.sub("<[^>]+>", "", s["html"])[:200]))
     verifica("Mesa: a passagem no palco e o que falta", not problemas, "; ".join(problemas)[:500] if problemas else
-             "%d versoes: a duracao pedida poe o corte no fim da frase (para a frente e para tras), a versao fica igual, "
-             "o encurtar so acima dos 3 s, a verificada dita, e calada em «Como está», na mesma e mal escrita" % len(r or {}))
+             "%d versoes com a musica do corte desta montagem (aos %.2f s): a duracao pedida poe o corte no fim da frase (para a "
+             "frente e para tras), a versao fica igual, o encurtar so acima dos 3 s, a verificada dita, e calada em «Como "
+             "está», na mesma e mal escrita" % (len(r or {}), nc0))
 
 
 def teste_passagem_guardada_ao_gravar_a_musica():
@@ -6659,12 +6739,13 @@ console.log(JSON.stringify(r));
 DECLARACOES_LEG = ["var LEGENDA_LADO = ", "var LADO_CORTE_AVISO = ", "var LADO_FOLGA_PX = ", "var LADO_INTEIRA = ",
                    "var PISO_DA_LEGENDA = ", "var lpUltimoToque = "]
 FUNCOES_LEG = ["function lpDoClip(", "function x1Do(", "function liDo(", "function x1NoFilme(", "function liNoFilme(", "function legPosicao(", "function legDxEfetivo(",
-               "function legXs(", "function legJunta(", "function legNumaLinha(", "function legLinhas(",
+               "function legLarguraNumaLinha(", "function legMargemDoBloco(", "function legXs(", "function legJunta(", "function legNumaLinha(", "function legLinhas(",
                "function legPisoDoGrupo(", "function ladoCelulas(", "function ladoCorte(", "function ladoCorteDoClip(",
                "function ladoPct(", "function ladoCortadas(", "function avisoLadoCorta(", "function avisosNumaLinha(",
                "function estiloMede(", "function estiloQuebra("]
 FUNCOES_LEG_INSPETOR = ["function temLegendaDeBaixo(", "function textoDaLegendaDoClip(", "function notaNumaLinha(",
-                        "function legNoLimite(", "function x1NaoCabe(", "function notaPosicaoDoClip(", "function lpSetaParada(",
+                        "function legNoLimite(", "function x1NaoCabe(", "function notaEncostaDoClip(", "function notaPosicaoDoClip(",
+                        "function limitesNumaLinha(", "function lpSetaParada(",
                         "function lpPoe(", "function lpPasso(", "function lpRepor(", "function x1Poe(", "function liPoe(",
                         "function guardaDesfazerCampos(", "function desfazer(", "function ordemDoClip("]
 FUNCOES_LEG_ESTILO = ["function estiloPoePosicao(", "function estiloSetaPosicao(", "function estiloComoEsta(",
@@ -7935,6 +8016,1027 @@ process.stdout.write(JSON.stringify(a.map(function(x){ return {grau: x.grau, cam
              "%d casos com as fotos e os nomes contados como o avisos_da_velocidade() (%d avisos iguais), o que fica parado, o «Sem "
              "cargos» no painel, o Validar so com o que vai ao ecra, e o render de ontem a dar «ainda não chega ao filme»"
              % (len(casos), conferidos))
+
+
+# ------------------------------------------------- os contadores de 3 de outubro (contrato_1003, pontos 6 e 7)
+# O Tiago: "o que pretendemos e que ele se mova desde 2023 ate 2026 para a data de 4 de outubro de 2026", "precisava que
+# ficasse mais 3 segundos depois de chegar", e para o de 1995: "o contador para em maio de 2012 onde comecaram a namorar".
+# O contador de anos pode acabar numa data inteira ("1995>20/05/2012|2011=texto;20/05/2012=texto") e ficar parado no fim
+# (clip.cp). Aqui guarda-se que:
+#  20. a Mesa le o texto como o linha_tempo.ler_contador() e o chegada_do_contador(), e avisa do que o Python nao le;
+#  21. o palco escreve os mesmos textos, nos mesmos sitios e com o mesmo brilho que os fotogramas do render, instante a
+#      instante: os anos, a data de chegada e o texto dela, o que nao apaga, e parado no fim;
+#  22. o clip.cp le-se como o montar_da_mesa.parado_do_contador(), grava so quando difere de zero, passa pelo anular e
+#      pela juncao, conta na duracao do clip e do filme, e o rebobinar anda so enquanto o contador anda;
+#  23. a Mesa diz o que o filme vai fazer (a data escrita na partida, um texto fora da viagem ou com pouco tempo), e
+#      «ainda não chega ao filme» com um render que nao os faz (gerar_mesa.le_os_contadores_de_3_de_outubro).
+DECLARACOES_CONTADOR = ["var CONTADOR_PARADO_MAX = ", "var CONTADOR_FRACAO_PARADA = ", "var CONTADOR_DIAS_MAX = ", "var MESES_CURTOS = ",
+                        "var MESES_LONGOS = ", "var XF_CPS = ", "var PALCO_R = ", "var ESTILO_MESES = ", "var cpUltimoToque = "]
+FUNCOES_CONTADOR = ["function lerContador(", "function eDataContador(", "function dataValida(", "function avisosDoContador(", "function diasEntre(",
+                    "function contadorPlano(", "function contadorNoInspetor(", "function contadorSitio(", "function contadorTextos(",
+                    "function leituraDoContador(", "function dicasDoContador(", "function ultimoClipDoFilme(", "function cpDo(", "function cpNoFilme(",
+                    "function cpProblema(", "function cpPoe(", "function notaDoParado(", "function blocoParadoDoContador(",
+                    "function ajudaDoContador(", "function duracaoDoClip(", "function rotuloDoContador(", "function dataDeRotulo(",
+                    "function dataCurta(", "function dataParaIso(", "function isoParaData(", "function d2(", "function palcoDia(", "function fmtS(",
+                    "function s1(", "function rotuloDoClip(", "function pontoDoContador(", "function contadoresSeguidos(",
+                    "function contadorNoOutroTipo(", "function escreverContadorDatas(", "function escreverContadorAnos(", "function limpaRotulo(",
+                    "function palcoContador(", "function palcoAnos(", "function palcoDatas(", "function palcoParagens(",
+                    "function palcoSuave(", "function palcoRasto(", "function palcoPonteiro(", "function palcoRegua(",
+                    "function palcoRisco(", "function palcoLinha(", "function palcoMistura(", "function palcoRgb(",
+                    "function ordemDoClip(", "function guardaDesfazerCampos(", "function desfazer("]
+PRELUDE_CONTADOR = """
+var RENDER_LE = {}, est = {versoes: [], atual: "v1"}, pilhaDesfazer = [], marcas = 0, avisos = [], porId = {};
+var clipAtivo = -1, selClips = [], ancoraSel = -1;
+var document = {activeElement: null, getElementById: function(){ return null; }, querySelectorAll: function(){ return []; }};
+function nada(){}
+var pintaVersoes = nada, pintaGrelha = nada, pintaClips = nada, pintaInspetor = nada, pintaBarraClips = nada;
+function credAberto(){ return false; }
+function estiloAberto(){ return false; }
+function marcar(){ marcas++; }
+function avisar(t){ avisos.push(t); }
+function esc(s){ return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
+function versaoAtual(){ return est.versoes[0] || null; }
+function duracaoDoVideoNoFilme(){ return 0; }
+function aproximaAtivo(){ return false; }
+function temVozes(){ return false; }
+function videoNoCorpo(){ return false; }
+function temTextosFotos(){ return false; }
+function opcoesTextos(){ return undefined; }
+/* o palco a escrever numa lista em vez de num canvas: cada texto com o corpo, o sitio e a cor */
+var ESCRITOS = [], FALTAS = [], K = %(k)s;
+function palcoCores(){ return K; }
+function palcoCssContador(corpo){ return "700 " + corpo + "px Arial"; }
+function palcoTexto(ctx, texto, corpo, cor, x, y){ ESCRITOS.push([texto, corpo, x, y, cor]); }
+function palcoFalta(ctx, texto){ FALTAS.push(texto); }
+var ctx = new Proxy({}, {get: function(t, p){ return p in t ? t[p] : function(){ return {width: 0}; }; }, set: function(t, p, v){ t[p] = v; return true; }});
+"""
+
+
+def _correr_contador(corpo_js, problemas, mais=(), declaracoes=()):
+    """Corre no node as funcoes do contador da Mesa (a leitura, o plano, o parado, os avisos e o desenho do palco, que
+    escreve numa lista). As cores sao as de sempre do linha_tempo."""
+    import linha_tempo as lt
+    html = io.open(EDITOR, encoding="utf-8").read()
+    k = {"fundo": lt.FUNDO, "linha": lt.LINHA, "regua": lt.REGUA_MAIOR, "regua_texto": lt.REGUA_TEXTO, "ponteiro": lt.PONTEIRO,
+         "marco": lt.MARCO, "marco_texto": lt.MARCO_TEXTO, "ano": lt.ANO_PERTO, "ano_longe": lt.ANO_LONGE}
+    return _correr_js(DECLARACOES_CONTADOR + list(declaracoes), FUNCOES_CONTADOR + list(mais),
+                      PRELUDE_CONTADOR % {"k": json.dumps({n: list(v) for n, v in k.items()})}, corpo_js, problemas)
+
+
+def _montar_numa_pasta(clips, nome):
+    """Corre o montar_da_mesa sobre estes clips numa pasta temporaria: (as linhas do CSV, o que ele disse)."""
+    import contextlib
+    import csv
+    montar = _montar_calado()
+    import render  # noqa: F401 - antes do redirect: o render mexe no sys.stdout ao ser importado
+    pasta = tempfile.mkdtemp(prefix="teste_mesa_monta_")
+    caminho = os.path.join(pasta, "estado.json")
+    with io.open(caminho, "w", encoding="utf-8") as fh:
+        json.dump({"versoes": [{"id": "t", "nome": "t", "clips": clips}]}, fh, ensure_ascii=False)
+    guardado = (montar.ESTADO, montar.DESTINO, sys.argv)
+    montar.ESTADO, montar.DESTINO = caminho, pasta
+    sys.argv = ["montar_da_mesa.py", "t", "--nome", nome]
+    log = io.StringIO()
+    try:
+        with contextlib.redirect_stdout(log):
+            montar.main()
+        with open(os.path.join(pasta, nome + ".csv"), encoding="utf-8-sig", newline="") as fh:
+            linhas = list(csv.DictReader(fh))
+    finally:
+        montar.ESTADO, montar.DESTINO, sys.argv = guardado
+        shutil.rmtree(pasta, ignore_errors=True)
+    return linhas, log.getvalue()
+
+
+# os textos de contador para ler: os do contrato, os dele, e os que nao se leem
+CONTADORES_BONS = [
+    "1995>20/05/2012|2011=Clara e Tiago conhecem-se;20/05/2012=Começam a namorar",
+    "2023>04/10/2026", "2023>4/10/2026", "2023 > 04/10/2026 | 2024=a meio",
+    "1995>20/05/2012|rodapé da partida;2012=no ano da chegada;03/04/2011=numa data que não é a da chegada;20/05/2012=;2011=",
+    "1995>20/05/2012|x=y;20/05/2012=primeiro;20/05/2012=segundo", "2026>04/10/2026|na partida;2026=no ano",
+    "2026>25/12/2025|x", "2030>01/01/1995|1995=chegada;2012=o meio;2040=fora",
+    "2026>1995|4 de outubro de 2026", "1995>2012", "2023>2026 | 4 de outubro de 2026", "1995>2011|2011=texto", "2025>1995",
+    "04/10/2026>25/12/2025|4 de outubro de 2026;25/12/2025=o pedido", "01/01/2025>31/12/2025|a;01/06/2025=b",
+]
+CONTADORES_MAUS = ["04/10/2026>1995|do casamento até 1995", "1995>31/02/2012|x", "1995>20/05|x", "1995>20/|", "abc>20/05/2012",
+                   "1995>", "1995", "29/02/2025>01/01/2025|x", "04/10/2026>|x", "1995>dois mil"]
+
+
+def teste_contador_1003_le_como_o_linha_tempo():
+    """A Mesa le o texto de um contador como o linha_tempo: o tipo, as pontas, os marcos e as linhas da chegada.
+
+    O DEFEITO QUE ISTO APANHA: a Mesa a chamar «datas» ao contador de anos que acaba numa data (era assim ate 3 de outubro:
+    avisava que o clip 57 estava mal escrito e o inspetor mostrava os campos das datas, que ao primeiro toque apagavam o
+    texto de 2011); o texto da data de chegada a ir parar a partida, um marco numa data que nao e a da chegada a perder-se,
+    ou o que o Python nao le (uma data que nao existe, a data a partida) a passar sem aviso e a sair preto no filme. E dois
+    contadores que continuam um no outro, que entram com corte seco: a Mesa e o montar tem de dizer o mesmo.
+    """
+    if not shutil.which("node"):
+        salta("Mesa: o contador le-se como o linha_tempo", "sem node neste PC")
+        return
+    import linha_tempo as lt
+    import montar_da_mesa
+    if not hasattr(lt, "chegada_do_contador"):
+        salta("Mesa: o contador le-se como o linha_tempo", "o linha_tempo ainda nao tem o contador ate uma data")
+        return
+    problemas = []
+    pares = [("2026>1995|x", "1995>20/05/2012|y"), ("1995>20/05/2012|y", "2012>2026"), ("1995>20/05/2012|y", "20/05/2012>01/01/2013"),
+             ("1995>20/05/2012|y", "2011>2026"), ("2023>04/10/2026", "04/10/2026>25/12/2025"), ("04/10/2026>25/12/2025", "2025>01/01/1995")]
+    corpo_js = """
+var bons = %s, maus = %s, pares = %s;
+function le(x){ var o = lerContador(x), P = contadorPlano(o);
+  return {tipo: o.tipo, de: o.de, para: o.para, marcos: o.marcos.map(function(m){ return [m.onde, m.t]; }), chegada: o.chegada || null, ate: o.ate || null,
+          avisos: avisosDoContador(o), plano: P ? {modo: P.modo, ordenados: P.ordenados, recua: P.recua, porOnde: P.porOnde, linhas: P.linhas, fora: P.fora.length} : null,
+          inspetor: contadorNoInspetor(o), rotulo: rotuloDoClip({t: "contador", x: x})}; }
+console.log(JSON.stringify({bons: bons.map(le), maus: maus.map(le), seguidos: pares.map(function(p){ return contadoresSeguidos(p[0], p[1]); }),
+  outro: [contadorNoOutroTipo(lerContador(bons[0]), "datas"), contadorNoOutroTipo(lerContador("2023>04/10/2026"), "datas")]}));
+""" % (json.dumps(CONTADORES_BONS, ensure_ascii=False), json.dumps(CONTADORES_MAUS, ensure_ascii=False), json.dumps(pares))
+    r = _correr_contador(corpo_js, problemas)
+    if r:
+        for x, m in zip(CONTADORES_BONS, r["bons"]):
+            try:
+                tipo, de, para, marcos = lt.ler_contador(x)
+            except (ValueError, AttributeError, TypeError) as erro:
+                problemas.append("%r devia ler-se no Python e nao se le (%s)" % (x[:30], erro))
+                continue
+            chegada = lt.chegada_do_contador(x)
+            if m["tipo"] != tipo or m["avisos"]:
+                problemas.append("%r: a Mesa chama-lhe %s (avisos %s) e o Python %s" % (x[:30], m["tipo"], m["avisos"], tipo))
+                continue
+            if m["chegada"] != chegada:
+                problemas.append("%r: as linhas da chegada na Mesa %s, no Python %s" % (x[:30], m["chegada"], chegada))
+            if tipo == "anos":
+                # os marcos que contam sao os de dentro da viagem com texto: o ultimo de cada ano ganha, como no anos()
+                baixo, cima = min(de, para), max(de, para)
+                por_ano = {a: t for a, t in marcos if baixo <= a <= cima}
+                if chegada:
+                    por_ano[para] = chegada[0]
+                paragens = sorted({de, para} | set(por_ano), reverse=para < de)
+                p = m["plano"]
+                if not p or p["modo"] != "anos" or p["ordenados"] != paragens or p["recua"] != (para < de):
+                    problemas.append("%r: as paragens na Mesa %s, no Python %s" % (x[:30], p and p["ordenados"], paragens))
+                elif {int(k): v for k, v in p["porOnde"].items() if v} != {a: t for a, t in por_ano.items() if t}:
+                    problemas.append("%r: os textos por ano na Mesa %s, no Python %s" % (x[:30], p["porOnde"], por_ano))
+                elif chegada and p["linhas"].get(str(para)) != chegada:
+                    problemas.append("%r: as linhas da chegada no plano %s" % (x[:30], p["linhas"]))
+                if (int(m["de"]), int(m["para"])) != (de, para):
+                    problemas.append("%r: as pontas na Mesa %s>%s, no Python %s>%s" % (x[:30], m["de"], m["para"], de, para))
+            if (m["inspetor"] == "anos") != (tipo == "anos"):
+                problemas.append("%r: o inspetor mostra %s num contador de %s" % (x[:30], m["inspetor"], tipo))
+        for x, m in zip(CONTADORES_MAUS, r["maus"]):
+            try:
+                lt.ler_contador(x)
+                problemas.append("%r era para nao se ler no Python" % x[:30])
+            except (ValueError, AttributeError, TypeError):
+                pass
+            if not m["avisos"]:
+                problemas.append("%r nao se le no Python (sai preto) e a Mesa nao avisa" % x[:30])
+        # a meio de escrever um contador de anos ate uma data o inspetor fica nos anos (o campo nao lhe foge)
+        meio = dict(zip(CONTADORES_MAUS, r["maus"]))
+        if meio["1995>20/|"]["inspetor"] != "anos" or meio["1995>20/05|x"]["inspetor"] != "anos" or \
+                meio["04/10/2026>1995|do casamento até 1995"]["inspetor"] != "datas":
+            problemas.append("o tipo que o inspetor mostra a meio da escrita: %s" % {k: v["inspetor"] for k, v in meio.items()})
+        if "20/05" not in meio["1995>20/05|x"]["avisos"][0] or "não existe no calendário" not in meio["1995>31/02/2012|x"]["avisos"][0]:
+            problemas.append("os avisos da chegada que nao e uma data: %s" % [meio[k]["avisos"] for k in ("1995>20/05|x", "1995>31/02/2012|x")])
+        for (a, b), s in zip(pares, r["seguidos"]):
+            if s != montar_da_mesa.contadores_seguidos(a, b):
+                problemas.append("%r e depois %r: seguidos na Mesa %s, no montar %s" % (a[:20], b[:20], s, montar_da_mesa.contadores_seguidos(a, b)))
+        # a lista diz as duas pontas e os textos, e passar a datas aproveita a data de chegada e o texto dela
+        if r["bons"][0]["rotulo"] != "1995 → 20 mai 2012 · Clara e Tiago conhecem-se · Começam a namorar" or r["bons"][1]["rotulo"] != "2023 → 4 out 2026":
+            problemas.append("o rotulo na lista: %r e %r" % (r["bons"][0]["rotulo"], r["bons"][1]["rotulo"]))
+        if r["outro"] != ["01/01/1995>20/05/2012|20/05/2012=Começam a namorar", "01/01/2023>04/10/2026"]:
+            problemas.append("passar a datas: %s" % r["outro"])
+    verifica("Mesa: o contador le-se como o linha_tempo", r is not None and not problemas, "; ".join(problemas)[:600] if problemas else
+             "%d textos lidos como o ler_contador() e o chegada_do_contador() (o tipo, as paragens, os textos e as linhas da "
+             "chegada), %d que nao se leem avisados, o inspetor nos anos a meio da escrita, e %d pares seguidos como o montar"
+             % (len(CONTADORES_BONS), len(CONTADORES_MAUS), len(pares)))
+
+
+def teste_contador_1003_palco_como_o_render():
+    """O palco escreve o contador como os fotogramas do render: os mesmos textos, no mesmo sitio, com o mesmo brilho.
+
+    O DEFEITO QUE ISTO APANHA: o palco a mostrar a data de chegada noutra linha, a apaga-la antes do corte (no filme fica
+    acesa), a por o texto de 2011 noutro instante, ou a nao parar no fim: ele acertava a duracao e o «Parado no fim» por
+    uma imagem que nao e a do filme. Em cada instante compara-se o que o palco escreve (o ano grande com o rasto, a data
+    do contador por datas, e os textos por baixo da linha) com o que o render.desenhar() escreve, do render.preparar()
+    com o "~segundos" do clip.cp, como o montar o escreve. Os nomes dos meses da regua ficam de fora: apagam-se pela
+    largura da letra, que no node nao ha.
+    """
+    if not shutil.which("node"):
+        salta("Mesa: o contador no palco como o render", "sem node neste PC")
+        return
+    import linha_tempo as lt
+    import render
+    if not hasattr(lt, "chegada_do_contador"):
+        salta("Mesa: o contador no palco como o render", "o render ainda nao tem o contador ate uma data")
+        return
+    problemas = []
+    casos = [("1995>20/05/2012|2011=Clara e Tiago conhecem-se;20/05/2012=Começam a namorar", 9.0, 0.0),
+             ("2023>04/10/2026", 13.0, 3.0), ("2023>04/10/2026|2026=O casamento", 6.0, 0.0),
+             ("2023>2026 | 4 de outubro de 2026", 13.0, 0.0), ("2026>1995|4 de outubro de 2026", 9.0, 0.0),
+             ("2026>1995|4 de outubro de 2026;1995=Onde tudo começa", 9.0, 2.5), ("2026>25/12/2025|x;25/12/2025=o pedido", 5.0, 1.0),
+             ("04/10/2026>25/12/2025|4 de outubro de 2026;25/12/2025=o pedido", 9.0, 0.0),
+             ("04/10/2026>25/12/2025|4 de outubro de 2026;25/12/2025=o pedido", 9.0, 3.0),
+             ("1995>20/05/2012|rodapé;2012=no ano;03/04/2011=noutra data;20/05/2012=texto da data", 10.0, 4.0)]
+    passos = 36
+    y_linha, y_num, y_rot = int(1080 * 0.60), int(1080 * 0.60) - int(1080 * 0.14), int(1080 * 0.60) + int(1080 * lt.Y_ROTULO)
+    corpo_js = """
+var casos = %s, passos = %d, r = [];
+casos.forEach(function(q){
+  var c = {t: "contador", x: q[0], d: q[1]}; if(q[2]) c.cp = q[2];
+  var dur = duracaoDoClip({clips: [c]}, 0), seg = {c: c, dur: dur}, linhas = [];
+  if(cpNoFilme(c) > 0) seg.parado = cpNoFilme(c);
+  for(var k = 0; k <= passos; k++){
+    ESCRITOS = []; FALTAS = [];
+    palcoContador(ctx, seg, dur * k / passos);
+    linhas.push(ESCRITOS.filter(function(e){ return e[3] === %d || e[3] >= %d; }));
+  }
+  r.push({dur: dur, linhas: linhas, faltas: FALTAS.length});
+});
+console.log(JSON.stringify(r));
+""" % (json.dumps(casos, ensure_ascii=False), passos, y_num, y_rot)
+    r = _correr_contador(corpo_js, problemas)
+    if r:
+        registo = []
+        original = lt._texto
+
+        def espia(d, txt, fonte, x, y, cor, centro=True, alfa=1.0):
+            registo.append((txt, fonte.size, x, y, tuple(cor)))
+            return original(d, txt, fonte, x, y, cor, centro, alfa)
+        conferidos = acesos_no_fim = 0
+        lt._texto = espia
+        try:
+            for (x, d, cp), m in zip(casos, r):
+                texto = x + ("~%s" % cp if cp else "")
+                pronto = render.preparar({"tipo": "contador", "texto_ecra": texto, "ficheiro": "", "duracao_s": str(d + cp),
+                                          "ordem": "1", "tratamento": "fiel"}, {})
+                if pronto is None or m["faltas"]:
+                    problemas.append("%r nao se preparou no render, ou o palco diz que nao se le" % x[:30])
+                    continue
+                if abs(m["dur"] - (d + cp)) > 1e-9:
+                    problemas.append("%r: o clip dura %s na Mesa e %s no montar" % (x[:30], m["dur"], d + cp))
+                for k in range(passos + 1):
+                    del registo[:]
+                    render.desenhar(pronto, (d + cp) * k / passos, d + cp)
+                    certo = sorted((t, s, round(px, 2), py, c) for t, s, px, py, c in registo if py == y_num or py >= y_rot)
+                    palco = sorted((e[0], e[1], round(e[2], 2), e[3], tuple(int(n) for n in re.findall(r"\d+", e[4]))) for e in m["linhas"][k])
+                    if len(certo) != len(palco) or any(a[0] != b[0] or a[1] != b[1] or abs(a[2] - b[2]) > 0.02 or a[3] != b[3] or a[4] != b[4]
+                                                        for a, b in zip(certo, palco)):
+                        so_r = [a for a in certo if a not in palco][:2]
+                        so_p = [b for b in palco if b not in certo][:2]
+                        problemas.append("%r aos %.2f s de %.1f: o render escreve %s e o palco %s" % (x[:28], (d + cp) * k / passos, d + cp, so_r, so_p))
+                        break
+                    conferidos += len(certo)
+                    if k == passos and any(py >= y_rot for _t, _s, _px, py, _c in certo):
+                        acesos_no_fim += 1
+        finally:
+            lt._texto = original
+        # o que o contrato pede ve-se no ultimo fotograma: a data de chegada e o texto dela acesos por inteiro, 62 px abaixo
+        fim = {x: m["linhas"][-1] for (x, _d, _cp), m in zip(casos, r)}
+        chegada = [e for e in fim[casos[0][0]] if e[3] >= y_rot]
+        if [(e[0], e[3]) for e in chegada] != [("20 de maio de 2012", y_rot), ("Começam a namorar", y_rot + 62)] or \
+                any(e[4] != "rgb(%d,%d,%d)" % tuple(lt.MARCO_TEXTO) for e in chegada):
+            problemas.append("no fim do contador ate 20/05/2012 o palco escreve %s" % chegada)
+        if [e[0] for e in fim["2023>04/10/2026"] if e[3] >= y_rot] != ["4 de outubro de 2026"]:
+            problemas.append("no fim do 2023>04/10/2026 parado 3 s o palco escreve %s" % [e for e in fim["2023>04/10/2026"] if e[3] >= y_rot])
+        if [e for e in fim["2023>2026 | 4 de outubro de 2026"] if e[3] >= y_rot]:
+            problemas.append("o contador de hoje (a data na partida) passou a ter texto no fim")
+    verifica("Mesa: o contador no palco como o render", r is not None and not problemas, "; ".join(problemas)[:700] if problemas else
+             "%d contadores em %d instantes cada: %d textos no sitio, no corpo e na cor dos fotogramas (o ano com o rasto, a data "
+             "de chegada e o texto dela 62 px abaixo, o que fica aceso e o parado no fim), %d acesos no ultimo fotograma"
+             % (len(casos), passos + 1, conferidos, acesos_no_fim))
+
+
+def teste_contador_1003_parado_grava_desfaz_e_junta():
+    """O «Parado no fim» grava so o que difere de zero, le-se como o montar, desfaz-se, junta-se e conta no filme.
+
+    O DEFEITO QUE ISTO APANHA: abrir um contador a deixar um cp: 0 na base (o montar escrevia "~0" e o filme deixava de
+    sair igual ao byte); um cp que a Mesa conta e o montar recusa (ou ao contrario), e o palco a dar ao filme outra
+    duracao; dez toques no campo a dar dez entradas no anular; as «Ordens para o Claude» sem o campo; dois aparelhos, ou
+    uma Mesa antiga, a perder o parado; o palco a dizer que o clip bate com a montagem depois de ele mudar o parado; e o
+    rebobinar a tocar pelo tempo do clip inteiro, parado incluido.
+    """
+    if not shutil.which("node"):
+        salta("Mesa: o parado no fim grava, desfaz e junta", "sem node neste PC")
+        return
+    problemas = []
+    valores = [None, "", False, 0, 3, 3.456, "3", " 2.5 ", "abc", True, -1, 31, 30, 30.004, 1e9, [], {"a": 1}, "1e1", "0", 0.004, "3,5"]
+    corpo_js = """
+var valores = %s, r = {};
+est.versoes = [{id: "v1", nome: "demo", clips: [{t: "contador", x: "2023>04/10/2026", d: 13, c: 0.7}, {t: "foto", i: "f1", d: 4, c: 0.7, cp: 3},
+                                               {t: "contador", x: "2026>1995|x", d: 9, c: 0.7}]}];
+var v = est.versoes[0], c = v.clips[0], foto = v.clips[1];
+function ve(x){ return JSON.parse(JSON.stringify({cp: x.cp, tem: "cp" in x})); }
+/* 1. os valores que podem vir da base, como o montar os le */
+r.valores = valores.map(function(x){ var k = {t: "contador", x: "2026>1995", d: 9, cp: x};
+  return {s: cpDo(k), mal: !!cpProblema(k), dur: duracaoDoClip({clips: [k]}, 0)}; });
+/* 2. como esta: zero num clip sem cp nao mexe em nada, nem abre o anular */
+r.nada = [cpPoe(c, 0), cpPoe(c, ""), cpPoe(c, 45), cpPoe(c, -2), cpPoe(foto, 3), ve(c), pilhaDesfazer.length, marcas];
+/* 3. tres segundos: a chave, uma entrada do anular, a duracao e as ordens */
+r.tres = [cpPoe(c, 3), ve(c), pilhaDesfazer.length, duracaoDoClip(v, 0), cpDo(c), cpNoFilme(c), ordemDoClip(v, c, 0).parado_no_fim_s, ordemDoClip(v, foto, 1).parado_no_fim_s,
+          ordemDoClip(v, v.clips[2], 2).parado_no_fim_s];
+r.outra = [cpPoe(c, 3), cpPoe(c, 4.5), cpPoe(c, 5), ve(c), pilhaDesfazer.length];
+desfazer(); r.desfeito = [ve(c), pilhaDesfazer.length];
+cpPoe(c, 2); cpUltimoToque = {c: null, em: 0, entrada: null}; cpPoe(c, 0); r.tirado = [ve(c), pilhaDesfazer.length];
+desfazer(); r.tiradoAnulado = ve(c); desfazer(); r.tudoAnulado = ve(c);
+/* um valor que nao presta na base: zero limpa-o, com anular */
+c.cp = 45; r.lixo = [cpDo(c), !!cpProblema(c), duracaoDoClip(v, 0), cpPoe(c, 0), ve(c)];
+pilhaDesfazer.length = 0;
+/* 4. com um render que ainda nao le o parado: a escolha fica, o filme nao a conta, e diz-se */
+c.cp = 3; RENDER_LE = {contador_parado: false};
+r.ontem = [cpDo(c), cpNoFilme(c), duracaoDoClip(v, 0), notaDoParado(c), dicasDoContador(v, c).map(function(d){ return d.grau + ": " + d.t; })];
+RENDER_LE = {};
+r.hoje = [notaDoParado(c), notaDoParado(v.clips[2]), blocoParadoDoContador(c), blocoParadoDoContador(v.clips[2])];
+console.log(JSON.stringify(r));
+""" % json.dumps(valores)
+    s = _correr_contador(corpo_js, problemas)
+    if s:
+        montar = _montar_calado()
+        for x, m in zip(valores, s["valores"]):
+            av = []
+            certo = montar.parado_do_contador({"cp": x}, 1, av)
+            if abs(m["s"] - certo) > 1e-9 or m["mal"] != bool(av) or abs(m["dur"] - (9 + certo)) > 1e-9:
+                problemas.append("cp %r: a Mesa conta %s s (aviso %s, clip %s s) e o montar %s (aviso %s)" % (x, m["s"], m["mal"], m["dur"], certo, bool(av)))
+        vazio = {"tem": False}
+        if s["nada"] != [False, False, False, False, False, vazio, 0, 0]:
+            problemas.append("«como está» mexeu em alguma coisa: %s" % s["nada"])
+        if s["tres"] != [True, {"cp": 3, "tem": True}, 1, 16, 3, 3, 3, None, None]:
+            problemas.append("tres segundos: %s" % s["tres"])
+        if s["outra"] != [False, True, True, {"cp": 5, "tem": True}, 1] or s["desfeito"] != [vazio, 0]:
+            problemas.append("toques seguidos e o anular: %s, desfeito %s" % (s["outra"], s["desfeito"]))
+        if s["tirado"] != [vazio, 2] or s["tiradoAnulado"] != {"cp": 2, "tem": True} or s["tudoAnulado"] != vazio:
+            problemas.append("tirar o parado e anular: %s, %s, %s" % (s["tirado"], s["tiradoAnulado"], s["tudoAnulado"]))
+        if s["lixo"] != [0, True, 13, True, vazio]:
+            problemas.append("um cp de 45 na base: %s" % s["lixo"])
+        if s["ontem"][:3] != [3, 0, 13] or "Ainda não chega ao filme" not in s["ontem"][3] or not any("ainda não chega ao filme" in d for d in s["ontem"][4]):
+            problemas.append("com um render que nao le o parado: %s" % s["ontem"])
+        if "16 s no filme" not in s["hoje"][0] or "Ainda não chega" in s["hoje"][0] or not s["hoje"][1].startswith("Como está") or \
+                'value="3"' not in s["hoje"][2] or 'data-cp="3"' not in s["hoje"][2] or 'class="pessoa on" role="radio" aria-checked="true" data-cp="3"' not in s["hoje"][2] or \
+                'class="pessoa on" role="radio" aria-checked="true" data-cp="0"' not in s["hoje"][3] or 'value=""' not in s["hoje"][3]:
+            problemas.append("o campo e a nota do parado: %s" % s["hoje"][:2])
+        # o que o montar escreve com o que a Mesa grava: a duracao com o parado e o "~segundos" no texto
+        linhas, saida = _montar_numa_pasta([{"t": "contador", "x": "2023>04/10/2026", "d": 13, "c": 0.7, "r": "fiel", "cp": 3},
+                                            {"t": "foto", "i": "f0012", "d": 4, "c": 0.7, "r": "fiel"}], "contparado")
+        l0 = linhas[0] if linhas else {}
+        if not linhas or abs(float(l0["duracao_s"]) - 16.0) > 1e-9 or not l0["texto_ecra"].startswith("2023>04/10/2026~3") or "parado no fim" in saida:
+            problemas.append("o montar escreve %s s e %r, e diz %s" % (l0.get("duracao_s"), l0.get("texto_ecra"), saida[-200:]))
+    # A JUNCAO POR PARTES: o parado vai com os clips da montagem; e uma Mesa antiga que grava nao o tira
+    B0 = {"versoes": [{"id": "v1", "nome": "demo", "clips": [{"t": "contador", "x": "2023>04/10/2026", "d": 13, "c": 0.7}]}],
+          "pessoas": [], "tags": {}, "atual": "v1", "estilo": {"legenda": {"tamanho": 59}},
+          "quando": "2026-10-03T05:00:00Z", "rev": 5, "pagina": "2026-10-02"}
+    corpo_js = """
+var r = {}, B0 = %s;
+function com(m){ var b = copia(B0); Object.keys(m).forEach(function(k){ if(m[k] === undefined) delete b[k]; else b[k] = m[k]; }); return b; }
+var clipCom = {t: "contador", x: "2023>04/10/2026", d: 13, c: 0.7, cp: 3};
+/* A. la puseram o parado no clip, aqui mexeu-se no estilo: juntam-se e o parado fica */
+abrir(B0); est.estilo = {legenda: {tamanho: 54}};
+var j = juntarComBase(com({versoes: [{id: "v1", nome: "demo", clips: [clipCom]}], rev: 6}));
+r.A = {ok: j.ok, clip: est.versoes[0].clips[0], estilo: copia(est.estilo)};
+/* B. aqui o parado, la o estilo */
+abrir(B0); est.versoes[0].clips[0].cp = 3;
+j = juntarComBase(com({estilo: {legenda: {tamanho: 54}}, rev: 6}));
+r.B = {ok: j.ok, clip: est.versoes[0].clips[0], estilo: copia(est.estilo)};
+/* C. uma Mesa antiga (sem pagina) grava por cima sem os clips desta versao mexidos: o parado da base fica */
+abrir(com({versoes: [{id: "v1", nome: "demo", clips: [clipCom]}]}));
+j = juntarComBase(com({versoes: [{id: "v1", nome: "demo", clips: [clipCom]}], estilo: undefined, pagina: undefined, rev: 6}));
+r.C = {ok: j.ok, clip: corpo().versoes[0].clips[0]};
+/* D. os dois a mexer no parado do mesmo clip, de maneiras diferentes: e conflito, como dois na mesma montagem */
+abrir(B0); est.versoes[0].clips[0].cp = 3;
+j = juntarComBase(com({versoes: [{id: "v1", nome: "demo", clips: [{t: "contador", x: "2023>04/10/2026", d: 13, c: 0.7, cp: 5}]}], rev: 6}));
+r.D = {ok: j.ok, choque: j.choque};
+console.log(JSON.stringify(r));
+""" % json.dumps(B0)
+    r = _correr_js(DECLARACOES_JUNTAR, FUNCOES_JUNTAR, PRELUDE_JUNTAR, corpo_js, problemas)
+    if r:
+        if not r["A"]["ok"] or r["A"]["clip"].get("cp") != 3 or r["A"]["estilo"] != {"legenda": {"tamanho": 54}}:
+            problemas.append("o parado de la e o estilo daqui: %s" % r["A"])
+        if not r["B"]["ok"] or r["B"]["clip"].get("cp") != 3 or r["B"]["estilo"] != {"legenda": {"tamanho": 54}}:
+            problemas.append("o parado daqui e o estilo de la: %s" % r["B"])
+        if not r["C"]["ok"] or r["C"]["clip"].get("cp") != 3:
+            problemas.append("a Mesa antiga tirou o parado: %s" % r["C"])
+        if r["D"]["ok"] or not r["D"].get("choque"):
+            problemas.append("os dois no parado do mesmo clip devia ser conflito: %s" % r["D"])
+    # O PALCO: a duracao com o parado, o que bate com a montagem, e o rebobinar so enquanto o contador anda
+    clips = [{"t": "contador", "x": "2026>1995|x", "d": 9, "c": 0.7, "cp": 3}, {"t": "foto", "i": "f1", "d": 4, "c": 0.7}]
+    filme = {"montagem": "v3", "versao": "v1", "gerado": "hoje", "videos": 0, "fim": 15.3, "com_a_mesa": True, "linhas": [
+        {"chave": "contador:2026>1995|x#1", "t": "contador", "filme": 0, "d": 12.0, "c": 0, "parado": 3.0, "md": 9, "mc": 0.7},
+        {"chave": "foto:f1#1", "t": "foto", "filme": 11.3, "d": 4.0, "c": 0.7, "md": 4, "mc": 0.7}]}
+    som = {"versao": "v1", "gerado": "hoje", "clips": [{"chave": "contador:2026>1995|x#1", "d": 12.0, "filme": 0}],
+           "faixas": [{"f": "rebobinar.wav", "clip": "contador:2026>1995|x#1", "dentro": 2.7, "filme": 2.7, "corpo": 2.7, "in": 0, "dura": 3.78,
+                       "origem": "regra", "nota": "fita a rebobinar", "efeito": True}]}
+    corpo_js = """
+var v = {id: "v1", clips: %s}, r = {};
+function resumo(F){ var s = F.porI[0]; return {dur: s.dur, parado: s.parado || 0, bate: !!s.r, mudou: !!s.mudou, fim: F.fim, foto: F.porI[1].ini}; }
+r.montada = resumo(palcoFilme(v));
+var w = JSON.parse(JSON.stringify(v)); w.clips[0].cp = 5; r.cinco = resumo(palcoFilme(w));
+var z = JSON.parse(JSON.stringify(v)); delete z.clips[0].cp; r.sem = resumo(palcoFilme(z));
+var semMd = JSON.parse(JSON.stringify(PALCO)); semMd.filme.linhas.forEach(function(l){ delete l.md; delete l.mc; });
+var guarda = PALCO; PALCO = semMd; r.regra = [resumo(palcoFilme(v)), resumo(palcoFilme(w))]; PALCO = guarda;
+PALCO = {}; r.semMontagem = [resumo(palcoFilme(v)), resumo(palcoFilme(z))]; PALCO = guarda;
+RENDER_LE = {contador_parado: false}; PALCO = {}; r.ontem = resumo(palcoFilme(v)); PALCO = guarda; RENDER_LE = {};
+var reb = function(x){ var p = palcoSomPlano(palcoFilme(x)).plano.filter(function(e){ return e.f === "rebobinar.wav"; })[0]; return p ? [p.ini, p.dura] : null; };
+r.rebobinar = [reb(v), reb(w), reb(z)];
+console.log(JSON.stringify(r));
+""" % json.dumps(clips)
+    audio = {"rebobinar.wav": {"url": "audio/rebobinar.m4a", "duracao": 4.0, "perfil": [-200] * 4, "tipo": "musica"}}
+    p = _correr_palco({"filme": filme}, som, audio, corpo_js, problemas, {"r": {}, "faixas": {}})
+    if p:
+        if p["montada"] != {"dur": 12, "parado": 3, "bate": True, "mudou": False, "fim": 15.3, "foto": 11.3}:
+            problemas.append("o palco com a versao montada: %s" % p["montada"])
+        if p["cinco"]["dur"] != 14 or p["cinco"]["parado"] != 5 or p["cinco"]["bate"] or not p["cinco"]["mudou"] or abs(p["cinco"]["foto"] - 13.3) > 1e-9:
+            problemas.append("com o parado mudado para 5 s depois da montagem: %s" % p["cinco"])
+        if p["sem"]["dur"] != 9 or p["sem"]["parado"] != 0 or p["sem"]["bate"] or abs(p["sem"]["fim"] - 12.3) > 1e-9:
+            problemas.append("com o parado tirado depois da montagem: %s" % p["sem"])
+        if not p["regra"][0]["bate"] or p["regra"][1]["bate"] or p["regra"][1]["dur"] != 14:
+            problemas.append("sem o md, pela regra: %s" % p["regra"])
+        if p["semMontagem"][0]["dur"] != 12 or p["semMontagem"][0]["parado"] != 3 or p["semMontagem"][1]["dur"] != 9:
+            problemas.append("sem a montagem: %s" % p["semMontagem"])
+        if p["ontem"]["dur"] != 9 or p["ontem"]["parado"] != 0:
+            problemas.append("com um render que nao le o parado o palco conta %s" % p["ontem"])
+        # o montar: comeca a 30%% do tempo em que anda e dura 42%% dele (junta_som(REBOBINAR, t + anda * 0.30, anda * 0.42))
+        certo = [[round(9 * 0.30, 2), round(9 * 0.42, 2)]] * 3
+        if p["rebobinar"] != certo:
+            problemas.append("o rebobinar com o parado: %s, e o montar da %s" % (p["rebobinar"], certo))
+    verifica("Mesa: o parado no fim grava, desfaz e junta", s is not None and r is not None and p is not None and not problemas,
+             "; ".join(problemas)[:700] if problemas else
+             "%d valores lidos como o parado_do_contador(), como esta sem escritas, uma entrada no anular, as ordens, o montar a "
+             "escrever 16 s e o ~3, quatro juncoes, e o palco: a duracao, o que bate com a montagem e o rebobinar so a andar"
+             % len(valores))
+
+
+def teste_contador_1003_avisa():
+    """A Mesa diz o que o filme vai fazer com cada contador, e nunca mexe no texto dele (083).
+
+    O DEFEITO QUE ISTO APANHA: o contador do fim como estava a 3 de outubro ("2023>2026 | 4 de outubro de 2026") a passar
+    sem uma palavra, com a data a acender na partida e nao na chegada, que era o pedido dele; um texto num ano fora da
+    viagem, que nunca aparece; um texto com mais letras do que o tempo em que fica aceso deixa ler a 15 metros (o de 2011
+    e os da chegada do contador de 1995, com 9 s e sem parado); e a Mesa a dar por bom um contador que o render de ontem
+    nao le, ou a calar que o parado ainda nao chega ao filme.
+    """
+    if not shutil.which("node"):
+        salta("Mesa: os avisos do contador", "sem node neste PC")
+        return
+    import gerar_mesa
+    import linha_tempo as lt
+    import render
+    problemas = []
+    clips = [{"t": "contador", "x": "2023>2026 | 4 de outubro de 2026", "d": 13, "c": 0.7},
+             {"t": "contador", "x": "1995>20/05/2012|2011=Clara e Tiago conhecem-se;20/05/2012=Começam a namorar", "d": 9, "c": 0.7},
+             {"t": "contador", "x": "1995>20/05/2012|2011=Clara e Tiago conhecem-se;20/05/2012=Começam a namorar", "d": 11, "c": 0.7, "cp": 2},
+             {"t": "contador", "x": "2023>04/10/2026", "d": 13, "c": 0.7, "cp": 3},
+             {"t": "contador", "x": "2026>1995|4 de outubro de 2026", "d": 9, "c": 0.7},
+             {"t": "contador", "x": "1995>2012|2030=Depois;1990=Antes", "d": 9, "c": 0.7},
+             {"t": "contador", "x": "2026>04/10/2026", "d": 6, "c": 0.7},
+             {"t": "contador", "x": "04/10/2026>25/12/2025|4 de outubro de 2026;25/12/2025=o pedido", "d": 9, "c": 0.7},
+             {"t": "contador", "x": "2023>04/10/2026", "d": 13, "c": 0.7, "cp": 45},
+             {"t": "contador", "x": "1995>2012", "d": 9, "c": 0.7}]
+    corpo_js = """
+var v = {id: "v1", clips: %s}, antes = JSON.stringify(v), r = {};
+function tudo(){ return v.clips.map(function(c){ return {dicas: dicasDoContador(v, c).map(function(d){ return d.grau + ": " + d.t; }), le: leituraDoContador(c),
+                                                        tempos: (function(){ var P = contadorPlano(lerContador(c.x)); return P ? contadorTextos(P, c).map(function(x){ return [x.sitio, x.letras, x.s, x.pede, x.fica]; }) : null; })()}; }); }
+r.hoje = tudo();
+RENDER_LE = {contador_data: false, contador_parado: false}; r.ontem = tudo(); RENDER_LE = {};
+ESCRITOS = []; FALTAS = []; RENDER_LE = {contador_data: false};
+palcoContador(ctx, {c: v.clips[3], dur: 13}, 13); r.palcoOntem = [ESCRITOS.length, FALTAS];
+RENDER_LE = {};
+/* o ultimo clip do filme: os ultimos 2,5 s sao a passagem para os creditos, e a chegada so se le ate ai */
+var u = {id: "u", clips: [{t: "foto", i: "f1", d: 4, c: 0.7}, {t: "contador", x: "2023>04/10/2026", d: 13, c: 0.7, cp: 3}]};
+var u2 = {id: "u", clips: [{t: "foto", i: "f1", d: 4, c: 0.7}, {t: "contador", x: "2023>04/10/2026", d: 5, c: 0.7}]};
+r.ultimo = [leituraDoContador(u.clips[1], u), dicasDoContador(u, u.clips[1]).map(function(d){ return d.t; }),
+            leituraDoContador(u2.clips[1], u2), dicasDoContador(u2, u2.clips[1]).map(function(d){ return d.t; }), leituraDoContador(u.clips[1], v)];
+r.igual = JSON.stringify(v) === antes;
+r.ajuda = ajudaDoContador();
+console.log(JSON.stringify(r));
+""" % json.dumps(clips, ensure_ascii=False)
+    r = _correr_contador(corpo_js, problemas)
+    if r:
+        h = r["hoje"]
+        # 1. o contador do fim como estava: a data na partida, com o texto certo para escrever
+        d0 = h[0]["dicas"]
+        if len(d0) != 1 or not d0[0].startswith("confirma: «4 de outubro de 2026» está na partida") or "2023>04/10/2026" not in d0[0]:
+            problemas.append("o contador do fim de hoje: %s" % d0)
+        if "Na partida, por baixo de 2023, acende «4 de outubro de 2026»" not in h[0]["le"]:
+            problemas.append("a leitura do contador do fim de hoje: %s" % h[0]["le"])
+        # 2. o de 1995 com 9 s: tres paragens de 1,86 s; o texto de 2011 (25 letras) pede 2,08 s e os da chegada (35) 2,92 s
+        t1 = h[1]["tempos"]
+        if [x[0] for x in t1] != ["2011", "2012"] or [x[1] for x in t1] != [25, 35] or abs(t1[0][2] - 0.62 / 3 * 9) > 1e-9 or abs(t1[0][3] - 25 / 12.0) > 1e-9:
+            problemas.append("os tempos do contador de 1995: %s" % t1)
+        if len(h[1]["dicas"]) != 2 or "25 letras" not in h[1]["dicas"][0] or "10,1 s de duração" not in h[1]["dicas"][0] or \
+                "35 letras" not in h[1]["dicas"][1] or "«Parado no fim»" not in h[1]["dicas"][1]:
+            problemas.append("os avisos de leitura do contador de 1995 com 9 s: %s" % h[1]["dicas"])
+        if "Em 2011 pára e acende «Clara e Tiago conhecem-se»" not in h[1]["le"] or \
+                "Na chegada acende «20 de maio de 2012» e, por baixo, «Começam a namorar», e ficam acesos até ao fim" not in h[1]["le"] or "3 paragens" not in h[1]["le"]:
+            problemas.append("a leitura do contador de 1995: %s" % h[1]["le"])
+        # com 11 s e 2 s parado chega para os dois
+        if h[2]["dicas"]:
+            problemas.append("com 11 s e 2 s parado nao devia haver avisos: %s" % h[2]["dicas"])
+        # 3. o do fim como o contrato o pede, e o da abertura como esta: nada a dizer
+        if h[3]["dicas"] or h[4]["dicas"] or h[7]["dicas"] or h[9]["dicas"] or "fica parado 3 s" not in h[3]["le"]:
+            problemas.append("os contadores certos tem avisos: %s" % [h[k]["dicas"] for k in (3, 4, 7, 9)])
+        if "e apaga antes do corte" not in h[7]["le"] or "a rebobinar" not in h[4]["le"]:
+            problemas.append("a leitura do de datas e do da abertura: %s | %s" % (h[7]["le"], h[4]["le"]))
+        # 4. textos fora da viagem, e a partida igual a chegada
+        if len(h[5]["dicas"]) != 2 or not all("fora da viagem" in d for d in h[5]["dicas"]):
+            problemas.append("os textos fora da viagem: %s" % h[5]["dicas"])
+        if not any("o mesmo ano" in d for d in h[6]["dicas"]):
+            problemas.append("a partida e a chegada no mesmo ano: %s" % h[6]["dicas"])
+        # 5. um parado de 45 s na base e erro, com as palavras do limite
+        if not h[8]["dicas"] or not h[8]["dicas"][0].startswith("erro: ") or "de 0 a 30 s" not in h[8]["dicas"][0]:
+            problemas.append("um parado de 45 s: %s" % h[8]["dicas"])
+        # 6. com um render de ontem: a data de chegada sai preta (erro) e o parado nao chega (confirma); o palco tambem
+        o = r["ontem"]
+        if not any(d.startswith("erro: ") and "cartão preto" in d for d in o[1]["dicas"]) or not any("ainda não chega ao filme" in d for d in o[3]["dicas"]) \
+                or o[4]["dicas"] or o[9]["dicas"]:
+            problemas.append("com um render de ontem: %s" % [o[k]["dicas"] for k in (1, 3, 4, 9)])
+        if r["palcoOntem"][0] or not r["palcoOntem"][1]:
+            problemas.append("com um render de ontem o palco desenha o contador ate uma data: %s" % r["palcoOntem"])
+        if not r["igual"]:
+            problemas.append("os avisos mudaram os clips (083)")
+        # 6b. o ultimo clip do filme: com 13 s e 3 parado a chegada fica 4,5 s antes da passagem (0,31 x 13 + 3 - 2,5), e
+        # sem aviso; com 5 s e sem parado fica 0 s (1,55 - 2,5), e avisa com a conta do parado: 1,67 + 2,5 - 1,55 = 2,62
+        ul = r["ultimo"]
+        if "É o último clip do filme" not in ul[0] or "fica à vista 4,5 s" not in ul[0] or ul[1] or "último clip" in ul[4]:
+            problemas.append("o ultimo clip do filme com 3 s parado: %s | %s" % (ul[0][-150:], ul[1]))
+        if "fica à vista 0 s" not in ul[2] or len(ul[3]) != 1 or "antes da passagem para os créditos" not in ul[3][0] or "Põe mais 2,7 s em «Parado no fim»" not in ul[3][0] or "13,5 s de duração" not in ul[3][0]:
+            problemas.append("o ultimo clip do filme com 5 s e sem parado: %s | %s" % (ul[2][-150:], ul[3]))
+        # 7. a ajuda: a sintaxe com exemplos, e cada exemplo le-se no Python
+        exemplos = re.findall(r"<code>(.*?)</code>", r["ajuda"])
+        if len(exemplos) < 4 or not any("20/05/2012=" in e for e in exemplos):
+            problemas.append("a ajuda do contador tem %d exemplos" % len(exemplos))
+        for e in exemplos:
+            e = e.replace("&gt;", ">").replace("&amp;", "&")
+            try:
+                lt.ler_contador(e)
+            except (ValueError, AttributeError, TypeError):
+                problemas.append("o exemplo %r da ajuda nao se le no render" % e)
+    # O GERAR_MESA: o render de agora faz as duas coisas; um montar sem o parado, um linha_tempo sem a chegada e um
+    # render que nao para dao False
+    montar_txt = io.open(os.path.join(REPO, "scripts", "montar_da_mesa.py"), encoding="utf-8").read()
+    hoje = gerar_mesa.le_os_contadores_de_3_de_outubro(render, montar_txt)
+    if hoje != {"contador_data": True, "contador_parado": True}:
+        problemas.append("o render de agora faz a data de chegada e o parado, e o gerar_mesa diz %s" % hoje)
+    sem_montar = gerar_mesa.le_os_contadores_de_3_de_outubro(render, montar_txt.replace("def parado_do_contador(", "def outra("))
+    if sem_montar != {"contador_data": True, "contador_parado": False}:
+        problemas.append("um montar sem o parado_do_contador: %s" % sem_montar)
+
+    class RenderDeOntem:
+        """prepara o contador sem a chegada nem o parado: o desenho de 2 de outubro"""
+        def __getattr__(self, nome):
+            return getattr(render, nome)
+
+        def preparar(self, clip, inv):
+            pronto = render.preparar(clip, inv)
+            return {k: v for k, v in pronto.items() if k not in ("chegada", "parado")} if pronto else pronto
+    ontem = gerar_mesa.le_os_contadores_de_3_de_outubro(RenderDeOntem(), montar_txt)
+    if ontem != {"contador_data": False, "contador_parado": False}:
+        problemas.append("um render que le o texto e nao desenha a chegada nem para: %s" % ontem)
+    guarda = lt.chegada_do_contador
+    try:
+        del lt.chegada_do_contador
+        sem_lt = gerar_mesa.le_os_contadores_de_3_de_outubro(render, montar_txt)
+    finally:
+        lt.chegada_do_contador = guarda
+    if sem_lt.get("contador_data") is not False:
+        problemas.append("um linha_tempo sem o chegada_do_contador: %s" % sem_lt)
+    tudo = gerar_mesa.o_que_o_render_le()
+    if tudo.get("contador_data") is not True or tudo.get("contador_parado") is not True:
+        problemas.append("o o_que_o_render_le() nao as traz: %s" % {k: tudo.get(k) for k in ("contador_data", "contador_parado")})
+    verifica("Mesa: os avisos do contador", r is not None and not problemas, "; ".join(problemas)[:700] if problemas else
+             "a data na partida (com o texto certo para escrever), 2 textos com pouco tempo e a conta deles, 2 fora da viagem, o "
+             "mesmo ano, o parado de 45 s, o render de ontem (preto, e o parado que nao chega), %d exemplos da ajuda lidos pelo "
+             "render, e o gerar_mesa a perguntar ao desenho" % len(exemplos if r else []))
+
+# ------------------------------------------------- o fecho de 3 de outubro: o que a revisao apanhou
+# A revisao no browser e a da paridade, na manha de 3 de outubro, apanharam: o Validar a dizer que tres musicas que o
+# montar encontra «não estão nas pastas»; a legenda numa linha que cabe na Mesa e nao no render, com o Validar calado; a
+# nota das setas a dizer uma posicao que o filme nao da quando a legenda encosta a margem; e a pilha com a legenda muito
+# subida maior do que no filme. Guarda-se aqui que:
+#  21. o musicaConhecida() do Validar da o mesmo que o resolve_musica() do montar, nome a nome;
+#  22. a legenda que cabe numa linha por menos de 3% vai para «Confirma tu», e a nota das setas diz quanto a legenda anda
+#      de facto, com a conta do render.dx_efetivo();
+#  23. a pilha com a legenda subida pousa onde o render.pilha_disposicao() a pousa.
+def teste_fecho_1003_musica_do_validar_como_o_montar():
+    """O Validar so diz «não está nas pastas» da musica que o montar tambem nao encontra.
+
+    O DEFEITO QUE ISTO APANHA: a 3 de outubro o Validar dava tres «Está mal» falsos, «o filme fica mudo a partir daqui»,
+    nos clips 37, 42 e 49 da leitura 66. O montar encontra as tres: uma tem um ponto no nome («Mr. Blue Sky_after_4sec»
+    ficava «Mr») e as outras duas sao o ficheiro que ganhou um sufixo « - » (regra do montar desde 23 de setembro).
+    """
+    if not shutil.which("node"):
+        salta("Mesa: a musica do Validar como o montar", "sem node neste PC")
+        return
+    import unicodedata
+    montar = _montar_calado()
+    problemas = []
+    html = io.open(EDITOR, encoding="utf-8").read()
+    regras = _regras_do_validador(html, problemas)
+    apoio = "\n".join(_bloco(html, m, problemas) for m in APOIO_VALIDADOR)
+    pasta = ["Mr. Blue Sky_after_4sec.mp3", "Baha Men - Who Let The Dogs Out (Lyrics) - Cães.mp3",
+             "Antonio variações - o corpo é que paga ( semi-original ) - Exercicio.mp3", "Dois - a.mp3", "Dois - b.mp3",
+             "Inês Homem de Melo – Fome de Viagem (Music Video).MP3", "v1.0 final.wav", "Sem extensao", "Um.Dois.Tres.flac"]
+    nomes = ["Mr. Blue Sky_after_4sec", "Mr. Blue Sky_after_4sec.mp3", "mr. blue sky_after_4sec.MP3", "Mr", "Mr.", "Mr. Blue Sky",
+             "Baha Men - Who Let The Dogs Out (Lyrics)", "baha men - who let the dogs out (lyrics)", "Baha Men",
+             "Baha Men - Who Let The Dogs Out (Lyrics) - Cães", "Baha Men - Who Let The Dogs Out (Lyrics).mp3",
+             "Antonio variações - o corpo é que paga ( semi-original )",
+             unicodedata.normalize("NFD", "Antonio variações - o corpo é que paga ( semi-original )"),
+             "Dois", "Dois - a", "Dois - a.mp3", "Dois - c", "Inês Homem de Melo – Fome de Viagem (Music Video)",
+             "inês homem de melo – fome de viagem (music video).mp3", "v1.0 final", "v1.0 final.wav", "v1", "v1.0",
+             "Sem extensao", "sem extensao.mp3", "Um.Dois.Tres", "Um.Dois", "Um", "Uma que não existe.mp3", "  Dois - b  "]
+    casos = [("a pasta de ensaio", pasta, nomes)]
+    # e os nomes que ele marcou de verdade, contra as pastas deste PC (so a ler)
+    try:
+        verdade = sorted(montar.caminhos_de_musica().keys())
+        e = json.load(io.open(ESTADO_MONTADO, encoding="utf-8"))
+        marcados = sorted({str(c["m"]["f"]).strip() for v in (e.get("data", e).get("versoes") or []) for c in (v.get("clips") or [])
+                           if isinstance(c.get("m"), dict) and str(c["m"].get("f") or "").strip()})
+        if verdade and marcados:
+            casos.append(("as pastas e as marcas dele", verdade, marcados))
+    except (SystemExit, Exception):
+        pass
+    vistos = 0
+    for nome_caso, mus, lista in casos:
+        if problemas:
+            break
+        programa = ("var TT_OMISSAO = 46, TT_MIN = 28, TT_MAX = 90;\nvar MUS = %s;\n" % json.dumps(mus, ensure_ascii=False)) + apoio + "\n" + \
+            regras + "\nconsole.log(JSON.stringify({r: %s.map(musicaConhecida), vazio: [musicaConhecida(''), musicaConhecida('  '), musicaConhecida(null)]}));\n" \
+            % json.dumps(lista, ensure_ascii=False)
+        s = _node_programa(programa, problemas)
+        if not s:
+            break
+        if s["vazio"] != [True, True, True]:
+            problemas.append("sem musica marcada nao ha nada a acusar: %s" % s["vazio"])
+        dicio = {k: k for k in mus}
+        for nome, veio in zip(lista, s["r"]):
+            era = montar.resolve_musica(nome, dicio) is not None
+            vistos += 1
+            if veio != era:
+                problemas.append("%s: o montar %s «%s» e o Validar diz que %s" % (
+                    nome_caso, "encontra" if era else "nao encontra", nome[:40], "esta" if veio else "falta"))
+    verifica("Mesa: a musica do Validar como o montar", not problemas, "; ".join(problemas)[:500] if problemas else
+             "%d nomes em %d listas, o mesmo que o resolve_musica(): o ponto no nome, o sufixo « - » com um so candidato, "
+             "os acentos e as maiusculas" % (vistos, len(casos)))
+
+
+def teste_fecho_1003_legenda_no_limite_e_encostada():
+    """A legenda numa linha que cabe por pouco vai ao Validar, e a nota das setas diz quanto a legenda anda de facto.
+
+    O DEFEITO QUE ISTO APANHA: a Mesa mede no browser e o render com a Pillow, que da ate 2,6% a mais. No clip 10, com a
+    Playfair a 56, a Mesa mostrava uma linha e o filme saia com duas, e o Validar nao dizia nada. E com a legenda do clip
+    69 toda para a esquerda a nota dizia «no filme, 600 px à esquerda» quando ela encosta a margem aos 516.
+    """
+    if not shutil.which("node"):
+        salta("Mesa: a legenda no limite e encostada", "sem node neste PC")
+        return
+    import render
+    problemas = []
+
+    # o medidor do node da 0,58 do corpo por letra: a 46, 62 letras sao 1655 px (cabe por 5), 60 sao 1601 (folgado)
+    def frase(n):
+        return ("palavra " * 40)[:n].rstrip().ljust(n, "a")
+    base = {"versoes": [{"id": "v1", "nome": "demo", "clips": [
+        {"t": "foto", "i": "f1", "x": frase(62), "d": 4, "c": 0.7, "x1": True},
+        {"t": "foto", "i": "f1", "x": frase(60), "d": 4, "c": 0.7, "x1": True},
+        {"t": "foto", "i": "f1", "x": frase(63), "d": 4, "c": 0.7, "x1": True},
+        {"t": "foto", "i": "f1", "x": frase(62), "d": 4, "c": 0.7},
+        {"t": "lado", "fotos": ["f1", "f2"], "lay": "2v", "x": "Curta", "xf": [frase(61), ""], "vf": True, "vm": "legenda", "d": 5, "c": 0.7, "x1": True},
+        {"t": "foto", "i": "f1", "x": frase(50), "d": 4, "c": 0.7, "lp": {"dx": 300, "dy": 0}},
+        {"t": "foto", "i": "f1", "x": "Curta", "d": 4, "c": 0.7, "lp": {"dx": 300, "dy": -20}},
+        {"t": "foto", "i": "f1", "x": "", "d": 4, "c": 0.7, "lp": {"dx": 300, "dy": 0}},
+        {"t": "foto", "i": "f1", "x": frase(50), "d": 4, "c": 0.7}]}], "atual": "v1", "pessoas": [], "tags": {}}
+    porid = {"f1": {"id": "f1", "w": 4000, "h": 3000}, "f2": {"id": "f2", "w": 3000, "h": 4000}}
+    js = (APOIO_LEG % {"porid": json.dumps(porid)}) + """
+var v = est.versoes[0], r = {};
+RENDER_LE = {legenda_posicao: true, numa_linha: true, posicao_clip: true};
+r.limite = v.clips.map(function(_c, i){ return limitesNumaLinha(v, i).map(function(a){ return [a.t, a.texto.length]; }); });
+r.naoCabe = v.clips.map(function(_c, i){ return avisosNumaLinha(v, i).length; });
+r.encosta = v.clips.map(function(c){ return notaEncostaDoClip(c); });
+r.nota5 = notaPosicaoDoClip(v.clips[5]);
+/* a de todas encostada a esquerda, com um dx para a esquerda: nao anda nada */
+est.estilo = {legenda: {posicao: {dx: -40, alinhamento: "esquerda"}}};
+r.esquerda = [notaEncostaDoClip(v.clips[8]), notaPosicaoDoClip(v.clips[8])];
+delete est.estilo;
+console.log(JSON.stringify(r));
+"""
+    s = _correr_estilo(base, js, problemas, mais=FUNCOES_LEG + FUNCOES_LEG_INSPETOR + FUNCOES_LEG_ESTILO, declaracoes=DECLARACOES_LEG)
+    if s:
+        lim = s["limite"]
+        if not (len(lim[0]) == 1 and re.fullmatch(r"A legenda do clip 1 cabe numa linha por pouco: precisa de 1655 px e há 1660 px\. "
+                                                  r".*o filme parte-a como hoje, e o montar diz\.", lim[0][0][0])):
+            problemas.append("a legenda que cabe por 5 px: %s" % (lim[0],))
+        if lim[1] or lim[2] or lim[3] or lim[5] or lim[6] or lim[7] or lim[8]:
+            problemas.append("avisos do limite onde nao deviam (folgada, a que nao cabe, sem x1): %s" % lim)
+        if len(lim[4]) != 1 or lim[4][0][1] != 61 or "clip 5" not in lim[4][0][0]:
+            problemas.append("o texto de cada foto na legenda de baixo, no limite: %s" % (lim[4],))
+        if s["naoCabe"] != [0, 0, 1, 0, 0, 0, 0, 0, 0]:
+            problemas.append("o que nao cabe continua a ser so do avisosNumaLinha: %s" % s["naoCabe"])
+        # a conta do render: a linha de 50 letras tem 50 x 46 x 0,58 px, e o dx pedido sao 300
+        larg = 50 * 46 * 0.58
+        anda = render.dx_efetivo([larg], 300, "centro")
+        esperada = " Mas encosta à margem: no filme anda só %d px dos 300 pedidos para a direita, para não sair do ecrã." % int(anda + 0.5)
+        if abs(anda - 300) < 1 or s["encosta"][5] != esperada:
+            problemas.append("a legenda comprida com 300 px: %r, e o render.dx_efetivo da %s" % (s["encosta"][5], anda))
+        if not s["nota5"].endswith(esperada) or "ao todo pede 300 px à direita" not in s["nota5"] or "no filme, 300" in s["nota5"]:
+            problemas.append("a nota das setas nao leva o que anda de facto: %r" % s["nota5"])
+        if s["encosta"][6] or s["encosta"][7] or s["encosta"][8]:
+            problemas.append("encosta onde nao devia (curta, sem legenda, sem posicao): %s" % s["encosta"])
+        zero = render.dx_efetivo([larg], -40, "esquerda")
+        if zero != 0 or "anda só 0 px dos 40 pedidos para a esquerda" not in s["esquerda"][0] or not s["esquerda"][1].endswith(s["esquerda"][0]):
+            problemas.append("encostada a esquerda com dx -40: %s (o render anda %s)" % (s["esquerda"], zero))
+    html = io.open(EDITOR, encoding="utf-8").read()
+    for funcao, tem in (("function validar(", "limitesNumaLinha(v, i)"), ("function estiloGaranteLetra(", "estiloLetraChegou()"),
+                        ("function estiloLetraChegou(", "atualizaLegendaDoClip(v, c)"), ("function estiloLetraChegou(", "pintaValidador()"),
+                        ("function estiloLetraChegou(", "palcoCache.legenda = {}"),
+                        ("function blocoLegendaDoClip(", "estiloGaranteLetra("), ("function pintaValidador(", "estiloGaranteLetra("),
+                        ("function blocoLegendaDoClip(", "notaPosicaoNoInspetor(c)"), ("function atualizaLegendaDoClip(", "notaPosicaoNoInspetor(c)")):
+        if tem not in _bloco(html, funcao, problemas):
+            problemas.append("o %s deixou de ter %s" % (funcao, tem))
+    verifica("Mesa: a legenda no limite e encostada", s is not None and not problemas, "; ".join(problemas)[:600] if problemas else
+             "a que cabe por 5 px em «Confirma tu» (a do clip e a de cada foto), a folgada e a que nao cabe sem ele; a nota "
+             "com o que a legenda anda, pelo render.dx_efetivo; e a letra que chega manda medir outra vez")
+
+
+def teste_fecho_1003_pilha_com_a_legenda_subida():
+    """A pilha em monte com a legenda subida pousa onde o render.pilha_disposicao() a pousa.
+
+    O DEFEITO QUE ISTO APANHA: o pilhaMonteDoRender() da Mesa tinha o piso fixo a metade do ecra. Com a legenda 400 px
+    acima o render encolhe o monte para caber acima dela (ate um quarto do ecra) e a Mesa deixava-o 12% maior, a tocar
+    na faixa: a pre-visualizacao mostrava as fotos de outro tamanho.
+    """
+    if not shutil.which("node"):
+        salta("Mesa: a pilha com a legenda subida", "sem node neste PC")
+        return
+    import render
+    problemas = []
+    if not all(hasattr(render, n) for n in ("pilha_disposicao", "piso_da_legenda", "MONTE_LEGENDA_FOLGA")):
+        salta("Mesa: a pilha com a legenda subida", "o render ainda nao tem o piso da legenda")
+        return
+    tamanhos = [(1600, 850), (1600, 1200), (1500, 1004)]
+    dys = [0, -40, -200, -269, -270, -400, -500]
+    A = render.A
+    # a faixa de uma linha a 46: o topo esta a A - 70 - 62 - 26 = 922 (render.faixa_texto), mais o dy
+    topo0 = A - 70 - int(46 * 1.35) - 26
+    base = {"versoes": [{"id": "v1", "nome": "demo", "clips": [{"t": "pilha", "fotos": ["a", "b", "c"], "x": "Legenda", "d": 6, "c": 0.7}]}],
+            "atual": "v1", "pessoas": [], "tags": {}}
+    porid = {k: {"id": k, "w": w, "h": h} for k, (w, h) in zip("abc", tamanhos)}
+    js = (APOIO_LEG % {"porid": json.dumps(porid)}) + """
+var c = est.versoes[0].clips[0], fs = c.fotos.map(function(id){ return porId[id]; }), r = {com: [], sem: [], piso: []};
+RENDER_LE = {legenda_posicao: true, posicao_clip: true};
+%s.forEach(function(dy){
+  if(dy) est.estilo = {legenda: {posicao: {dy: dy}}}; else delete est.estilo;
+  var livre = %d + dy - 0.02 * 1080;
+  r.piso.push(legPisoDoGrupo(c, 1080));
+  r.com.push(pilhaMonteDoRender(fs, 1920, livre, legPisoDoGrupo(c, 1080)));
+  r.sem.push(pilhaMonteDoRender(fs, 1920, livre));
+});
+console.log(JSON.stringify(r));
+""" % (json.dumps(dys), topo0)
+    s = _correr_estilo(base, js, problemas, mais=FUNCOES_LEG + ["function pilhaMonteDoRender("],
+                       declaracoes=list(DECLARACOES_LEG) + ["var PILHA_ANGULOS_RENDER = "])
+    pior = 0.0
+    if s:
+        aspetos = [w / float(h) for w, h in tamanhos]
+        for k, dy in enumerate(dys):
+            livre = topo0 + dy - render.MONTE_LEGENDA_FOLGA * A
+            com_piso = {} if dy == 0 else {"piso": 0.5 * A + dy}
+            lugares = render.pilha_disposicao(aspetos, livre, **com_piso)
+            for (cx, cy, w, h, _ang), mesa in zip(lugares, s["com"][k]):
+                d = max(abs(cx - mesa[0]), abs(cy - mesa[1]), abs(w - mesa[2]), abs(h - mesa[3]))
+                pior = max(pior, d)
+                if d > 1.5:
+                    problemas.append("dy %d: a Mesa pousa em %s e o render em %s" % (dy, [round(x, 1) for x in mesa[:4]],
+                                                                                    [round(x, 1) for x in (cx, cy, w, h)]))
+                    break
+        # e sem o piso (a Mesa de antes) a legenda 400 px acima dava outro monte: e isso que o teste apanha
+        k400 = dys.index(-400)
+        if abs(s["sem"][k400][0][2] - s["com"][k400][0][2]) < 20:
+            problemas.append("sem o piso da legenda subida o monte devia sair maior: %s contra %s" % (s["sem"][k400][0][:4], s["com"][k400][0][:4]))
+        if s["sem"][0] != s["com"][0]:
+            problemas.append("sem posicao, o piso nao pode mudar nada")
+    html = io.open(EDITOR, encoding="utf-8").read()
+    if "pilhaMonteDoRender(fsG, W, temLegG ? Hp : null, legPisoDoGrupo(c, 1080))" not in html:
+        problemas.append("o palco deixou de passar o piso da legenda subida ao pilhaMonteDoRender()")
+    verifica("Mesa: a pilha com a legenda subida", s is not None and not problemas, "; ".join(problemas)[:500] if problemas else
+             "%d posicoes da legenda, 3 fotos, a %.2f px do render.pilha_disposicao(); sem o piso, a 400 px saia maior" % (len(dys), pior))
+
+
+def teste_fecho_1003_marca_continua_fica():
+    """A marca de musica que continua de onde ficou (m.in = "continua") nao se perde ao tocar no nome da musica.
+
+    O DEFEITO QUE ISTO APANHA: o montar le m = {f, in: "continua"} desde 3 de outubro (MARCA_CONTINUA), e o campo «entra
+    ao segundo» da Mesa e de numeros: mostrava-a vazia, e bastava tocar no nome da musica do clip para a marca passar a
+    in: 0, sem aviso. No filme a musica voltava ao principio em vez de continuar.
+    """
+    if not shutil.which("node"):
+        salta("Mesa: a marca que continua fica", "sem node neste PC")
+        return
+    problemas = []
+    html = io.open(EDITOR, encoding="utf-8").read()
+    try:
+        marca = _montar_calado().MARCA_CONTINUA
+    except AttributeError:
+        salta("Mesa: a marca que continua fica", "o montar ainda nao tem a MARCA_CONTINUA")
+        return
+    casos = [{"m": {"f": "a", "in": marca}}, {"m": {"f": "a", "in": " Continua "}}, {"m": {"f": "a", "in": 43.7}}, {"m": {"f": "a", "in": 0}},
+             {"m": {"f": "a"}}, {"m": {"f": "a", "in": "12"}}, {"m": {"f": "a", "in": True}}, {}, None]
+    programa = _bloco(html, "function musicaContinua(", problemas) + "\nconsole.log(JSON.stringify(%s.map(musicaContinua)));\n" % json.dumps(casos)
+    s = None if problemas else _node_programa(programa, problemas)
+    if s is not None and s != [True, True, False, False, False, False, False, False, False]:
+        problemas.append("o musicaContinua() diz %s" % s)
+    for funcao, tem in (("function ligaInspetor(", 'continua ? "continua" : Math.max(0, dentro)'), ("function ligaInspetor(", 'musicaContinua(c) && escrito === ""'),
+                        ("function pintaInspetor(", "musicaContinua(c)"), ("function pintaInspetor(", 'placeholder="continua"')):
+        if tem not in _bloco(html, funcao, problemas):
+            problemas.append("o %s deixou de ter %s" % (funcao, tem))
+    verifica("Mesa: a marca que continua fica", s is not None and not problemas, "; ".join(problemas)[:400] if problemas else
+             "o «continua» do montar reconhecido em %d casos, mostrado no campo e guardado ate ele escrever um segundo" % len(casos))
+
+
+def teste_fecho_1003_sons_automaticos_a_escolha():
+    """Os interruptores dos sons automaticos gravam o que o montar le: so o false, por versao, pelo anular.
+
+    O DEFEITO QUE ISTO APANHA: ele pediu a 3 de outubro para escolher as musicas que o filme poe sozinho, o montar passou a
+    ler versao.som_auto = {nome: false}, e a Mesa nao tinha onde o mostrar nem onde o mudar. Um interruptor que gravasse
+    true, ou outro nome, ou que desligasse um som por um valor mal escrito, era o filme a sair com outro som sem ninguem
+    saber porque.
+    """
+    if not shutil.which("node"):
+        salta("Mesa: os sons automaticos a escolha", "sem node neste PC")
+        return
+    import gerar_mesa
+    import som_para_mesa
+    montar = _montar_calado()
+    if not hasattr(montar, "ler_som_auto") or not hasattr(som_para_mesa, "SOM_AUTO"):
+        salta("Mesa: os sons automaticos a escolha", "o montar ainda nao le o som_auto")
+        return
+    problemas = []
+    html = io.open(EDITOR, encoding="utf-8").read()
+    nomes = [n for n, _c, _t in som_para_mesa.SOM_AUTO]
+    lista = [{"nome": n, "texto": t} for n, _c, t in som_para_mesa.SOM_AUTO]
+    funcoes = ["function somAutoLista(", "function somAutoLido(", "function somAutoLigado(", "function somAutoDesligados(",
+               "function somAutoPoe(", "function somAutoHtml("]
+    programa = """
+"use strict";
+var SR = {som_auto: %s}, RENDER_LE = {}, pilhaDesfazer = [], pintado = 0;
+var est = {versoes: [{id: "v1", clips: [1, 2]}, {id: "v2", clips: [], som_auto: {rei_leao: false, foguetes: true, outro: "x", ana_faria: null}},
+                     {id: "v3", clips: [], som_auto: "nao"}, {id: "v4", clips: [], som_auto: {rei_leao: "false", foguetes: 0}}]};
+function esc(s){ return String(s); }
+function pintaSom(){ pintado++; }
+var document = {getElementById: function(){ return {open: true}; }};
+%s
+var NOMES = SR.som_auto.map(function(x){ return x.nome; });
+function copia(x){ return x === undefined ? null : JSON.parse(JSON.stringify(x)); }
+function ligados(v){ var o = {}; NOMES.forEach(function(n){ o[n] = somAutoLigado(v, n); }); return o; }
+var v1 = est.versoes[0], v2 = est.versoes[1], v3 = est.versoes[2], v4 = est.versoes[3], r = {estados: []};
+function regista(v){ r.estados.push([copia(v.som_auto), ligados(v)]); }
+regista(v1); regista(v2); regista(v3); regista(v4);
+/* 1. como esta: ligar o que ja esta ligado nao grava nada nem abre o anular */
+r.nada = [somAutoPoe(v1, "rei_leao", true), "som_auto" in v1, pilhaDesfazer.length, somAutoHtml(v1).split("data-somauto=").length - 1,
+          somAutoHtml(v1).split(" checked").length - 1, somAutoHtml(v1).indexOf("desligado") >= 0];
+/* 2. desligar grava so o false; ligar outra vez tira a chave, e sem nenhum a versao fica sem som_auto */
+somAutoPoe(v1, "rei_leao", false); r.um = copia(v1.som_auto); regista(v1);
+somAutoPoe(v1, "foguetes", false); r.dois = copia(v1.som_auto); regista(v1);
+r.html = [somAutoHtml(v1).split(" checked").length - 1, somAutoHtml(v1).indexOf("2 sons desligados") >= 0, somAutoHtml(v1).indexOf("Ainda não chega") >= 0];
+RENDER_LE = {som_auto: false}; r.naoLe = somAutoHtml(v1).indexOf("Ainda não chega ao filme") >= 0; RENDER_LE = {som_auto: true};
+somAutoPoe(v1, "rei_leao", true); r.volta = copia(v1.som_auto);
+somAutoPoe(v1, "foguetes", true); r.limpo = ["som_auto" in v1, pilhaDesfazer.length, pilhaDesfazer.every(function(u){ return u.soEstado === true && /o som «/.test(u.rotulo); })];
+/* 3. o anular, passo a passo, sem tocar nos clips nem na outra versao */
+r.anular = [];
+while(pilhaDesfazer.length){ pilhaDesfazer.pop().aoAnular(); r.anular.push(copia(v1.som_auto)); }
+r.depois = ["som_auto" in v1, v1.clips.length, pintado, copia(v2.som_auto)];
+/* 4. o que a base traz de outros nomes e de valores que nao sao false fica como esta, e so o false desliga */
+somAutoPoe(v2, "ana_faria", false); r.v2 = copia(v2.som_auto); regista(v2);
+somAutoPoe(v3, "rebobinar", false); r.v3 = copia(v3.som_auto); regista(v3);
+r.v4 = ligados(v4);
+/* 5. sem a lista na pagina (uma montagem antiga) nao ha interruptores */
+SR = {faixas: []}; r.semLista = [somAutoHtml(v1), somAutoLista().length]; SR = null; r.semSom = somAutoHtml(v1);
+console.log(JSON.stringify(r));
+""" % (json.dumps(lista, ensure_ascii=False), "\n".join(_bloco(html, m, problemas) for m in funcoes))
+    s = None if problemas else _node_programa(programa, problemas)
+    if s:
+        if s["nada"] != [False, False, 0, len(nomes), len(nomes), False]:
+            problemas.append("como esta: %s" % s["nada"])
+        if s["um"] != {"rei_leao": False} or s["dois"] != {"rei_leao": False, "foguetes": False} or s["volta"] != {"foguetes": False}:
+            problemas.append("desligar e ligar: %s, %s, %s" % (s["um"], s["dois"], s["volta"]))
+        if s["html"] != [len(nomes) - 2, True, False] or not s["naoLe"]:
+            problemas.append("o que o painel diz com dois desligados: %s, e sem o montar a ler: %s" % (s["html"], s["naoLe"]))
+        if s["limpo"] != [False, 4, True]:
+            problemas.append("com todos ligados a chave sai, em quatro entradas do anular: %s" % s["limpo"])
+        if s["anular"] != [{"foguetes": False}, {"rei_leao": False, "foguetes": False}, {"rei_leao": False}, None]:
+            problemas.append("o anular, passo a passo: %s" % s["anular"])
+        if s["depois"][:2] != [False, 2] or s["depois"][2] < 4 or s["depois"][3] != {"rei_leao": False, "foguetes": True, "outro": "x", "ana_faria": None}:
+            problemas.append("depois do anular: %s" % s["depois"])
+        if s["v2"] != {"rei_leao": False, "foguetes": True, "outro": "x", "ana_faria": False} or s["v3"] != {"rebobinar": False}:
+            problemas.append("o que a base trazia: %s, %s" % (s["v2"], s["v3"]))
+        if s["semLista"] != ["", 0] or s["semSom"] != "":
+            problemas.append("sem a lista na pagina: %s, %r" % (s["semLista"], s["semSom"]))
+        # O MONTAR LE O MESMO: cada estado que a Mesa viu ou gravou, pelo ler_som_auto()
+        for bruto, mesa in s["estados"] + [[None, s["v4"]]]:
+            versao = {} if bruto is None else {"som_auto": bruto}
+            if mesa is s["v4"]:
+                versao = {"som_auto": {"rei_leao": "false", "foguetes": 0}}
+            lido = montar.ler_som_auto(versao, [])
+            if {n: lido[n] for n in nomes} != mesa:
+                problemas.append("com %r o montar liga %s e a Mesa mostra %s" % (versao.get("som_auto"), lido, mesa))
+        for gravado in (s["um"], s["dois"], s["volta"]):
+            avisos = []
+            montar.ler_som_auto({"som_auto": gravado}, avisos)
+            if avisos:
+                problemas.append("o que a Mesa grava da avisos no montar: %s" % avisos[:1])
+    # os nomes sao os do montar, e as «Ordens para o Claude» levam a escolha
+    if nomes != [n for n, _nota, _diz in montar.SOM_AUTO]:
+        problemas.append("os nomes do som_para_mesa e do montar diferem")
+    for funcao, tem in (("function exportar(", "som_auto: v.som_auto || undefined"), ("function pintaSom(", "somAutoHtml(v)"),
+                        ("function pintaSom(", "somAutoLiga(alvo, v)"), ("function somAutoLiga(", "marcar()")):
+        if tem not in _bloco(html, funcao, problemas):
+            problemas.append("o %s deixou de ter %s" % (funcao, tem))
+    # o gerar_mesa diz se o montar ja o le
+    montar_txt = io.open(os.path.join(REPO, "scripts", "montar_da_mesa.py"), encoding="utf-8").read()
+    if gerar_mesa.le_o_som_a_escolha(montar_txt) != {"som_auto": True, "marca_continua": True}:
+        problemas.append("o montar de agora le o som_auto e o continua, e o gerar_mesa diz %s" % gerar_mesa.le_o_som_a_escolha(montar_txt))
+    if gerar_mesa.le_o_som_a_escolha(montar_txt.replace("def ler_som_auto(", "def outra(")).get("som_auto") is not False \
+            or gerar_mesa.le_o_som_a_escolha(montar_txt.replace("MARCA_CONTINUA = ", "OUTRA = ")).get("marca_continua") is not False:
+        problemas.append("um montar de ontem devia dar False no gerar_mesa")
+    tudo = gerar_mesa.o_que_o_render_le()
+    if tudo.get("som_auto") is not True or tudo.get("marca_continua") is not True:
+        problemas.append("o o_que_o_render_le() nao as traz: %s" % {k: tudo.get(k) for k in ("som_auto", "marca_continua")})
+    verifica("Mesa: os sons automaticos a escolha", s is not None and not problemas, "; ".join(problemas)[:600] if problemas else
+             "%d interruptores com os nomes do montar; so o false se grava, por versao; quatro passos do anular; o que a base "
+             "trazia fica; %d estados lidos pelo montar como a Mesa os mostra; e as ordens levam a escolha" % (len(nomes), len(s["estados"]) + 1))
+
+
+def teste_fecho_1003_largura_de_uma_linha_e_a_do_render():
+    """A largura em que uma legenda numa linha tem de caber e a do render, lida pelo gerar_mesa, e nao um numero da Mesa.
+
+    O DEFEITO QUE ISTO APANHA: a Mesa tinha os 1660 px escritos. Se ele escolher a legenda do clip 10 numa linha com menos
+    margem (o render passa o LEGENDA_LARGURA_NUMA_LINHA a 1762), o filme punha-a numa linha e a Mesa continuava a dizer
+    «não cabe: precisa de 1741 px e há 1660 px», e a desenha-la em duas.
+    """
+    if not shutil.which("node"):
+        salta("Mesa: a largura de uma linha e a do render", "sem node neste PC")
+        return
+    import gerar_mesa
+    import render
+    if not all(hasattr(render, n) for n in ("LEGENDA_LARGURA_NUMA_LINHA", "margem_do_bloco", "x_das_linhas", "LEGENDA_MARGEM_LADO")):
+        salta("Mesa: a largura de uma linha e a do render", "o render ainda nao tem a largura de uma linha")
+        return
+    problemas = []
+    frase = ("palavra " * 40)[:65].rstrip().ljust(65, "a")           # 65 letras a 46: 1734,2 px no medidor do node
+    base = {"versoes": [{"id": "v1", "nome": "demo", "clips": [{"t": "foto", "i": "f1", "x": frase, "d": 4, "c": 0.7, "x1": True}]}],
+            "atual": "v1", "pessoas": [], "tags": {}}
+    larguras = [[1734.2], [1700.0, 900.0], [1500.0], [1762.0], []]
+    js = (APOIO_LEG % {"porid": "{}"}) + """
+var v = est.versoes[0], LARG = %s, r = {};
+function caso(){
+  var m = legNumaLinha(v.clips[0].x);
+  return {larg: legLarguraNumaLinha(), cabe: m.cabe, precisa: m.precisa, ha: m.ha, linhas: legLinhas(v.clips[0].x, null, true).linhas.length,
+          avisos: avisosNumaLinha(v, 0).map(function(a){ return a.t; }), nota: notaNumaLinha(v, 0),
+          margens: LARG.map(legMargemDoBloco),
+          xs: LARG.map(function(l){ return ["centro", "esquerda", "direita"].map(function(al){ return [0, 40, -40].map(function(dx){ return legXs(l, dx, al); }); }); })};
+}
+RENDER_LE = {numa_linha: true}; r.semChave = caso();
+RENDER_LE = {numa_linha: true, numa_linha_largura: 1660}; r.hoje = caso();
+RENDER_LE = {numa_linha: true, numa_linha_largura: 1762}; r.larga = caso();
+r.lixo = ["1762", 100, 2500, true, null, NaN].map(function(x){ RENDER_LE = {numa_linha_largura: x}; return legLarguraNumaLinha(); });
+console.log(JSON.stringify(r));
+""" % json.dumps(larguras)
+    s = _correr_estilo(base, js, problemas, mais=FUNCOES_LEG + FUNCOES_LEG_INSPETOR + FUNCOES_LEG_ESTILO, declaracoes=DECLARACOES_LEG)
+    util = render.L - 2 * render.LEGENDA_MARGEM_LADO
+
+    def do_render(largura):
+        guardado = render.LEGENDA_LARGURA_NUMA_LINHA
+        render.LEGENDA_LARGURA_NUMA_LINHA = largura
+        try:
+            return ([render.margem_do_bloco(l) for l in larguras],
+                    [[[list(render.x_das_linhas(l, dx, al)) for dx in (0, 40, -40)] for al in ("centro", "esquerda", "direita")] for l in larguras])
+        finally:
+            render.LEGENDA_LARGURA_NUMA_LINHA = guardado
+
+    def perto(a, b):
+        if isinstance(a, list):
+            return len(a) == len(b) and all(perto(x, y) for x, y in zip(a, b))
+        return abs(a - b) < 1e-6
+    if s:
+        for nome, largura in (("semChave", util), ("hoje", 1660), ("larga", 1762)):
+            c = s[nome]
+            margens, xs = do_render(largura)
+            if c["larg"] != largura or c["ha"] != largura:
+                problemas.append("%s: a Mesa conta com %s px e diz que ha %s, e o render tem %s" % (nome, c["larg"], c["ha"], largura))
+            if not perto(c["margens"], margens) or not perto(c["xs"], xs):
+                problemas.append("%s: a margem ou o x das linhas diferem do render (%s contra %s)" % (nome, c["margens"], margens))
+        if s["hoje"] != s["semChave"]:
+            problemas.append("com os 1660 de hoje a Mesa tem de dar o mesmo que sem a chave")
+        h, l = s["hoje"], s["larga"]
+        if h["cabe"] or h["linhas"] != 2 or len(h["avisos"]) != 1 or "precisa de 1735 px e há 1660 px" not in h["avisos"][0]:
+            problemas.append("hoje a frase de 1735 px nao cabe: %s" % {k: h[k] for k in ("cabe", "linhas", "avisos")})
+        if not l["cabe"] or l["linhas"] != 1 or l["avisos"] or "precisa de 1735 px e há 1762 px" not in l["nota"]:
+            problemas.append("com 1762 a frase de 1735 px cabe numa linha: %s" % {k: l[k] for k in ("cabe", "linhas", "avisos", "nota")})
+        if s["lixo"] != [util] * 6:
+            problemas.append("um valor que nao presta tem de valer a largura util: %s" % s["lixo"])
+    tudo = gerar_mesa.o_que_o_render_le()
+    if tudo.get("numa_linha_largura") != int(render.LEGENDA_LARGURA_NUMA_LINHA):
+        problemas.append("o gerar_mesa diz %r e o render tem %r" % (tudo.get("numa_linha_largura"), render.LEGENDA_LARGURA_NUMA_LINHA))
+    verifica("Mesa: a largura de uma linha e a do render", s is not None and not problemas, "; ".join(problemas)[:600] if problemas else
+             "hoje %d px, como sem a chave; com 1762 a frase de 1735 px cabe, e a margem e o x de cada linha sao os do render "
+             "em %d larguras, 3 alinhamentos e 3 dx" % (int(render.LEGENDA_LARGURA_NUMA_LINHA), len(larguras)))
 
 
 def main():

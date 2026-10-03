@@ -1037,6 +1037,28 @@ final dos créditos. Contrato em `saida/discussao/contrato_1003.md`, com as pala
     - a retoma do piano na fita antes da Clara (060), que não está na lista dele;
     - o lado a lado inteiro nos clips 45, 69, 70, 71, 115 e 129, que cortam mais de 25% (cinco têm
       foco escolhido por ele).
+- **Fotos e músicas da pasta para a Mesa, sozinhas (11:20).** Ele: *"Há duas funcionalidades que
+  precisamos, que é a possibilidade de colocar fotos na pasta e elas entrarem logo na Mesa de Montagem,
+  e igual para as músicas. Estas funcionalidades têm de estar prontas até às 16h."*
+  - O caminho: `scripts/vigiar_pastas.py` vigia a `01-NOVAS` e a `02-NOVAS-MÚSICAS` e avisa quando há
+    ficheiros novos já parados. `scripts/entrada_rapida.py` faz só o trabalho das novas e escreve
+    `saida/entrada_rapida.json` com a lista exata do que publicar.
+  - A publicação continua a ser minha, com a ferramenta: a página e os ficheiros do manifesto, ler a
+    `montagem/estado2`, e escrever a `montagem/publicacao`.
+  - Só funciona com esta sessão aberta no PC.
+  - Em construção, com hora limite às 15:30 (workflow `entrada-rapida-de-fotos-e-musicas`).
+- **A Mesa versão 56, publicada às 12:15.** Traz as escolhas do contrato de 3 de outubro e os
+  interruptores dos seis sons automáticos (botão «Som do render»). Logo a seguir escrevi na base o que
+  entrou no render das 10h (versão 2374 para 2375), e a montagem da base ficou igual, clip a clip, ao
+  estado que foi ao render:
+  - clip 57: o texto novo e o piano (`m`, in 43,7);
+  - clip 143: o texto novo, `cp` 3 e o piano (`m`, in 52);
+  - clip 10: `x1`;
+  - clips 107 e 108: `li`;
+  - créditos: `partes` e `nomes_corridos`.
+- **«Sê prático e eficiente na execução dos meus pedidos. Aplica um critério 80/20»** (11:40). Fica
+  como regra de trabalho. O vigia das pastas ficou logo a correr com o caminho de hoje (6 a 8 minutos
+  por lote), e a versão rápida entra quando estiver pronta.
 - **Fica para depois, palavras dele:** «trocar a foto x por 5-3» (*"vamos vigiar, mas para já
   ignora"*). A `01-NOVAS/5-3.jpg` é igual à original (f0009), que já está no clip 24.
 - As fotos de 04:29 a 04:31 estavam nas Transferências e foram copiadas para a `01-NOVAS`, sem mexer

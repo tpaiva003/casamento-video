@@ -333,9 +333,26 @@ def guia(montagem, pasta, filme_davinci, filme_sem_creditos, srt, entradas, refs
     w("    número do DaVinci pode não ser o mesmo: acerta-o a olho com a referência (passo 5).")
     w("  Line Spacing: no nosso as linhas estão a %d píxeis umas das outras (1,35 corpos)." % entrelinha)
     w("  Color: %s. Opacity: 100." % cor)
-    w("  Alignment: ao centro. Position: centrada, com a última linha a assentar a %d píxeis do fundo"
-      % render.LEGENDA_TEXTO)
-    w("    do ecrã.")
+    # A POSICAO DAS LEGENDAS (3 de outubro): a de todas, escolhida no Estilo da Mesa, nao cabe no .srt, que
+    # so tem tempos e texto. Poe-se aqui, na faixa. Sem posicao escolhida, as duas linhas de sempre.
+    pos_dx, pos_dy, pos_alinha = S.posicao_de()
+    if (pos_dx, pos_dy, pos_alinha) == (0, 0, "centro"):
+        w("  Alignment: ao centro. Position: centrada, com a última linha a assentar a %d píxeis do fundo"
+          % render.LEGENDA_TEXTO)
+        w("    do ecrã.")
+    else:
+        w("  Alignment: %s. Position: com a última linha a assentar a %d píxeis do fundo do ecrã%s."
+          % ({"centro": "ao centro", "esquerda": "à esquerda", "direita": "à direita"}[pos_alinha],
+             render.LEGENDA_TEXTO - pos_dy,
+             {"centro": "", "esquerda": ", e as linhas a começar a %d píxeis da borda esquerda" % render.LEGENDA_MARGEM_LADO,
+              "direita": ", e as linhas a acabar a %d píxeis da borda direita" % render.LEGENDA_MARGEM_LADO}[pos_alinha]))
+        if pos_dx:
+            w("    Na Mesa as legendas estão %d píxeis para a %s. No nosso render cada legenda anda isso, ou só até"
+              % (abs(pos_dx), "direita" if pos_dx > 0 else "esquerda"))
+            w("    tocar na margem de %d píxeis: uma linha comprida encosta em vez de sair do ecrã."
+              % render.LEGENDA_MARGEM_LADO)
+        w("    É A POSIÇÃO ESCOLHIDA NA MESA PARA TODAS AS LEGENDAS. O .srt não leva posição: põe-se aqui, na")
+        w("    faixa, e acerta-se a olho com a referência (passo 5). Confirma as legendas mais compridas.")
     w("  Stroke e Drop Shadow: desligados.")
     w("  Background: ligado, cor preta (#000000), Opacity %d%% (no nosso render é preto a %d em 255)."
       % (int(round(100.0 * alfa / 255)), alfa))
@@ -370,6 +387,19 @@ def guia(montagem, pasta, filme_davinci, filme_sem_creditos, srt, entradas, refs
              (" --corte %.2f" % (tempos["corte_q"] / float(FPS))) if com_creditos and tempos.get("corte_q") else "",
              os.path.join(pasta, "legendas_corpo60.srt")))
     w("  Uma legenda só: seleciona-a na faixa, Inspector > Caption > Customize Caption.")
+    # AS LEGENDAS COM POSICAO SO DELAS (clip.lp, 3 de outubro): o .srt nao a leva, e mexem-se a mao
+    proprias = S.com_posicao_propria(entradas)
+    if proprias:
+        w("  ATENÇÃO, LEGENDAS COM POSIÇÃO SÓ DELAS NA MESA, que o .srt não leva: %s. No nosso render estão"
+          % "; ".join("%d (%s)" % (e["n"], S.frase_da_posicao(*S.posicao_de(e)[:2]) or "no sítio de sempre")
+                      for e in proprias[:12]))
+        w("  nesse sítio, contado do sítio de sempre. No DaVinci mexe-se cada uma à mão, como acima.")
+    numa_linha = [e for e in entradas if e.get("leg") and e["leg"]["x1"]]
+    if numa_linha:
+        w("  As legendas pedidas numa só linha na Mesa vão como o nosso render as escreve (numa linha se")
+        w("  couber na largura das legendas, partidas se não couber): %s."
+          % ", ".join("%d (%d linha%s)" % (e["n"], len(e["linhas"]), "" if len(e["linhas"]) == 1 else "s")
+                      for e in numa_linha[:12]))
     if falas:
         w("  As falas estão em linhas separadas, como no nosso: legenda%s %s."
           % ("s" if len(falas) > 1 else "", ", ".join(str(e["n"]) for e in falas[:12])))

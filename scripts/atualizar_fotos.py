@@ -29,8 +29,14 @@ com null), e escrever o documento
 montagem/publicacao com o build do data/estado_fotos.json, para as Mesas que
 estejam abertas saberem que ha versao nova.
 
+Desde 3 de outubro ha tambem o scripts/entrada_rapida.py, que da o mesmo resultado sem refazer
+as contas das fotos que nao mudaram (cerca de um minuto em vez de seis) e escreve
+saida/entrada_rapida.json com o que entrou, os avisos e a lista exata do que ha para publicar.
+O --rapido deste script chama-o. Sem o --rapido, tudo aqui e como sempre foi.
+
 Uso:  py -3.11 scripts/atualizar_fotos.py
       py -3.11 scripts/atualizar_fotos.py --sem-ia
+      py -3.11 scripts/atualizar_fotos.py --rapido     o mesmo, pelo scripts/entrada_rapida.py
 """
 import os
 import subprocess
@@ -61,6 +67,9 @@ def passo(n, nome, *args):
 
 
 def main():
+    if "--rapido" in sys.argv:
+        resto = [a for a in sys.argv[1:] if a not in ("--rapido", "--sem-ia")]
+        sys.exit(subprocess.call([PY, os.path.join(AQUI, "entrada_rapida.py")] + resto))
     passo(1, "inventario.py")
     passo(2, "upscale.py")
     print()

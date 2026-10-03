@@ -84,6 +84,38 @@ REBOBINAR = "rebobinar.wav"
 # baixo das vozes. Estava escrito duas vezes dentro do main, uma para cada uso.
 EFEITOS = (VINHETA, REBOBINAR)
 
+# OS SONS QUE O MONTAR POE SOZINHO, E QUE ELE LIGA E DESLIGA UM A UM (3 de outubro). O Tiago, as
+# 05:50: "decidimos na Mesa de Montagem que musicas queriamos incluir, e umas tiramos e outras
+# incluimos. Isso nao e bem uma decisao. Quero ter a opcionalidade das musicas que quero."
+#
+# Um campo da versao da Mesa, versao.som_auto = {<nome>: false}. AUSENTE OU true E COMO ESTA, e o
+# som.csv sai igual ao byte; false tira esse som, e so esse. O QUE ESTAVA A TOCAR CONTINUA, como se
+# fosse uma marca a menos: o leito de antes vai ate ao proximo som que o corte (os foguetes de um
+# nascimento, a musica de um nascimento, uma marca dele) ou ate ao fim. Nada entra no lugar do
+# que saiu: se nao houver nada a tocar, fica sem musica e o montar avisa (083, avisa e nao
+# corrige). A IMAGEM NAO MUDA: a fita continua parada na data o mesmo tempo, com ou sem foguetes.
+#
+# (nome, o comeco da nota com que a faixa sai no som.csv, como se diz nos avisos). O nome e curto e
+# nao muda: e o que a Mesa grava. O texto de cada um para a Mesa esta no som_para_mesa.SOM_AUTO, e
+# o teste_som_auto_liga_e_desliga le os dois.
+SOM_AUTO = (
+    ("piano_abertura", "da abertura ate ao nascimento do Tiago", "o piano da abertura"),
+    ("rebobinar", "fita a rebobinar", "a fita a rebobinar"),
+    ("foguetes", "foguetes, nascimento", "os foguetes dos nascimentos"),
+    ("rei_leao", "Rei Leao, do nascimento do Tiago", "o Rei Leao do nascimento do Tiago"),
+    ("ana_faria", "a musica da Clarinha", "a Ana Faria do nascimento da Clara"),
+    ("retoma_piano", "retoma a musica da abertura", "a retoma do piano na fita antes da Clara"),
+)
+
+# "CONTINUAR DE ONDE FICOU" (3 de outubro): a marca m = {f, in: "continua"}. A musica entra no
+# segundo do ficheiro onde parou da ultima vez que tocou no filme (o in mais a duracao dessa faixa,
+# a mesma conta da retoma da 060); se ainda nao tocou, entra do inicio com o silencio saltado. Ate
+# aqui o "Lang Lang a continuar" dos contadores era um numero feito a mao (43,7 e 52), que deixava
+# de valer logo que uma duracao mudasse. Um in em numero continua a ser o que era, ao byte.
+MARCA_CONTINUA = "continua"
+# Um troco sem som nenhum a partir disto avisa, quando vem de um som automatico desligado (som_auto).
+SILENCIO_QUE_SE_OUVE = 0.3
+
 # AS VOZES DO PEDIDO, decisao 075. O Tiago, a 17 de setembro: "Aqui vou meter a foto do
 # pedido e meto os audios que ja cortamos do pedido, eu depois decido a sequencia dos
 # audios". A regra do CLAUDE.md "nenhuma narracao falada" fica de pe para o resto do
@@ -1311,6 +1343,53 @@ def e_leito(fx):
     return fx["ficheiro"] not in EFEITOS and not fx.get("voz") and not fx.get("video")
 
 
+def ler_som_auto(versao, avisos):
+    """{nome: True se o som automatico entra} para os nomes de SOM_AUTO, a partir de versao.som_auto.
+
+    So o `false` do JSON desliga. Ausente, true, null e "" sao "como esta". O que nao se percebe
+    (um nome que nao existe, um valor que nao e true nem false, um som_auto que nao e um objeto) fica
+    como esta COM AVISO: desligar uma musica por causa de um valor mal escrito era o filme a sair
+    calado sem ninguem saber porque.
+    """
+    liga = {nome: True for nome, _nota, _diz in SOM_AUTO}
+    bruto = (versao or {}).get("som_auto")
+    if bruto in (None, "") or bruto == {}:
+        return liga
+    if not isinstance(bruto, dict):
+        avisos.append("som_auto da versao nao e um objeto {nome: false}, ficam todos os sons automaticos "
+                      "como estao: %r" % (bruto,))
+        return liga
+    for nome, v in bruto.items():
+        if nome not in liga:
+            avisos.append("som_auto com o nome %r, que nao existe, ignorado: os nomes sao %s"
+                          % (nome, ", ".join(n for n, _nota, _diz in SOM_AUTO)))
+        elif v is False:
+            liga[nome] = False
+        elif v is not True and v not in (None, ""):
+            avisos.append("som_auto.%s %r tem de ser true ou false, fica como esta" % (nome, v))
+    return liga
+
+
+def sem_musica(faixas, de, ate):
+    """[(inicio, fim)] dos trocos entre `de` e `ate`, no relogio do corpo, em que nao toca nada.
+
+    Conta tudo o que enche a sala (leitos, foguetes, que sao cantados, vozes, som de video) menos a
+    fita a rebobinar, que e um efeito de tres segundos e nao faz de musica. Serve para avisar quando
+    um leito automatico desligado deixa um buraco.
+    """
+    cobertos = sorted((fx["quando_s"], fx["quando_s"] + fx["dura_s"]) for fx in faixas
+                      if fx["ficheiro"] != REBOBINAR and fx["dura_s"] > 0
+                      and fx["quando_s"] < ate and fx["quando_s"] + fx["dura_s"] > de)
+    buracos, t = [], de
+    for a, b in cobertos:
+        if a > t:
+            buracos.append((t, a))
+        t = max(t, b)
+    if t < ate:
+        buracos.append((t, ate))
+    return buracos
+
+
 def corpo_da_montagem(linhas):
     """As linhas que nao sao a fanfarra do bloco inicial.
 
@@ -1403,6 +1482,33 @@ def fita_continua_o_contador(texto_contador, texto_fita):
             return False
         para = para.year
     return para == ano and abre and troco[0] <= 1e-4
+
+
+def contador_acaba_aceso(texto):
+    """O que fica aceso por baixo do ponteiro no ULTIMO fotograma deste contador, em palavras, ou "".
+
+    Ate 3 de outubro o rotulo de uma paragem apagava sempre antes do corte, e o ultimo fotograma de
+    um contador de anos era so a fita: e por isso que a fita de 1995 pode entrar a seguir em corte
+    seco, numa so peca (fita_continua_o_contador). Desde entao ha dois casos em que o contador acaba
+    com texto aceso (o fim_aceso do render.desenhar): a data inteira de um contador que acaba numa
+    data ("2026>12/09/1995"), e o texto do ano de chegada quando o contador tem parado no fim
+    ("2026>1995|1995=Nascem~2.0"). Um rotulo da partida ("2026>1995|4 de outubro de 2026") nao conta,
+    com ou sem parado. Um texto que nao se le nao acaba aceso.
+    """
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import linha_tempo
+    try:
+        tipo, de, para, marcos = linha_tempo.ler_contador(texto or "")
+        if linha_tempo.chegada_do_contador(texto or "") is not None:
+            return "a data de chegada acesa"
+        if linha_tempo.segura_de(texto or "") <= 0:
+            return ""
+        if tipo == "datas" and abs((para - de).days) > linha_tempo.DIAS_MAXIMOS_DATAS:
+            # o preparar do render troca-o pelo contador de anos, e os marcos vao para o ano deles
+            para, marcos = para.year, [(d.year, t) for d, t in marcos]
+        return "o texto da chegada aceso" if any(a == para for a, _t in marcos) else ""
+    except (ValueError, AttributeError, TypeError):
+        return ""
 
 
 def video_tem_som(caminho):
@@ -1970,12 +2076,24 @@ def main():
         # E A FITA DE 1995 NUMA SO PECA COM O CONTADOR (2 de outubro), pela mesma regra: o primeiro
         # fotograma dela e o ultimo do contador, e um encadeado punha o "1996" a sair pela direita
         # por cima do "1996" parado. So com o estilo continuo; sem ele fica o encadeado que vier.
-        if (tipo == "marcos" and trans > 0 and (estilo_mesa.get("contador") or {}).get("continuo")
-                and linhas and linhas[-1]["tipo"] == "contador"
-                and fita_continua_o_contador(linhas[-1]["texto_ecra"], c.get("x", ""))):
+        numa_peca = (tipo == "marcos" and (estilo_mesa.get("contador") or {}).get("continuo")
+                     and linhas and linhas[-1]["tipo"] == "contador"
+                     and fita_continua_o_contador(linhas[-1]["texto_ecra"], c.get("x", "")))
+        if numa_peca and trans > 0:
             avisos.append("a fita do clip %d continua o contador do clip %d numa so peca: entra com "
                           "corte seco, sem o encadeado de %s s" % (len(linhas) + 1, len(linhas), segundos(trans)))
             trans = 0.0
+        # ... E O QUE O CORTE SECO JA NAO GARANTE (revisao de 3 de outubro). Um contador que acaba numa
+        # data, ou com texto no ano de chegada e parado no fim, fica com esse texto ACESO ate ao ultimo
+        # fotograma, e a fita nao o tem no primeiro: some de um fotograma para o outro. Avisa-se e nao se
+        # mexe (083): voltar ao encadeado trazia o fantasma dos dois "1995", que e pior.
+        if numa_peca:
+            aceso = contador_acaba_aceso(linhas[-1]["texto_ecra"])
+            if aceso:
+                avisos.append("o contador do clip %d acaba com %s por baixo do ponteiro, e a fita do "
+                              "clip %d entra a seguir em corte seco, numa so peca: esse texto some de um "
+                              "fotograma para o outro. Tira-o do fim do contador (a data, ou o parado no fim), "
+                              "ou desliga «Uma so peca»" % (len(linhas), aceso, len(linhas) + 1))
         # A FITA PARADA NO FIM (decisao 089), so num clip da fita que a conta dos foguetes
         # segurou: a duracao cresce e o texto leva "~segundos", que o render le. Sem
         # paragem a linha sai como sempre, ao byte.
@@ -2004,6 +2122,12 @@ def main():
         # e por isso conta com os segundos a mais sem mais nada. Sem cp, a linha de sempre ao byte.
         if tipo == "contador":
             segura = parado_do_contador(c, len(linhas) + 1, avisos)
+        elif c.get("cp") not in (None, "", False, 0, "0"):
+            # SO OS CONTADORES TEM PARADO NO FIM. Um clip que foi contador e passou a outra coisa pode
+            # trazer o cp de antes: fica de fora COM AVISO, como o x1, o lp e o li (revisao de 3 de outubro;
+            # ate ai ficava de fora calado).
+            avisos.append("o clip %d e %s e tem parado no fim: so os contadores o levam, fica de fora"
+                          % (len(linhas) + 1, tipo))
         texto_clip = c.get("x", "")
         if segura > 0:
             texto_clip = "%s~%s" % (texto_clip, numero(segura))
@@ -2036,8 +2160,14 @@ def main():
             videos_marcados.append((len(linhas) - 1, modo))
         m = c.get("m") or {}
         if (m.get("f") or "").strip():
-            musicas_marcadas.append((len(linhas) - 1, m["f"].strip(),
-                                     float(m.get("in") or 0.0)))
+            # "CONTINUAR DE ONDE FICOU" (3 de outubro): o in e a palavra, e o segundo do ficheiro sai
+            # da conta do som, la em baixo, quando ja se sabe o que tocou antes. Um numero e o de sempre.
+            entra_m = m.get("in")
+            if isinstance(entra_m, str) and entra_m.strip().lower() == MARCA_CONTINUA:
+                entra_m = MARCA_CONTINUA
+            else:
+                entra_m = float(entra_m or 0.0)
+            musicas_marcadas.append((len(linhas) - 1, m["f"].strip(), entra_m))
         # AS VOZES DO PEDIDO, pela ordem que ele deu na Mesa. Ficam presas ao indice do
         # clip e nao ao instante: o cartao do nascimento estica-se entre as duas
         # passagens, e um instante guardado aqui ficava a apontar para o sitio errado.
@@ -2292,9 +2422,33 @@ def main():
         if bloco:
             faixas[-1]["bloco"] = bloco
 
+    # OS SONS AUTOMATICOS QUE ELE DESLIGOU NA MESA (versao.som_auto, 3 de outubro), ver SOM_AUTO.
+    # Com tudo ligado, que e a omissao, as contas abaixo sao as de sempre, pela mesma ordem.
+    som_auto = ler_som_auto(versao, avisos)
+    # A musica de cada nascimento entra no ultimo segundo dos foguetes (092).
+    entra_tiago = None if t_tiago is None else t_tiago + VINHETA_DURA - NOME_ANTES_DO_FIM_DOS_FOGUETES
+    entra_clara = None if t_clara is None else t_clara + VINHETA_DURA - NOME_ANTES_DO_FIM_DOS_FOGUETES
+    # ATE ONDE VAI CADA LEITO AUTOMATICO: ate ao proximo som automatico que o corta. Com os foguetes
+    # ligados sao eles que cortam, no instante do nascimento, como sempre. Sem foguetes o leito
+    # continua ate entrar a musica do nascimento, e sem essa ate a do nascimento seguinte ou ao fim
+    # (as marcas dele cortam-no antes, mais abaixo, como cortam qualquer leito).
+    fim_piano = fim_tiago = None
     if t_tiago is not None:
-        junta_som(LANG_LANG, 0.0, t_tiago, 1.0,
-                  "da abertura ate ao nascimento do Tiago", LANG_LANG_IN)
+        if som_auto["foguetes"]:
+            fim_tiago = t_clara if t_clara is not None else fim_corpo
+            fim_piano = t_tiago
+        else:
+            fim_tiago = entra_clara if (t_clara is not None and som_auto["ana_faria"]) else fim_corpo
+            fim_piano = entra_tiago if som_auto["rei_leao"] else fim_tiago
+    # Os leitos desligados, (nome, de, ate) no relogio do corpo: e ai que se procura depois o silencio.
+    leitos_desligados = []
+
+    if t_tiago is not None:
+        if som_auto["piano_abertura"]:
+            junta_som(LANG_LANG, 0.0, fim_piano, 1.0,
+                      "da abertura ate ao nascimento do Tiago", LANG_LANG_IN)
+        else:
+            leitos_desligados.append(("piano_abertura", 0.0, fim_piano))
 
     # O REBOBINAR E DE CADA CONTADOR QUE RECUA, e nao do primeiro contador que aparecer.
     #
@@ -2323,7 +2477,7 @@ def main():
                           "se le a essa velocidade e sai o contador de anos"
                           % (l["ordem"], de_c.isoformat(), para_c.isoformat(),
                              linha_tempo.DIAS_MAXIMOS_DATAS // 366))
-        if linha_tempo.contador_recua(l["texto_ecra"]):
+        if linha_tempo.contador_recua(l["texto_ecra"]) and som_auto["rebobinar"]:
             t_cont = l["inicio_s"] - desvio
             # com o clip.cp o contador anda so na duracao menos o parado no fim (3 de outubro)
             anda_c = l["duracao_s"] - linha_tempo.segura_de(l["texto_ecra"])
@@ -2331,20 +2485,25 @@ def main():
                       anda_c * 0.42, 1.15, "fita a rebobinar")
 
     if t_tiago is not None:
-        junta_som(VINHETA, t_tiago, VINHETA_DURA, 2.0,
-                  "foguetes, nascimento do Tiago", VINHETA_IN)
-        fim_tiago = t_clara if t_clara is not None else fim_corpo
-        junta_som(REI_LEAO, t_tiago + VINHETA_DURA - NOME_ANTES_DO_FIM_DOS_FOGUETES,
-                  fim_tiago - (t_tiago + VINHETA_DURA - NOME_ANTES_DO_FIM_DOS_FOGUETES), 1.05,
-                  "Rei Leao, do nascimento do Tiago ate ao da Clara",
-                  bloco=(t_tiago, fim_tiago))
+        if som_auto["foguetes"]:
+            junta_som(VINHETA, t_tiago, VINHETA_DURA, 2.0,
+                      "foguetes, nascimento do Tiago", VINHETA_IN)
+        if som_auto["rei_leao"]:
+            junta_som(REI_LEAO, entra_tiago, fim_tiago - entra_tiago, 1.05,
+                      "Rei Leao, do nascimento do Tiago ate ao da Clara",
+                      bloco=(t_tiago, fim_tiago))
+        else:
+            leitos_desligados.append(("rei_leao", entra_tiago, fim_tiago))
     if t_clara is not None:
-        junta_som(VINHETA, t_clara, VINHETA_DURA, 2.0,
-                  "foguetes, nascimento da Clara", VINHETA_IN)
-        junta_som(CLARINHA, t_clara + VINHETA_DURA - NOME_ANTES_DO_FIM_DOS_FOGUETES,
-                  fim_corpo - (t_clara + VINHETA_DURA - NOME_ANTES_DO_FIM_DOS_FOGUETES), 1.0,
-                  "a musica da Clarinha que a mae dela pos", CLARINHA_IN,
-                  bloco=(t_clara, fim_corpo))
+        if som_auto["foguetes"]:
+            junta_som(VINHETA, t_clara, VINHETA_DURA, 2.0,
+                      "foguetes, nascimento da Clara", VINHETA_IN)
+        if som_auto["ana_faria"]:
+            junta_som(CLARINHA, entra_clara, fim_corpo - entra_clara, 1.0,
+                      "a musica da Clarinha que a mae dela pos", CLARINHA_IN,
+                      bloco=(t_clara, fim_corpo))
+        else:
+            leitos_desligados.append(("ana_faria", entra_clara, fim_corpo))
 
     # ------------------------------------------------------- as vozes do pedido
     #
@@ -2528,7 +2687,13 @@ def main():
     for i, f, dentro in musicas_marcadas:
         t_marca = linhas[i]["inicio_s"] - desvio
         real = resolve_musica(f, mus)
-        if real:
+        if real and dentro == MARCA_CONTINUA:
+            # "CONTINUAR DE ONDE FICOU": o segundo do ficheiro so se sabe com as faixas todas no
+            # sitio (a retoma da fita incluida), ver resolver_continuas(). Para a regra do eco conta
+            # como um pedido do principio: se a automatica da mesma musica acabou de entrar,
+            # continuar e deixa-la tocar.
+            marcas_t.append((t_marca, real, MARCA_CONTINUA, "", 0.0))
+        elif real:
             calado = silencio_no_inicio(mus[real], dentro)
             # O AVISO DO SILENCIO VAI COM A MARCA e so se diz se ela ficar: uma marca absorvida
             # pela automatica da mesma musica nao entra no ficheiro onde o aviso dizia.
@@ -2599,9 +2764,19 @@ def main():
         # (verificador, medido no render). Parado aqui, o cruzamento do render da-lhe os
         # mesmos 2,2 s a descer por cima dos foguetes que o automatico sempre teve, e a
         # retoma depois da fita encontra-o como encontrava o automatico.
+        # SO COM OS FOGUETES LIGADOS (som_auto, 3 de outubro): sem eles nao ha nada por cima, e a
+        # musica continua ate ao proximo leito, como uma marca qualquer.
         for t_nasce in (t_tiago, t_clara):
-            if t_nasce is not None and t < t_nasce < fim:
+            if som_auto["foguetes"] and t_nasce is not None and t < t_nasce < fim:
                 fim = t_nasce
+        if dentro == MARCA_CONTINUA:
+            # o segundo de entrada fica por resolver, e a faixa leva a marca de que e para continuar
+            postas = len(faixas)
+            junta_som(f, t, fim - t, 1.0,
+                      "marcada na Mesa, no clip das %.1f s, a continuar de onde ficou" % t, 0.0)
+            if len(faixas) > postas:
+                faixas[-1]["continua"] = True
+            continue
         junta_som(f, t, fim - t, 1.0, "marcada na Mesa, no clip das %.1f s" % t, dentro)
 
     # A MUSICA DA ABERTURA RETOMA QUANDO A FITA VOLTA, e nao o Rei Leao.
@@ -2616,7 +2791,40 @@ def main():
     # mesmo antes dos foguetes do Tiago, seja ele qual for, marcado na Mesa ou nao, e
     # retoma-se no segundo do ficheiro onde parou. Vai da primeira fita depois do
     # nascimento do Tiago ate onde ia o leito que ela interrompe.
-    if t_tiago is not None and t_clara is not None:
+    #
+    # "CONTINUAR DE ONDE FICOU" (3 de outubro). Cada marca com in "continua" entra onde a MESMA
+    # musica parou da ultima vez que tocou antes dela: o in mais a duracao dessa faixa, a conta que
+    # a retoma faz logo abaixo. Se ainda nao tocou, entra do inicio com o silencio saltado, como uma
+    # marca sem in. Resolve-se pela ordem do filme, para uma continuacao poder apoiar-se noutra, e
+    # duas vezes: antes da retoma (que pode retomar uma marca destas) e depois dela (que pode ser a
+    # ultima vez que a musica tocou, como o Lang Lang do contador 57 depois da fita antes da Clara).
+    def resolver_continuas(dizer):
+        for fx in sorted((x for x in faixas if x.get("continua")), key=lambda x: x["quando_s"]):
+            antes = [x for x in faixas if x is not fx and e_leito(x) and x["ficheiro"] == fx["ficheiro"]
+                     and x["quando_s"] < fx["quando_s"] and x["dura_s"] > 0]
+            if antes:
+                ultima = max(antes, key=lambda x: x["quando_s"])
+                fx["in_s"] = round(float(ultima["in_s"] or 0.0) + ultima["dura_s"], 2)
+                if dizer:
+                    # A MUSICA PODE ACABAR ANTES DO CLIP. Continuar e de onde ficou, e nao volta ao
+                    # principio sozinha: diz-se quanto falta, e ele escolhe outro in (083).
+                    tem = duracao_de_audio(fx["caminho"])
+                    if tem and fx["in_s"] + fx["dura_s"] > tem + 0.05:
+                        avisos.append("musica marcada %s a continuar no clip das %.1f s: continua aos %.2f s "
+                                      "do ficheiro, que tem %.1f s, e cala-se %.1f s antes de a seguinte entrar"
+                                      % (fx["ficheiro"][:40], fx["quando_s"], fx["in_s"], tem,
+                                         fx["in_s"] + fx["dura_s"] - tem))
+            else:
+                calado = silencio_no_inicio(fx["caminho"], 0.0)
+                fx["in_s"] = round(0.0 + calado, 2)
+                if dizer:
+                    avisos.append("musica marcada %s a continuar no clip das %.1f s: ainda nao tocou no "
+                                  "filme, entra do inicio%s"
+                                  % (fx["ficheiro"][:40], fx["quando_s"],
+                                     (", com %.2f s de silencio saltados" % calado) if calado else ""))
+
+    resolver_continuas(dizer=False)
+    if t_tiago is not None and t_clara is not None and som_auto["retoma_piano"]:
         # A FITA QUE VOLTA TEM FOTOS ANTES DELA, depois do nascimento do Tiago. Uma continuacao
         # colada a fita do nascimento (com "c", sem nada pelo meio) nao volta a lado nenhum; e
         # com a fita parada (decisao 089) podia comecar depois da entrada do Rei Leao e roubar-lhe
@@ -2634,12 +2842,43 @@ def main():
                   and t_tiago < fx["quando_s"] < t_volta < fx["quando_s"] + fx["dura_s"]]
         if t_volta is not None and antes and depois:
             abertura, interrompido = antes[-1], depois[-1]
-            # Nunca por cima dos foguetes da Clara: la comeca o bloco dela.
-            ate = min(interrompido["quando_s"] + interrompido["dura_s"], t_clara)
+            # Nunca por cima dos foguetes da Clara: la comeca o bloco dela. Sem foguetes (som_auto)
+            # vai ate onde ia o leito que interrompe, que ja acaba na musica da Clara ou numa marca.
+            ate = interrompido["quando_s"] + interrompido["dura_s"]
+            if som_auto["foguetes"]:
+                ate = min(interrompido["quando_s"] + interrompido["dura_s"], t_clara)
             interrompido["dura_s"] = round(t_volta - interrompido["quando_s"], 2)
             junta_som(abertura["ficheiro"], t_volta, ate - t_volta, abertura["ganho"],
                       "retoma a musica da abertura onde parou, na fita que volta antes da Clara",
                       round(abertura["in_s"] + abertura["dura_s"], 2))
+        elif (t_volta is not None and antes and not som_auto["rei_leao"]
+              and not any(e_leito(fx) and fx["quando_s"] <= t_volta < fx["quando_s"] + fx["dura_s"]
+                          for fx in faixas)):
+            # SEM O REI LEAO E SEM MARCA DELE NAS FOTOS DO TIAGO nao ha leito nenhum para a retoma
+            # interromper, e ela ficava de fora com o interruptor dela ligado. Desligar um som tira
+            # so esse: a musica da abertura volta na fita na mesma, ate ao proximo leito ou ate ao
+            # nascimento da Clara. So com o Rei Leao desligado; com ele ligado a conta e a de sempre.
+            abertura = antes[-1]
+            limite = t_clara if som_auto["foguetes"] else (entra_clara if som_auto["ana_faria"] else fim_corpo)
+            ate = min([fx["quando_s"] for fx in faixas if e_leito(fx) and t_volta < fx["quando_s"] < limite]
+                      or [limite])
+            junta_som(abertura["ficheiro"], t_volta, ate - t_volta, abertura["ganho"],
+                      "retoma a musica da abertura onde parou, na fita que volta antes da Clara",
+                      round(abertura["in_s"] + abertura["dura_s"], 2))
+    resolver_continuas(dizer=True)
+
+    # O SILENCIO QUE UM LEITO DESLIGADO DEIXA (som_auto). Nada entra no lugar dele: se ele nao marcou
+    # outra musica ali, fica sem musica, e diz-se onde e quanto. Avisa, nao corrige (083). A partir de
+    # SILENCIO_QUE_SE_OUVE: os 0,66 s entre o fim dos foguetes e a marca dele na primeira foto, medidos
+    # no som do render sem o Rei Leao automatico, ja se ouvem como um buraco.
+    for nome_auto, de_auto, ate_auto in leitos_desligados:
+        buracos = [(a, b) for a, b in sem_musica(faixas, max(0.0, de_auto), ate_auto)
+                   if b - a >= SILENCIO_QUE_SE_OUVE]
+        if buracos:
+            avisos.append("som_auto: sem %s nao toca nada %s. Marca la uma musica, ou liga-o outra vez"
+                          % (dict((n, d) for n, _nota, d in SOM_AUTO)[nome_auto],
+                             " e ".join("dos %.1f aos %.1f s do corpo (%.1f s)" % (a, b, b - a)
+                                        for a, b in buracos)))
 
     # O LEITO BAIXA POR BAIXO DAS VOZES, E NAO PARA NEM PERDE O SITIO.
     #
@@ -2720,6 +2959,9 @@ def main():
     for f in faixas:
         print("   %6.1fs  dura %5.1fs  x%.2f  %-38s %s"
               % (f["quando_s"], f["dura_s"], f["ganho"], f["ficheiro"][:38], f["nota"]))
+    desligados = [diz for n, _nota, diz in SOM_AUTO if not som_auto[n]]
+    if desligados:
+        print("  DESLIGADOS NA MESA (som_auto): %s" % "; ".join(desligados))
     if esticados:
         print()
         print("  ESTICADO POR MIM, para os foguetes acabarem antes das fotos:")

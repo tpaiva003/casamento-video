@@ -65,6 +65,30 @@ EXPLICACOES = (
     ("som do video", "o som do próprio vídeo, que toca enquanto ele passa no meio do filme"),
 )
 
+# OS SONS AUTOMATICOS QUE ELE LIGA E DESLIGA NA MESA (3 de outubro). O Tiago: "Quero ter a
+# opcionalidade das musicas que quero." A versao da Mesa leva som_auto = {nome: false}; ausente ou
+# true e como esta. (nome, o comeco da nota do montar, o texto do interruptor.) Os nomes e as notas
+# sao os do montar_da_mesa.SOM_AUTO, e o teste_som_auto_liga_e_desliga le as duas tabelas. O nome
+# nao muda: e o que fica gravado na base.
+SOM_AUTO = (
+    ("piano_abertura", "da abertura ate ao nascimento do Tiago",
+     "O piano na abertura, do primeiro contador ao nascimento do Tiago"),
+    ("rebobinar", "fita a rebobinar", "O som da fita a rebobinar, nos contadores que recuam"),
+    ("foguetes", "foguetes, nascimento", "Os foguetes nos dois nascimentos"),
+    ("rei_leao", "Rei Leao, do nascimento do Tiago", "O Rei Leão a entrar com o nome do Tiago"),
+    ("ana_faria", "a musica da Clarinha", "A Ana Faria a entrar com o nome da Clara"),
+    ("retoma_piano", "retoma a musica da abertura", "O piano na fita antes da Clara"),
+)
+
+
+def auto_da_nota(nota):
+    """O nome do som automatico de uma faixa, pelo comeco da nota; "" se nao e um deles."""
+    for nome, comeco, _texto in SOM_AUTO:
+        if (nota or "").startswith(comeco):
+            return nome
+    return ""
+
+
 # O que a musica por baixo das vozes esta a fazer. Vem da coluna `abafar` do som.csv, que
 # so existe quando ha vozes: o render baixa ali o leito sem o cortar, para ele voltar no
 # ponto onde estaria se as vozes nao existissem. O texto e para a Mesa, logo com acentos.
@@ -111,6 +135,9 @@ def ler_abafar(celula):
 
 def explica(nota):
     if nota.startswith("marcada na Mesa"):
+        # a marca com in "continua" (3 de outubro): o segundo de entrada e o montar que o calcula
+        if "a continuar de onde ficou" in nota:
+            return "marcada por ti, a continuar de onde tinha ficado"
         return "marcada por ti"
     for comeco, texto in EXPLICACOES:
         if nota.startswith(comeco):
@@ -176,6 +203,8 @@ def som_para_mesa(nome="v3", versao="demo_v3"):
             "f": f["ficheiro"], "filme": round(videos + quando, 2), "corpo": round(quando, 2),
             "in": round(float(f["in_s"] or 0), 2), "dura": round(float(f["dura_s"]), 2),
             "nota": f["nota"], "explica": texto, "origem": origem(f["nota"]),
+            # o nome com que este som se desliga na Mesa (versao.som_auto), "" se nao e automatico
+            "auto": auto_da_nota(f["nota"]),
             "efeito": f["ficheiro"] in EFEITOS,
             "voz": bool((f.get("voz") or "").strip()),
             "video": bool((f.get("video") or "").strip()),
@@ -192,7 +221,9 @@ def som_para_mesa(nome="v3", versao="demo_v3"):
         c["filme"] = round(videos + c["inicio"] - desvio, 2)
     return {"montagem": nome, "versao": versao, "gerado": feito.strftime("%d/%m às %H:%M"),
             "videos": round(videos, 2), "fim": round(videos + max(c["fim"] for c in corpo) - desvio, 2) if corpo else 0,
-            "faixas": saida, "clips": [{"chave": c["chave"], "d": c["d"], "filme": c["filme"]} for c in clips]}
+            "faixas": saida, "clips": [{"chave": c["chave"], "d": c["d"], "filme": c["filme"]} for c in clips],
+            # os interruptores dos sons automaticos, pela ordem em que tocam: o nome que se grava e o texto
+            "som_auto": [{"nome": nome, "texto": texto} for nome, _comeco, texto in SOM_AUTO]}
 
 
 if __name__ == "__main__":

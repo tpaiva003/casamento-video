@@ -195,6 +195,19 @@ section:last-child{border-right:0}
 .legClip .legSeta{min-width:36px; min-height:32px; font-size:14px}
 .legClip .legSeta:disabled{opacity:.35; cursor:default}
 @media (max-width:700px){ .legClip .legSeta{min-width:44px; min-height:40px} .legClip .legX1{font-size:14px} }
+/* o contador de 3 de outubro: a ajuda com exemplos, o que o filme le e o parado no fim */
+.ctAjuda{font-size:11.5px; color:var(--tenue); margin-top:6px; line-height:1.45}
+.ctAjuda summary{cursor:pointer; color:var(--suave); padding:3px 0}
+.ctAjuda p{margin:5px 0}
+.ctAjuda ul{margin:4px 0 4px 0; padding-left:16px}
+.ctAjuda li{margin-bottom:5px}
+.ctAjuda code{display:block; font-family:ui-monospace, Consolas, monospace; font-size:11.5px; color:var(--texto); background:var(--fundo2); border-radius:4px;
+  padding:3px 6px; margin-bottom:2px; overflow-wrap:anywhere; user-select:all; -webkit-user-select:all}
+.ctLeitura{margin:-4px 0 10px; color:var(--suave)}
+.ctParado .pessoas{align-items:center}
+.ctParado .ctParadoOutro{display:inline-flex; align-items:center; gap:4px; font-size:12px; color:var(--suave)}
+.ctParado .ctParadoOutro input{width:68px}
+@media (max-width:700px){ .ctAjuda, .ctAjuda code{font-size:13px} .ctAjuda summary{padding:8px 0} .ctParado .pessoa{min-height:40px} .ctParado .ctParadoOutro input{width:76px; min-height:40px} }
 .ladoLinha button{border:1px solid var(--linha); background:var(--superficie); border-radius:4px; width:24px; height:22px; font-size:11px; color:var(--suave); padding:0}
 .ladoLinha button.tira{font-size:14px; line-height:1}
 .ladoLinha button.tira:hover, .ladoLinha button.tira:focus-visible{border-color:var(--vinho); color:var(--vinho)}
@@ -354,6 +367,14 @@ section:last-child{border-right:0}
 .somLinha{display:flex; gap:12px; padding:6px 10px; border-top:1px solid var(--linha); font-size:13px}
 .somLinha:first-child{border-top:0}
 .somLinha.efeito{opacity:.82}
+/* os interruptores dos sons automaticos (3 de outubro): uma linha por som, com a caixa a esquerda, alta para o dedo */
+.somAuto{margin:0 0 16px; padding:0 0 4px; border-bottom:1px solid var(--linha)}
+.somAutoLinha{display:flex; gap:10px; align-items:flex-start; padding:9px 2px; border-top:1px solid var(--linha);
+  font-size:13px; line-height:1.4; cursor:pointer}
+.somAutoLinha input{flex:0 0 auto; width:19px; height:19px; margin:0; accent-color:var(--vinho)}
+.somAutoLinha.fora span{color:var(--suave)}
+.somAutoLinha.fora b{color:#8A3B2E}
+.somAuto .estadoNota.somAviso{color:#8A3B2E}
 .somT{font-variant-numeric:tabular-nums; color:var(--suave); min-width:3.2em}
 .somF small{display:block; color:var(--tenue); font-size:11.5px; margin-top:2px}
 /* ---------- validador ----------
@@ -791,9 +812,15 @@ dialog input.campoTexto{
 .credSemCargos p{margin:0 0 6px}
 .credIrForma{margin:0 0 8px}
 /* na aba da musica, num ecra largo, a pre-visualizacao encolhe um pouco: a escolha, o que vai tocar e os botoes de
-   ouvir cabem por baixo dela sem rolar (num portatil de 900 px de alto a coluna de baixo tinha 250 px) */
+   ouvir cabem por baixo dela sem rolar (num portatil de 900 px de alto a coluna de baixo tinha 250 px).
+   E EM TODAS AS ABAS A PREVIA DEIXA 300 px A COLUNA DE BAIXO (3 de outubro, a revisao): a previa tinha sempre a largura
+   da coluna (693 x 390), e num ecra de 1920 x 1080 a 125% (1536 x 730) sobravam 91 px para a aba «Ordem e velocidade»,
+   que tem 880 px de escolhas: a regua, o − e o + e o que a Mesa diz nunca se viam juntos. A altura da previa passa a
+   ser a do painel (94vh, ate 980) menos os 205 px do cabecalho, dos controlos e das abas, menos os 300 da coluna de
+   baixo; nunca abaixo de 260 px de largura, nem acima da coluna. Num ecra alto fica como estava. */
 @media (min-width:1001px){
-  .credCorpo[data-aba="musica"] .credTelaCaixa{width:70%; margin:0 auto}
+  #dlgCreditos .credTelaCaixa{width:min(100%, max(260px, calc((min(94vh, 980px) - 505px) * 16 / 9))); margin:0 auto}
+  #dlgCreditos .credCorpo[data-aba="musica"] .credTelaCaixa{width:min(70%, max(260px, calc((min(94vh, 980px) - 505px) * 16 / 9)))}
 }
 /* A MUSICA DOS CREDITOS: as duas escolhas de cima sao as do Estilo (estEscolha); por baixo, a lista das
    musicas com procura, o «Começa», a linha que diz o que vai tocar, os avisos e os dois botoes de ouvir */
@@ -1216,11 +1243,11 @@ dialog input.campoTexto{
       <button class="bt pequeno" id="btContador">+ Contador</button>
       <button class="bt pequeno" id="btFita">+ Fita</button>
       <button class="bt pequeno" id="btVideo">+ Vídeo</button>
-      <button class="bt pequeno" id="btSomRender" title="As músicas e os efeitos tal como o render os toca">Som do render</button>
+      <button class="bt pequeno" id="btSomRender" title="As músicas e os efeitos tal como o render os toca, e os sons que o filme põe sozinho, para ligar e desligar">Som do render</button>
       <button class="bt pequeno" id="btValidar" title="Corre as verificações nesta montagem e mostra o que está por rever. Não corrige nada.">Validar</button>
       <button class="bt pequeno" id="btCreditos" title="A ordem das fotos e os textos do fim dos créditos, com a pré-visualização a correr">Créditos</button>
       <button class="bt pequeno" id="btVideosPorDecidir" title="Os vídeos que estão na pasta NOVAS e ainda não entraram no filme" hidden>Vídeos por decidir</button>
-      <button class="bt pequeno" id="btAnular" title="Anular a última mudança na ordem (Ctrl+Z)" disabled>Anular</button>
+      <button class="bt pequeno" id="btAnular" title="Anular a última mudança na ordem, nos grupos ou numa escolha (Ctrl+Z). O que escreves num campo, como o texto ou a duração, não passa por aqui: muda-se no próprio campo." disabled>Anular</button>
     </div>
     <div class="barraClips" id="barraClips" hidden></div>
     <div class="rolo" id="listaClips"></div>
@@ -1836,13 +1863,15 @@ var PILHA_LEQUE_MAX = 24;
    moldura; o angulo e o da Pillow, contra o relogio, e o CSS roda ao contrario. `livre` e a altura
    livre acima da legenda em pixeis do quadro (ja com a folga), ou null sem legenda. */
 var PILHA_ANGULOS_RENDER = [-9, 6, -4, 11, -7, 3, -12, 8];
-function pilhaMonteDoRender(fs, W, livre){
+function pilhaMonteDoRender(fs, W, livre, piso){
   var L = 1920, A = 1080, s = W / L, b = 0.012 * A;
   var fotos = fs.map(function(ff, i){
     var a = ff && ff.w && ff.h ? ff.w / ff.h : 4 / 3, h = Math.min(0.64 * A, 0.50 * L / a);
     return [L / 2 + Math.sin(i * 1.7) * 90, A / 2 + Math.cos(i * 2.1) * 46, a * h, h, PILHA_ANGULOS_RENDER[i % 8]];
   });
-  var baixo = livre == null ? A - b : Math.max(0.5 * A, Math.min(A - b, livre / s));
+  /* o piso e a metade do ecra; com a legenda subida (3 de outubro) e o render.piso_da_legenda(), que o palco passa em
+     pixeis de 1080 (legPisoDoGrupo). Sem ele, com a legenda 400 px acima, o monte ficava maior do que no filme. */
+  var baixo = livre == null ? A - b : Math.max(piso == null ? 0.5 * A : piso, Math.min(A - b, livre / s));
   var contorno = function(f){
     var t = Math.max(6, Math.round(0.016 * Math.min(f[2], f[3]))), ml = f[2] / 2 + t, ma = f[3] / 2 + t;
     var r = f[4] * Math.PI / 180, co = Math.cos(r), si = Math.sin(r);
@@ -2610,7 +2639,8 @@ var XF_CPS = 12;
    ou numa versao que nao e a da ultima montagem, fica a duracao dele, como antes. */
 function duracaoNoRender(v, i){
   var d = duracaoDoClip(v, i);
-  if(!v || !srDaVersao(v)) return d;
+  /* um contador dura o que esta escrito mais o parado no fim, que o duracaoDoClip ja conta: o montar nunca o estica */
+  if(!v || !srDaVersao(v) || (v.clips[i] && v.clips[i].t === "contador")) return d;
   var r = renderPorClip(v)[i];
   return r && +r.d > d ? +r.d : d;
 }
@@ -4634,6 +4664,8 @@ function renderPorClip(v){
    uma foto nem um grupo: uma duracao da montagem mais curta do que a escrita e a de antes de ele a mudar na Mesa, e
    nao a do render (revisor de 2 de outubro: uma foto passada a 41 s dizia «render 4.0s», e o render vai usar os 41) */
 function renderMudaADuracao(c, r){
+  /* num contador a duracao do filme e a escrita mais o parado no fim (3 de outubro), sempre: o montar nao a mexe */
+  if(c.t === "contador") return false;
   var d = +c.d || 0;
   return !!r && Math.abs(+r.d - d) > 0.05 && (c.t === "video" || +r.d > d);
 }
@@ -4672,11 +4704,74 @@ function blocoRender(v, i){
   return '<div class="campo"><label>No render' + (sr ? ' <span style="color:var(--tenue);font-weight:400">· montagem de ' + esc(sr.gerado) + '</span>' : '') +
     '</label><div class="somNota">' + linhas.map(function(l){ return '<div>' + l + '</div>'; }).join("") + '</div></div>';
 }
+/* ---------- os sons automaticos a escolha (3 de outubro, decisao 111) ----------
+   O Tiago, as 05:50: "Quero ter a opcionalidade das musicas que quero." Ha seis sons que o montar poe sozinho, sem marca
+   dele e por isso sem maneira de os tirar: o piano da abertura, a fita a rebobinar, os foguetes, o Rei Leao, a Ana Faria
+   e a retoma do piano. A versao leva som_auto = {nome: false}: SO O false DESLIGA, e sem a chave e como esta, todos
+   ligados (montar_da_mesa.ler_som_auto). Os nomes e os textos vem com a pagina (SOM_RENDER.som_auto, do
+   som_para_mesa.SOM_AUTO).
+   A MESA SO GRAVA A ESCOLHA. O que estava a tocar continua ate ao proximo som que o corte, e quem faz essa conta e o
+   montar: o palco e a lista do som mostram a ultima montagem ate eu voltar a montar, e diz-se. Passa pelo anular e pela
+   gravacao de sempre, e vai dentro da versao (a parte "versoes" da juncao). */
+function somAutoLista(){ return (SR && Array.isArray(SR.som_auto) ? SR.som_auto : []).filter(function(x){ return x && x.nome; }); }
+function somAutoLido(v){ var s = v && v.som_auto; return s && typeof s === "object" && !Array.isArray(s) ? s : {}; }
+function somAutoLigado(v, nome){ return somAutoLido(v)[nome] !== false; }
+function somAutoDesligados(v){ return somAutoLista().filter(function(x){ return !somAutoLigado(v, x.nome); }); }
+/* LIGA OU DESLIGA UM SOM: fica so o false de cada som desligado, e sem nenhum a chave sai da versao. O que la estiver
+   de outros nomes fica como esta. Devolve se mudou. */
+function somAutoPoe(v, nome, ligado){
+  if(!v || !nome || somAutoLigado(v, nome) === !!ligado) return false;
+  var antes = v.som_auto === undefined ? undefined : JSON.parse(JSON.stringify(v.som_auto)), id = v.id;
+  var texto = nome;
+  somAutoLista().forEach(function(x){ if(x.nome === nome && x.texto) texto = x.texto; });
+  /* soEstado: o anular nao troca a versao aberta nem mexe nos clips, ver desfazer() */
+  pilhaDesfazer.push({soEstado: true, rotulo: (ligado ? "ligar" : "desligar") + " o som «" + texto + "»", aoAnular: function(){
+    var x = null;
+    est.versoes.forEach(function(y){ if(y.id === id) x = y; });
+    if(!x) return;
+    if(antes === undefined) delete x.som_auto; else x.som_auto = JSON.parse(JSON.stringify(antes));
+    try{ var d = document.getElementById("dlgSom"); if(d && d.open) pintaSom(); }catch(e){}
+  }});
+  if(pilhaDesfazer.length > 40) pilhaDesfazer.shift();
+  var lido = somAutoLido(v), s = {};
+  Object.keys(lido).forEach(function(k){ s[k] = lido[k]; });
+  if(ligado) delete s[nome]; else s[nome] = false;
+  if(Object.keys(s).length) v.som_auto = s; else delete v.som_auto;
+  return true;
+}
+function somAutoHtml(v){
+  var lista = somAutoLista();
+  if(!v || !lista.length) return "";
+  var fora = somAutoDesligados(v).length;
+  return '<div class="somAuto" id="somAuto"><p class="estadoNota"><b>Os sons que o filme põe sozinho.</b> Como está, estão todos ligados. ' +
+    'Desligar tira só esse som: o que estava a tocar continua até ao próximo som que o corte, e nada entra no lugar dele.</p>' +
+    lista.map(function(x){
+      var on = somAutoLigado(v, x.nome);
+      return '<label class="somAutoLinha' + (on ? '' : ' fora') + '"><input type="checkbox" data-somauto="' + esc(x.nome) + '"' + (on ? ' checked' : '') + '>' +
+        '<span>' + esc(x.texto || x.nome) + (on ? '' : ' <b>· desligado</b>') + '</span></label>';
+    }).join("") +
+    (fora ? '<p class="estadoNota somAviso" id="somAutoNota" style="margin-top:8px">' + (fora === 1 ? '1 som desligado' : fora + ' sons desligados') +
+      ' nesta versão. ' + (fora === 1 ? 'Sai' : 'Saem') + ' do filme na próxima montagem: o palco e a lista de baixo ainda mostram a última.' +
+      (RENDER_LE.som_auto === false ? ' Ainda não chega ao filme: fica guardado, mas o montar de hoje põe todos os sons.' : '') + '</p>' : '') +
+    '</div>';
+}
+function somAutoLiga(alvo, v){
+  alvo.querySelectorAll("[data-somauto]").forEach(function(x){
+    x.addEventListener("change", function(){
+      var nome = x.getAttribute("data-somauto");
+      if(somAutoPoe(v, nome, x.checked)){ marcar(); pintaBarraClips(); }
+      pintaSom();
+      var de = document.querySelector('#somCorpo [data-somauto="' + nome + '"]');
+      if(de) de.focus();
+    });
+  });
+}
 function pintaSom(){
-  var v = versaoAtual(), sr = srDaVersao(v), alvo = document.getElementById("somCorpo");
+  var v = versaoAtual(), sr = srDaVersao(v), alvo = document.getElementById("somCorpo"), auto = somAutoHtml(v);
   if(!sr){
-    alvo.innerHTML = '<p class="estadoNota">' + (SR ? 'O som do render é da versão ' + esc(SR.versao) + '. Abre essa versão para o ver.'
+    alvo.innerHTML = auto + '<p class="estadoNota">' + (SR ? 'O som do render é da versão ' + esc(SR.versao) + '. Abre essa versão para o ver.'
       : 'Esta Mesa foi publicada sem o som do render.') + '</p>';
+    somAutoLiga(alvo, v);
     return;
   }
   var idx = {}; chavesDaVersao(v).forEach(function(k, i){ idx[k] = i; });
@@ -4687,21 +4782,24 @@ function pintaSom(){
     return '<div class="somLinha' + (fx.efeito ? ' efeito' : '') + '"><span class="somT">' + mmss(fx.filme) + '</span>' +
       '<span class="somF">' + (fx.efeito ? '✦ ' : '♪ ') + esc(nomeFaixa(fx)) + '<small>' + onde +
       ' · do segundo ' + fmtS(fx.in) + ' · ' + fmtS(fx.dura) + ' s · ' + (fx.origem === "mesa" ? 'marcada por ti' : esc(fx.explica || fx.nota)) +
+      (fx.auto && !somAutoLigado(v, fx.auto) ? ' · <b class="somAviso">desligado, sai na próxima montagem</b>' : '') +
       '</small></span></div>';
   };
   var rp = renderPorClip(v), mudadas = [];
   v.clips.forEach(function(cl, i){
     var r = rp[i];
-    if(r && Math.abs(r.d - cl.d) > 0.05)
+    if(r && cl.t !== "contador" && Math.abs(r.d - cl.d) > 0.05)
       mudadas.push('clip ' + (i + 1) + ' · ' + esc((cl.x || cl.f || cl.t).slice(0, 40)) + ': ' + fmtS(cl.d) + ' s na Mesa, ' + fmtS(r.d) + ' s no render');
   });
-  alvo.innerHTML = '<p class="estadoNota">Tal como ficou na última montagem, a ' + esc(sr.gerado) +
+  alvo.innerHTML = auto + '<p class="estadoNota">Tal como ficou na última montagem, a ' + esc(sr.gerado) +
     '. Se mudares a ordem, as músicas ou as durações, estes instantes só mudam quando eu voltar a montar. ' +
-    'As músicas marcadas por ti mudam-se no clip; as regras do script vêm do que decidiste comigo, e para as mudar pede-mo.</p>' +
+    'As músicas marcadas por ti mudam-se no clip; ' + (auto ? 'os sons que o filme põe sozinho ligam-se e desligam-se aqui em cima; as outras regras' : 'as regras') +
+    ' do script vêm do que decidiste comigo, e para as mudar pede-mo.</p>' +
     '<div class="somLista">' + sr.faixas.map(linha).join("") + '</div>' +
     (mudadas.length ? '<p class="estadoNota" style="margin-top:12px"><b>Durações que o render usa diferentes das da Mesa</b></p><div class="estadoLista">' +
       mudadas.map(function(m){ return '<div><span>' + m + '</span></div>'; }).join("") + '</div>' : '') +
     '<p class="estadoNota">O filme acaba aos <b>' + mmss(sr.fim) + '</b>, com a imagem a escurecer nos últimos 2,5 s e o som a descer nos últimos 4 s.</p>';
+  somAutoLiga(alvo, v);
 }
 /* ---------- o validador ----------
    O Tiago, 22 de setembro, decisao 082, ponto 5: "Isso e um validador no final. Podes meter na
@@ -5061,15 +5159,25 @@ function textosDoClip(c){
    o que o resolve_musica() do montar faz: 10 dos 11 nomes que ele marcou estao escritos sem o
    .mp3, e uma comparacao exacta dava 10 avisos falsos de uma vez. O normalize("NFC") e o
    equivalente do unicodedata do montar, e faz falta: o "Inês Homem de Melo" e o "Antonio
-   variações" tem acentos. */
-function semExtensao(s){ return String(s).replace(/\.[^.]+$/, ""); }
+   variações" tem acentos.
+
+   E A REGRA INTEIRA DO resolve_musica(), desde 3 de outubro (a revisao): o Validar dizia «não está nas pastas» e «o
+   filme fica mudo» de tres musicas que o montar encontra (clips 37, 42 e 49 da leitura 66), tres alarmes falsos na
+   manha do render final. Eram duas diferencas:
+   - so se tira a extensao quando e de musica. «Mr. Blue Sky_after_4sec» tem um ponto no nome e ficava «Mr»;
+   - o ficheiro que ganhou um sufixo. «Baha Men - Who Let The Dogs Out (Lyrics)» e o «... (Lyrics) - Cães.mp3»: vale o
+     UNICO ficheiro que comece pelo nome dele seguido de " - "; com dois nao se adivinha.
+   E a mesma conta do somResolve() do palco, aqui sobre a lista das pastas (MUS) e sem depender de mais nada. */
+var MUS_EXTENSOES = [".mp3", ".wav", ".m4a", ".wma", ".flac", ".ogg"];
+function semExtensao(s){ s = String(s); var m = /\.[^.\\/]*$/.exec(s); return m ? s.slice(0, s.length - m[0].length) : s; }
 function musicaConhecida(nome){
-  var n = String(nome == null ? "" : nome).trim().normalize("NFC").toLowerCase();
-  if(!n) return true;
-  return MUS.some(function(f){
-    var k = String(f).normalize("NFC").toLowerCase();
-    return k === n || semExtensao(k) === semExtensao(n);
-  });
+  var n = String(nome == null ? "" : nome).trim();
+  if(!n || MUS.indexOf(n) >= 0) return true;
+  var alvo = n.normalize("NFC").toLowerCase(), ext = /\.[^.\\/]*$/.exec(alvo);
+  if(ext && MUS_EXTENSOES.indexOf(ext[0]) >= 0) alvo = semExtensao(alvo);
+  var nomes = MUS.map(function(f){ return semExtensao(String(f).normalize("NFC").toLowerCase()); });
+  if(nomes.indexOf(alvo) >= 0) return true;
+  return nomes.filter(function(k){ return k.indexOf(alvo + " - ") === 0; }).length === 1;
 }
 /* <<< REGRAS PURAS DO VALIDADOR, FIM >>> */
 
@@ -5223,6 +5331,9 @@ function validar(v){
       (t === AVISO_VIDEO_POR_DECIDIR ? confirma : erro)(i, t);
     });
     if(c.t === "contador") avisosDoContador(lerContador(c.x)).forEach(function(t){ erro(i, t); });
+    /* e o que o filme vai fazer com este contador (3 de outubro): o parado no fim que nao presta, o que ainda nao
+       chega ao filme, a data escrita na partida, um texto fora da viagem ou com pouco tempo para se ler */
+    if(c.t === "contador") dicasDoContador(v, c).forEach(function(p){ (p.grau === "erro" ? erro : confirma)(i, p.t); });
     /* a guarda do temVozes() nao e cosmetica: o avisosDasVozes percorre a montagem a partir
        dali (alcanceDasVozes), e em 313 clips isso somava meio segundo por carregada */
     if(temVozes(c)) avisosDasVozes(v, c).forEach(function(t){ confirma(i, t); });
@@ -5258,6 +5369,8 @@ function validar(v){
     /* a legenda numa so linha que nao cabe, e o lado a lado que corta mais de 25% de uma foto (3 de outubro): o mesmo
        que o inspetor diz. Nao sai errado no render (parte-se como hoje; enche como hoje), por isso «Confirma tu». */
     if(c.x1 !== undefined) avisosNumaLinha(v, i).forEach(function(x){ confirma(i, x.t, {campo: "texto no ecrã", detalhe: x.texto}); });
+    /* e a que cabe por pouco: no filme pode partir-se, porque o render mede com outra letra (limitesNumaLinha) */
+    if(c.x1 !== undefined) limitesNumaLinha(v, i).forEach(function(x){ confirma(i, x.t, {campo: "texto no ecrã", detalhe: x.texto}); });
     var ladoCorta = c.t === "lado" ? avisoLadoCorta(c) : "";
     if(ladoCorta) confirma(i, ladoCorta, {campo: "as fotos nas células"});
     /* 2. O TEXTO A MAIS PARA O TEMPO, pela MESMA conta da etiqueta da lista de clips. Se aqui
@@ -5322,6 +5435,8 @@ function validar(v){
 function valCorta(s, n){ return Array.from(String(s == null ? "" : s)).slice(0, n).join(""); }
 function pintaValidador(){
   var v = versaoAtual(), alvo = document.getElementById("validarCorpo");
+  /* as legendas numa linha medem-se na letra das legendas: pede-se ja, e quando chega o Validar mede outra vez */
+  try{ estiloGaranteLetra(estiloCss(estiloLetra("legenda"), 40)); }catch(e){}
   if(!v){ alvo.innerHTML = '<p class="valNada">Sem versão aberta.</p>'; return; }
   /* os textos dos creditos vem depois dos clips, que e onde estao no filme (decisao 105) */
   var achados = validar(v).concat(CRED ? validarCreditos() : []), total = 0;
@@ -5736,6 +5851,11 @@ function pintaClips(){
               " em relação às outras")+'">legenda mexida</span>' : '')+
           (c.t === "lado" && liDo(c)
             ? '<span class="etiq fiel" title="Cada foto entra inteira na sua célula, sem cortar">fotos inteiras</span>' : '')+
+          /* o contador parado no fim (3 de outubro): quanto, ou a vermelho um valor da base que nao presta */
+          (c.t === "contador" && cpProblema(c)
+            ? '<span class="etiq render" title="'+esc(cpProblema(c))+'">parado no fim?</span>'
+            : c.t === "contador" && cpDo(c)
+              ? '<span class="etiq fiel" title="'+esc("Anda " + fmtS(+c.d || 0) + " s e fica parado " + fmtS(cpDo(c)) + " s na chegada, com o texto aceso")+'">parado '+fmtS(cpDo(c))+' s</span>' : '')+
           (temTextosFotos(c) && !textosForaDoFilme(c) ? (modoTextos(c) === "legenda"
             ? '<span class="etiq fiel" title="Os textos das fotos vão para a legenda de baixo, a mudar com cada foto">texto na legenda</span>'
             : '<span class="etiq fiel" title="Cada foto deste grupo leva o seu texto">texto nas fotos</span>') : '')+
@@ -5878,6 +5998,15 @@ function fitaDaVersao(){
 
      anos    2026>1995|4 de outubro de 2026;2011=O encontro
      datas   04/10/2026>25/12/2025|4 de outubro de 2026;25/12/2025=O pedido
+     anos ate uma data (3 de outubro)
+             1995>20/05/2012|2011=Clara e Tiago conhecem-se;20/05/2012=Começam a namorar
+
+   O DE ANOS ATE UMA DATA (contrato de 3 de outubro, pontos 6 e 7). O Tiago: "o que pretendemos e que ele se mova
+   desde 2023 ate 2026 para a data de 4 de outubro de 2026". Um ano antes do ">" e uma data inteira depois e um
+   contador de ANOS que para no ano da data, e ai acende a data por extenso e, por baixo, o texto dela; nao apagam.
+   E a regra do linha_tempo.ler_anos_ate_data(). So a chegada pode ser data: "04/10/2026>1995" continua a nao se ler.
+   E O PARADO NO FIM, clip.cp em segundos: o contador anda no d e fica parado na chegada cp segundos, com o texto
+   aceso; o clip dura d + cp (montar_da_mesa.parado_do_contador). Ausente quer dizer 0, como esta.
 
    O DE ANOS NAO MUDA NADA. O que la esta escrito continua a ser lido igual, e os
    fotogramas do render tem de sair iguais ao byte: e por isso que o tipo se descobre
@@ -5908,6 +6037,40 @@ function lerContador(x){
   var cab = i < 0 ? texto : texto.slice(0, i), resto = i < 0 ? "" : texto.slice(i + 1);
   var j = cab.indexOf(">");
   var de = (j < 0 ? cab : cab.slice(0, j)).trim(), para = (j < 0 ? "" : cab.slice(j + 1)).trim();
+  /* O DE ANOS ATE UMA DATA (3 de outubro), "1995>20/05/2012|2011=texto;20/05/2012=texto": um ano antes do ">" e uma
+     data inteira depois e um contador de ANOS, que para no ano da data (linha_tempo._e_ano_ate_data). Devolve a mais
+     `ate`, a data como ele a escreveu, e `chegada`, as linhas que acendem na chegada, uma por baixo da outra: a data
+     por extenso, o texto escrito NESSA data, e um marco no ANO da chegada (linha_tempo.ler_anos_ate_data). Um marco
+     numa data que nao e a da chegada fica no ano dele, e um texto sem "=" e o da partida.
+     ESCRITO SEM CHAMAR MAIS NADA DA PAGINA (nem o dataValida, nem a lista dos meses): os testes do render tiram esta
+     funcao sozinha, pelo nome, e uma chamada a mais parava-os no primeiro contador destes. */
+  var dataDe = function(s){
+    var m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(String(s == null ? "" : s).trim());
+    if(!m) return null;
+    var q = new Date(Date.UTC(+m[3], +m[2] - 1, +m[1]));
+    return q.getUTCFullYear() === +m[3] && q.getUTCMonth() === +m[2] - 1 && q.getUTCDate() === +m[1] ? {d: +m[1], m: +m[2], a: +m[3]} : null;
+  };
+  var fim = j >= 0 && /^\d+$/.test(de) ? dataDe(para) : null;
+  if(fim){
+    var meses = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
+    var lista = [], chegada = [fim.d + " de " + meses[fim.m - 1] + " de " + fim.a];
+    resto.split(";").forEach(function(p){
+      p = p.trim();
+      if(!p) return;
+      var k = p.indexOf("="), chave = k < 0 ? "" : p.slice(0, k).trim(), rot = k < 0 ? "" : p.slice(k + 1).trim();
+      var dm = k < 0 ? null : dataDe(chave);
+      if(dm){
+        if(rot){ if(dm.d === fim.d && dm.m === fim.m && dm.a === fim.a) chegada.push(rot); else lista.push({onde: String(dm.a), t: rot}); }
+      } else if(k >= 0 && /^\d+$/.test(chave)){
+        if(rot) lista.push({onde: chave, t: rot});
+      } else lista.push({onde: de, t: p});
+    });
+    if(+de !== fim.a){
+      lista.forEach(function(m){ if(+m.onde === fim.a) chegada.push(m.t); });
+      lista = lista.filter(function(m){ return +m.onde !== fim.a; });
+    }
+    return {tipo: "anos", de: de, para: String(fim.a), marcos: lista, ate: para, chegada: chegada};
+  }
   /* QUEM DECIDE E A BARRA, a mesma regra do linha_tempo.ler_contador(). A Mesa exigia as
      DUAS pontas em dd/mm/aaaa, e por isso "04/10/2026>1995" era um contador de anos para
      ela e um contador de datas para o Python: a Mesa nao dava aviso nenhum e o render
@@ -5930,6 +6093,9 @@ function rotuloDoClip(c){
   if(c.t === "contador"){
     var o = lerContador(c.x);
     if(o.tipo === "datas") return dataCurta(o.de) + " → " + dataCurta(o.para);
+    /* o de anos ate uma data (3 de outubro): as duas pontas e os textos, em vez da instrucao em bruto */
+    if(o.ate) return o.de + " → " + dataCurta(o.ate) + o.marcos.map(function(m){ return " · " + m.t; }).join("") +
+                     o.chegada.slice(1).map(function(t){ return " · " + t; }).join("");
   }
   return c.x || "";
 }
@@ -5994,6 +6160,8 @@ function contadorNoOutroTipo(o, tipo){
     var anoAte = parseInt(o.para, 10) || anoDe;
     var de = dataDeRotulo(rotDe) || ("01/01/" + anoDe);
     var ate = dataDeRotulo(rotAte) || ("01/01/" + anoAte);
+    /* de um contador de anos ate uma data: a data de chegada ja esta escrita, e o texto dela e o rotulo da chegada */
+    if(o.ate){ ate = isoParaData(dataParaIso(o.ate)) || ate; rotAte = (o.chegada || []).slice(1).join(" "); }
     return escreverContadorDatas(de, ate, rotDe, rotAte);
   }
   var de2 = dataParaIso(o.de).slice(0, 4) || String(new Date().getFullYear());
@@ -6015,7 +6183,7 @@ function escreveCamposDoContador(c, foco){
   if(!c || c.t !== "contador") return;
   var o = lerContador(c.x);
   var tipo = document.getElementById("cCtTipo");
-  if(tipo && tipo.value !== o.tipo){
+  if(tipo && tipo.value !== contadorNoInspetor(o)){
     var antes = document.getElementById(foco || "cTexto");
     var pos = antes && antes.selectionStart != null ? antes.selectionStart : null;
     pintaInspetor();
@@ -6042,23 +6210,36 @@ function escreveCamposDoContador(c, foco){
   if(t2 && t2.value !== c.x) t2.value = c.x;
   var bruto = document.getElementById("cTexto");
   if(bruto && bruto.value !== c.x) bruto.value = c.x;
-  /* e a nota dos dias, que e quem lhe diz se este contador ainda serve por datas */
-  var av = document.getElementById("ctAvisos"), lista = avisosDoContador(o);
-  if(av){
-    av.innerHTML = lista.map(function(a){ return "<div>" + esc(a) + "</div>"; }).join("");
-    av.hidden = !lista.length;
-  }
+  /* e a nota dos dias, que e quem lhe diz se este contador ainda serve por datas; desde 3 de outubro tambem o que
+     o filme le deste texto, as dicas e a nota do parado no fim (atualizaNotasDoContador) */
+  atualizaNotasDoContador(versaoAtual(), c);
 }
 function avisosDoContador(o){
-  if(o.tipo !== "datas") return [];
+  /* O DE ANOS QUE NAO SE LE (3 de outubro). O Python le os anos com o int(): uma ponta vazia ou com letras da clip
+     preto, e ate aqui a Mesa nao dizia nada. So chama o que os testes do render trazem com esta funcao. */
+  if(o.tipo !== "datas"){
+    if(/^\d+$/.test(o.de) && /^\d+$/.test(o.para)) return [];
+    return ["Este contador não se lê: " + (!o.de ? "falta o ano de partida"
+              : !/^\d+$/.test(o.de) ? "«" + o.de + "» não é um ano"
+              : o.para ? "«" + o.para + "» não é um ano nem uma data" : "falta o ano, ou a data, de chegada") +
+            ". Escreve o ano de partida, > e o ano de chegada (2026>1995), ou acaba numa data (2023>04/10/2026). No filme sai um cartão preto."];
+  }
   var avisos = [];
+  /* COMECA NUM ANO E A CHEGADA NAO E UMA DATA INTEIRA: e o contador de anos ate uma data a meio de ser escrito, ou
+     com um dia que nao existe. Diz-se o que falta, em vez de «uma das pontas é uma data e a outra é um ano». */
+  if(/^\d+$/.test(o.de)){
+    avisos.push(eDataContador(o.para) ? "A data de chegada " + o.para + " não existe no calendário. No filme sai um cartão preto."
+      : "A chegada «" + o.para + "» não é uma data inteira: escreve o dia, o mês e o ano (20/05/2012), ou só o ano (2012). No filme sai um cartão preto.");
+    return avisos;
+  }
   /* UMA PONTA EM DATA E A OUTRA EM ANO. É a forma que ele escreve quando quer rebobinar do
      dia do casamento até 1995 num contador só, e era a única que passava calada: a Mesa
      chamava-lhe «anos» e o Python «datas», e o render morria no fotograma em que o clip
      entra. Agora as duas concordam no tipo, e o que falta dizer é qual das pontas está mal. */
   if(eDataContador(o.de) !== eDataContador(o.para)){
     avisos.push("Uma das pontas é uma data e a outra é um ano: " + (eDataContador(o.de) ? o.para : o.de) +
-      " não é uma data. Escreve as duas em dd/mm/aaaa, ou passa este contador a anos.");
+      " não é uma data. Escreve as duas em dd/mm/aaaa, ou passa este contador a anos. Um contador de anos pode acabar " +
+      "numa data (1995>20/05/2012), mas não começar numa.");
     return avisos;
   }
   if(!dataValida(o.de) || !dataValida(o.para)){
@@ -6071,6 +6252,261 @@ function avisosDoContador(o){
     avisos.push("São " + Math.abs(dias) + " dias entre as duas datas, mais de três anos. A esta distância os dias "
       + "passam depressa de mais para se lerem a 15 metros: usa o contador por anos.");
   return avisos;
+}
+/* ---------- o contador de 3 de outubro: o que o filme le, o parado no fim e as dicas ----------
+   Contrato de 3 de outubro, pontos 6 e 7. O Tiago: "o que pretendemos e que ele se mova desde 2023 ate 2026 para a
+   data de 4 de outubro de 2026", "precisava que ficasse mais 3 segundos depois de chegar", e para o de 1995: "o
+   contador para em maio de 2012 onde comecaram a namorar". A Mesa deixa escrever, diz por palavras como o filme le o
+   que esta escrito, mostra o campo «Parado no fim» e desenha tudo no palco com as contas do linha_tempo.py. Avisa e
+   nunca corrige (083): o texto do contador e dele. */
+var CONTADOR_PARADO_MAX = 30;          /* montar_da_mesa.CONTADOR_PARADO_MAX */
+var CONTADOR_FRACAO_PARADA = 0.62;     /* a parte do tempo que a fita fica parada, repartida pelas paragens (linha_tempo.anos e datas) */
+/* O TIPO QUE O INSPETOR MOSTRA. E o do lerContador, menos enquanto se escreve um contador de anos ate uma data:
+   "1995>20/" ja tem barra, e para o Python e um contador de datas que nao se le; se o inspetor trocasse para os campos
+   das datas a meio da palavra, o campo onde ele esta a escrever desaparecia. Comeca num ano, fica nos anos. */
+function contadorNoInspetor(o){ return /^\d+$/.test(o.de) ? "anos" : o.tipo; }
+/* OS SEGUNDOS DO clip.cp, como o montar_da_mesa.parado_do_contador() os le: 0 sem nada, ou com um valor que nao
+   presta (um texto, um true, fora de 0 a 30). A regra vive no duracaoDoClip(), que os testes do render tiram da
+   pagina sozinho, e aqui pergunta-se-lhe com um contador de duracao zero. cpDo e a escolha dele; cpNoFilme e o que
+   o filme faz com ela (zero enquanto o render nao a ler, RENDER_LE.contador_parado). */
+function cpDo(c){ return c && c.t === "contador" ? duracaoDoClip({clips: [{t: "contador", d: 0, cp: c.cp}]}, 0, true) : 0; }
+function cpNoFilme(c){ return c && c.t === "contador" ? duracaoDoClip({clips: [{t: "contador", d: 0, cp: c.cp}]}, 0) : 0; }
+/* o que esta mal num clip.cp que veio da base, com as palavras do montar; "" quando esta bem ou nao ha */
+function cpProblema(c){
+  var cp = c ? c.cp : undefined;
+  if(!c || c.t !== "contador" || cp === undefined || cp === null || cp === "" || cp === false || cp === 0) return "";
+  var n = typeof cp === "number" ? cp : (typeof cp === "string" && /^\s*[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?\s*$/.test(cp) ? parseFloat(cp) : NaN);
+  if(n !== n) return "O «Parado no fim» deste contador é «" + String(typeof cp === "object" ? JSON.stringify(cp) : cp) + "»: tem de ser um número de segundos. No filme fica 0.";
+  if(!(n >= 0 && n <= CONTADOR_PARADO_MAX)) return "O «Parado no fim» deste contador tem " + s1(n) + " s: tem de ser de 0 a " + CONTADOR_PARADO_MAX + " s. No filme fica 0.";
+  return "";
+}
+/* POE O PARADO NO FIM: so o que difere de zero fica no clip (sem a chave e como esta). Devolve se mudou. Toques
+   seguidos no mesmo clip sao uma entrada do anular, como as setas da legenda: mas so enquanto essa entrada for a
+   ultima da pilha. Depois de um Anular, ou de outra mudanca pelo meio, a mexida seguinte abre a sua. */
+var cpUltimoToque = {c: null, em: 0, entrada: null};
+function cpPoe(c, s){
+  s = Math.round((+s || 0) * 100) / 100;
+  if(!c || c.t !== "contador" || !(s >= 0 && s <= CONTADOR_PARADO_MAX)) return false;
+  if(s === 0 ? c.cp === undefined : c.cp === s) return false;
+  var entrada = cpUltimoToque.entrada;
+  if(cpUltimoToque.c !== c || !entrada || pilhaDesfazer[pilhaDesfazer.length - 1] !== entrada || Date.now() - cpUltimoToque.em > 1500)
+    entrada = guardaDesfazerCampos(s ? "deixar o contador parado no fim" : "tirar a paragem do fim do contador", c, ["cp"]) || null;
+  cpUltimoToque = {c: c, em: Date.now(), entrada: entrada};
+  if(s > 0) c.cp = s; else delete c.cp;
+  return true;
+}
+/* AS PARAGENS DE UM CONTADOR, COMO O FILME AS FAZ (linha_tempo.anos e datas, e o render.preparar): a partida, a
+   chegada e os marcos de dentro da viagem, pela ordem em que a fita passa por eles; o texto de cada paragem (o ultimo
+   marco do mesmo sitio ganha) e, na chegada de um contador ate uma data, as linhas dela. Um contador por datas com
+   mais de tres anos desenha-se por anos, como o preparar() faz. null quando nao se le (sai preto).
+   {modo, trocou, de, para, baixo, cima, recua, ordenados, porOnde, linhas, fora}: no modo "anos" tudo em anos, no
+   "datas" em dias desde 1970 (palcoDia). */
+function contadorPlano(o){
+  var P = {modo: o.tipo, trocou: false, porOnde: {}, linhas: {}, fora: []}, de, para, ms;
+  if(o.tipo === "datas"){
+    de = palcoDia(o.de); para = palcoDia(o.para);
+    if(de === null || para === null) return null;
+    ms = o.marcos.map(function(m){ return {onde: palcoDia(m.onde), t: m.t}; }).filter(function(m){ return m.onde !== null; });
+    if(Math.abs(para - de) > CONTADOR_DIAS_MAX){
+      var anoDe = function(d){ return new Date(d * 86400000).getUTCFullYear(); };
+      P.modo = "anos"; P.trocou = true; de = anoDe(de); para = anoDe(para);
+      ms = ms.map(function(m){ return {onde: anoDe(m.onde), t: m.t}; });
+    }
+  } else {
+    de = parseInt(o.de, 10); para = parseInt(o.para, 10);
+    if(!(de > 0 && para > 0)) return null;
+    ms = o.marcos.map(function(m){ return {onde: parseInt(m.onde, 10), t: m.t}; });
+  }
+  var baixo = Math.min(de, para), cima = Math.max(de, para), conj = {};
+  conj[de] = 1; conj[para] = 1;
+  ms.forEach(function(m){ if(m.onde >= baixo && m.onde <= cima){ conj[m.onde] = 1; P.porOnde[m.onde] = m.t; } else P.fora.push(m); });
+  /* a data de chegada e o texto dela, so no de anos (o linha_tempo.anos(chegada=...)): tomam o lugar do rotulo desse ano */
+  if(o.chegada && o.chegada.length){ P.linhas[para] = o.chegada.filter(Boolean); P.porOnde[para] = P.linhas[para][0] || null; }
+  P.de = de; P.para = para; P.baixo = baixo; P.cima = cima; P.recua = para < de;
+  P.ordenados = Object.keys(conj).map(Number).sort(function(a, b){ return P.recua ? b - a : a - b; });
+  return P;
+}
+/* como se diz um sitio do contador numa frase: o ano, ou a data curta */
+function contadorSitio(P, onde){
+  if(P.modo === "anos") return String(onde);
+  var d = new Date(onde * 86400000);
+  return d.getUTCDate() + " " + MESES_CURTOS[d.getUTCMonth()] + " " + d.getUTCFullYear();
+}
+/* O QUE SE LE EM CADA PARAGEM E QUANTO TEMPO FICA ACESO: [{onde, sitio, linhas, s, fim, letras, pede}]. Cada paragem
+   dura a sua parte dos 62% do tempo em que a fita anda (d, sem o parado); o texto acende e apaga dentro dela. O da
+   chegada de um contador ate uma data, ou com parado no fim, nao apaga: fica ate ao fim do clip (fim_aceso). `pede`
+   e o tempo que as letras pedem a 15 metros, pela regua das legendas (XF_CPS). */
+function contadorTextos(P, c, ultimoDoFilme){
+  var anda = Math.max(0, +c.d || 0), parado = cpNoFilme(c), n = P.ordenados.length, tp = n ? CONTADOR_FRACAO_PARADA / n * anda : 0;
+  var fica = !!(P.linhas[P.para]) || parado > 0, r = [];
+  P.ordenados.forEach(function(onde, k){
+    var linhas = P.linhas[onde] || (P.porOnde[onde] ? [P.porOnde[onde]] : []);
+    if(!linhas.length) return;
+    var ult = k === n - 1, letras = linhas.reduce(function(a, t){ return a + Array.from(String(t)).length; }, 0);
+    /* NO ULTIMO CLIP DO FILME os ultimos 2,5 s ja sao a passagem para os creditos, ou o fade a preto
+       (render.FADE_FIM_IMAGEM): o texto da chegada so se le ate ai */
+    var s = tp + (ult && fica ? parado : 0);
+    if(ult && ultimoDoFilme) s -= PALCO_R.fadeImagem;
+    /* `falta` e quanto tempo a mais as letras pedem (com a paragem mais curta do que a passagem, o tempo a vista e
+       zero e falta mais do que o que as letras pedem) */
+    r.push({onde: onde, sitio: contadorSitio(P, onde), linhas: linhas, fim: ult, partida: k === 0, fica: ult && fica,
+            s: Math.max(0, s), letras: letras, pede: letras / XF_CPS, falta: letras / XF_CPS - s});
+  });
+  return r;
+}
+/* este clip e o ultimo do filme? (o clip legado t:"fanfarra" nao conta, como no montar) */
+function ultimoClipDoFilme(v, c){
+  if(!v || !c) return false;
+  for(var k = v.clips.length - 1; k >= 0; k--) if(v.clips[k].t !== "fanfarra") return v.clips[k] === c;
+  return false;
+}
+/* O QUE O FILME LE DESTE TEXTO, por palavras: de onde a onde, quantas paragens e o que acende em cada uma. E o que
+   lhe mostra, enquanto escreve, se o texto foi parar a partida ou a chegada. */
+function leituraDoContador(c, v){
+  var o = lerContador(c.x), P = contadorPlano(o);
+  if(!P) return "";
+  var q = function(t){ return "«" + t + "»"; }, n = P.ordenados.length, ultimo = ultimoClipDoFilme(v, c), T = contadorTextos(P, c, ultimo), parado = cpNoFilme(c);
+  var anda = Math.max(0, +c.d || 0), tp = n ? CONTADOR_FRACAO_PARADA / n * anda : 0;
+  var f = ["O filme lê: de " + contadorSitio(P, P.de) + " a " + (o.ate ? dataCurta(o.ate) : contadorSitio(P, P.para)) +
+           (P.modo === "anos" ? ", de ano em ano" : ", dia a dia") + (P.recua ? ", a rebobinar" : "") +
+           (n > 1 ? ", com " + n + " paragens de " + fmtS(tp) + " s." : ", sem sair do sítio.")];
+  T.forEach(function(x){
+    var ls = x.linhas.map(q), txt = ls.length > 1 ? ls[0] + " e, por baixo, " + ls.slice(1).join(" e ") : ls[0];
+    if(x.partida && !x.fim) f.push("Na partida, por baixo de " + x.sitio + ", acende " + txt + ".");
+    else if(x.fim) f.push("Na chegada" + (o.ate ? "" : " a " + x.sitio) + " acende " + txt +
+                          (x.fica ? (ls.length > 1 ? ", e ficam acesos até ao fim." : ", e fica aceso até ao fim.") : ", e apaga antes do corte."));
+    else f.push("Em " + x.sitio + " pára e acende " + txt + ".");
+  });
+  if(parado > 0) f.push("Depois de chegar fica parado " + fmtS(parado) + " s.");
+  /* o ultimo clip do filme acaba na passagem para os creditos (ou no fade a preto), que leva os ultimos 2,5 s dele:
+     diz-se quanto tempo a chegada fica a vista antes disso, que e o que ele quer saber quando poe o parado no fim */
+  if(ultimo && n > 1) f.push("É o último clip do filme: os últimos " + fmtS(PALCO_R.fadeImagem) + " s já são a passagem para os créditos, ou o fade a preto. Antes disso, a chegada fica à vista " +
+                             fmtS(Math.max(0, tp + parado - PALCO_R.fadeImagem)) + " s.");
+  if(P.trocou) f.push("São mais de três anos: o filme desenha-o por anos.");
+  return f.join(" ");
+}
+/* AS DICAS: o que o filme vai fazer e ele talvez nao queira. Nunca mudam nada (083). [{t, grau}], grau "erro" quando
+   o filme sai mal, "confirma" quando e so para ele ver.
+   - o render de hoje ainda nao le o contador de anos ate uma data (RENDER_LE.contador_data): sai preto;
+   - o clip.cp que veio da base e nao presta;
+   - a data por extenso escrita na PARTIDA quando e a da chegada: "2023>2026|4 de outubro de 2026" acende a data por
+     baixo de 2023, no arranque, e nao no fim. Era o contador do fim a 3 de outubro, e o pedido dele;
+   - um texto num ano ou numa data fora da viagem, que nunca aparece;
+   - a partida e a chegada no mesmo sitio;
+   - um texto com mais letras do que o tempo em que fica aceso deixa ler a 15 metros (a regua das legendas). */
+function dicasDoContador(v, c){
+  var o = lerContador(c.x), P = contadorPlano(o), l = [], q = function(t){ return "«" + t + "»"; };
+  var mal = cpProblema(c);
+  if(mal) l.push({grau: "erro", t: mal});
+  if(!P) return l;
+  if(o.chegada && RENDER_LE.contador_data === false)
+    l.push({grau: "erro", t: "O contador de anos que acaba numa data ainda não chega ao filme: o render de hoje não o lê, e sai um cartão preto."});
+  if(cpDo(c) > 0 && RENDER_LE.contador_parado === false)
+    l.push({grau: "confirma", t: "O «Parado no fim» ainda não chega ao filme: fica guardado, mas o render de hoje acaba o contador sem parar."});
+  if(o.tipo === "anos" && !o.chegada){
+    var rotDe = rotuloDoContador(o, o.de), dataRot = dataDeRotulo(rotDe), anoRot = dataRot ? +dataRot.slice(6) : 0;
+    if(anoRot && anoRot === P.para && P.para !== P.de)
+      l.push({grau: "confirma", t: q(rotDe) + " está na partida: acende por baixo de " + P.de + ", no arranque, e não na chegada. Para o contador chegar a essa data e ela acender no fim, escreve " +
+                                    P.de + ">" + dataRot + "."});
+  }
+  P.fora.forEach(function(m){
+    l.push({grau: "confirma", t: "O texto " + q(m.t) + " está em " + contadorSitio(P, m.onde) + ", fora da viagem deste contador (de " +
+                                 contadorSitio(P, P.de) + " a " + contadorSitio(P, P.para) + "): não aparece."});
+  });
+  if(P.de === P.para) l.push({grau: "confirma", t: "A partida e a chegada são " + (P.modo === "anos" ? "o mesmo ano" : "o mesmo dia") + ": o contador não tem por onde andar."});
+  var ultimoF = ultimoClipDoFilme(v, c), fade = ultimoF ? PALCO_R.fadeImagem : 0;
+  contadorTextos(P, c, ultimoF).forEach(function(x){
+    if(x.falta <= 0.05) return;
+    var n = P.ordenados.length, falta = x.falta;
+    var dPede = Math.ceil((x.fim ? Math.max(0, x.pede + fade - (x.fica ? cpNoFilme(c) : 0)) : x.pede) * n / CONTADOR_FRACAO_PARADA * 10) / 10;
+    l.push({grau: "confirma", t: (x.linhas.length > 1 ? "Os textos da chegada (" : "O texto " + (x.fim ? "da chegada (" : x.partida ? "da partida (" : "de " + x.sitio + " (")) +
+      x.linhas.map(q).join(" e ") + ") " + (x.linhas.length > 1 ? "têm " : "tem ") + x.letras + " letras e " + (x.linhas.length > 1 ? "ficam acesos " : "fica aceso ") + fmtS(x.s) +
+      " s" + (x.fim && ultimoF ? " antes da passagem para os créditos" : "") + ": a 15 metros " + (x.linhas.length > 1 ? "pedem " : "pede ") + fmtS(x.pede) + " s. " +
+      (x.fica || x.fim ? "Põe mais " + fmtS(Math.ceil(falta * 10) / 10) + " s em «Parado no fim», ou dá ao contador " + fmtS(dPede) + " s de duração."
+                       : "Chega com " + fmtS(dPede) + " s de duração.")});
+  });
+  return l;
+}
+/* o que se diz por baixo do «Parado no fim» */
+function notaDoParado(c){
+  var cp = cpDo(c), d = +c.d || 0, mal = cpProblema(c);
+  if(mal) return mal + " Escolhe um valor para o corrigir.";
+  if(!cp) return "Como está: o contador chega e o filme segue. Com 3, por exemplo, fica parado 3 s na chegada, com o texto aceso, e o clip passa de " +
+                 fmtS(d) + " para " + fmtS(d + 3) + " s.";
+  return "Anda " + fmtS(d) + " s (a Duração de cima) e fica parado " + fmtS(cp) + " s na chegada, com o texto aceso: " + fmtS(d + cp) + " s no filme." +
+         (RENDER_LE.contador_parado === false ? " Ainda não chega ao filme: fica guardado, mas o render de hoje acaba o contador sem parar." : "");
+}
+/* O CAMPO «PARADO NO FIM», nos contadores de anos e de datas: tres escolhas de um toque (para o telemovel) e o
+   numero para outro valor. */
+function blocoParadoDoContador(c){
+  var cp = cpDo(c), mal = cpProblema(c);
+  var botao = function(s, txt){
+    var on = !mal && cp === s;
+    return '<button type="button" class="pessoa' + (on ? ' on' : '') + '" role="radio" aria-checked="' + on + '" data-cp="' + s + '">' + txt + '</button>';
+  };
+  return '<div class="campo ctParado" id="ctParado"><label for="cCtParado">Parado no fim</label>' +
+    '<div class="pessoas" role="radiogroup" aria-label="Parado no fim">' + botao(0, "Como está") + botao(2, "2 s") + botao(3, "3 s") + botao(5, "5 s") +
+      '<span class="ctParadoOutro">ou <input type="number" inputmode="decimal" step="0.5" min="0" max="' + CONTADOR_PARADO_MAX + '" id="cCtParado" value="' +
+      (cp ? cp : "") + '" placeholder="0" aria-label="Parado no fim, em segundos"> s</span></div>' +
+    '<div class="focoAjuda' + (mal ? ' somAviso' : '') + '" id="ctParadoNota" aria-live="polite">' + esc(notaDoParado(c)) + '</div></div>';
+}
+/* A AJUDA DO TEXTO DO CONTADOR DE ANOS: a sintaxe, com exemplos que ele pode copiar */
+function ajudaDoContador(){
+  var ex = function(texto, diz){ return '<li><code>' + esc(texto) + '</code> ' + diz + '</li>'; };
+  return '<details class="ctAjuda" id="ctAjuda"><summary>Como se escreve, com exemplos</summary>' +
+    '<p>O ano de partida, <b>&gt;</b>, a chegada, e depois de <b>|</b> os textos, separados por <b>;</b></p><ul>' +
+    ex("2026>1995", "só os anos, sem texto.") +
+    ex("2026>1995|4 de outubro de 2026", "um texto sem ano à frente acende na partida, por baixo de 2026.") +
+    ex("1995>2012|2011=Clara e Tiago conhecem-se", "com <b>ano=</b> à frente, o contador pára nesse ano e acende o texto.") +
+    ex("2023>04/10/2026", "a chegada pode ser uma data (dia/mês/ano): o contador pára em 2026 e acende «4 de outubro de 2026», que fica até ao fim.") +
+    ex("1995>20/05/2012|2011=Clara e Tiago conhecem-se;20/05/2012=Começam a namorar", "com a <b>data de chegada=</b> à frente, o texto acende por baixo dela.") +
+    '</ul><p>Só a chegada pode ser uma data. Para o contador ficar parado depois de chegar, usa o «Parado no fim», mais abaixo.</p></details>';
+}
+/* A LEITURA, OS AVISOS E A NOTA DO PARADO, sem repintar o inspetor (o cursor fica onde esta): a cada tecla no texto,
+   na duracao ou no parado. */
+function htmlDosAvisosDoContador(v, c){
+  return avisosDoContador(lerContador(c.x)).map(function(a){ return '<div>' + esc(a) + '</div>'; }).join("") +
+         dicasDoContador(v, c).map(function(a){ return '<div>' + esc(a.t) + '</div>'; }).join("");
+}
+function atualizaNotasDoContador(v, c){
+  if(!c || c.t !== "contador") return;
+  var le = document.getElementById("ctLeitura"), t = leituraDoContador(c, v);
+  if(le){ le.textContent = t; le.hidden = !t; }
+  var av = document.getElementById("ctAvisos"), h = htmlDosAvisosDoContador(v, c);
+  if(av){ av.innerHTML = h; av.hidden = !h; }
+  var n = document.getElementById("ctParadoNota");
+  if(n){ n.textContent = notaDoParado(c); n.classList.toggle("somAviso", !!cpProblema(c)); }
+  var cp = cpDo(c), mal = cpProblema(c);
+  document.querySelectorAll("#ctParado [data-cp]").forEach(function(b){
+    var on = !mal && cp === +b.getAttribute("data-cp");
+    b.classList.toggle("on", on); b.setAttribute("aria-checked", on ? "true" : "false");
+  });
+}
+/* o campo e os botoes do parado: gravam pelo anular e pela gravacao de sempre */
+function ligaParadoDoContador(v, c){
+  var bloco = document.getElementById("ctParado"), campo = document.getElementById("cCtParado");
+  if(!bloco || !c) return;
+  var depois = function(){ atualizaNotasDoContador(v, c); pintaClips(); marcar(); };
+  bloco.querySelectorAll("[data-cp]").forEach(function(b){
+    b.addEventListener("click", function(){
+      var s = +b.getAttribute("data-cp");
+      if(cpPoe(c, s)) depois(); else atualizaNotasDoContador(v, c);
+      if(campo) campo.value = cpDo(c) ? cpDo(c) : "";
+    });
+  });
+  if(campo){
+    campo.addEventListener("input", function(){
+      var t = String(campo.value).trim().replace(",", "."), s = t === "" ? 0 : parseFloat(t);
+      if(!(s >= 0 && s <= CONTADOR_PARADO_MAX)){
+        var n = document.getElementById("ctParadoNota");
+        if(n){ n.textContent = "O parado no fim vai de 0 a " + CONTADOR_PARADO_MAX + " s: este valor não fica gravado."; n.classList.add("somAviso"); }
+        return;
+      }
+      if(cpPoe(c, s)) depois(); else atualizaNotasDoContador(v, c);
+    });
+    /* ao sair do campo, mostra o que ficou (um valor recusado volta ao gravado) */
+    campo.addEventListener("change", function(){ campo.value = cpDo(c) ? cpDo(c) : ""; atualizaNotasDoContador(v, c); });
+  }
 }
 /* ONDE UM CONTADOR COMECA E ACABA, em ano e em dia, para se saber se o seguinte continua
    este. Um lado que nao se le nao e ponta de nada e devolve null. */
@@ -6107,11 +6543,23 @@ function encadeadoDoClip(v, i){
   return (ant && ant.t === "contador" && contadoresSeguidos(ant.x, c.x)) ? 0 : n;
 }
 /* QUANTO TEMPO UM CLIP TEM NO ECRA. Quase sempre e o c.d; num video pode nao ser, porque
-   o montar mede o ficheiro (ver duracaoDoVideoNoFilme). */
-function duracaoDoClip(v, i){
+   o montar mede o ficheiro (ver duracaoDoVideoNoFilme).
+   E NUM CONTADOR COM PARADO NO FIM (clip.cp, 3 de outubro) e o d mais esses segundos: o contador anda no d e fica
+   parado na chegada, e o montar escreve a linha com d + cp (montar_da_mesa.parado_do_contador). A REGRA DO cp ESTA
+   ESCRITA AQUI DENTRO, sem chamar mais nada: os testes do render tiram esta funcao da pagina sozinha, pelo nome. E a
+   do montar: um numero de 0 a 30 (ou um texto que seja um numero), arredondado a centesima; o que nao presta vale 0
+   (o cpProblema() diz porque). Com `aEscolha` conta a escolha dele mesmo que o render ainda nao a leia; sem ele, so
+   o que chega ao filme (RENDER_LE.contador_parado). O cpDo() e o cpNoFilme() perguntam aqui. */
+function duracaoDoClip(v, i, aEscolha){
   var c = v && v.clips[i];
   if(!c) return 0;
-  return c.t === "video" ? (duracaoDoVideoNoFilme(v, i) || +c.d || 0) : (+c.d || 0);
+  if(c.t === "video") return duracaoDoVideoNoFilme(v, i) || +c.d || 0;
+  var d = +c.d || 0, cp = c.cp;
+  if(c.t !== "contador" || cp === undefined || cp === null || typeof cp === "boolean") return d;
+  var s = typeof cp === "number" ? cp : (typeof cp === "string" && /^\s*[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?\s*$/.test(cp) ? parseFloat(cp) : NaN);
+  if(!(s >= 0 && s <= 30)) return d;
+  if(aEscolha !== true && typeof RENDER_LE !== "undefined" && RENDER_LE && RENDER_LE.contador_parado === false) return d;
+  return d + Math.round(s * 100) / 100;
 }
 /* QUANTO TEMPO DO FILME UM CLIP OCUPA, na conta com que a lista soma o total: o tempo no
    ecra menos o encadeado com que ele proprio entra por cima do anterior. */
@@ -6146,6 +6594,10 @@ function totalDasVozes(lista){
   var t = 0;
   lista.forEach(function(n, i){ t += duraDaVoz(n) + (i ? PAUSA_VOZ : 0); });
   return t;
+}
+/* a marca m = {f, in: "continua"}: a musica entra onde parou da ultima vez que tocou (montar_da_mesa.MARCA_CONTINUA) */
+function musicaContinua(c){
+  return !!(c && c.m && typeof c.m["in"] === "string" && c.m["in"].trim().toLowerCase() === "continua");
 }
 function musicaDasVozes(c){ return c && c.vzm === "parada" ? "parada" : "baixa"; }
 /* Quanto tempo do filme ocupa um clip, para se saber ate onde as vozes chegam.
@@ -6190,7 +6642,7 @@ function alcanceDasVozes(v, c){
 function nomeDoClip(v, k){
   var c = v.clips[k]; if(!c) return "";
   if(c.t === "foto" && c.i && porId[c.i]) return porId[c.i].f;
-  if(c.t === "contador"){ var o = lerContador(c.x); return dataCurta(o.de) + " → " + dataCurta(o.para); }
+  if(c.t === "contador"){ var o = lerContador(c.x); return dataCurta(o.de) + " → " + dataCurta(o.ate || o.para); }
   if(c.t === "marcos") return "a fita de " + fitaLer(c.x).ano;
   return c.x || c.f || c.t;
 }
@@ -6647,12 +7099,18 @@ function pintaInspetor(){
       partes.push('<div class="focoAjuda' + (porFotoApertada(v, c) ? ' somAviso' : '') + '" id="notaPorFoto" style="margin:-7px 0 12px">' + esc(textoPorFoto(v, c)) + '</div>');
     var noRender = blocoRender(v, v.clips.indexOf(c));
     if(noRender) partes.push(noRender);
+    /* A MARCA QUE CONTINUA DE ONDE A MUSICA FICOU (3 de outubro, o fecho): m = {f, in: "continua"}, que o montar le
+       (MARCA_CONTINUA) e o Claude escreve na base a pedido dele. O campo do segundo e de numeros e mostrava-a vazia, e
+       bastava tocar no nome da musica para a marca passar a `in: 0`, sem aviso: a musica voltava ao principio no
+       filme. Agora o campo diz «continua», a nota explica, e so um segundo escrito por ele a troca (musicaMuda). */
+    var mCont = musicaContinua(c);
     partes.push('<div class="campo"><label>Música que começa neste clip</label>'+
       '<input id="cMus" value="'+esc((c.m&&c.m.f)||"")+'" placeholder="vazio: continua a que vinha">'+
       '<div style="display:flex;gap:6px;align-items:center;margin-top:5px;font-size:12px">'+
         '<span>entra ao segundo</span>'+
-        '<input type="number" step="0.5" min="0" id="cMusIn" value="'+((c.m&&c.m.in)||0)+'" style="width:80px">'+
+        '<input type="number" step="0.5" min="0" id="cMusIn" value="'+(mCont ? "" : ((c.m&&c.m.in)||0))+'"'+(mCont ? ' placeholder="continua"' : '')+' style="width:80px">'+
       '</div>'+
+      (mCont ? '<div class="focoAjuda" id="cMusContinua">Esta música continua de onde ficou da última vez que tocou no filme. Para a fazer entrar noutro sítio, escreve o segundo.</div>' : '')+
       '<div style="font-size:11px;color:var(--tenue);margin-top:4px">'+
         'O nome do ficheiro tal como está na pasta. A música toca até ao próximo clip que tenha outra.</div></div>');
     /* AS VOZES DO PEDIDO ficam logo a seguir a musica, porque e a musica que elas mandam
@@ -6831,15 +7289,16 @@ function pintaInspetor(){
     if(c.t === "video")
       partes.push(blocoVideo(c, v));
     if(c.t === "contador"){
-      var ct = lerContador(c.x);
+      /* o tipo que o inspetor mostra: o do texto, menos a meio de escrever um contador de anos ate uma data */
+      var ct = lerContador(c.x), ctTipo = contadorNoInspetor(ct);
       partes.push('<div class="campo"><label for="cCtTipo">O que este contador conta</label>'+
         '<select id="cCtTipo">'+
-          '<option value="anos"'+(ct.tipo === "anos" ? " selected" : "")+'>Anos</option>'+
-          '<option value="datas"'+(ct.tipo === "datas" ? " selected" : "")+'>Datas</option>'+
+          '<option value="anos"'+(ctTipo === "anos" ? " selected" : "")+'>Anos</option>'+
+          '<option value="datas"'+(ctTipo === "datas" ? " selected" : "")+'>Datas</option>'+
         '</select>'+
-        '<div class="focoAjuda">Anos salta de ano em ano, de 2026 a 1995. Datas anda dia a dia, '+
-        'com a régua dos meses por baixo, para saltos curtos como o do casamento ao pedido.</div></div>');
-      if(ct.tipo === "datas"){
+        '<div class="focoAjuda">Anos salta de ano em ano, de 2026 a 1995, e pode acabar numa data inteira, como 4 de outubro de 2026. '+
+        'Datas anda dia a dia, com a régua dos meses por baixo, para saltos curtos como o do casamento ao pedido.</div></div>');
+      if(ctTipo === "datas"){
         partes.push('<div class="linha2c">'+
           '<div class="campo"><label for="cCtDe">De</label>'+
             '<input type="date" id="cCtDe" value="'+esc(dataParaIso(ct.de))+'"></div>'+
@@ -6851,20 +7310,24 @@ function pintaInspetor(){
           '<input id="cCtRotAte" value="'+esc(rotuloDoContador(ct, ct.para))+'" placeholder="25 de dezembro de 2025">'+
           '<div class="focoAjuda">O da partida fica por baixo da data inicial, no arranque; o da chegada '+
           'aparece por baixo da data final quando ela pára.</div></div>');
-        /* A CAIXA DOS AVISOS EXISTE SEMPRE, escondida quando nao ha nenhum: e o
-           escreveCamposDoContador que a enche a cada tecla escrita na instrucao em bruto,
-           e uma caixa que so nascia com o primeiro aviso nao estava la para ser enchida.
-           E o mesmo que o vidAvisos do video faz. */
-        var avCt = avisosDoContador(ct);
-        partes.push('<div class="somNota somAviso" id="ctAvisos"'+(avCt.length ? '' : ' hidden')+'>'+
-          avCt.map(function(a){ return '<div>'+esc(a)+'</div>'; }).join("")+'</div>');
       } else {
-        partes.push('<div class="campo"><label>Anos e rodapé</label>'+
-          '<input id="cTexto2" value="'+esc(c.x)+'" placeholder="2026>1995|4 de outubro de 2026">'+
-          '<div style="font-size:11px;color:var(--tenue);margin-top:4px">Formato: ano inicial &gt; ano final | rodapé. '+
-          'O rodapé sem ano fica por baixo do ano inicial. Para o pôr por baixo de outro ano, escreve o ano antes: '+
-          '<b>1995&gt;2011|2011=texto</b></div></div>');
+        /* O TEXTO DO CONTADOR DE ANOS, com a ajuda da sintaxe e exemplos (3 de outubro): desde que pode acabar numa
+           data e levar um texto em cada ano, uma linha de formato ja nao chegava */
+        partes.push('<div class="campo"><label for="cTexto2">Anos e textos</label>'+
+          /* UMA CAIXA DE VARIAS LINHAS (3 de outubro, a revisao): num campo de uma linha, as 75 letras do contador ate
+             a data em que comecaram a namorar nao cabiam, e o fim, que e o texto que ele ainda vai decidir, ficava fora
+             da vista. O Enter nao escreve uma mudanca de linha (ligaInspetor): o texto continua a ser uma instrucao so. */
+          '<textarea id="cTexto2" rows="3" placeholder="2026>1995|4 de outubro de 2026" autocapitalize="off" autocomplete="off" spellcheck="false">'+esc(c.x)+'</textarea>'+
+          ajudaDoContador() + '</div>');
       }
+      /* O QUE O FILME LE DESTE TEXTO, OS AVISOS E O PARADO NO FIM, nos dois tipos (3 de outubro).
+         A CAIXA DOS AVISOS EXISTE SEMPRE, escondida quando nao ha nenhum: e o escreveCamposDoContador que a enche a
+         cada tecla escrita na instrucao em bruto, e uma caixa que so nascia com o primeiro aviso nao estava la para
+         ser enchida. E o mesmo que o vidAvisos do video faz. */
+      var leCt = leituraDoContador(c, v), avCt = htmlDosAvisosDoContador(v, c);
+      partes.push('<div class="somNota ctLeitura" id="ctLeitura" aria-live="polite"'+(leCt ? '' : ' hidden')+'>'+esc(leCt)+'</div>');
+      partes.push('<div class="somNota somAviso" id="ctAvisos" style="margin-bottom:10px"'+(avCt ? '' : ' hidden')+'>'+avCt+'</div>');
+      partes.push(blocoParadoDoContador(c));
     }
     if(f){
       partes.push('<div class="campo"><label>Quem está nesta foto</label><div class="pessoas" id="tagsClip">'+
@@ -6910,11 +7373,13 @@ function ligaInspetor(){
       c.x = e.target.value;
       escreveCamposDoContador(c, "cTexto2"); pintaClips(); marcar();
     });
+    /* a caixa do contador tem varias linhas so para se ver o texto todo: o Enter nao parte a instrucao */
+    liga("cTexto2","keydown",function(e){ if(e.key === "Enter") e.preventDefault(); });
     /* O CONTADOR: ANOS OU DATAS. Trocar de tipo reescreve o x inteiro, e por isso leva
        anular; os campos escrevem-no a cada tecla, como o campo de hoje. */
     liga("cCtTipo","change",function(e){
       var tipo = e.target.value === "datas" ? "datas" : "anos", o = lerContador(c.x);
-      if(o.tipo === tipo){ pintaInspetor(); return; }
+      if(contadorNoInspetor(o) === tipo){ pintaInspetor(); return; }
       guardaDesfazerCampos("contador por " + tipo, c, ["x"]);
       c.x = contadorNoOutroTipo(o, tipo);
       pintaClips(); pintaInspetor(); marcar();
@@ -6936,9 +7401,12 @@ function ligaInspetor(){
          ecra, no jantar. E o mesmo que o atualizaNotasDoVideo() faz com as notas do video. */
       var bruto = document.getElementById("cTexto");
       if(bruto && bruto.value !== c.x) bruto.value = c.x;
+      atualizaNotasDoContador(v, c);
       pintaClips(); marcar();
       if(repintar) pintaInspetor();
     };
+    /* o parado no fim do contador (3 de outubro) */
+    ligaParadoDoContador(v, c);
     liga("cCtDe","change",function(e){
       if(!e.target.value) avisar("A data de partida não pode ficar vazia.");
       escreveDatasDoContador(true);
@@ -6966,7 +7434,7 @@ function ligaInspetor(){
        encadeado de saida de um e o de entrada do outro). A nota do inspetor so mostra o clip
        aberto, o que esta certo; as etiquetas dos vizinhos acompanham pelo pintaClips(), que
        ja estava nos dois. */
-    liga("cDur","input",function(e){ c.d = Math.max(.2, parseFloat(e.target.value)||c.d); atualizaNotasTempo(c); atualizaPorFoto(c); atualizaAvisoDenso(c); espelhaDuracaoDoVideo(c); atualizaNotasDoVideo(c); if(c.zd) zdAtualiza(c); pintaClips(); marcar(); });
+    liga("cDur","input",function(e){ c.d = Math.max(.2, parseFloat(e.target.value)||c.d); atualizaNotasTempo(c); atualizaPorFoto(c); atualizaAvisoDenso(c); espelhaDuracaoDoVideo(c); atualizaNotasDoVideo(c); if(c.zd) zdAtualiza(c); atualizaNotasDoContador(v, c); pintaClips(); marcar(); });
     liga("cCross","input",function(e){ c.c = Math.max(0, parseFloat(e.target.value)||0); atualizaNotasTempo(c); atualizaPorFoto(c); atualizaAvisoDenso(c); if(c.zd) zdAtualiza(c); pintaClips(); marcar(); });
     liga("cTrat","change",function(e){
       var val = e.target.value;
@@ -7176,8 +7644,13 @@ function ligaInspetor(){
     }
     function musicaMuda(){
       var f = ((document.getElementById("cMus")||{}).value || "").trim();
-      var dentro = parseFloat((document.getElementById("cMusIn")||{}).value) || 0;
-      if(f) c.m = {f: f, in: Math.max(0, dentro)}; else delete c.m;
+      var escrito = String((document.getElementById("cMusIn")||{}).value || "").trim();
+      var dentro = parseFloat(escrito) || 0;
+      /* a marca que continua de onde ficou fica como esta enquanto ele nao escrever um segundo (ver musicaContinua) */
+      var continua = musicaContinua(c) && escrito === "";
+      if(f) c.m = {f: f, in: continua ? "continua" : Math.max(0, dentro)}; else delete c.m;
+      var nota = document.getElementById("cMusContinua");
+      if(nota && !(continua && f)) nota.hidden = true;
       pintaClips(); marcar();
     }
     liga("cMus","input",musicaMuda); liga("cMusIn","input",musicaMuda);
@@ -8538,7 +9011,7 @@ function mostraQuadro(qual, c){
     var pintaPecas = function(Hp){
       var tam = Math.min(W, Hp) * (c.t === "colagem" ? 0.46 : 0.52);
       /* a pilha em monte com as medidas do render, ver pilhaMonteDoRender() */
-      var monteG = c.t === "pilha" && est2 !== "leque" ? pilhaMonteDoRender(fsG, W, temLegG ? Hp : null) : null;
+      var monteG = c.t === "pilha" && est2 !== "leque" ? pilhaMonteDoRender(fsG, W, temLegG ? Hp : null, legPisoDoGrupo(c, 1080)) : null;
       el.innerHTML = fundoG + fsG.map(function(ff, k){
         var n = fsG.length, ang = [-3.5, 2.5, 2, -2, 4, -3, 3, -1.5][k % 8];
         var x, y, t2 = tam, fR = monteG && monteG[k];
@@ -8715,6 +9188,10 @@ function mostraQuadro(qual, c){
           var rQd = rotuloDoContador(ctQ, ctQ.de), rQa = rotuloDoContador(ctQ, ctQ.para);
           if(rQd) itens.push(dataCurta(ctQ.de) + ": " + rQd);
           if(rQa) itens.push(dataCurta(ctQ.para) + ": " + rQa);
+        } else if(ctQ.ate){
+          /* o de anos ate uma data (3 de outubro): os textos de cada ano e, na chegada, a data e o texto dela */
+          cab = ctQ.de + " → " + dataCurta(ctQ.ate);
+          itens = ctQ.marcos.map(function(m){ return m.onde + ": " + m.t; }).concat([ctQ.chegada.join(" · ")]);
         } else {
           /* a mesma regra do ler_anos: rodape sem "ano=" fica no ano de partida */
           var anoDe = (pedacos[0] || "").split(">")[0].trim();
@@ -8723,6 +9200,7 @@ function mostraQuadro(qual, c){
       } else {
         itens = itens.map(function(x){ return x.replace(/\s*@.*$/, ""); });
       }
+      if(c.t === "contador" && cpDo(c)) itens.push("parado " + fmtS(cpDo(c)) + " s no fim");
       el.innerHTML = '<div><div class="fita">' + esc(cab) + '</div>' +
         (itens.length ? '<div class="fitaNota">' + esc(itens.join("  ·  ")) + '</div>' : "") +
         '</div>';
@@ -8811,6 +9289,9 @@ function palcoCreditos(){
    pelo montar), e o encadeado o da montagem, fora o primeiro do corpo e a foto que sobe do nome do bebe. */
 function palcoBate(v, i, r, antR){
   var c = v.clips[i], n = function(x){ return +x || 0; };
+  /* o contador parado no fim (3 de outubro): o que o filme faz com o clip.cp de agora tem de ser o "~segundos" que a
+     montagem escreveu (r.parado, do palco_para_mesa); a duracao escrita pode ser a mesma e o parado ter mudado */
+  if(c.t === "contador" && Math.abs(cpNoFilme(c) - n(r.parado)) >= 0.005) return false;
   if(r.md !== undefined)
     return Math.abs(n(c.d) - n(r.md)) < 0.005 && Math.abs(n(c.c) - n(r.mc)) < 0.005 &&
            (c.t !== "video" || Math.abs(n(c.vin) - n(r.mv)) < 0.005);
@@ -8840,16 +9321,25 @@ function palcoFilme(v){
   v.clips.forEach(function(c, i){ if(c.t !== "fanfarra") idx.push(i); });
   /* o bloco inicial: os videos antes de qualquer outro clip, seguidos e com corte seco */
   while(j < idx.length && v.clips[idx[j]].t === "video"){
-    var i0 = idx[j], r0 = fr ? porChave[chaves[i0]] : null, d0 = r0 ? r0.d : duracaoDoClip(v, i0);
-    if(r0) exatos++; else pela.push(i0);
-    var s0 = {i: i0, c: v.clips[i0], t: "video", ini: t, dur: d0, entra: 0, abertura: true, r: r0};
+    var i0 = idx[j], r0 = fr ? porChave[chaves[i0]] : null;
     /* A INTRO COM AS CORES DO ESTILO, que o montar poe no lugar da intro 5: com a copia dela, toca-se e conta-se
        com a duracao dela */
-    var ie = palcoIntroDoEstilo(v.clips[i0]);
+    var ie = palcoIntroDoEstilo(v.clips[i0]), jaNaMontagem = false;
+    /* A INTRO QUE O MONTAR JA TROCOU (3 de outubro: a montagem das 07:26 foi a primeira com as cores dele). A linha da
+       montagem traz o ficheiro da intro das cores ("intro_clara_tiago_5 sem preto_81ad6d igualado.mp4") e a Mesa o da
+       intro 5: pela chave nao batiam, e o palco dizia que o clip 2 nao estava na montagem. Se o Estilo de agora pede
+       essa mesma intro, o clip e essa linha; se ele entretanto mudou as cores, ja nao e, e conta-se pela Mesa. */
+    if(fr && !r0 && ie && ie.f){ r0 = porChave["video:" + ie.f + "#1"] || null; jaNaMontagem = !!r0; }
+    var d0 = r0 ? r0.d : duracaoDoClip(v, i0);
+    if(r0) exatos++; else pela.push(i0);
+    var s0 = {i: i0, c: v.clips[i0], t: "video", ini: t, dur: d0, entra: 0, abertura: true, r: r0};
     if(ie){
       s0.intro = ie;
       var copI = ie.f && AUDIO_INFO && AUDIO_INFO.videos && AUDIO_INFO.videos[ie.f];
-      if(copI && copI.length){ s0.fv = ie.f; s0.dur = d0 = +copI[0].dura || d0; }
+      /* (quando a montagem ja a tem, a duracao e a da montagem, ao centesimo, e nao a da copia pequena) */
+      if(copI && copI.length){ s0.fv = ie.f; if(!jaNaMontagem) s0.dur = d0 = +copI[0].dura || d0; }
+      /* sem a copia pequena do video dela, o som e o dela na mesma (a copia do som faz-se a parte) */
+      else if(jaNaMontagem) s0.fa = ie.f;
     }
     segs.push(s0);
     t += d0; j++;
@@ -8861,7 +9351,8 @@ function palcoFilme(v){
     var r = rr && palcoBate(v, i, rr, fr.linhas[ordemR[rr.chave] - 1]) ? rr : null, mudou = !!rr && !r;
     /* um clip que mudou desde a montagem conta-se com o que tem agora (e a fita com o tempo que estava parada);
        um que a montagem nao tem, com a duracao do render quando o SOM_RENDER a sabe */
-    var dur = r ? r.d : mudou ? dc + (c.t === "marcos" ? (+rr.segura || 0) : 0) : (rp[i] && +rp[i].d > dc ? +rp[i].d : dc);
+    /* (um contador nunca e esticado pelo montar: a duracao dele e a escrita mais o parado no fim, que o dc ja traz) */
+    var dur = r ? r.d : mudou ? dc + (c.t === "marcos" ? (+rr.segura || 0) : 0) : (c.t !== "contador" && rp[i] && +rp[i].d > dc ? +rp[i].d : dc);
     var entra = primeiro ? 0 : (r ? r.c : encadeadoDoClip(v, i));
     if(r) exatos++; else pela.push(i);
     if(mudou) mudaram.push(i);
@@ -8889,6 +9380,9 @@ function palcoFilme(v){
     var seg = {i: i, c: c, t: c.t, ini: cursor - entra, dur: dur, entra: entra, r: r, mudou: mudou};
     var rs = r || (mudou ? rr : null);
     if(c.t === "marcos" && rs && rs.segura){ seg.segura = rs.segura; seg.congela = rs.congela == null ? null : rs.congela; }
+    /* O CONTADOR PARADO NO FIM (clip.cp, 3 de outubro): os segundos em que fica parado na chegada, dentro da duracao.
+       O da montagem quando o clip bate com ela, senao o que o filme faz com o clip.cp de agora. */
+    if(c.t === "contador"){ var pc = r && r.parado !== undefined ? (+r.parado || 0) : cpNoFilme(c); if(pc > 0) seg.parado = pc; }
     segs.push(seg);
     cursor = seg.ini + dur; primeiro = false;
   }
@@ -9360,14 +9854,13 @@ function palcoRisco(ctx, k, x0, y, alfa){
   palcoLinha(ctx, x0, y - 26, x0, y + 26, palcoRgb(k.marco), 6);
   ctx.restore();
 }
-/* o linha_tempo.anos(): a fita dos anos, a recuar como uma cassete a rebobinar */
-function palcoAnos(ctx, de, para, marcos, t, dur, k){
+/* o linha_tempo.anos(): a fita dos anos, a recuar como uma cassete a rebobinar. `P` e o contadorPlano(): as paragens,
+   o texto de cada uma e, na chegada de um contador ate uma data, as linhas dela (a data por extenso e o texto), uma
+   por baixo da outra a 1,35 corpos (CHEGADA_ENTRELINHA). Com `fimAceso` o texto da ultima paragem acende e nao apaga
+   para o corte: e o que a data de chegada e o parado no fim pedem (3 de outubro). */
+function palcoAnos(ctx, P, t, dur, k, fimAceso){
   var L = 1920, A = 1080, p = dur ? Math.max(0, Math.min(1, t / dur)) : 0;
-  var passo = Math.floor(L * 0.30), recuo = para < de, baixo = Math.min(de, para), cima = Math.max(de, para);
-  var conj = {}, porAno = {};
-  conj[de] = 1; conj[para] = 1;
-  marcos.forEach(function(m){ if(m.ano >= baixo && m.ano <= cima){ conj[m.ano] = 1; porAno[m.ano] = m.t; } });
-  var ordenados = Object.keys(conj).map(Number).sort(function(a, b){ return recuo ? b - a : a - b; });
+  var passo = Math.floor(L * 0.30), recuo = P.recua, baixo = P.baixo, cima = P.cima, porAno = P.porOnde, ordenados = P.ordenados;
   var paragens = ordenados.map(function(a){ return a - baixo; });
   var r = palcoParagens(p, paragens, 0.62, true), pos = r.pos;
   var p2 = dur ? Math.max(0, Math.min(1, (t + 0.04) / dur)) : 0, px_s = Math.abs(palcoParagens(p2, paragens, 0.62, true).pos - pos) / 0.04 * passo;
@@ -9391,11 +9884,12 @@ function palcoAnos(ctx, de, para, marcos, t, dur, k){
       palcoTexto(ctx, String(ano), corpo, palcoRgb(palcoMistura(k.fundo, cor, fade)), x0 + sentido * ra.larg * (q / Math.max(1, ra.n)), y - Math.floor(A * 0.14));
     }
     var txt = porAno[ano], aceso = 0;
-    if(txt && r.qual !== null && ordenados[r.qual] === ano) aceso = Math.min(1, r.dentro / 0.18) * Math.min(1, (1 - r.dentro) / 0.18);
+    if(txt && r.qual !== null && ordenados[r.qual] === ano)
+      aceso = Math.min(1, r.dentro / 0.18) * (fimAceso && r.qual === ordenados.length - 1 ? 1 : Math.min(1, (1 - r.dentro) / 0.18));
     if(txt && perto > 0.02 && aceso > 0.02){
-      var alfa = Math.pow(perto, 1.2) * aceso;
+      var alfa = Math.pow(perto, 1.2) * aceso, corT = palcoRgb(k.marco_texto.map(function(c){ return Math.floor(c * alfa); }));
       palcoRisco(ctx, k, x0, y, alfa);
-      palcoTexto(ctx, txt, 46, palcoRgb(k.marco_texto.map(function(c){ return Math.floor(c * alfa); })), x0, y + Math.floor(A * 0.16));
+      (P.linhas[ano] || [txt]).forEach(function(linha, n){ palcoTexto(ctx, linha, 46, corT, x0, y + Math.floor(A * 0.16) + n * Math.round(46 * 1.35)); });
     }
   }
 }
@@ -9403,13 +9897,10 @@ function palcoDia(s){
   var m = /^\s*(\d{1,2})\/(\d{1,2})\/(\d{4})\s*$/.exec(String(s == null ? "" : s));
   return m ? Math.round(Date.UTC(+m[3], +m[2] - 1, +m[1]) / 86400000) : null;
 }
-/* o linha_tempo.datas(): a mesma fita vista de perto, dia a dia, com a regua dos meses */
-function palcoDatas(ctx, de, para, marcos, t, dur, k){
-  var L = 1920, A = 1080, baixo = Math.min(de, para), cima = Math.max(de, para), dias = cima - baixo, recua = para < de;
-  var conj = {}, porData = {};
-  conj[de] = 1; conj[para] = 1;
-  marcos.forEach(function(m){ if(m.dia >= baixo && m.dia <= cima){ conj[m.dia] = 1; porData[m.dia] = m.t; } });
-  var ordenados = Object.keys(conj).map(Number).sort(function(a, b){ return recua ? b - a : a - b; });
+/* o linha_tempo.datas(): a mesma fita vista de perto, dia a dia, com a regua dos meses. `P` e o contadorPlano(), em
+   dias; com `fimAceso` (o parado no fim) o rotulo da chegada nao apaga. */
+function palcoDatas(ctx, P, t, dur, k, fimAceso){
+  var L = 1920, A = 1080, baixo = P.baixo, cima = P.cima, dias = cima - baixo, recua = P.recua, porData = P.porOnde, ordenados = P.ordenados;
   var paragens = ordenados.map(function(d){ return d - baixo; });
   var p = dur ? Math.max(0, Math.min(1, t / dur)) : 0, r = palcoParagens(p, paragens, 0.62, true), pos = r.pos;
   var largMes = L * 0.30 * Math.min(1, Math.sqrt(300 / Math.max(1, dias))), passo = largMes / 30.44;
@@ -9440,7 +9931,8 @@ function palcoDatas(ctx, de, para, marcos, t, dur, k){
     var x0 = xDe(d);
     if(x0 < -L || x0 > 2 * L) return;
     var perto = 1 - Math.min(1, Math.abs((d - baixo) - pos) / 30.44), aceso = 0;
-    if(r.qual !== null && ordenados[r.qual] === d) aceso = Math.min(1, r.dentro / 0.18) * Math.min(1, (1 - r.dentro) / 0.18);
+    if(r.qual !== null && ordenados[r.qual] === d)
+      aceso = Math.min(1, r.dentro / 0.18) * (fimAceso && r.qual === ordenados.length - 1 ? 1 : Math.min(1, (1 - r.dentro) / 0.18));
     if(perto > 0.02 && aceso > 0.02){
       var alfa = Math.pow(perto, 1.2) * aceso;
       palcoRisco(ctx, k, x0, y, alfa);
@@ -9451,19 +9943,16 @@ function palcoDatas(ctx, de, para, marcos, t, dur, k){
 /* O CONTADOR: o de anos ou o de datas pelo que esta escrito (lerContador, a regra do ler_contador), e o de
    datas com mais de tres anos passa ao de anos, como o render.preparar() faz */
 function palcoContador(ctx, seg, u){
-  var o = lerContador(seg.c.x), k = palcoCores();
-  if(o.tipo === "datas"){
-    var de = palcoDia(o.de), para = palcoDia(o.para);
-    if(de === null || para === null){ palcoFalta(ctx, "contador que não se lê: sai preto"); return; }
-    var ms = o.marcos.map(function(m){ return {dia: palcoDia(m.onde), t: m.t}; }).filter(function(m){ return m.dia !== null; });
-    if(Math.abs(para - de) <= CONTADOR_DIAS_MAX){ palcoDatas(ctx, de, para, ms, u, seg.dur, k); return; }
-    var anoDe = new Date(de * 86400000).getUTCFullYear(), anoPara = new Date(para * 86400000).getUTCFullYear();
-    palcoAnos(ctx, anoDe, anoPara, ms.map(function(m){ return {ano: new Date(m.dia * 86400000).getUTCFullYear(), t: m.t}; }), u, seg.dur, k);
-    return;
-  }
-  var a = parseInt(o.de, 10), b = parseInt(o.para, 10);
-  if(!(a > 0 && b > 0)){ palcoFalta(ctx, "contador que não se lê: sai preto"); return; }
-  palcoAnos(ctx, a, b, o.marcos.map(function(m){ return {ano: parseInt(m.onde, 10), t: m.t}; }), u, seg.dur, k);
+  var o = lerContador(seg.c.x), k = palcoCores(), P = contadorPlano(o);
+  /* um contador de anos ate uma data que o render ainda nao le sai preto no filme, e aqui tambem */
+  if(!P || (o.chegada && RENDER_LE.contador_data === false)){ palcoFalta(ctx, "contador que não se lê: sai preto"); return; }
+  /* PARADO NA CHEGADA (clip.cp) E A DATA DE CHEGADA, como o render.desenhar(): o contador anda no tempo de sempre, a
+     duracao menos os segundos parados, e fica no ultimo fotograma ate ao fim do clip, com o texto da chegada aceso.
+     Sem os dois e a conta de sempre. */
+  var parado = seg.parado || 0, fimAceso = !!o.chegada || parado > 0;
+  var anda = fimAceso ? Math.max(1 / PALCO_R.fps, seg.dur - parado) : seg.dur, t = fimAceso ? Math.min(u, anda) : u;
+  if(P.modo === "datas") palcoDatas(ctx, P, t, anda, k, fimAceso);
+  else palcoAnos(ctx, P, t, anda, k, fimAceso);
 }
 /* o linha_tempo.meses(): a fita de um ano, mes a mes, a abrir da escala do ano (so a primeira), a parar
    nos marcos do troco, com a palavra e a imagem de cada um */
@@ -9797,9 +10286,9 @@ function palcoSomPlano(F){
   F.segs.forEach(function(s){
     if(!s.abertura) return;
     /* a intro das cores do Estilo, quando o palco tem a copia dela, toca o som dela (fv) */
-    var fa = s.fv || s.c.f, a = AUDIO[fa];
+    var fa = s.fv || (s.fa && AUDIO[s.fa] ? s.fa : "") || s.c.f, a = AUDIO[fa];
     if(!a){ semCopia[fa] = 1; return; }
-    plano.push({tipo: "abertura", f: fa, url: a.url, ini: s.ini, "in": (s.fv ? 0 : +s.c.vin) || a.arranque || 0, dura: s.dur, ganho: 1,
+    plano.push({tipo: "abertura", f: fa, url: a.url, ini: s.ini, "in": (fa !== s.c.f ? 0 : +s.c.vin) || a.arranque || 0, dura: s.dur, ganho: 1,
                 gdb: (a.cru_db || 0) + 20 * Math.log10(R.limite), subida: 0, descida: 0, curva: "tri", cruza: 0, clip: chaves[s.i],
                 origem: "video", nome: String(fa).replace(/\.[^.]+$/, "")});
   });
@@ -9812,7 +10301,8 @@ function palcoSomPlano(F){
              tipo: fx.voz ? "voz" : fx.video ? "video" : somEfeito(fx.f) ? "efeito" : "leito", origem: fx.origem,
              nota: fx.nota || "", explica: fx.explica, clip: fx.clip, chave: ch, fimRender: fx.filme + fx.dura, solta: !s};
     /* O REBOBINAR E DO CONTADOR: comeca a 30% dele e dura 42% (montar), e estica com ele */
-    if(fx.f === R.rebobinar && s && s.c.t === "contador"){ e.ini = V + somR2(s.ini - V + s.dur * 0.30); e.dura = somR2(s.dur * 0.42); }
+    /* (com o parado no fim, so no tempo em que ele anda: a duracao menos os segundos parados, como o montar) */
+    if(fx.f === R.rebobinar && s && s.c.t === "contador"){ var andaC = s.dur - (s.parado || 0); e.ini = V + somR2(s.ini - V + andaC * 0.30); e.dura = somR2(andaC * 0.42); }
     if(fx.origem === "mesa"){
       var i = idx[fx.clip], c = i == null ? null : v.clips[i];
       /* a marca saiu, ou e de outra musica: esta faixa ja nao existe, e uma marca nova entra no passo 3 */
@@ -10377,7 +10867,8 @@ function palcoAproximado(F){
   /* a intro com as cores (e a letra, desde 2 de outubro a noite) do Estilo */
   var si = F.segs.filter(function(s){ return s.intro; })[0], oQue = estiloIntroOQueMudou();
   if(si) l.push(si.fv ? "A intro tem " + oQue + " que escolheste no Estilo" + (si.intro.nome ? " («" + si.intro.nome + "»)" : "") +
-                        ": é a que o montar vai pôr no lugar da de hoje, e no render só depois de montar outra vez."
+                        (si.r && F.fr ? ": a montagem de " + F.fr.gerado + " já a tem."
+                                      : ": é a que o montar vai pôr no lugar da de hoje, e no render só depois de montar outra vez.")
               : si.intro.feita ? "A intro com " + oQue + " do Estilo" + (si.intro.nome ? " («" + si.intro.nome + "»)" : "") +
                                  " já está feita, mas esta Mesa não tem a cópia dela: aqui vês a intro de hoje. Aparece quando a Mesa for montada outra vez."
               : "A intro com " + oQue + " do Estilo ainda não está feita: o montar fá-la (" + ESTILO_INTRO_CUSTO + "), e aqui vês a intro de hoje; a amostra do Estilo mostra-a.");
@@ -10576,7 +11067,10 @@ function ordemDoClip(v, c, i){
              esta funcao tambem corre sozinha nos testes. */
           legenda_numa_linha: c.x1 === true ? true : undefined,
           legenda_posicao: c.lp && typeof c.lp === "object" ? c.lp : undefined,
-          fotos_inteiras: c.t === "lado" && c.li === true ? true : undefined};
+          fotos_inteiras: c.t === "lado" && c.li === true ? true : undefined,
+          /* o contador parado no fim (3 de outubro: clip.cp, que o montar le com o parado_do_contador), tal como esta
+             no clip; tambem sem chamar mais nada */
+          parado_no_fim_s: c.t === "contador" && c.cp !== undefined && c.cp !== null ? c.cp : undefined};
 }
 function exportar(){
   var v = versaoAtual(); if(!v) return;
@@ -10597,6 +11091,8 @@ function exportar(){
      o montar le, e falha quando o proximo campo novo ficar de fora. */
   var saida = {
     versao: v.nome, id: v.id, notas: v.notas || "",
+    /* os sons automaticos que ele desligou nesta versao (3 de outubro, decisao 111): {nome: false} */
+    som_auto: v.som_auto || undefined,
     total_s: +(v.clips.reduce(function(a, c, i){ return a + ocupaNaLista(v, i); }, 0)).toFixed(1),
     clips: v.clips.map(function(c, i){ return ordemDoClip(v, c, i); }),
     pessoas_por_foto: tagsLegiveis,
@@ -13195,7 +13691,8 @@ function credMusicaPassagem(C){
   var segs = F.segs.filter(function(s){ return s.i >= 0 && !s.abertura; }), s = segs[segs.length - 1];
   if(s){
     var c = v.clips[s.i];
-    P.clip = {i: s.i, n: s.i + 1, frase: credMusicaClipNaFrase(v, s.i), dur: s.dur, escrita: duracaoDoClip(v, s.i), tipo: c.t || "foto",
+    /* (num contador com parado no fim, a duracao que ele escreve e a de andar: sem os segundos parados) */
+    P.clip = {i: s.i, n: s.i + 1, frase: credMusicaClipNaFrase(v, s.i), dur: s.dur, escrita: duracaoDoClip(v, s.i) - cpNoFilme(c), tipo: c.t || "foto",
               aberto: versaoAtual() === v};
     ["depois", "antes"].forEach(function(k){
       var o = P.onde[k];
@@ -14098,7 +14595,21 @@ function estiloPedeLetras(){
 function estiloGaranteLetra(css){
   if(estiloLetrasPedidas[css] || !document.fonts || !document.fonts.load) return;
   estiloLetrasPedidas[css] = 1;
-  document.fonts.load(css, "AaÇçÁ&1").then(function(){ estiloPedeDesenho(); }, function(){});
+  document.fonts.load(css, "AaÇçÁ&1").then(function(){ estiloLetraChegou(); }, function(){});
+}
+/* A LETRA CHEGOU (3 de outubro, a revisao). O que se mediu antes de ela chegar saiu na letra de recurso: a nota do
+   «Numa só linha» do clip 10 dizia 1725 px e, com a Playfair ja carregada, 1741, e ficava no numero errado ate se
+   reabrir o clip; o Validar tambem. Deita-se fora o que o palco guardou das linhas das legendas, e a nota do inspetor,
+   o Validar aberto, o Estilo e o palco voltam a medir, agora com a letra certa. */
+function estiloLetraChegou(){
+  estiloPedeDesenho();
+  try{ palcoCache.legenda = {}; play.sujo = true; }catch(e){}
+  try{
+    var v = versaoAtual(), c = v && clipAtivo >= 0 ? v.clips[clipAtivo] : null;
+    if(c && document.getElementById("legClip")) atualizaLegendaDoClip(v, c);
+    var dv = document.getElementById("dlgValidar");
+    if(dv && dv.open) pintaValidador();
+  }catch(e){}
 }
 /* UMA LETRA DO WINDOWS NUM TELEMOVEL NAO EXISTE: o Calibri, o Candara, o Corbel, o Georgia e o Cambria
    nao vem do Google. Mede-se o texto com ela e sem ela: se der igual, o aparelho nao a tem, e diz-se
@@ -14310,11 +14821,26 @@ function legDxEfetivo(larguras, dx, al){
   if(al === "direita") return Math.max(-folga, Math.min(0, dx));
   return Math.min(folga / 2, Math.max(-folga / 2, dx));
 }
+/* A LARGURA EM QUE UMA LEGENDA NUMA LINHA TEM DE CABER: a do render (LEGENDA_LARGURA_NUMA_LINHA), que o gerar_mesa poe
+   no RENDER_LE desde 3 de outubro (decisao 111: «ler a largura de uma linha do render em vez de a escrever»). Hoje e a
+   largura util de sempre, 1660. Se ele escolher a legenda do clip 10 numa linha com menos margem (1762), muda-se a
+   constante do render e a Mesa segue na montagem seguinte, sem mexer aqui. Sem a chave, ou com um valor que nao
+   presta, a util de hoje. */
+function legLarguraNumaLinha(){
+  var util = 1920 - 2 * LEGENDA_LADO, n = RENDER_LE.numa_linha_largura;
+  return typeof n === "number" && n >= util && n <= 1920 ? n : util;
+}
+/* o render.margem_do_bloco(): a margem de sempre; so e menor numa legenda numa linha mais larga do que a largura util,
+   que so existe se a largura de cima passar dela: ai o bloco fica ao centro, com a margem que lhe sobra */
+function legMargemDoBloco(larguras){
+  var util = 1920 - 2 * LEGENDA_LADO, largo = larguras.length ? Math.max.apply(null, larguras) : 0;
+  return legLarguraNumaLinha() <= util || largo <= util ? LEGENDA_LADO : (1920 - largo) / 2;
+}
 /* o render.x_das_linhas(): o x da esquerda de cada linha */
 function legXs(larguras, dx, al){
-  var d = legDxEfetivo(larguras, dx, al);
+  var d = legDxEfetivo(larguras, dx, al), m = legMargemDoBloco(larguras);
   return larguras.map(function(w){
-    return al === "esquerda" ? LEGENDA_LADO + d : al === "direita" ? 1920 - LEGENDA_LADO - w + d : (1920 - w) / 2 + d;
+    return al === "esquerda" ? m + d : al === "direita" ? 1920 - m - w + d : (1920 - w) / 2 + d;
   });
 }
 /* o texto numa so linha: as mudancas de linha escritas tambem se juntam, como no render */
@@ -14322,7 +14848,7 @@ function legJunta(texto){ return String(texto == null ? "" : texto).split(/\s+/)
 /* o render.legenda_numa_linha(): {cabe, precisa, ha} na letra e no corpo do estilo */
 function legNumaLinha(texto, tamanho){
   var f = estiloLetra("legenda"), tam = tamanho || estiloValor("legenda", "tamanho"), linha = legJunta(texto);
-  var precisa = linha ? Math.ceil(estiloMede(linha, f, tam) - 1e-9) : 0, ha = 1920 - 2 * LEGENDA_LADO;
+  var precisa = linha ? Math.ceil(estiloMede(linha, f, tam) - 1e-9) : 0, ha = legLarguraNumaLinha();
   return {cabe: precisa <= ha, precisa: precisa, ha: ha};
 }
 /* o render.linhas_legenda(): {f, tam, linhas, uma}. Desce de 4 em 4 ate caber em 4 linhas, nunca abaixo do minimo
@@ -14331,7 +14857,7 @@ function legLinhas(texto, tamanho, uma){
   var f = estiloLetra("legenda"), tam0 = tamanho || estiloValor("legenda", "tamanho"), larg = 1920 - 2 * LEGENDA_LADO;
   if(uma){
     var linha = legJunta(texto);
-    if(linha && estiloMede(linha, f, tam0) <= larg) return {f: f, tam: tam0, linhas: [linha], uma: true};
+    if(linha && estiloMede(linha, f, tam0) <= legLarguraNumaLinha()) return {f: f, tam: tam0, linhas: [linha], uma: true};
   }
   var tam = tam0, minimo = Math.floor(tam0 * 30 / 46 + 0.5), linhas = estiloQuebra(texto, f, tam, larg);
   while(linhas.length > 4 && tam > minimo){ tam = Math.max(minimo, tam - 4); linhas = estiloQuebra(texto, f, tam, larg); }
@@ -14467,6 +14993,27 @@ function avisosNumaLinha(v, i){
   return r;
 }
 
+/* A LEGENDA NUMA LINHA QUE CABE POR POUCO (3 de outubro, a revisao). A Mesa mede no browser e o render com a Pillow do PC
+   dele, que nas 19 letras da ate 2,6% a mais: no clip 10, com a Playfair a 56, a Mesa da 1653 px (cabe, uma linha no
+   palco) e o render 1667 (nao cabe, duas linhas no filme), e o Validar ficava calado. Uma linha que cabe por menos de
+   3% vai para «Confirma tu», com a mesma margem do legNoLimite() do inspetor. As mesmas legendas do avisosNumaLinha(). */
+function limitesNumaLinha(v, i){
+  var c = v && v.clips[i];
+  if(!x1Do(c)) return [];
+  var grupo = String(c.x || "").trim(), textos = [[grupo, null]];
+  if(eGrupo(c) && modoTextos(c) === "legenda" && temTextosFotos(c) && !(c.t === "colagem" && estiloDe(c) === "mergulho"))
+    textos = textosDasFotos(c).map(function(t){ return [String(t || "").trim() || grupo, tamanhoTextos(c)]; });
+  var vistos = {}, r = [];
+  textos.forEach(function(x){
+    if(!x[0] || vistos[x[0]]) return;
+    vistos[x[0]] = 1;
+    var m = legNumaLinha(x[0], x[1]);
+    if(m.cabe && m.precisa > m.ha * 0.97) r.push({texto: x[0], t: "A legenda do clip " + (i + 1) + " cabe numa linha por pouco: precisa de " +
+      m.precisa + " px e há " + m.ha + " px. O render mede com a letra do PC dele e pode dar mais uns píxeis: se não couber, o filme parte-a como hoje, e o montar diz."});
+  });
+  return r;
+}
+
 /* ---------- as legendas de 3 de outubro: o inspetor de cada clip ----------
    A LEGENDA DESTE CLIP, logo a seguir ao texto: «Numa só linha» (clip.x1) e a posicao so dele (clip.lp), com quatro
    setas de 10 px e o «Repor». So nos clips com legenda de baixo (as fotos, os videos e os grupos). Diz sempre o que
@@ -14504,17 +15051,31 @@ function legNoLimite(m){
 }
 /* o «Numa só linha» ligado numa legenda que nao cabe: a nota fica com a cor dos avisos */
 function x1NaoCabe(v, i){ return avisosNumaLinha(v, i).length > 0; }
+/* QUANTO A LEGENDA DESTE CLIP ANDA DE FACTO PARA O LADO (3 de outubro, a revisao): o render.dx_efetivo() com as linhas
+   dela. Uma legenda comprida encosta a margem antes do limite dos 600 px, o palco para ai como o filme, e a nota
+   continuava a dizer «no filme, 600 px à esquerda» com os ultimos toques a nao mexerem em nada. Diz-se com as palavras
+   do aviso do montar («encosta a margem: anda D px dos X pedidos»). "" sem legenda, sem dx, ou quando anda tudo. */
+function notaEncostaDoClip(c){
+  var x = textoDaLegendaDoClip(c), pos = legPosicao(c);
+  if(!x || !pos.dx) return "";
+  var l = legLinhas(x, eGrupo(c) && !String(c.x || "").trim() ? tamanhoTextos(c) : null, x1Do(c));
+  var d = legDxEfetivo(l.linhas.map(function(t){ return estiloMede(t, l.f, l.tam); }), pos.dx, pos.alinhamento);
+  if(Math.abs(d - pos.dx) < 1) return "";
+  return " Mas encosta à margem: no filme anda só " + Math.round(Math.abs(d)) + " px dos " + Math.abs(pos.dx) +
+    " pedidos para a " + (pos.dx > 0 ? "direita" : "esquerda") + ", para não sair do ecrã.";
+}
 /* o que se diz por baixo das setas */
 function notaPosicaoDoClip(c){
   var lp = lpDoClip(c), todas = estiloValor("legenda", "posicao"), pos = legPosicao(c);
   var falta = RENDER_LE.posicao_clip === false && (lp.dx || lp.dy) ? " Ainda não chega ao filme: fica guardada, mas o render de hoje põe-na no sítio de todas." : "";
   if(!lp.dx && !lp.dy)
-    return "No sítio de todas as legendas: " + legPosicaoTexto(todas) + ". Para mudar todas, é no Estilo, aba Legendas.";
+    return "No sítio de todas as legendas: " + legPosicaoTexto(todas) + ". Para mudar todas, é no Estilo, aba Legendas." + notaEncostaDoClip(c);
   var soma = {dx: todas.dx + lp.dx, dy: todas.dy + lp.dy};
-  var preso = soma.dx !== pos.dx || soma.dy !== pos.dy;
+  var preso = soma.dx !== pos.dx || soma.dy !== pos.dy, encosta = notaEncostaDoClip(c);
   return "Esta legenda fica " + legPosicaoTexto({dx: lp.dx, dy: lp.dy, alinhamento: "centro"}).replace(", ao centro", "") +
-    " em relação às outras; no filme, " + legPosicaoTexto(pos) + "." +
-    (preso ? " Chegou ao limite: nunca abaixo do sítio de hoje, por causa do projetor, nem mais de 500 px acima, nem 600 px para cada lado." : "") + falta;
+    " em relação às outras; " + (encosta ? "ao todo pede " : "no filme, ") + legPosicaoTexto(pos) + "." +
+    (preso ? " Chegou ao limite: nunca abaixo do sítio de hoje, por causa do projetor, nem mais de 500 px acima, nem 600 px para cada lado." : "") +
+    encosta + falta;
 }
 /* as setas que ja nao andam, pelos limites do total (a de todas mais a do clip) */
 function lpSetaParada(c, seta){
@@ -14526,29 +15087,45 @@ function lpSetaParada(c, seta){
 }
 function blocoLegendaDoClip(v, c){
   var i = v.clips.indexOf(c), lp = lpDoClip(c);
+  /* a medida do «Numa só linha» precisa da letra das legendas: pede-se ja, e quando chega a nota mede outra vez */
+  estiloGaranteLetra(estiloCss(estiloLetra("legenda"), 40));
+  /* SEM LEGENDA DE BAIXO NAO HA NADA PARA POR NUMA LINHA NEM PARA MEXER (3 de outubro, a revisao): numa foto sem texto a
+     caixa gravava o x1 e a lista dizia «1 linha», e as setas gravavam um lp, de uma legenda que nao existe. A caixa e as
+     setas ficam desligadas ate ele escrever a legenda. O que ja la estiver gravado continua a poder tirar-se: a caixa
+     marcada desmarca-se, e o «Repor» fica. */
+  var sem = !textoDaLegendaDoClip(c);
   var seta = function(s, txt, rot){
     return '<button type="button" class="bt pequeno legSeta" data-lpseta="' + s + '" aria-label="' + rot + '"' +
-      (lpSetaParada(c, s) ? ' disabled' : '') + '>' + txt + '</button>';
+      (sem || lpSetaParada(c, s) ? ' disabled' : '') + '>' + txt + '</button>';
   };
   return '<div class="campo legClip" id="legClip"><label>A legenda deste clip</label>' +
-    '<label class="legX1"><input type="checkbox" id="legX1"' + (x1Do(c) ? ' checked' : '') + '> Numa só linha, com a letra do mesmo tamanho</label>' +
+    '<label class="legX1"><input type="checkbox" id="legX1"' + (x1Do(c) ? ' checked' : '') + (sem && !x1Do(c) ? ' disabled' : '') +
+      '> Numa só linha, com a letra do mesmo tamanho</label>' +
     '<div class="focoAjuda' + (x1NaoCabe(v, i) ? ' somAviso' : '') + '" id="legX1Nota" aria-live="polite">' + esc(notaNumaLinha(v, i)) + '</div>' +
     '<div class="legPos"><span class="legPosRot">Mexer só esta</span>' +
       '<span class="legSetas" role="group" aria-label="Mexer só a legenda deste clip, 10 px de cada vez">' +
         seta("cima", "▲", "Subir 10 px") + seta("baixo", "▼", "Descer 10 px") + seta("esq", "◀", "10 px para a esquerda") + seta("dir", "▶", "10 px para a direita") +
       '</span>' +
       '<button type="button" class="bt pequeno" id="legRepor"' + (lp.dx || lp.dy ? '' : ' hidden') + '>Repor</button></div>' +
-    '<div class="focoAjuda" id="legPosNota" aria-live="polite">' + esc(notaPosicaoDoClip(c)) + '</div></div>';
+    '<div class="focoAjuda" id="legPosNota" aria-live="polite">' + esc(notaPosicaoNoInspetor(c)) + '</div></div>';
+}
+/* a nota das setas no inspetor: sem legenda de baixo e sem posicao gravada, diz que nao ha nada para mexer */
+function notaPosicaoNoInspetor(c){
+  var lp = lpDoClip(c);
+  if(!textoDaLegendaDoClip(c) && !lp.dx && !lp.dy) return "Sem legenda não há nada para mexer: as setas ligam-se quando a escreveres.";
+  return notaPosicaoDoClip(c);
 }
 /* depois de uma mexida, sem repintar o inspetor (o foco fica na seta, para tocar outra vez) */
 function atualizaLegendaDoClip(v, c){
   var i = v ? v.clips.indexOf(c) : -1;
   if(i < 0) return;
   var n = document.getElementById("legX1Nota"); if(n){ n.textContent = notaNumaLinha(v, i); n.classList.toggle("somAviso", x1NaoCabe(v, i)); }
-  var p = document.getElementById("legPosNota"); if(p) p.textContent = notaPosicaoDoClip(c);
+  var p = document.getElementById("legPosNota"); if(p) p.textContent = notaPosicaoNoInspetor(c);
   var lp = lpDoClip(c), r = document.getElementById("legRepor"); if(r) r.hidden = !(lp.dx || lp.dy);
-  document.querySelectorAll("#legClip [data-lpseta]").forEach(function(b){ b.disabled = lpSetaParada(c, b.getAttribute("data-lpseta")); });
-  var x = document.getElementById("legX1"); if(x) x.checked = x1Do(c);
+  /* sem legenda de baixo ficam desligadas (ver blocoLegendaDoClip): acompanham o texto a cada tecla */
+  var sem = !textoDaLegendaDoClip(c);
+  document.querySelectorAll("#legClip [data-lpseta]").forEach(function(b){ b.disabled = sem || lpSetaParada(c, b.getAttribute("data-lpseta")); });
+  var x = document.getElementById("legX1"); if(x){ x.checked = x1Do(c); x.disabled = sem && !x1Do(c); }
 }
 /* o lp com os dois campos, ou sem lp nenhum no sitio de todas */
 function lpPoe(c, dx, dy){

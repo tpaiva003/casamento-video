@@ -4250,6 +4250,243 @@ preto antes dele.
 - Antes do render final, a passagem mede-se outra vez (decisão 096).
 - O contrato está em `saida/discussao/contrato_mesa_1002.md`, secções 10 a 15.
 
+### 2026-10-03 | 111 | Os pedidos da madrugada de 3 de outubro, do lado do render: legendas, lado a lado, contadores, créditos e as músicas à escolha
+
+**O que ele pediu,** entre as 04:50 e as 05:50, para o filme de amanhã. As palavras dele estão no contrato
+`saida/discussao/contrato_1003.md` e no `docs/DISCUSSAO.md`, no bloco «Os pedidos de 3 de outubro»:
+- *"Inclui a possibilidade de alterar o tipo de letra no Contador. Incluir as mesmas letras que temos como opção
+  nas legendas."*
+- *"Na foto na posição 10, meter a legenda numa só linha, sem alterar o tamanho da letra."*
+- *"Permite-me ajustar o posicionamento das legendas, cima, baixo, direita, esquerda."*
+- *"Quando meto lado a lado está a focar em excesso, acabando por cortar pessoas."*
+- Nos créditos: *"Coloca este fecho exatamente com a mesma animação antes dos créditos a subir com as fotos e com
+  os nomes"*, *"Decidimos também remover as funções tipo creative e assim, vamos abolir isso"*, *"quero mesmo poder
+  remover integralmente"*, *"Nós só queremos os nomes dos convidados corridos"* e *"permite ajustar a velocidade
+  dos nomes e/ou das fotos"*.
+- No contador do fim: *"o que pretendemos é que ele se mova desde 2023 até 2026 para a data de 4 de outubro de
+  2026"* e *"precisava que ficasse mais 3 segundos depois de chegar à data"*.
+- No contador do meio: *"Ensure also that we can conheceram-se em 2011 e o contador para em maio de 2012 onde
+  começaram a namorar."*
+- Nas músicas: *"Decidimos na Mesa de Montagem que músicas queríamos incluir, e umas tirámos e outras incluímos.
+  Isso não é bem uma decisão. Quero ter a opcionalidade das músicas que quero."*
+- E às 05:15: *"Precisávamos de uma versão muito aproximada do resultado que metemos agora na Mesa e com as nossas
+  instruções pronta de manhã pelas 9/10h."*
+
+**A regra que atravessa tudo** é a da 104: «Como está» é a omissão, e sem as chaves novas o montar, o filme e os
+créditos saem iguais ao byte ao que saía antes desta noite. Foi construído por três frentes em paralelo (legendas
+e lado a lado, contadores, créditos), acertado de manhã e revisto por dois revisores e um corretor. As duas
+cópias de segurança do ramo `backup/2026-10-03-madrugada` (`e72558d`, tirada com o `render.py` a meio, e
+`8a5f199`) não são o «antes»: o «antes» desta noite está em `scratchpad/base_p234/`.
+
+**Construído:**
+- **A legenda numa linha, `clip.x1 = true`.** A legenda do clip não parte em linhas e mantém o corpo do estilo.
+  Só fica numa linha se couber em `render.LEGENDA_LARGURA_NUMA_LINHA`, que é a largura útil de sempre, 1660 px
+  (130 px de margem de cada lado). Se não couber, parte como hoje e avisa com os dois números. Na prática o `x1`
+  só junta mudanças de linha escritas, porque uma frase que cabe em 1660 já sai numa linha. Vale também para cada
+  texto da opção «na legenda de baixo» dos grupos.
+- **A posição das legendas.** `est.estilo.legenda.posicao = {dx, dy, alinhamento}` para todas, e
+  `clip.lp = {dx, dy}` para um clip, que se soma à de todas.
+  - No total o `dx` fica entre -600 e 600 px e o `dy` entre -500 e 0: a legenda sobe, nunca desce abaixo de onde
+    está hoje, por causa do projetor.
+  - O alinhamento é `centro`, `esquerda` ou `direita`. A faixa escura acompanha o texto.
+  - O bloco das linhas nunca sai da largura útil: uma frase comprida encosta à margem e o montar avisa. É um
+    acrescento ao contrato, sem o qual um `dx` de todas punha as frases compridas fora do ecrã.
+  - Nas colagens e nas pilhas as fotos continuam acima da legenda, onde ela estiver. O piso delas, que é metade
+    do ecrã, desce com a legenda até um quarto; abaixo disso a legenda fica por cima das fotos.
+- **A «Imposição das insígnias» (clip 69) não é defeito.** É o único lado a lado com legenda do grupo e texto em
+  cada foto, e os textos das fotos sobem para cima da legenda do grupo, pela regra de setembro. O render não mudou
+  nesse caso.
+- **O lado a lado com as fotos inteiras, `clip.li = true`.** Cada foto entra inteira na sua célula, encaixada,
+  sobre ela própria desfocada e escurecida (desfoque 46 e 55%, como o tratamento «fundo»). Ausente, enche a célula
+  e corta, como hoje. O `render.lado_corte()` diz quanto o enchimento de hoje corta em cada foto, e acima de 25%
+  (`LADO_CORTE_AVISO`) é para avisar.
+- **As três opções do clip vão na coluna `opcoes_clip`,** a última do CSV da montagem, em JSON só com o que difere
+  da omissão, e só quando algum clip a tem. A posição de todas vai no `estilo.json`, só com o que difere de
+  {0, 0, centro}. Num clip que não as leva (um cartão com `x1`, uma foto com `li`) ficam de fora, com aviso.
+- **O contador de anos que acaba numa data, `"AAAA>dd/mm/aaaa"`.** Anda por anos, como sempre, e pára no ano da
+  data. Aí acende, por baixo do ano grande, a data por extenso («4 de outubro de 2026»), e fica acesa até ao fim
+  do clip.
+  - Um marco escrito nessa data (`20/05/2012=texto`) vai na linha de baixo, e um marco no ano de chegada também.
+  - Um marco de ano (`2011=texto`) é o de sempre, e um marco numa data que não é a da chegada fica no ano dele.
+  - Só a chegada pode ser data: `04/10/2026>1995` continua a não se ler.
+  - **Porque o contador do fim não fazia o pedido:** em `2023>2026 | 4 de outubro de 2026` o que vem depois da
+    barra é o rótulo da partida, e a data acendia por baixo de 2023. Essa leitura não mudou; o texto novo do clip
+    é `2023>04/10/2026`.
+- **O contador parado no fim, `clip.cp = <segundos>`,** de 0 a 30, só nos contadores. O clip estica-se nessa
+  medida (o texto leva `~3.0` no CSV, como a fita parada da 089), o contador anda no tempo de sempre e fica parado
+  na chegada, com o rótulo da chegada aceso. A música, posta pelo relógio, conta com os segundos a mais.
+- **A letra do contador, `est.estilo.contador.fonte`,** um id de `data/fontes.json`, a mesma lista das legendas.
+  Vale para todos os textos dos contadores e da fita de 1995. Ausente ou `arial_bold` é como está. O render e o
+  montar avisam quando a letra escolhida se lê pior a 15 m do que o Arial Bold, pelo `corpo_minimo` da 104.
+- **Os créditos por partes, `est.creditos.partes`.** É a lista, pela ordem, de `"titulo"`, `"cargos"` e `"rolo"`,
+  cada uma no máximo uma vez e com o rolo obrigatório.
+  - Ausente é a ordem de hoje (rolo, cargos, título), ou a da 109 com `cargos_primeiro`.
+  - **Sem `"cargos"` na lista não há cargo nenhum:** nem fotograma, nem segundo, nem aviso. Os textos dos cargos
+    ficam guardados na base, para se poderem repor.
+  - A primeira parte nasce da última imagem do filme, sem preto, como os cargos primeiro da 109. As outras acendem
+    do preto, e a última acaba com o fade a preto do fim.
+  - Com o título primeiro os créditos ficam 0,5 s mais compridos, pela mesma razão dos 0,9 s da 109: o filme
+    desfaz-se no título já aceso.
+- **Os nomes corridos, `est.creditos.nomes_corridos = true`,** tiram os títulos, os subtítulos e os espaços dos
+  grupos. Ficam as mesmas linhas de nomes, pela ordem de hoje, a 78 px cada.
+- **A velocidade, `est.creditos.velocidade = {fotos, nomes}`,** em px/s, cada campo opcional: as fotos de 60 a
+  300 e os nomes de 30 a 200. O que acaba primeiro fica parado fora do ecrã, e o ponto5 diz quantos segundos.
+  Avisa das fotos que ficam menos de 2 s inteiras no ecrã e das linhas de nomes que passam depressa de mais, só em
+  contagens, sem dizer nomes.
+- **As músicas automáticas à escolha, `versao.som_auto = {<nome>: false}`.** Havia seis sons que o montar punha
+  sozinho, sem marca dele, e por isso sem maneira de os tirar. Os seis nomes não mudam: `piano_abertura`,
+  `rebobinar`, `foguetes`, `rei_leao`, `ana_faria` e `retoma_piano`.
+  - Só o `false` desliga. Ausente, `true`, `null` ou `""` é como está, e um nome ou valor mal escrito fica como
+    está, com aviso.
+  - Desligar um som tira só esse. O que estava a tocar continua até ao próximo som que o corte, e a imagem não
+    muda (sem foguetes a fita fica parada na data o mesmo tempo).
+  - Nada entra no lugar do que saiu. Se ficarem 0,3 s ou mais sem som, o montar avisa.
+- **A marca a continuar, `m = {f, in: "continua"}`.** A música entra no segundo do ficheiro onde parou da última
+  vez que tocou no filme, pela conta da retoma da 060 (o `in` mais a duração dessa faixa). Se ainda não tocou,
+  entra do início, com aviso. Nos contadores 57 e 143 dá 43,7 e 52,0 s, os números que tinham sido feitos à mão, e
+  passa a acompanhar qualquer duração que mude antes.
+- **Os acertos pequenos:**
+  - o `--escala` passa a encolher os textos com o ecrã (legenda, cartões, nome do bebé, contador e fita), com as
+    mesmas linhas do filme. É o `render.ENSAIO`, que fica 1,0 em tudo o que não passa pelo `--escala`. Um ensaio
+    de hoje já não se compara ao byte com um de ontem; o filme a 1080 não muda;
+  - o `juncao_creditos.py` mede a duração dos créditos com as partes, os nomes corridos e a velocidade;
+  - o `.srt` do pacote do DaVinci leva a legenda numa linha como o render a escreve, e o guia diz a posição, que
+    um `.srt` não leva;
+  - os avisos dos textos do contador e da fita medem-se na letra do contador.
+
+**O que muda em decisões fechadas, pelas palavras dele:**
+- **011.** Dizia que não se conheceram em 2011 (confirmado por ele a 10 de setembro) e que o cartão da mãe da
+  Clara estava errado. Às 05:15 ele disse o contrário, e foi-lhe dito que mudava a 011. No filme o contador do
+  meio vai de 1995 a 20 de maio de 2012, com «Clara e Tiago conhecem-se» em 2011 e um texto de início de namoro
+  na chegada. O 20 de maio de 2012 da 011 mantém-se.
+- **060.** A retoma do piano na fita antes da Clara não está na lista de músicas que ele mandou. Passa a ser o
+  interruptor `retoma_piano`, ligado por omissão. No render das 10h ficou como estava, e é ele que decide.
+- **001.** As canções que dizem o nome da pessoa (o Rei Leão e a Ana Faria a entrar com o nome do bebé) passam a
+  ser escolha dele, pelos interruptores. A lista dele é a verdade: só tocam as músicas que ele escolheu. As
+  fanfarras e a vinheta dos foguetes continuam protegidas, e os foguetes e a fita a rebobinar só saem se for ele a
+  desligá-los.
+- **104.** Dizia «o contador fica em Arial Bold e só muda de cor». A letra passa a escolher-se, com o Arial Bold
+  por omissão.
+- **109.** Os cargos podiam ir primeiro, ser mais e ter mais pessoas; agora podem também não existir.
+
+**O render das 10h.** `C:\casamento-video-media\saida\v3_2026-10-03_0759.mp4` (1080p, 218 MB, desenhado das 07:27
+às 08:04 com `--fatias 6`) e a cópia com créditos `saida/discussao/ponto5/v3_2026-10-03_0759_com_creditos_telemovel.mp4`
+(13:03, 28,6 MB), enviada às 08:18. É um render de trabalho, não o final.
+- Saiu de um estado composto, `scratchpad/render_10h/estado_para_o_render.json`: a leitura da rev 2374 mais as
+  instruções que a Mesa publicada ainda não guarda, sem escrever na base. O código e a montagem dele estão na
+  cópia de segurança `8a5f199`.
+- Leva as 15 fotos trocadas, o mapa de músicas dele, o Lang Lang a continuar nos contadores 57 e 143, o clip 57
+  `1995>20/05/2012` com os dois textos, o clip 143 `2023>04/10/2026` com `cp` 3, os créditos com título e rolo e
+  os nomes corridos, e as fotos inteiras nos clips 107 e 108.
+- Não deu a legenda do clip 10 numa linha: em Playfair a 59 precisa de 1762 px e há 1660.
+- Não leva os acertos feitos depois dele (os interruptores, o «continua» e o ensaio à escala), que não mudam
+  nada no filme sem as chaves.
+
+**O que a revisão encontrou e o corretor acertou** (3 de outubro, 11:30):
+- O `cp` num clip que não é contador ficava de fora calado. Passa a avisar, como o `x1`, o `lp` e o `li`.
+- Com «Uma só peça», a fita de 1995 entra em corte seco a seguir ao contador. Um contador que acabe numa data, ou
+  com texto na chegada e parado no fim, acaba com esse texto aceso, e ele some de um fotograma para o outro. O
+  montar passa a avisar (`contador_acaba_aceso`) e não mexe no corte: voltar ao encadeado trazia o fantasma dos
+  dois «1995». Não acontece na montagem de hoje.
+- Com fotos inteiras num lado a lado que tem legenda do grupo e texto em cada foto, a faixa do texto tapa o fundo
+  da foto (60 e 83 px no clip 69). É a regra de setembro e não um erro de contas; ficou escrito no código e é
+  escolha dele se quiser as fotos inteiras no 69.
+- Um `cp` escrito como texto (`"3"`) vale 3 s, sem aviso, como o `lp` já aceitava `"56"`.
+
+**Provado:**
+- **O montar:** 39 ficheiros iguais ao byte (CSV, som.csv, estilo.json e o texto impresso) nas 8 versões da
+  leitura 68, na referência congelada e na demo_v3 da leitura 64, contra o montar de antes desta noite. Depois dos
+  acertos do corretor, 35 de 35 outra vez.
+- **O filme a 1920 x 1080:** 581 fotogramas da demo_v3 (um por segundo), mais 903 numa amostra densa dos
+  contadores, da fita, do nome, do destaque e dos lados a lado, mais 515 dos tipos que a demo_v3 não tem. Nenhum
+  diferente.
+- **Os créditos:** tempos iguais ao bit, o mesmo rolo e a mesma coluna, e 820 fotogramas iguais em três casos.
+- **O filme das 10h** não mudou com os acertos da manhã: 584 fotogramas iguais com o código do `8a5f199` e com o
+  de agora, e o montar de agora dá o `v3.csv`, o `v3.som.csv` e o `v3.estilo.json` das 07:26 ao byte.
+- **Tudo junto pelo `main()`** (contador até uma data com `cp`, letra do contador, posição, `x1`, `li`, pilha e
+  colagem com `lp`): com 1 e com 3 fatias sai o mesmo mp4 ao byte.
+- **As partes dos créditos:** 11 ordens, com 1, 3 e 8 cargos e 4 velocidades, 2088 fotogramas. Cada parte entra
+  do preto e sai para o preto, e o último fotograma é sempre preto.
+- **Mutações:** 14 de 14 apanhadas nos testes do som, 17 de 18 nos outros quatro dos acertos (a que escapou é
+  equivalente), e 6 de 6 no teste dos dois avisos do corretor.
+
+**Testes:** dezasseis novos no `testes.py`: quatro das legendas e do lado a lado, três dos contadores, dois dos
+créditos, seis dos acertos e um do corretor. No `testes.py` inteiro, na corrida do corretor (11:36 a 12:19, com o
+código final), passaram 278 e falharam 2, as esperadas: «v3 sem vozes igual ao byte» (o `v3.som.csv` difere da
+referência congelada, como já diferia antes desta noite, e o `v3.csv` sai igual) e as fatias, com a assinatura de
+sempre, 1e236d1c... Nenhum teste que lê a Mesa falhou, com a equipa da Mesa ainda a trabalhar na página. Não se
+congelou nenhuma referência nem se mudou nenhuma assinatura. A saída está em
+`scratchpad/render6/testes_final6.txt`.
+
+**Por decidir pelo Tiago:**
+- a legenda do clip 10: numa linha com a margem a 82 px da borda (mudar `LEGENDA_LARGURA_NUMA_LINHA` para 1762),
+  em duas linhas equilibradas escritas por ele, ou todas as legendas a 55;
+- o clip 57: os dois textos novos ficam acesos 1,1 s e 0,85 s, e não se leem. Pede `cp` e mais duração;
+- o piano na fita antes da Clara (`retoma_piano`);
+- as fotos inteiras nos clips 45, 69, 70, 71, 115 e 129, que cortam mais de 25%;
+- o fim dos créditos: acabam com o rolo a sair para o preto, sem título no fim;
+- a passagem do filme para o título: o ano grande do contador e as letras do título ficam um segundo no mesmo
+  sítio.
+
+**Antes do render final:** as chaves escrevem-se na base depois de a Mesa nova estar publicada. Revêem-se os fins
+de frase (096): o `cp` do 143 deu 3 s a mais à música do último contador, e a música dos créditos entra aos
+124,03 s do ficheiro em vez dos 111,93. E pergunta-se-lhe pelos textos marcados (082).
+
+**Para a equipa da Mesa:** as contas das legendas, dos contadores e dos créditos estão no contrato, secções 10 e
+11; as dos interruptores e do «continuar de onde ficou» foram-lhe passadas à parte. Cabe-lhe mostrar e guardar as
+chaves, exportar o `som_auto` da versão, e ler a largura de uma linha do render em vez de a escrever. O lado da
+Mesa regista-se à parte, quando essa equipa fechar.
+
+**Quem:** o Tiago e a Clara pediram; os agentes construíram; os revisores e o corretor confirmaram e acertaram o
+que está acima. Sem commits.
+
+**Substitui:** a parte da 011 sobre 2011; a frase da 104 sobre a letra do contador. Acrescenta à 001, à 060 e à
+109 o que está em «O que muda em decisões fechadas».
+
+### 2026-10-03 | 112 | A Mesa de 3 de outubro: legendas, lado a lado, contadores, créditos, os sons à escolha, e o que a revisão acertou
+
+**O que ele pediu:** os pedidos das 04:50 às 05:50 de 3 de outubro. As palavras dele estão na decisão 111 e no contrato `saida/discussao/contrato_1003.md`. A 111 é o lado do render; esta é o lado da Mesa.
+
+**Decisão:** a Mesa passa a deixar escolher, a mostrar com as contas do render e a guardar tudo o que a 111 construiu. «Como está» é sempre a omissão: sem as escolhas novas a Mesa grava o mesmo de antes. Abrir o Estilo, os Créditos, o Validar e o Som do render dá 0 escritas. A Mesa avisa e nunca corrige (083).
+
+**O que é:**
+- **A letra do contador.** Estilo, aba «Contador e fita», campo «Letra»: a lista das legendas. Grava `est.estilo.contador.fonte`; «Arial Bold, como está» tira a chave. Avisa quando a letra se lê pior a 15 m, nos corpos do `render.CORPOS_DO_CONTADOR` (46, 38, 40 e 58).
+- **A legenda numa só linha.** No inspetor do clip, bloco «A legenda deste clip». Grava `clip.x1 = true`. Por baixo diz o que o filme faz, com os dois números: «precisa de P px e há 1660 px». A largura é a do render (`RENDER_LE.numa_linha_largura`, do `render.LEGENDA_LARGURA_NUMA_LINHA`), e não um número escrito na Mesa.
+- **A posição das legendas.** Todas: Estilo, aba Legendas, «Posição», com setas de 10 px, duas barras e o alinhamento (`est.estilo.legenda.posicao`, só o que difere). Uma só: «Mexer só esta» no clip, com quatro setas e «Repor» (`clip.lp`). A nota diz a posição no filme, e quando a legenda encosta à margem diz quanto anda de facto.
+- **As fotos inteiras do lado a lado.** «As fotos nas células», no inspetor: «Como está: enchem e cortam» ou «Fotos inteiras» (`clip.li = true`). Ao lado de cada foto, quanto o enchimento de hoje corta; acima de 25% avisa no inspetor e no Validar.
+- **Os contadores.** «Anos e textos» aceita a chegada numa data (`2023>04/10/2026`) e um texto por ano ou na data de chegada, com exemplos para copiar. A Mesa diz o que o filme lê e quanto tempo cada texto fica aceso. «Parado no fim» (Como está, 2 s, 3 s, 5 s ou outro valor até 30) grava `clip.cp`.
+- **Os créditos, aba «Ordem e velocidade».** A ordem das três partes com setas, «Sem cargos» (os textos ficam guardados e voltam com «Repor os cargos»), «Nomes corridos», e a velocidade das fotos (60 a 300 px/s) e dos nomes (30 a 200). Grava `est.creditos.partes`, `nomes_corridos` e `velocidade`. As contas são as do ponto5, ao bit.
+- **Os sons que o filme põe sozinho.** Botão «Som do render», em cima: seis caixas, uma por som (o piano da abertura, a fita a rebobinar, os foguetes, o Rei Leão, a Ana Faria e o piano antes da Clara). Grava `versao.som_auto = {nome: false}`, só o `false`; com todos ligados a chave sai. O palco e a lista do som só mudam na montagem seguinte, e a Mesa diz isso.
+- **A marca que continua** (`m.in = "continua"`). A Mesa mostra-a no campo «entra ao segundo» e guarda-a; só um segundo escrito por ele a troca. Para a pôr numa música, pede-se no chat.
+- **O `window.RENDER_LE`** ganhou as chaves `contador_fonte`, `legenda_posicao`, `numa_linha`, `posicao_clip`, `fotos_inteiras`, `creditos_partes`, `nomes_corridos`, `creditos_velocidade`, `contador_data`, `contador_parado`, `som_auto`, `marca_continua` e `numa_linha_largura`. O gerar_mesa pergunta ao desenho do render, e não só ao texto. Com uma chave a `false` a Mesa diz «ainda não chega ao filme» e o palco mostra o filme como está.
+
+**O que a revisão encontrou e o corretor acertou** (dois revisores e um corretor, 3 de outubro, 12:10):
+- O Validar dava três «Está mal» falsos, «a música não está nas pastas» e «o filme fica mudo», nos clips 37, 42 e 49. O montar encontra as três. A Mesa passou a usar a regra inteira do `resolve_musica()`: só tira a extensão quando é de música, e aceita o único ficheiro que comece pelo nome seguido de « - ».
+- No PC, a aba «Ordem e velocidade» ficava numa janela de 91 px a 1536x730. A pré-visualização dos créditos passou a deixar 300 px à coluna de baixo, em todas as abas.
+- A medida de «Numa só linha» saía com a letra de recurso antes de a letra do Google chegar (1725 px em vez de 1741). Agora a nota do clip, o Validar e o palco medem outra vez quando ela chega.
+- A Mesa mede no browser e o render com a Pillow, que dá até 2,6% a mais. Uma legenda que cabe numa linha por menos de 3% vai para «Confirma tu», porque no filme pode partir-se.
+- Sem legenda de baixo, a caixa «Numa só linha» e as setas ficam desligadas: gravavam chaves de uma legenda que não existe.
+- Com a legenda 400 px acima, a pilha em monte aparecia 12% maior do que no filme. O palco passa a usar o piso do render.
+- O campo «Anos e textos» era de uma linha e escondia o fim do texto do clip 57. Passou a caixa de três linhas.
+- O teste dos nomes dos convidados falhava por um nome inteiro que ele escreveu numa legenda (clip 132 da demo_v3). Deixou de falhar por isso, e diz onde está.
+
+**O que fica como está, visto pela revisão:**
+- trocar o contador de Anos para Datas e de volta perde a data de chegada (o Anular repõe);
+- o Anular não desfaz o texto nem a duração de um clip, e depois dele o inspetor fica vazio;
+- num browser em inglês, «1,5» no «Parado no fim» grava 15 (em pt-PT fica certo);
+- abrir um clip grava uma revisão sem mudar conteúdo, como já fazia;
+- o palco não segue os interruptores dos sons antes de uma montagem nova, e uma marca «continua» que a montagem da página ainda não tem toca do início no palco.
+
+**Provado:** node --check; `testes_mesa_1002.py` inteiro com 79 passaram, 0 falharam, 1 saltado; seis testes novos, três deles corridos contra a página de antes e a falhar os três; os 40 testes da Mesa do `testes.py` um a um, com 39 a passar e só a falha esperada («v3 sem vozes igual ao byte»). No browser, no PC e no telemóvel, sobre a página exata que se publica: sem erros de página, e as chaves do estado das 10h ficam na base depois de mexer noutra coisa.
+
+**Como se usa:** monta-se com `py -3.11 scripts/gerar_mesa.py`. Publica-se a página e, com `files` e `root: saida`, três cópias novas da intro e três nulls (`saida/audio/publicar.json`); as prévias não mudaram. Depois `py -3.11 scripts/audio_para_mesa.py --publicado`, ler `montagem/estado2` e escrever `montagem/publicacao`. As Mesas abertas recarregam-se pela barra «Há uma versão mais nova».
+
+**Por decidir pelo Tiago:**
+- a legenda do clip 10: em Playfair a 59 precisa de 1762 px no render e há 1660 (as três saídas estão na 111);
+- a legenda do clip 132 tem o nome inteiro de um convidado, que vai com o estado e a montagem para os ficheiros do Git.
+
+**Quem:** o Tiago e a Clara pediram; os agentes construíram, reviram e corrigiram. Sem commits.
+
 ## Em aberto
 
 Não assumir nenhuma destas sem decisão explícita do Tiago.

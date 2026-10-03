@@ -607,6 +607,76 @@ def le_as_legendas_de_3_de_outubro(render, montar):
     return le
 
 
+def le_os_contadores_de_3_de_outubro(render, montar):
+    """O render e o montar ja fazem os pontos 6 e 7 do contrato de 3 de outubro? (saida/discussao/contrato_1003.md)
+
+    {contador_data, contador_parado}, cada um True, False ou None (nao se conseguiu ver). `render` e o modulo, ja
+    importado; `montar` e o texto do montar_da_mesa.py (importa-lo mexe no sys.stdout).
+
+    PERGUNTA-SE AO DESENHO, como nas legendas: um True so por o texto se ler dizia ao Tiago que a data chegava ao filme.
+    - `contador_data`: o contador de anos que acaba numa data inteira ("2023>04/10/2026"). O linha_tempo le-o como um
+      contador de anos e da a data por extenso para a chegada (chegada_do_contador), o render.preparar() leva-a ao
+      desenho, e o ultimo fotograma sai diferente do de "2023>2026": tem a data acesa.
+    - `contador_parado`: o clip.cp. O montar escreve-o (parado_do_contador e a chave "cp", pelo texto dele), e o render,
+      com o "~segundos" no fim do texto, anda no tempo que sobra e fica no fotograma da chegada: num clip de 12 s com 3
+      parados, os 9 s e os 12 s sao o mesmo fotograma, e os 6 s nao sao os 6 s de um contador de 12 s sem paragem.
+    Sao quatro ou cinco fotogramas do contador, menos de 1 s, uma vez por Mesa montada.
+    """
+    import re
+    le = {"contador_data": None, "contador_parado": None}
+
+    def clip(texto):
+        return {"tipo": "contador", "texto_ecra": texto, "ficheiro": "", "duracao_s": "9", "ordem": "1", "tratamento": "fiel"}
+
+    def prepara(texto):
+        try:
+            return render.preparar(clip(texto), {})
+        except (ValueError, TypeError, AttributeError):
+            return None
+
+    try:
+        import linha_tempo
+        chegada = getattr(linha_tempo, "chegada_do_contador", None)
+        if not callable(chegada) or chegada("2023>04/10/2026") != ["4 de outubro de 2026"]:
+            le["contador_data"] = False
+        else:
+            com, sem = prepara("2023>04/10/2026"), prepara("2023>2026")
+            le["contador_data"] = bool(com and sem and linha_tempo.ler_contador("2023>04/10/2026")[0] == "anos"
+                                       and render.desenhar(com, 9.0, 9.0).tobytes() != render.desenhar(sem, 9.0, 9.0).tobytes())
+    except Exception as erro:  # noqa: BLE001 - so serve para a Mesa avisar
+        print("  AVISO: nao consegui perguntar ao render pelo contador ate uma data (%s)" % erro)
+    try:
+        if not (re.search(r"^def parado_do_contador\(", montar or "", re.M) and re.search(r"""["']cp["']""", montar or "")):
+            le["contador_parado"] = False
+        else:
+            com, sem = prepara("2023>2026~3.0"), prepara("2023>2026")
+            if not com or not sem or com.get("parado") != 3.0:
+                le["contador_parado"] = False
+            else:
+                aos9, aos12 = render.desenhar(com, 9.0, 12.0).tobytes(), render.desenhar(com, 12.0, 12.0).tobytes()
+                le["contador_parado"] = bool(aos9 == aos12 and
+                                             render.desenhar(com, 6.0, 12.0).tobytes() != render.desenhar(sem, 6.0, 12.0).tobytes())
+    except Exception as erro:  # noqa: BLE001 - so serve para a Mesa avisar
+        print("  AVISO: nao consegui perguntar ao render pelo contador parado no fim (%s)" % erro)
+    return le
+
+
+def le_o_som_a_escolha(montar):
+    """O montar ja le os sons automaticos a escolha e a marca que continua? (decisao 111, 3 de outubro)
+
+    {som_auto, marca_continua}, cada um True ou False. `montar` e o texto do montar_da_mesa.py (importa-lo mexe no
+    sys.stdout).
+    - `som_auto`: a versao da Mesa leva som_auto = {nome: false}, e o montar le-o no ler_som_auto() com os nomes do
+      SOM_AUTO. Com False a Mesa diz, nos interruptores do «Som do render», que ainda nao chega ao filme.
+    - `marca_continua`: a marca m = {f, in: "continua"}, pela MARCA_CONTINUA do montar.
+    """
+    import re
+    montar = montar or ""
+    return {"som_auto": bool(re.search(r"^SOM_AUTO\s*=", montar, re.M) and re.search(r"^def ler_som_auto\(", montar, re.M)
+                             and re.search(r"""\.get\(\s*["']som_auto["']""", montar)),
+            "marca_continua": bool(re.search(r"""^MARCA_CONTINUA\s*=\s*["']continua["']""", montar, re.M))}
+
+
 def o_que_o_render_le():
     """{creditos, continuo, destaque, creditos_musica, data_afastada}: True se o render ja os le, False se
     nao, None se nao se conseguiu ver.
@@ -630,12 +700,20 @@ def o_que_o_render_le():
     inspetor do clip.
     `creditos_partes`, `nomes_corridos`, `creditos_velocidade`: os pontos 5 e 5b do mesmo contrato (a ordem das partes
     dos creditos com o «Sem cargos», os nomes corridos e a velocidade), ver le_as_partes_dos_creditos.
+    `contador_data`, `contador_parado`: os pontos 6 e 7 (o contador de anos que acaba numa data inteira, e o clip.cp,
+    parado no fim), ver le_os_contadores_de_3_de_outubro. Com False a Mesa diz no inspetor e no Validar que ainda nao
+    chega ao filme, e o palco nao os desenha.
     """
     import re
     le = {"creditos": None, "continuo": None, "destaque": None, "creditos_musica": None, "data_afastada": None,
           "intro_fonte": None, "cargos_primeiro": None, "cargos_varios": None, "cargos_max": None, "pessoas_max": None,
           "contador_fonte": None, "legenda_posicao": None, "numa_linha": None, "posicao_clip": None, "fotos_inteiras": None,
-          "creditos_partes": None, "nomes_corridos": None, "creditos_velocidade": None}
+          "creditos_partes": None, "nomes_corridos": None, "creditos_velocidade": None,
+          "contador_data": None, "contador_parado": None,
+          # os sons automaticos a escolha e a marca que continua (decisao 111), ver le_o_som_a_escolha
+          "som_auto": None, "marca_continua": None,
+          # a largura em que uma legenda numa linha tem de caber, em pixeis a 1080 (render.LEGENDA_LARGURA_NUMA_LINHA)
+          "numa_linha_largura": None}
     try:
         sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
         import render
@@ -671,8 +749,26 @@ def o_que_o_render_le():
         import render
         montar = io.open(os.path.join(REPO, "scripts", "montar_da_mesa.py"), encoding="utf-8").read()
         le.update(le_as_legendas_de_3_de_outubro(render, montar))
+        # A LARGURA EM QUE UMA LEGENDA NUMA LINHA TEM DE CABER (decisao 111): a Mesa le-a daqui em vez de a escrever. Hoje
+        # e a largura util de sempre, 1660; se ele quiser a legenda do clip 10 numa linha com menos margem, muda-se a
+        # constante do render e a Mesa segue na montagem seguinte.
+        largura = getattr(render, "LEGENDA_LARGURA_NUMA_LINHA", None)
+        if isinstance(largura, (int, float)) and not isinstance(largura, bool):
+            le["numa_linha_largura"] = int(largura)
     except Exception as erro:  # noqa: BLE001 - so serve para a Mesa avisar
         print("  AVISO: nao consegui perguntar ao render pelas legendas de 3 de outubro (%s)" % erro)
+    try:
+        # O CONTADOR ATE UMA DATA E O PARADO NO FIM (3 de outubro, pontos 6 e 7)
+        import render
+        montar = io.open(os.path.join(REPO, "scripts", "montar_da_mesa.py"), encoding="utf-8").read()
+        le.update(le_os_contadores_de_3_de_outubro(render, montar))
+    except Exception as erro:  # noqa: BLE001 - so serve para a Mesa avisar
+        print("  AVISO: nao consegui perguntar ao render pelos contadores de 3 de outubro (%s)" % erro)
+    try:
+        # OS SONS AUTOMATICOS A ESCOLHA E A MARCA QUE CONTINUA (3 de outubro, decisao 111): pelo texto do montar
+        le.update(le_o_som_a_escolha(io.open(os.path.join(REPO, "scripts", "montar_da_mesa.py"), encoding="utf-8").read()))
+    except OSError as erro:
+        print("  AVISO: nao li o montar_da_mesa.py para lhe perguntar pelos sons a escolha (%s)" % erro)
     try:
         texto = io.open(PONTO5, encoding="utf-8").read()
         le["creditos"] = bool(re.search(r"""(\.get\(\s*|\[\s*)["']creditos["']""", texto))

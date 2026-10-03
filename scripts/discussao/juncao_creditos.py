@@ -81,16 +81,38 @@ def _arg(nome, omissao=None):
 
 
 # --------------------------------------------------------------------------------- onde cai
+def tempos_da_leitura(leitura):
+    """O tempos_dos_creditos() do ponto5 para esta leitura, COM TUDO O QUE O main() DELE CONTA.
+
+    Ate 3 de outubro so levava o rolo, a coluna e o numero de cargos. Faltavam a ordem (os cargos
+    primeiro da 109: 0,9 s curto), as partes, os nomes corridos e a velocidade (contrato de 3 de
+    outubro): com o titulo antes, sem cargos e os nomes corridos dava 179,887 s em vez de 167,787, e a
+    entrada da musica com "fim" saia 12,1 s cedo de mais no ficheiro. E a letra do estilo da Mesa, com
+    que o ponto5 parte os nomes do rolo: so muda a duracao quando sao os nomes a mandar (com a
+    velocidade dos nomes escolhida), mas e a mesma conta. O estilo deste processo volta ao que era.
+    """
+    antes = render.estilo_ativo()
+    with contextlib.redirect_stdout(io.StringIO()):
+        try:
+            render.aplicar_estilo(render.ler_estilo(C.MONTAGEM))
+            textos = p5.textos_dos_creditos(leitura[0], [])
+            blocos, _fora = p5.por_grupo(p5.ler_convidados(p5.folha_mais_recente()), textos["grupos"])
+            fotos, _fonte = p5.fotos_marcadas(leitura)
+            corridos = textos["nomes_corridos"]
+            rolo = p5.rolo_de_nomes(blocos, corridos) if corridos else p5.rolo_de_nomes(blocos)
+            coluna = p5.coluna_de_fotos(fotos)
+        finally:
+            render.aplicar_estilo(antes)
+    return p5.tempos_dos_creditos(rolo.height, coluna.height, len(textos["cargos"]), textos["cargos_primeiro"],
+                                  textos["partes"], textos["velocidade"])
+
+
 def duracao_dos_creditos(leitura):
-    """A duracao dos creditos pelas contas do ponto5 (o rolo de nomes, a coluna de fotos e os cargos)."""
+    """A duracao dos creditos pelas contas do ponto5: o rolo de nomes, a coluna de fotos, os cargos, a
+    ordem das partes, os nomes corridos e a velocidade, ver tempos_da_leitura()."""
     if _arg("--creditos"):
         return float(_arg("--creditos").replace(",", "."))
-    with contextlib.redirect_stdout(io.StringIO()):
-        textos = p5.textos_dos_creditos(leitura[0], [])
-        blocos, _fora = p5.por_grupo(p5.ler_convidados(p5.folha_mais_recente()), textos["grupos"])
-        fotos, _fonte = p5.fotos_marcadas(leitura)
-        rolo, coluna = p5.rolo_de_nomes(blocos), p5.coluna_de_fotos(fotos)
-    return p5.tempos_dos_creditos(rolo.height, coluna.height, len(textos["cargos"]))["dur"]
+    return tempos_da_leitura(leitura)["dur"]
 
 
 def situacao():

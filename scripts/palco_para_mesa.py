@@ -102,8 +102,8 @@ def linhas_do_filme(nome="v3", versao="demo_v3"):
     """{montagem, versao, gerado, videos, fim, linhas: [...]} ou None sem a montagem.
 
     Cada linha: {chave, t (tipo), filme, d, c (encadeado com que entra), e no "nome" o x, e na fita
-    parada segura e congela, e md, mc e mv (o d, o c e o vin que o clip tinha na Mesa quando se montou,
-    ver o_que_a_mesa_tinha)}. `filme` e o instante no filme inteiro, a mesma conta do
+    parada segura e congela, no contador parado no fim parado (os segundos do clip.cp, 3 de outubro), e md,
+    mc e mv (o d, o c e o vin que o clip tinha na Mesa quando se montou, ver o_que_a_mesa_tinha)}. `filme` e o instante no filme inteiro, a mesma conta do
     som_para_mesa.py: os videos do bloco inicial um a seguir ao outro, e o corpo a partir do fim
     deles, contado do inicio_s do primeiro clip do corpo.
     """
@@ -142,6 +142,13 @@ def linhas_do_filme(nome="v3", versao="demo_v3"):
                 linha["segura"] = _f(m.group(1))
                 if m.group(2):
                     linha["congela"] = _f(m.group(2))
+        elif x["tipo"] == "contador":
+            # O CONTADOR PARADO NO FIM (clip.cp, contrato de 3 de outubro): o montar escreve "~segundos" no fim do
+            # texto e a duracao ja com eles. A Mesa precisa dos dois: o contador anda em d - parado e fica parado o
+            # resto, e so bate com a montagem um clip cujo cp de agora e este.
+            m = SEGURA.search(texto)
+            if m:
+                linha["parado"] = _f(m.group(1))
         saida.append(linha)
     fim = max((videos + x["inicio"] - desvio + x["d"]) for x in corpo) if corpo else videos
     import datetime

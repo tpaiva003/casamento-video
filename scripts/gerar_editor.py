@@ -54,6 +54,18 @@ def caminho_final(r, finais):
     return r["caminho"]
 
 
+def miniatura(cam):
+    """A foto inteira, rodada pelo EXIF, reduzida para caber na celula.
+
+    Esta fora do main() desde 3 de outubro para o scripts/entrada_rapida.py guardar a
+    miniatura de cada foto e so abrir as novas. Aqui nao ha cache nenhuma.
+    """
+    with Image.open(cam) as im:
+        im = ImageOps.exif_transpose(im).convert("RGB")
+        im.thumbnail((CELULA, CELULA), Image.LANCZOS)
+    return im
+
+
 def main():
     with open(INVENTARIO, encoding="utf-8-sig", newline="") as fh:
         inv = list(csv.DictReader(fh))
@@ -84,9 +96,7 @@ def main():
             folha = Image.new("RGB", (CELULA * COLUNAS, CELULA * LINHAS), FUNDO)
         cam = caminho_final(r, finais)
         try:
-            with Image.open(cam) as im:
-                im = ImageOps.exif_transpose(im).convert("RGB")
-                im.thumbnail((CELULA, CELULA), Image.LANCZOS)
+            im = miniatura(cam)
         except Exception as e:
             print("  nao abriu %s: %s" % (r["ficheiro"][:40], e))
             continue

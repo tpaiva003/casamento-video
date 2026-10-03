@@ -11003,6 +11003,9 @@ def _correr_render(render, argv, montagens, saida):
         erro = str(e)
     finally:
         render.MONTAGENS, render.SAIDA, render.RENDERS, render.L, render.A, sys.argv = guardado
+        # E A PROPORCAO DOS TEXTOS (3 de outubro): o main() com --escala liga o ensaio a escala neste
+        # processo, e os testes que vem a seguir desenham a 480 x 270 com os textos de sempre.
+        render.ENSAIO = 1.0
     ficheiros = sorted(f for f in os.listdir(saida) if f.lower().endswith(".mp4")) if os.path.isdir(saida) else []
     return texto.getvalue(), ficheiros, erro
 
@@ -13079,6 +13082,9 @@ CAMPOS_EXPORTADOS = {
     # a legenda numa linha, a posicao da legenda do clip e as fotos inteiras do lado a lado, 3 de
     # outubro (contrato_1003, pontos 2 a 4: clip.x1, clip.lp e clip.li, coluna opcoes_clip)
     "x1": "legenda_numa_linha", "lp": "legenda_posicao", "li": "fotos_inteiras",
+    # o contador parado no fim, 3 de outubro (contrato_1003, ponto 6: clip.cp, que o montar le no
+    # parado_do_contador e escreve como "~segundos" no texto do contador)
+    "cp": "parado_no_fim_s",
 }
 
 
@@ -13481,10 +13487,16 @@ def teste_contador_mal_escrito_nao_para_o_render():
     import montar_da_mesa
     import render
     problemas = []
-    maus = ["04/10/2026>1995|do casamento ate 1995", "2026>25/12/2025|x",
+    # O "AAAA>dd/mm/aaaa" SAIU DOS MAUS A 3 DE OUTUBRO: e o contador de anos ate uma data (contrato
+    # de 3 de outubro, pontos 6 e 7), que o Python le desde a madrugada e a Mesa desde a manha. O
+    # contrario, uma data a partir e um ano a chegar, continua a nao se ler nos dois lados.
+    maus = ["04/10/2026>1995|do casamento ate 1995",
             "29/02/2025>01/01/2025|x", "04/10/2026>|x"]
+    bons = ["04/10/2026>25/12/2025|x", "2026>1995|x", "2026>25/12/2025|x",
+            "1995>20/05/2012|2011=x;20/05/2012=y"]
     for x in maus:
         if render.contador_legivel(x):
+            problemas.append("%r passou a ler-se, e esta na lista dos que nao se leem" % x[:24])
             continue
         clip = {"tipo": "contador", "texto_ecra": x, "ficheiro": "", "duracao_s": "9",
                 "ordem": "3", "tratamento": "fiel"}
@@ -13519,7 +13531,7 @@ def teste_contador_mal_escrito_nao_para_o_render():
                         "function dataParaIso(", "function d2(", "function diasEntre(",
                         "function pontoDoContador(", "function contadoresSeguidos(",
                         "function avisosDoContador("))
-        casos = list(maus) + ["04/10/2026>25/12/2025|x", "2026>1995|x"]
+        casos = list(maus) + list(bons)
         seguidos = [("04/10/2026>25/12/2025|x", "2025>1995|x"),
                     ("04/10/2026>25/12/2025|x", "24/12/2025>01/01/2025|x"),
                     ("2026>1995|x", "1995>2011|x"),
@@ -13547,16 +13559,23 @@ process.stdout.write(JSON.stringify({
             else:
                 saida_js = json.loads(r.stdout)
                 for k, x in enumerate(casos):
-                    tipo_py = "datas" if "/" in x.partition("|")[0] else "anos"
+                    # o tipo do Python e o do ler_contador() quando se le; num que nao se le, e o da
+                    # barra, que e como o Python o tentava ler quando rebentava
+                    try:
+                        tipo_py = linha_tempo.ler_contador(x)[0]
+                    except (ValueError, AttributeError, TypeError):
+                        tipo_py = "datas" if "/" in x.partition("|")[0] else "anos"
                     if saida_js["tipos"][k] != tipo_py:
                         problemas.append("a Mesa chama %r a %r e o Python chama %r"
                                          % (saida_js["tipos"][k], x[:24], tipo_py))
                 for k, x in enumerate(maus):
                     if not saida_js["avisos"][k]:
                         problemas.append("a Mesa nao avisa de %r" % x[:24])
-                for k in (len(maus), len(maus) + 1):
-                    if saida_js["avisos"][k]:
-                        problemas.append("a Mesa avisa de um contador bem escrito")
+                for k, x in enumerate(bons):
+                    if saida_js["avisos"][len(maus) + k]:
+                        problemas.append("a Mesa avisa de um contador bem escrito: %r" % x[:24])
+                    if not render.contador_legivel(x):
+                        problemas.append("o Python nao le um contador bem escrito: %r" % x[:24])
                 for k, (a, b) in enumerate(seguidos):
                     if saida_js["seguidos"][k] != montar_da_mesa.contadores_seguidos(a, b):
                         problemas.append("contadores seguidos: a Mesa diz %s e o montar %s "
@@ -19383,6 +19402,727 @@ def teste_creditos_velocidade():
              "parada %.1f s" % (Tf["dur"], Tb["parado"][1]))
 
 
+def _monta_congelado(mexe=None, com_texto=False):
+    """Monta a demo_v3 do estado congelado (rev 242), mexido por `mexe(versao)`, numa pasta temporaria.
+
+    Devolve (bytes do CSV, linhas do som.csv, bytes do som.csv) e, com `com_texto`, tambem o que o
+    montar imprimiu. As tabelas do som sao as da referencia, como no teste do byte: um fim de frase
+    medido de novo nao pode mexer nestes testes.
+    """
+    import contextlib
+    import io
+    import json
+    import shutil
+    import tempfile
+    import montar_da_mesa
+    import render  # noqa: F401  (antes do redirect)
+    referencia = os.path.join(REPO, "data", "montagens", "referencia")
+    est = json.load(open(os.path.join(referencia, "mesa_estado_v3.json"), encoding="utf-8"))
+    v = next(x for x in est["versoes"] if x.get("id") == "demo_v3")
+    if mexe is not None:
+        mexe(v)
+    pasta = tempfile.mkdtemp(prefix="teste_som_auto_")
+    copia = os.path.join(pasta, "estado.json")
+    json.dump(est, open(copia, "w", encoding="utf-8"), ensure_ascii=False)
+    guardado = (montar_da_mesa.ESTADO, montar_da_mesa.DESTINO, montar_da_mesa.FINS_DE_FRASE,
+                montar_da_mesa.ENTRADAS_ATAQUE, sys.argv)
+    montar_da_mesa.ESTADO, montar_da_mesa.DESTINO = copia, pasta
+    for atributo, nome in (("FINS_DE_FRASE", "fins_de_frase.csv"), ("ENTRADAS_ATAQUE", "entradas_ataque.csv")):
+        if os.path.exists(os.path.join(referencia, nome)):
+            setattr(montar_da_mesa, atributo, os.path.join(referencia, nome))
+    sys.argv = ["montar_da_mesa.py", "demo_v3", "--nome", "t"]
+    texto = io.StringIO()
+    try:
+        with contextlib.redirect_stdout(texto):
+            montar_da_mesa.main()
+        imagem = open(os.path.join(pasta, "t.csv"), "rb").read()
+        som_bytes = open(os.path.join(pasta, "t.som.csv"), "rb").read()
+        som = list(csv.DictReader(open(os.path.join(pasta, "t.som.csv"), encoding="utf-8-sig")))
+    finally:
+        (montar_da_mesa.ESTADO, montar_da_mesa.DESTINO, montar_da_mesa.FINS_DE_FRASE,
+         montar_da_mesa.ENTRADAS_ATAQUE, sys.argv) = guardado
+        shutil.rmtree(pasta, ignore_errors=True)
+    return (imagem, som, som_bytes, texto.getvalue()) if com_texto else (imagem, som, som_bytes)
+
+
+def teste_som_auto_liga_e_desliga():
+    """Cada som que o montar poe sozinho desliga-se pelo nome, e so esse; sem a chave, o som.csv de sempre.
+
+    O PEDIDO (3 de outubro, 05:50): "decidimos na Mesa de Montagem que musicas queriamos incluir, e
+    umas tiramos e outras incluimos. Isso nao e bem uma decisao. Quero ter a opcionalidade das musicas
+    que quero." O piano da abertura, a fita a rebobinar, os foguetes, o Rei Leao, a Ana Faria e a
+    retoma do piano na fita antes da Clara entravam sempre, sem marca dele e sem maneira de os tirar
+    (a retoma, da decisao 060, nao estava na lista que ele mandou e foi ao render das 10h).
+    versao.som_auto = {nome: false} tira um som; ausente, true, null ou "" e como esta.
+
+    NOS DOIS SENTIDOS. Sem a chave, com {} e com todos a true, o CSV e o som.csv saem iguais ao
+    byte. Com um nome a false: essas faixas saem, as dos outros nomes ficam todas, a imagem (o CSV)
+    nao muda, e O QUE ESTAVA A TOCAR CONTINUA: sem a retoma o Rei Leao vai ate aos foguetes da Clara;
+    sem foguetes o piano vai ate o Rei Leao entrar e a retoma ate a Ana Faria entrar, sem buraco. Um
+    leito desligado que deixa silencio avisa. E o que nao se percebe (outro nome, "nao" em vez de
+    false) fica como esta, com aviso: nunca desliga nada. Os nomes e as notas sao os mesmos no montar
+    e no som_para_mesa, que e de onde a Mesa os le.
+    """
+    import montar_da_mesa
+    import som_para_mesa
+    referencia = os.path.join(REPO, "data", "montagens", "referencia", "mesa_estado_v3.json")
+    if not os.path.exists(referencia):
+        salta("som_auto: cada som automatico liga e desliga", "sem a copia congelada " + referencia)
+        return
+    problemas = []
+    nomes = [n for n, _nota, _diz in montar_da_mesa.SOM_AUTO]
+    if [(n, nota) for n, nota, _diz in montar_da_mesa.SOM_AUTO] != [(n, nota) for n, nota, _t in som_para_mesa.SOM_AUTO]:
+        problemas.append("os nomes ou as notas do montar e do som_para_mesa diferem")
+    if nomes != ["piano_abertura", "rebobinar", "foguetes", "rei_leao", "ana_faria", "retoma_piano"]:
+        problemas.append("os nomes mudaram, e a Mesa grava-os: %s" % nomes)
+
+    def do(nome, som):
+        nota = dict((n, x) for n, x, _d in montar_da_mesa.SOM_AUTO)[nome]
+        return [r for r in som if r["nota"].startswith(nota)]
+
+    def fim(r):
+        return float(r["quando_s"]) + float(r["dura_s"])
+
+    imagem, base, base_bytes = _monta_congelado()
+    em_falta = [n for n in nomes if not do(n, base)]
+    if em_falta:
+        problemas.append("o estado congelado nao tem %s: o teste nao prova nada" % em_falta)
+    # como esta: sem a chave, vazia, tudo a true, null e ""
+    for rotulo, valor in (("{}", {}), ("tudo true", {n: True for n in nomes}),
+                          ("null e vazio", {"foguetes": None, "rei_leao": ""})):
+        im, _som, som_bytes = _monta_congelado(lambda v, x=valor: v.__setitem__("som_auto", x))
+        if im != imagem or som_bytes != base_bytes:
+            problemas.append("com som_auto %s o montar nao da o de sempre ao byte" % rotulo)
+    # cada um a false: sai esse, ficam os outros, a imagem nao muda
+    sem = {}
+    for nome in nomes:
+        im, som, _b, texto = _monta_congelado(lambda v, n=nome: v.__setitem__("som_auto", {n: False}), com_texto=True)
+        sem[nome] = (som, texto)
+        if im != imagem:
+            problemas.append("sem %s a imagem mudou" % nome)
+        if do(nome, som):
+            problemas.append("sem %s ainda la esta: %s" % (nome, [r["nota"][:30] for r in do(nome, som)]))
+        for outro in nomes:
+            if outro == nome or (nome == "piano_abertura" and outro == "retoma_piano"):
+                continue        # sem musica na abertura nao ha o que retomar na fita
+            if len(do(outro, som)) != len(do(outro, base)):
+                problemas.append("sem %s, %s passou de %d para %d faixas"
+                                 % (nome, outro, len(do(outro, base)), len(do(outro, som))))
+        if "DESLIGADOS NA MESA" not in texto:
+            problemas.append("sem %s o montar nao diz que esta desligado" % nome)
+    if not problemas:
+        retoma_base = do("retoma_piano", base)[0]
+        rei_base = do("rei_leao", base)[0]
+        fog_base = sorted(float(r["quando_s"]) for r in do("foguetes", base))
+        # sem a retoma, o Rei Leao que ela interrompia continua ate onde ela ia (os foguetes da Clara)
+        rei = do("rei_leao", sem["retoma_piano"][0])[0]
+        if abs(fim(rei) - fim(retoma_base)) > 0.011 or abs(fim(rei) - fog_base[1]) > 0.011:
+            problemas.append("sem a retoma o Rei Leao acaba aos %.2f s e nao nos foguetes da Clara, %.2f"
+                             % (fim(rei), fog_base[1]))
+        # sem foguetes nada para no nascimento: o piano vai ate o Rei Leao entrar, a retoma ate a Ana
+        # Faria entrar, e a retoma continua de onde o piano parou
+        som = sem["foguetes"][0]
+        piano, rei, retoma, ana = (do(n, som)[0] for n in ("piano_abertura", "rei_leao", "retoma_piano", "ana_faria"))
+        if abs(fim(piano) - float(rei["quando_s"])) > 0.011 or abs(fim(retoma) - float(ana["quando_s"])) > 0.011:
+            problemas.append("sem foguetes ha buraco: o piano acaba aos %.2f e o Rei Leao entra aos %s; a retoma "
+                             "acaba aos %.2f e a Ana Faria entra aos %s"
+                             % (fim(piano), rei["quando_s"], fim(retoma), ana["quando_s"]))
+        if abs(float(retoma["in_s"]) - (float(piano["in_s"]) + float(piano["dura_s"]))) > 0.011:
+            problemas.append("sem foguetes a retoma nao continua de onde o piano parou: %s" % retoma["in_s"])
+        if rei["quando_s"] != rei_base["quando_s"] or ana["quando_s"] != do("ana_faria", base)[0]["quando_s"]:
+            problemas.append("sem foguetes as musicas dos nascimentos mudaram de sitio")
+        # e uma musica marcada por ele nas fotos do Tiago tambem deixa de parar no nascimento da Clara:
+        # a retoma, que a interrompe, vai ate a Ana Faria entrar; com os foguetes, para neles
+        def marca_no_tiago(v, desliga):
+            k = next(k for k, c in enumerate(v["clips"]) if c.get("t") == "foto")
+            v["clips"][k]["m"] = {"f": "Tiago Celebration Song (Reggae)", "in": 0}
+            if desliga:
+                v["som_auto"] = {"foguetes": False}
+        for desliga in (False, True):
+            _im, som_m, _b = _monta_congelado(lambda v, d=desliga: marca_no_tiago(v, d))
+            retoma_m, ana_m = do("retoma_piano", som_m), do("ana_faria", som_m)
+            alvo = float(ana_m[0]["quando_s"]) if desliga else fog_base[1]
+            if len(retoma_m) != 1 or abs(fim(retoma_m[0]) - alvo) > 0.011:
+                problemas.append("com uma marca nas fotos do Tiago e %s foguetes a retoma acaba aos %s e nao aos %.2f"
+                                 % ("sem" if desliga else "com",
+                                    fim(retoma_m[0]) if retoma_m else None, alvo))
+        # sem o Rei Leao (e sem marca dele nas fotos do Tiago) fica silencio depois dos foguetes, e avisa
+        som, texto = sem["rei_leao"]
+        if "som_auto: sem o Rei Leao" not in texto or "nao toca nada" not in texto:
+            problemas.append("sem o Rei Leao fica silencio depois dos foguetes e o montar nao avisa")
+        if abs(fim(do("piano_abertura", som)[0]) - fog_base[0]) > 0.011:
+            problemas.append("sem o Rei Leao o piano deixou de parar nos foguetes do Tiago")
+        # sem a fita a rebobinar, sem a retoma e sem os foguetes nao ha silencio nenhum para avisar
+        for nome in ("rebobinar", "retoma_piano", "foguetes"):
+            if "nao toca nada" in sem[nome][1]:
+                problemas.append("sem %s avisou de um silencio que nao ha" % nome)
+    # o que nao se percebe fica como esta, com aviso
+    for rotulo, valor, diz in (("outro nome", {"piano": False}, "que nao existe"),
+                               ("um texto", {"rei_leao": "nao"}, "tem de ser true ou false"),
+                               ("um zero", {"foguetes": 0}, "tem de ser true ou false"),
+                               ("nao objeto", ["foguetes"], "nao e um objeto")):
+        im, _som, som_bytes, texto = _monta_congelado(lambda v, x=valor: v.__setitem__("som_auto", x), com_texto=True)
+        if som_bytes != base_bytes or im != imagem:
+            problemas.append("som_auto mal escrito (%s) mudou o som" % rotulo)
+        if diz not in texto:
+            problemas.append("som_auto mal escrito (%s) nao avisou" % rotulo)
+    # a Mesa le de cada faixa automatica o nome com que se desliga
+    autos = [som_para_mesa.auto_da_nota(r["nota"]) for r in base if not r["nota"].startswith("marcada na Mesa")]
+    if autos != ["piano_abertura", "rebobinar", "foguetes", "rei_leao", "retoma_piano", "foguetes", "ana_faria"]:
+        problemas.append("o som_para_mesa nao da o nome de cada faixa automatica: %s" % autos)
+    if any(som_para_mesa.auto_da_nota(r["nota"]) for r in base if r["nota"].startswith("marcada na Mesa")):
+        problemas.append("uma musica marcada por ele saiu com nome de automatica")
+    verifica("som_auto: cada som automatico liga e desliga", not problemas,
+             "; ".join(problemas[:3]) if problemas else
+             "sem a chave ao byte; os 6 saem um a um e so esse; o que tocava continua; o silencio e o mal escrito avisam")
+
+
+def teste_marca_a_continuar():
+    """m = {f, in: "continua"}: a musica entra onde parou da ultima vez que tocou no filme.
+
+    O DEFEITO: o "Lang Lang a continuar" dos contadores 57 e 143 foi ao render das 10h com o in feito
+    a mao (43,7 e 52), a soma do in e da duracao da vez anterior. Basta mudar uma duracao antes (a
+    fita parada, uma foto a mais) para o numero deixar de ser onde a musica parou, sem ninguem dar por
+    isso. Com "continua" a conta e do montar: o in mais a duracao da ULTIMA faixa da mesma musica
+    antes do clip (a retoma da fita incluida, e outra continuacao tambem); se ainda nao tocou, o
+    inicio com o silencio saltado e um aviso. E A MUTACAO: escrito com o numero que a conta da, o
+    som.csv sai igual em tudo menos na nota; e uma marca com numero continua ao byte.
+    """
+    import montar_da_mesa
+    referencia = os.path.join(REPO, "data", "montagens", "referencia", "mesa_estado_v3.json")
+    if not os.path.exists(referencia):
+        salta("marca a continuar de onde ficou", "sem a copia congelada " + referencia)
+        return
+    piano = "Lang Lang - Beauty and the Beast (From Lang Lang Plays Disney  Live)"
+    # uma musica com silencio a abrir (2,4 s), posta antes do sitio onde o estado congelado a marca
+    nova = "Antonio variações - o corpo é que paga ( semi-original )"
+    problemas = []
+
+    def cartoes(v, quantos):
+        # os primeiros cartoes depois do bloco da Clara que ainda nao tem musica marcada
+        nasce = next(k for k, c in enumerate(v["clips"]) if c.get("t") == "cartao"
+                     and "nasce uma bebe" in montar_da_mesa.sem_acentos(c.get("x")))
+        return [k for k, c in enumerate(v["clips"]) if k > nasce and c.get("t") == "cartao" and not c.get("m")][:quantos]
+
+    def poe(valores):
+        def mexe(v):
+            for k, (f, entra) in zip(cartoes(v, len(valores)), valores):
+                v["clips"][k]["m"] = {"f": f, "in": entra}
+        return mexe
+
+    imagem, som, _b, texto = _monta_congelado(poe([(piano, "continua"), (nova, " Continua"), (piano, "continua")]),
+                                              com_texto=True)
+    leitos = [r for r in som if r["ficheiro"].startswith("Lang Lang")]
+    if len(leitos) != 4:
+        problemas.append("esperava o piano 4 vezes (abertura, retoma e duas a continuar): %s"
+                         % [(r["quando_s"], r["in_s"], r["nota"][:20]) for r in leitos])
+    else:
+        for antes, depois in zip(leitos, leitos[1:]):
+            onde = float(antes["in_s"]) + float(antes["dura_s"])
+            if abs(float(depois["in_s"]) - onde) > 0.011:
+                problemas.append("o piano dos %s s entra aos %s do ficheiro e tinha parado aos %.2f"
+                                 % (depois["quando_s"], depois["in_s"], onde))
+        if not all("a continuar de onde ficou" in r["nota"] and r["nota"].startswith("marcada na Mesa") for r in leitos[2:]):
+            problemas.append("a nota das duas marcas a continuar: %s" % [r["nota"] for r in leitos[2:]])
+        if float(leitos[2]["in_s"]) <= float(leitos[1]["in_s"]) or float(leitos[3]["in_s"]) <= float(leitos[2]["in_s"]):
+            problemas.append("o piano nao avanca de uma vez para a outra")
+    # a que ainda nao tocou: e a primeira das duas vezes que esta musica aparece no filme
+    novas = [r for r in som if r["ficheiro"].startswith("Antonio varia")]
+    caminho_nova = novas[0]["caminho"] if novas else ""
+    calado = montar_da_mesa.silencio_no_inicio(caminho_nova, 0.0) if caminho_nova else None
+    if not novas or "a continuar" not in novas[0]["nota"] or not calado or calado < 0.5             or abs(float(novas[0]["in_s"]) - round(calado, 2)) > 0.011:
+        problemas.append("uma musica que ainda nao tocou entra aos %s e o silencio a abrir e %s"
+                         % (novas[0]["in_s"] if novas else None, calado))
+    if "ainda nao tocou no filme" not in texto:
+        problemas.append("a musica que ainda nao tocou nao avisou")
+    # a mutacao: os mesmos numeros escritos a mao dao o mesmo som, menos a nota
+    if len(leitos) == 4 and novas:
+        im2, som2, _b2 = _monta_congelado(poe([(piano, float(leitos[2]["in_s"])), (nova, 0),
+                                              (piano, float(leitos[3]["in_s"]))]))
+
+        def sem_nota(linhas):
+            return [{k: x for k, x in r.items() if k != "nota"} for r in linhas]
+        if im2 != imagem or sem_nota(som2) != sem_nota(som):
+            dif = [(a["quando_s"], a["in_s"], b["in_s"]) for a, b in zip(som, som2)
+                   if {k: x for k, x in a.items() if k != "nota"} != {k: x for k, x in b.items() if k != "nota"}]
+            problemas.append("a continuar e com os numeros a mao nao dao o mesmo som: %s" % dif[:3])
+    # a musica que acaba antes do clip: continuar perto do fim do ficheiro avisa
+    tem = montar_da_mesa.duracao_de_audio(caminho_nova) if caminho_nova else None
+    if tem:
+        _im, _som3, _b3, texto3 = _monta_congelado(poe([(nova, round(tem - 6.0, 2)), (piano, 0), (nova, "continua")]),
+                                                   com_texto=True)
+        if "cala-se" not in texto3:
+            problemas.append("continuar para la do fim do ficheiro nao avisou")
+    verifica("marca a continuar de onde ficou", not problemas,
+             "; ".join(problemas[:3]) if problemas else
+             "o piano continua da retoma e de marca em marca (aos %s, %s e %s s); a que ainda nao tocou entra do "
+             "inicio; igual aos numeros a mao" % tuple(r["in_s"] for r in leitos[1:]))
+
+
+def teste_escala_encolhe_os_textos():
+    """Num render --escala os textos encolhem com o ecra, com as linhas do filme; sem ele, tudo como sempre.
+
+    O DEFEITO (3 de outubro, o ensaio das 07:24 a um quarto do tamanho): a legenda, os cartoes, o nome
+    do bebe e os textos do contador e da fita estao escritos em pixeis de um ecra de 1080, e num ecra de
+    270 saiam do mesmo tamanho, quatro vezes maiores: a legenda a 59 enchia meio ecra e partia-se
+    noutros sitios, e a data do contador nao cabia. O ensaio nao mostrava o filme.
+
+    O QUE SE GUARDA. Com o ensaio a escala (render.ENSAIO, que so o main() liga com o --escala): a
+    faixa da legenda ocupa a mesma parte do ecra que no filme e tem as mesmas linhas; o letreiro de um
+    cartao tem o tamanho do filme vezes a escala; o contador e a fita sao o fotograma de 1080 reduzido.
+    SEM ELE, a 480 x 270 a mao como os testes das assinaturas desenham, nada muda: e o que as
+    assinaturas de sempre prendem, e aqui confirma-se que a faixa e o contador sao os de antes. E o
+    main(): o --escala liga-o, sem --escala fica a 1.0 mesmo depois de um ensaio no mesmo processo, e
+    uma fatia recebe a proporcao de quem a lanca por extenso (--textos).
+    """
+    import contextlib
+    import io
+    import tempfile
+    import render
+    problemas = []
+    longa = "Ir trabalhar para Lisboa no dia de aniversario e a deixar a familia toda em sua casa a espera"
+    guardado = (render.L, render.A, render.ENSAIO)
+
+    def caixa(capa):
+        # onde a faixa tem pelo menos metade do alfa dela (165): a reducao deixa uma orla fraca a volta
+        return capa[1].point(lambda v: 255 if v > 80 else 0).getbbox()
+    try:
+        with contextlib.redirect_stdout(io.StringIO()):
+            render.aplicar_estilo(None)
+        render.L, render.A, render.ENSAIO = 1920, 1080, 1.0
+        filme = render.faixa_texto(longa)
+        linhas_filme = render.linhas_legenda(longa)[1]
+        let_filme = render.letreiro_do_cartao("Era uma vez")
+        marcos = [(1995, "4 de outubro de 2026")]
+        contador_filme = linha_tempo.anos(1920, 1080, 2026, 1995, marcos, 0.4, 2.0)
+        # a 480 x 270 com os textos de sempre: o que os testes das assinaturas desenham
+        render.L, render.A, render.ENSAIO = 480, 270, 1.0
+        sempre = render.faixa_texto(longa)
+        linhas_sempre = render.linhas_legenda(longa)[1]
+        contador_sempre = render.desenhar({"tipo": "contador", "modo": "anos", "de": 2026, "para": 1995,
+                                           "marcos": marcos}, 0.4, 2.0)
+        if contador_sempre.tobytes() != linha_tempo.anos(480, 270, 2026, 1995, marcos, 0.4, 2.0).tobytes():
+            problemas.append("sem o ensaio a escala o contador a 480 x 270 deixou de ser o de sempre")
+        if sempre[0].size != (480, 270) or len(linhas_sempre) <= len(linhas_filme):
+            problemas.append("sem o ensaio a escala a legenda a 480 x 270 ja nao parte como antes (%d linhas)"
+                             % len(linhas_sempre))
+        # com o ensaio a escala
+        render.ENSAIO = 270 / 1080.0
+        ensaio = render.faixa_texto(longa)
+        if render.linhas_legenda(longa)[1] != linhas_filme:
+            problemas.append("no ensaio a legenda parte em %d linhas e no filme em %d"
+                             % (len(render.linhas_legenda(longa)[1]), len(linhas_filme)))
+        cf, ce = caixa(filme), caixa(ensaio)
+        if ensaio[0].size != (480, 270) or any(abs(ce[k] - cf[k] / 4.0) > 1.5 for k in range(4)):
+            problemas.append("a faixa do ensaio %s nao e a do filme a um quarto %s" % (ce, [v / 4.0 for v in cf]))
+        if abs(caixa(sempre)[1] - cf[1] / 4.0) < 20:
+            problemas.append("a medida nao distingue: sem o ensaio a escala a faixa ja estava no sitio")
+        let = render.letreiro_do_cartao("Era uma vez")
+        if let.size != (int(round(let_filme.width * 0.25)), int(round(let_filme.height * 0.25))):
+            problemas.append("o letreiro do ensaio tem %s e o do filme %s" % (let.size, let_filme.size))
+        pronto = {"tipo": "contador", "modo": "anos", "de": 2026, "para": 1995, "marcos": marcos}
+        if render.desenhar(pronto, 0.4, 2.0).tobytes() != contador_filme.resize((480, 270), Image.LANCZOS).tobytes():
+            problemas.append("o contador do ensaio nao e o do filme reduzido")
+        ano, marcas, troco, abre = linha_tempo.ler_meses("1995@0-0.5|17/01 Terramoto em Kobe;*12/09 Nasce o Tiago")
+        fita = {"tipo": "marcos", "ano": ano, "marcas": marcas, "troco": troco, "abre": abre,
+                "segura": 0.0, "congela": None}
+        fita_filme = linha_tempo.meses(1920, 1080, ano, marcas, 1.0, 2.4, troco, abre)
+        if render.desenhar(fita, 1.0, 2.4).tobytes() != fita_filme.resize((480, 270), Image.LANCZOS).tobytes():
+            problemas.append("a fita do ensaio nao e a do filme reduzida")
+        # as contas de 1080 nao deixam o ecra trocado: depois de cada uma, o ecra e o do ensaio
+        if (render.L, render.A, render.ENSAIO) != (480, 270, 0.25):
+            problemas.append("uma conta a 1080 deixou o ecra em %s" % ((render.L, render.A, render.ENSAIO),))
+        # a fatia recebe a proporcao de quem a lanca
+        cmd = render.comando_da_fatia("x", 0, 2, ["render.py", "x", "--escala", "0.25"])
+        if "--textos" not in cmd or float(cmd[cmd.index("--textos") + 1]) != 0.25:
+            problemas.append("a fatia de um ensaio nao recebe a proporcao dos textos: %s" % cmd[-4:])
+        render.ENSAIO = 1.0
+        cmd = render.comando_da_fatia("x", 0, 2, ["render.py", "x", "--escala", "0.25"])
+        if "--textos" not in cmd or float(cmd[cmd.index("--textos") + 1]) != 1.0:
+            problemas.append("uma fatia lancada com os textos de sempre recebe outra proporcao: %s" % cmd[-4:])
+        if "--textos" in render.comando_da_fatia("x", 0, 2, ["render.py", "x", "--ate", "8"]):
+            problemas.append("sem --escala a fatia recebe o --textos, e a linha de comando ja nao e a de sempre")
+    finally:
+        render.L, render.A, render.ENSAIO = guardado
+    # o main(): o --escala liga o ensaio a escala, e sem ele volta a 1.0
+    pasta = tempfile.mkdtemp(prefix="teste_escala_")
+    _escrever_montagem(pasta, "escala", [dict(tipo="cartao", duracao_s="0.2", transicao_s="0", texto_ecra="Era uma vez")])
+    ligado = []
+    original = render.carregar_montagem
+
+    def espia(*args, **kwargs):
+        ligado.append((render.L, render.A, render.ENSAIO))
+        return original(*args, **kwargs)
+    render.carregar_montagem = espia
+    try:
+        for argv in (["escala", "--escala", "0.25", "--sem-som", "--fatias", "1"],
+                     ["escala", "--ate", "0.2", "--sem-som", "--fatias", "1"]):
+            _texto, _ficheiros, erro = _correr_render(render, argv, pasta, os.path.join(pasta, "saida"))
+            if erro:
+                problemas.append("o render de ensaio %s: %s" % (argv[1], erro))
+    finally:
+        render.carregar_montagem = original
+    if ligado != [(480, 270, 0.25), (1920, 1080, 1.0)]:
+        problemas.append("o main() com e sem --escala desenhou com %s" % ligado)
+    if render.ENSAIO != 1.0 or (render.L, render.A) != (1920, 1080):
+        problemas.append("depois do main() o processo ficou com o ecra %s e a proporcao %s"
+                         % ((render.L, render.A), render.ENSAIO))
+    verifica("--escala: os textos encolhem com o ecra, com as linhas do filme", not problemas,
+             "; ".join(problemas[:3]) if problemas else
+             "a faixa, as %d linhas, o letreiro, o contador e a fita do filme a um quarto; sem ele, os de sempre"
+             % len(linhas_filme))
+
+
+def teste_juncao_mede_os_creditos_como_o_ponto5():
+    """O juncao_creditos mede a duracao dos creditos com a ordem, as partes, os nomes corridos e a velocidade.
+
+    O DEFEITO (3 de outubro): o duracao_dos_creditos() chamava o tempos_dos_creditos() so com o rolo, a
+    coluna e o numero de cargos. Com a escolha deles (o titulo antes, sem cargos, os nomes corridos)
+    dava 179,887 s em vez de 167,787, e a entrada da musica com "fim" saia 12,1 s cedo de mais no
+    ficheiro; com os cargos primeiro (109) ficava 0,9 s curto. Agora faz as contas do main() do ponto5.
+    Com convidados e fotos de ensaio (nem a folha nem as fotos dele): cada configuracao tem de dar a
+    duracao que o ponto5 da com os mesmos textos, o caso de sempre nao muda, e o estilo do processo
+    fica como estava.
+    """
+    import contextlib
+    import io
+    import shutil
+    import tempfile
+    import render
+    p5 = _ponto5()
+    import juncao_creditos as jc
+    problemas = []
+    pasta = tempfile.mkdtemp(prefix="juncao_dur_")
+    guardado = (p5.ler_convidados, p5.folha_mais_recente, p5.fotos_marcadas, render.ler_estilo, sys.argv)
+    try:
+        fotos = []
+        for k, (tam, cor) in enumerate((((800, 600), (180, 120, 90)), ((600, 800), (90, 140, 180)),
+                                        ((900, 600), (120, 160, 110)))):
+            fotos.append(os.path.join(pasta, "f%d.jpg" % k))
+            Image.new("RGB", tam, cor).save(fotos[-1], quality=90)
+        p5.ler_convidados = lambda caminho: [dict(c) for c in CONVIDADOS_DE_ENSAIO]
+        p5.folha_mais_recente = lambda: "folha de ensaio"
+        p5.fotos_marcadas = lambda leitura=None: (list(fotos), "ensaio")
+        render.ler_estilo = lambda nome, pasta=None: {}
+        sys.argv = ["juncao_creditos.py"]
+        with contextlib.redirect_stdout(io.StringIO()):
+            render.aplicar_estilo({"legenda": {"tamanho": 56}})
+        estilo_antes = render.estilo_ativo()
+
+        def do_ponto5(cr):
+            with contextlib.redirect_stdout(io.StringIO()):
+                render.aplicar_estilo({})
+                t = p5.textos_dos_creditos({"creditos": cr}, [])
+                blocos = p5.por_grupo(CONVIDADOS_DE_ENSAIO, t["grupos"])[0]
+                rolo = p5.rolo_de_nomes(blocos, True) if t["nomes_corridos"] else p5.rolo_de_nomes(blocos)
+                coluna = p5.coluna_de_fotos(fotos)
+                render.aplicar_estilo(estilo_antes)
+            return p5.tempos_dos_creditos(rolo.height, coluna.height, len(t["cargos"]), t["cargos_primeiro"],
+                                          t["partes"], t["velocidade"])["dur"]
+        casos = [("como esta", {}), ("os cargos primeiro", {"cargos_primeiro": True}),
+                 ("o titulo antes, sem cargos e corridos", {"partes": ["titulo", "rolo"], "nomes_corridos": True}),
+                 ("o titulo, os cargos e o rolo", {"partes": ["titulo", "cargos", "rolo"]}),
+                 ("as fotos a 100", {"velocidade": {"fotos": 100}}),
+                 ("os nomes a 30", {"nomes_corridos": True, "velocidade": {"nomes": 30}})]
+        # a medida usa o estilo da montagem e devolve o deste processo: ve-se logo a seguir a ela, antes
+        # de o do_ponto5() o repor
+        jc.duracao_dos_creditos(({"creditos": {}}, "ensaio"))
+        if render.estilo_ativo() != estilo_antes:
+            problemas.append("a medida deixou o estilo do processo em %s" % render.estilo_ativo())
+            with contextlib.redirect_stdout(io.StringIO()):
+                render.aplicar_estilo(estilo_antes)
+        duracoes = {}
+        for nome, cr in casos:
+            duracoes[nome] = jc.duracao_dos_creditos(({"creditos": cr}, "ensaio"))
+            if abs(duracoes[nome] - do_ponto5(cr)) > 1e-9:
+                problemas.append("%s: a juncao da %.3f s e o ponto5 %.3f" % (nome, duracoes[nome], do_ponto5(cr)))
+        if len({round(v, 6) for v in duracoes.values()}) < 5:
+            problemas.append("as configuracoes dao quase todas a mesma duracao, a medida nao distingue: %s"
+                             % {k: round(v, 3) for k, v in duracoes.items()})
+        if abs(duracoes["os cargos primeiro"] - duracoes["como esta"] - 0.9) > 1e-6:
+            problemas.append("os cargos primeiro nao somam os 0,9 s da 109")
+        if render.estilo_ativo() != estilo_antes:
+            problemas.append("a medida deixou o estilo do processo em %s" % render.estilo_ativo())
+        sys.argv = ["juncao_creditos.py", "--creditos", "167,787"]
+        if jc.duracao_dos_creditos(({}, "ensaio")) != 167.787:
+            problemas.append("o --creditos deixou de mandar")
+    finally:
+        p5.ler_convidados, p5.folha_mais_recente, p5.fotos_marcadas, render.ler_estilo, sys.argv = guardado
+        with contextlib.redirect_stdout(io.StringIO()):
+            render.aplicar_estilo({})
+        shutil.rmtree(pasta, ignore_errors=True)
+    verifica("juncao dos creditos: a duracao com as partes, os corridos e a velocidade", not problemas,
+             "; ".join(problemas[:3]) if problemas else
+             "%d configuracoes iguais ao ponto5, os cargos primeiro com mais 0,9 s, o estilo como estava" % len(casos))
+
+
+def teste_srt_e_guia_com_a_legenda_numa_linha_e_a_posicao():
+    """O .srt leva a legenda numa linha como o render a escreve, e o guia diz a posicao, que o .srt nao leva.
+
+    O DEFEITO (3 de outubro): o legendas_srt.py nao conhecia o clip.x1 nem a posicao. Uma legenda que o
+    filme escreve numa linha saia no .srt partida nas mudancas de linha escritas, e uma legenda subida
+    ou encostada a esquerda ia para o DaVinci sem ninguem saber que no filme estava noutro sitio. O .srt
+    so tem tempos e texto: a linha unica vai nele, e a posicao vai no guia (a de todas na faixa, a de um
+    clip na lista das que se mexem a mao). SEM AS CHAVES o plano, as linhas e o guia sao os de sempre.
+    """
+    import contextlib
+    import io
+    import render
+    import legendas_srt as S
+    import davinci_pacote as P
+    problemas = []
+    dialogo = "- Gostas?\n- Gosto!"
+    clip = dict(tipo="foto", ordem="3", texto_ecra=dialogo, duracao_s="4", transicao_s="0.5")
+    with contextlib.redirect_stdout(io.StringIO()):
+        render.aplicar_estilo({})
+    sem = S.plano_da_legenda(dict(clip))
+    vazia = S.plano_da_legenda(dict(clip, opcoes_clip=""))
+    so_li = S.plano_da_legenda(dict(clip, opcoes_clip='{"li": true}'))
+    if sem != {"fixa": dialogo, "tamanho": None} or vazia != sem or so_li != sem:
+        problemas.append("sem x1 nem posicao o plano mudou: %s / %s / %s" % (sem, vazia, so_li))
+    com = S.plano_da_legenda(dict(clip, opcoes_clip='{"x1": true, "lp": {"dx": 40, "dy": -120}}'))
+    if not com or not com.get("leg") or not com["leg"]["x1"] or com["leg"]["lp"] != (40, -120):
+        problemas.append("o plano nao leva as opcoes do clip: %s" % (com,))
+    legendas = [{"q0": 0, "q1": 50, "texto": dialogo, "tamanho": 46},
+                {"q0": 60, "q1": 110, "texto": dialogo, "tamanho": 46, "leg": {"x1": True, "lp": (40, -120), "li": False}},
+                {"q0": 120, "q1": 170, "texto": TEXTOS_DA_LEGENDA_P234[3], "tamanho": 46,
+                 "leg": {"x1": True, "lp": (0, 0), "li": False}}]
+    e = S.entradas_do_filme(legendas, 0)
+    if e[0]["linhas"] != ["- Gostas?", "- Gosto!"] or "leg" in e[0]:
+        problemas.append("a legenda sem opcoes mudou: %s" % e[0])
+    if e[1]["linhas"] != ["- Gostas? - Gosto!"]:
+        problemas.append("a legenda numa linha saiu no .srt como %s" % e[1]["linhas"])
+    if e[2]["linhas"] != render.linhas_legenda(TEXTOS_DA_LEGENDA_P234[3])[1] or len(e[2]["linhas"]) < 2:
+        problemas.append("a que nao cabe numa linha nao saiu partida como no filme: %s" % e[2]["linhas"])
+    if "- Gostas? - Gosto!\r\n" not in S.texto_srt(e):
+        problemas.append("o .srt nao tem a linha unica")
+    if [x["n"] for x in S.com_posicao_propria(e)] != [2] or S.posicao_de(e[1])[:2] != (40, -120):
+        problemas.append("as legendas com posicao so delas: %s" % [x["n"] for x in S.com_posicao_propria(e)])
+    if S.frase_da_posicao(40, -120) != "40 px para a direita e 120 px para cima" or S.frase_da_posicao(0, 0) != "":
+        problemas.append("a frase da posicao: %r" % S.frase_da_posicao(40, -120))
+    # o guia: sem posicao o de sempre; com a de todas e a de um clip, diz as duas
+    simples = [dict(x) for x in e[:1]]
+    try:
+        with contextlib.redirect_stdout(io.StringIO()):
+            render.aplicar_estilo({})
+            sempre = P.guia("v3", "C:/x", "C:/x/f.mp4", "C:/x/f.mp4", "C:/x/legendas.srt", simples, [], {}, False)
+            com_leg = P.guia("v3", "C:/x", "C:/x/f.mp4", "C:/x/f.mp4", "C:/x/legendas.srt", e, [], {}, False)
+            render.aplicar_estilo({"legenda": {"posicao": {"dx": -200, "dy": -100, "alinhamento": "esquerda"}}})
+            subida = P.guia("v3", "C:/x", "C:/x/f.mp4", "C:/x/f.mp4", "C:/x/legendas.srt", simples, [], {}, False)
+    finally:
+        with contextlib.redirect_stdout(io.StringIO()):
+            render.aplicar_estilo({})
+    # o guia parte as linhas a 100 colunas: procura-se com os espacos juntos
+    sempre_j, com_leg_j, subida_j = (" ".join(x.split()) for x in (sempre, com_leg, subida))
+    if "Alignment: ao centro. Position: centrada" not in sempre_j or "POSIÇÃO ESCOLHIDA NA MESA" in sempre_j \
+            or "POSIÇÃO SÓ DELAS" in sempre_j or "numa só linha na Mesa" in sempre_j:
+        problemas.append("sem posicao nem opcoes o guia ja nao e o de sempre")
+    if "POSIÇÃO SÓ DELAS" not in com_leg_j or "2 (40 px para a direita e 120 px para cima)" not in com_leg_j \
+            or "numa só linha na Mesa" not in com_leg_j:
+        problemas.append("o guia nao diz a legenda com posicao propria nem as de uma linha")
+    if "Alignment: à esquerda" not in subida_j \
+            or "a assentar a %d píxeis" % (render.LEGENDA_TEXTO + 100) not in subida_j \
+            or "O .srt não leva posição" not in subida_j or "200 píxeis para a esquerda" not in subida_j:
+        problemas.append("o guia nao diz a posicao de todas as legendas")
+    for nome, texto in (("sempre", sempre), ("com posicao", subida), ("com opcoes", com_leg)):
+        if "\u2014" in texto or "\u2013" in texto:
+            problemas.append("o guia %s tem travessoes" % nome)
+    verifica(".srt e guia: a legenda numa linha vai, a posicao diz-se", not problemas,
+             "; ".join(problemas[:3]) if problemas else
+             "a linha unica no .srt, a que nao cabe partida como no filme, a posicao de todas e a de um clip no guia")
+
+
+def teste_avisos_medem_na_letra_do_contador_e_a_margem_de_uma_linha():
+    """Os textos do contador e da fita medem-se na letra do contador; e a largura de uma linha e um numero so.
+
+    DOIS ACERTOS de 3 de outubro. (1) O render.avisos_dos_textos() media os caracteres em falta dos
+    textos do contador e da fita sempre em Arial Bold, mesmo com est.estilo.contador.fonte: um sinal
+    que a letra escolhida nao tem saia numa caixa vazia sem aviso, e um que so o Arial nao tem avisava
+    sem razao. Agora mede na letra que o linha_tempo abre para desenhar. (2) A largura em que uma
+    legenda com x1 tem de caber e render.LEGENDA_LARGURA_NUMA_LINHA, 1660 como hoje: o que decide, o
+    que avisa e a margem do bloco leem todos esse numero, e mudando so ele (1762, a decisao que ele
+    ainda nao tomou) a legenda do clip 10 cabe numa linha, ao centro, sem sair do ecra.
+    """
+    import contextlib
+    import io
+    import render
+    problemas = []
+    clips = [{"tipo": "contador", "ordem": 3, "texto_ecra": "2023>04/10/2026|2024=sinal \u01c5 e \u20aa"},
+             {"tipo": "marcos", "ordem": 4, "texto_ecra": "1995@0-0.7|17/01 Terramoto \u20aa em Kobe"},
+             {"tipo": "foto", "ordem": 5, "texto_ecra": "legenda \u01c5"}]
+    letras = render.letras_da_mesa()
+    largura_antes = render.LEGENDA_LARGURA_NUMA_LINHA
+    try:
+        with contextlib.redirect_stdout(io.StringIO()):
+            render.aplicar_estilo({})
+        sem = render.avisos_dos_textos(clips)
+        outras = []
+        for ident in sorted(letras):
+            with contextlib.redirect_stdout(io.StringIO()):
+                render.aplicar_estilo({"contador": {"fonte": ident}}, [])
+            agora = render.avisos_dos_textos(clips)
+            if [a for a in agora if "clip 5" in a] != [a for a in sem if "clip 5" in a]:
+                problemas.append("a letra do contador %s mudou o aviso de uma legenda" % ident)
+            if agora != sem:
+                outras.append(ident)
+        if not outras:
+            problemas.append("nenhuma letra de data/fontes.json muda os avisos do contador: a medida nao distingue")
+        with contextlib.redirect_stdout(io.StringIO()):
+            render.aplicar_estilo({})
+        if render.avisos_dos_textos(clips) != sem:
+            problemas.append("sem a letra do contador os avisos nao voltaram aos de sempre")
+        # a largura de uma linha: 1660 como hoje, e um numero so
+        if largura_antes != 1660 or render.LEGENDA_LARGURA_UTIL != 1660:
+            problemas.append("a largura de uma linha deixou de ser 1660 sem ele decidir: %s" % largura_antes)
+        with contextlib.redirect_stdout(io.StringIO()):
+            render.aplicar_estilo({"legenda": {"fonte": "playfair_display", "tamanho": 59}})
+        frase = "Com a mãe, o irmão e as tias (que, pela idade, podiam ser primas)."
+        clip = [{"tipo": "foto", "ordem": "10", "texto_ecra": frase, "opcoes_clip": '{"x1": true}'}]
+        cabe, precisa, ha = render.legenda_numa_linha(frase)
+        if "playfair_display" in letras and render.abrir_letra("playfair_display", 59, avisar=False) is not None:
+            if cabe or not 1660 < precisa <= 1800 or len(render.avisos_das_legendas(clip)) != 1:
+                problemas.append("a 1660 a frase do clip 10 devia nao caber e avisar: precisa de %d" % precisa)
+            render.LEGENDA_LARGURA_NUMA_LINHA = precisa
+            um = {"x1": True, "lp": (0, 0), "li": False}
+            if len(render.linhas_legenda(frase, uma_linha=True)[1]) != 1 or render.avisos_das_legendas(clip):
+                problemas.append("com a largura a %d a frase nao ficou numa linha, ou ainda avisa" % precisa)
+            for alinhamento in ("centro", "esquerda", "direita"):
+                with contextlib.redirect_stdout(io.StringIO()):
+                    render.aplicar_estilo({"legenda": {"fonte": "playfair_display", "tamanho": 59,
+                                                       "posicao": {"alinhamento": alinhamento}}})
+                capa = render.faixa_texto(frase, clip_leg=um)
+                letras_x = capa[0].convert("L").point(lambda v: 255 if v > 128 else 0).getbbox()
+                margem = (1920 - precisa) / 2.0
+                if abs(letras_x[0] - margem) > 6 or abs((1920 - letras_x[2]) - margem) > 6:
+                    problemas.append("a linha larga alinhada a %s vai de %d a %d, e devia ficar ao centro com %d px "
+                                     "de cada lado" % (alinhamento, letras_x[0], letras_x[2], margem))
+            render.LEGENDA_LARGURA_NUMA_LINHA = largura_antes
+            # e de volta aos 1660 a margem e a de sempre, tambem alinhada a esquerda
+            if render.margem_do_bloco([precisa]) != render.LEGENDA_MARGEM_LADO:
+                problemas.append("a 1660 a margem do bloco deixou de ser a de sempre")
+    finally:
+        render.LEGENDA_LARGURA_NUMA_LINHA = largura_antes
+        with contextlib.redirect_stdout(io.StringIO()):
+            render.aplicar_estilo({})
+    verifica("avisos na letra do contador, e a largura de uma linha num numero so", not problemas,
+             "; ".join(problemas[:3]) if problemas else
+             "%d letras mudam os avisos do contador e nenhuma os da legenda; a 1660 o clip 10 precisa de %d px e "
+             "nao cabe, e so com o numero mudado fica numa linha ao centro" % (len(outras), precisa))
+
+
+def teste_avisos_do_parado_fora_do_contador_e_da_peca_que_acaba_acesa():
+    """Dois avisos do montar que a revisao de 3 de outubro pediu: o cp fora de um contador, e a peca.
+
+    O DEFEITO 1: o clip.cp so se lia nos contadores, e num clip de outro tipo ficava de fora CALADO, ao
+    contrario do x1, do lp e do li, que dizem "fica de fora". Um clip que foi contador e passou a foto
+    trazia o cp de antes e ninguem sabia porque nao parava.
+
+    O DEFEITO 2: com "Uma so peca" a fita de 1995 entra em corte seco a seguir ao contador, porque o
+    primeiro fotograma dela e o ultimo dele. Desde 3 de outubro um contador pode acabar com texto
+    ACESO (a data inteira de "2026>12/09/1995", ou o texto do ano de chegada com parado no fim), e
+    entao os dois fotogramas ja nao sao iguais: o texto some de um fotograma para o outro. O montar
+    avisa e nao mexe no corte. A medida faz-se aqui pelo desenho do render, para o aviso dizer o que
+    o filme faz: acaba aceso se e so se o ultimo fotograma do contador difere, a vista, do primeiro
+    da fita (mais de 100 niveis em 255; o rotulo de sempre acaba a 8%, que sao uns 20).
+    """
+    import contextlib
+    import io
+    import json
+    import tempfile
+    import numpy as np
+    import montar_da_mesa
+    import render
+    problemas = []
+    fita = "1995@0-0.7|17/01 Terramoto em Kobe"
+    casos = [("2026>12/09/1995", 9.0, True),
+             ("2026>1995|1995=Nascem~2.0", 11.0, True),
+             ("2026>1995|1995=Nascem", 9.0, False),
+             ("2026>1995|4 de outubro de 2026", 9.0, False),
+             ("2026>1995|4 de outubro de 2026~2.0", 11.0, False)]
+    guardado = _resolucao(render, 1920, 1080)
+    try:
+        with contextlib.redirect_stdout(io.StringIO()):
+            render.aplicar_estilo(ESTILO_NUMA_PECA)
+            ini = np.asarray(render.desenhar(_pronto(render, fita, "marcos", 6.0), 0.0, 6.0)).astype(int)
+            for texto, dur, aceso in casos:
+                fim = np.asarray(render.desenhar(_pronto(render, texto, "contador", dur),
+                                                 dur - 1.0 / 25, dur)).astype(int)
+                # "aceso" e a 100%: o rotulo de sempre, a apagar para o corte, ainda la esta a 8% no
+                # ultimo fotograma (uns 20 niveis em 255), e isso ja era assim antes da peca
+                difere = int(np.abs(fim - ini).max()) > 100
+                diz = bool(montar_da_mesa.contador_acaba_aceso(texto))
+                if difere != aceso or diz != aceso:
+                    problemas.append("%r: o desenho difere %s e o montar diz %s, devia ser %s"
+                                     % (texto, difere, diz, aceso))
+    finally:
+        render.aplicar_estilo({})
+        render.L, render.A = guardado
+    if montar_da_mesa.contador_acaba_aceso("lixo") or montar_da_mesa.contador_acaba_aceso(None):
+        problemas.append("um contador que nao se le acaba aceso")
+
+    pasta = tempfile.mkdtemp(prefix="teste_peca_acesa_")
+    cam = os.path.join(pasta, "estado.json")
+
+    def montar(clips, peca=True):
+        estado = {"versoes": [{"id": "t", "nome": "t", "clips": clips}]}
+        if peca:
+            estado["estilo"] = ESTILO_NUMA_PECA
+        json.dump(estado, open(cam, "w", encoding="utf-8"), ensure_ascii=False)
+        antes = (montar_da_mesa.ESTADO, montar_da_mesa.DESTINO, sys.argv)
+        montar_da_mesa.ESTADO, montar_da_mesa.DESTINO = cam, pasta
+        sys.argv = ["montar_da_mesa.py", "t", "--nome", "t"]
+        saida = io.StringIO()
+        try:
+            with contextlib.redirect_stdout(saida):
+                montar_da_mesa.main()
+        finally:
+            montar_da_mesa.ESTADO, montar_da_mesa.DESTINO, sys.argv = antes
+            render.aplicar_estilo({})
+        return saida.getvalue(), list(csv.DictReader(open(os.path.join(pasta, "t.csv"), encoding="utf-8-sig")))
+
+    def par(x, **mais):
+        return [dict({"t": "contador", "x": x, "d": 9, "c": 0.7, "r": "fiel"}, **mais),
+                {"t": "marcos", "x": fita, "d": 6, "c": 0.7, "r": "fiel"}]
+
+    some = "some de um fotograma para o outro"
+    for clips, peca, espera, nome in (
+            (par("2026>12/09/1995"), True, True, "a data de chegada com a peca"),
+            (par("2026>1995|1995=Nascem", cp=2), True, True, "o texto da chegada com parado e a peca"),
+            (par("2026>1995|1995=Nascem"), True, False, "o texto da chegada sem parado"),
+            (par("2026>1995|4 de outubro de 2026", cp=2), True, False, "o rotulo da partida com parado"),
+            (par("2026>12/09/1995"), False, False, "a data de chegada sem a peca")):
+        texto, linhas = montar(clips, peca)
+        if (some in texto) != espera:
+            problemas.append("%s: o aviso %s" % (nome, "faltou" if espera else "apareceu"))
+        fitas = [l["transicao_s"] for l in linhas if l["tipo"] == "marcos"]
+        if peca and fitas != ["0.0"]:
+            problemas.append("%s: a fita deixou de entrar a seco (%s)" % (nome, fitas))
+    # o corte seco que ja vinha da Mesa (c = 0) tambem avisa: o texto some na mesma
+    clips = par("2026>12/09/1995")
+    clips[1]["c"] = 0
+    if some not in montar(clips)[0]:
+        problemas.append("com o corte seco escrito na Mesa o aviso faltou")
+
+    # O CP FORA DE UM CONTADOR
+    base = [{"t": "foto", "i": "f0012", "d": 4, "c": 0.7, "r": "fiel"},
+            {"t": "cartao", "x": "Era uma vez", "d": 3.6, "c": 0.7, "r": "fiel"}]
+    l0, _s0, o0 = _monta_em_pasta(base, nome="cpfora")
+    l5, _s5, o5 = _monta_em_pasta([dict(base[0], cp=5), dict(base[1], cp=2)], nome="cpfora")
+    fora = "tem parado no fim: so os contadores o levam, fica de fora"
+    if fora in o0:
+        problemas.append("sem cp o aviso apareceu")
+    if o5.count(fora) != 2 or "o clip 1 e foto" not in o5 or "o clip 2 e cartao" not in o5:
+        problemas.append("o cp numa foto e num cartao nao avisou duas vezes")
+    if l5 != l0:
+        problemas.append("o cp fora de um contador mudou a montagem")
+    lz, _sz, oz = _monta_em_pasta([dict(base[0], cp=0), dict(base[1], cp="")], nome="cpfora")
+    if fora in oz or lz != l0:
+        problemas.append("um cp a zero ou vazio fora de um contador avisou ou mudou a montagem")
+    verifica("avisos: o parado fora do contador, e a peca que acaba acesa", not problemas,
+             "; ".join(problemas)[:300] if problemas else
+             "o cp numa foto diz que fica de fora; a peca avisa so quando o desenho difere")
+
+
 def main():
     rapido = "--rapido" in sys.argv
     print("TESTES DE REGRESSAO")
@@ -19628,6 +20368,16 @@ def main():
     print("os creditos, 3 de outubro")
     teste_creditos_partes_e_nomes_corridos()
     teste_creditos_velocidade()
+    print("os acertos de 3 de outubro: os sons automaticos e a marca a continuar")
+    teste_som_auto_liga_e_desliga()
+    teste_marca_a_continuar()
+    print("os acertos de 3 de outubro: o ensaio a escala, a juncao dos creditos, o .srt e os avisos")
+    teste_escala_encolhe_os_textos()
+    teste_juncao_mede_os_creditos_como_o_ponto5()
+    teste_srt_e_guia_com_a_legenda_numa_linha_e_a_posicao()
+    teste_avisos_medem_na_letra_do_contador_e_a_margem_de_uma_linha()
+    print("o fecho de 3 de outubro: os dois avisos que a revisao pediu")
+    teste_avisos_do_parado_fora_do_contador_e_da_peca_que_acaba_acesa()
     print()
     print("%d passaram, %d falharam%s"
           % (len(PASSOU), len(FALHAS),

@@ -89,6 +89,28 @@ def sha256(caminho):
     return h.hexdigest()
 
 
+def medir(caminho):
+    """O que se le do proprio ficheiro: sha256, largura, altura, data EXIF e equipamento.
+
+    Faz tambem a miniatura de proxies/, se faltar. Esta fora do main() desde 3 de outubro
+    para o scripts/entrada_rapida.py poder guardar a resposta pelo tamanho e pela data do
+    ficheiro e nao voltar a ler as 741 fotos por causa de tres novas. Aqui nao ha cache
+    nenhuma: quem corre o inventario.py le tudo, como sempre.
+    """
+    h = sha256(caminho)
+    with Image.open(caminho) as bruta:
+        img = ImageOps.exif_transpose(bruta)
+        larg, alt = img.size
+        dexif = data_exif(bruta)
+        equip = equipamento(bruta)
+        proxy = os.path.join(PROXIES, h[:12] + ".jpg")
+        if not os.path.exists(proxy):
+            mini = img.convert("RGB")
+            mini.thumbnail((LADO_PROXY, LADO_PROXY), Image.LANCZOS)
+            mini.save(proxy, "JPEG", quality=82, optimize=True)
+    return h, larg, alt, dexif, equip
+
+
 # Equipamentos que NAO sao camaras. Se a foto veio de um destes, a data EXIF e
 # o dia em que a mae da Clara a passou a scanner, nao o dia em que foi tirada.
 # Uma foto de bebe do Tiago aparece datada de 2013 por esta razao exata.
@@ -318,17 +340,7 @@ def main():
                 pasta = etiqueta if rel == "." else "%s/%s" % (
                     etiqueta, rel.replace("\\", "/"))
                 try:
-                    h = sha256(caminho)
-                    with Image.open(caminho) as bruta:
-                        img = ImageOps.exif_transpose(bruta)
-                        larg, alt = img.size
-                        dexif = data_exif(bruta)
-                        equip = equipamento(bruta)
-                        proxy = os.path.join(PROXIES, h[:12] + ".jpg")
-                        if not os.path.exists(proxy):
-                            mini = img.convert("RGB")
-                            mini.thumbnail((LADO_PROXY, LADO_PROXY), Image.LANCZOS)
-                            mini.save(proxy, "JPEG", quality=82, optimize=True)
+                    h, larg, alt, dexif, equip = medir(caminho)
                 except Exception as e:
                     erros.append((caminho, "%s: %s" % (type(e).__name__, e)))
                     continue

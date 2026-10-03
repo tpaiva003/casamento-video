@@ -25,6 +25,8 @@ Uso:
     py -3.11 scripts/render.py v1a
     py -3.11 scripts/render.py v1a --sem-som
     py -3.11 scripts/render.py v1a --ate 120     so os primeiros 120 segundos
+    py -3.11 scripts/render.py v3 --escala 0.25    um ensaio a um quarto do tamanho, com os textos
+                                                   na mesma proporcao e as linhas do filme
     py -3.11 scripts/render.py v3 --fatias 7       7 processos a desenhar, um encoder
     py -3.11 scripts/render.py v3 --fatias auto    os nucleos menos um, ate 8
     py -3.11 scripts/render.py v3 --guardar-quadros   deixa a cache dos videos do corpo
@@ -38,6 +40,7 @@ O pacote do DaVinci inteiro (o filme sem legendas, os creditos, o .srt e o guia)
 """
 import csv
 import datetime
+import functools
 import itertools
 import json
 import math
@@ -354,6 +357,86 @@ def preparar_quadros_dos_videos(ff, estado):
 
 
 L, A, FPS = 1920, 1080, 25
+
+# ------------------------------------------------------------ o ensaio a escala, 3 de outubro
+# O --escala FAZ UM FILME MAIS PEQUENO, E OS TEXTOS ENCOLHEM COM ELE. Ate 3 de outubro so encolhiam as
+# fotos: a legenda, os cartoes, o nome do bebe e os textos do contador e da fita estao escritos em
+# pixeis de um ecra de 1080 e saiam do mesmo tamanho num ecra de 270, ou seja quatro vezes maiores
+# (a legenda a 59 enchia meio ecra no ensaio das 07:24). Um ensaio serve para ver o filme inteiro em
+# seis minutos antes de o render de uma hora, e com as legendas gigantes nao mostrava o filme.
+#
+# COMO: essas pecas desenham-se como no filme, num ecra de 1920 x 1080, com as mesmas linhas partidas
+# nos mesmos sitios, e reduzem-se para o ecra do ensaio. Nada se mede outra vez num corpo pequeno: uma
+# legenda que tem duas linhas no filme tem duas linhas no ensaio. O contador e a fita de 1995
+# desenham-se a 1080 e reduzem-se a cada fotograma (o linha_tempo recebe o ecra como argumento).
+#
+# SO O main() LIGA ISTO, com o --escala, e passa-o a cada fatia por extenso (--textos). Com ENSAIO a
+# 1.0, que e o filme verdadeiro e tudo o que nao passa pelo --escala (os testes que desenham a 480 x
+# 270 a mao, com as suas assinaturas), cada funcao e a chamada de sempre, ao byte.
+REF_L, REF_A = L, A      # o ecra em que as medidas dos textos estao escritas
+ENSAIO = 1.0             # A / 1080 num render --escala; 1.0 em tudo o resto
+
+
+def na_escala(pixeis_a_1080):
+    """Uma medida de texto escrita para 1080 no ecra deste render: a mesma, menos num ensaio a escala."""
+    return pixeis_a_1080 if ENSAIO == 1.0 else pixeis_a_1080 * ENSAIO
+
+
+def em_1080(funcao):
+    """Decora uma conta dos textos que esta escrita para o ecra de 1080: num ensaio a escala corre-a
+    com o ecra de 1080 (L, A e ENSAIO de volta ao filme), e fora dele chama-a tal e qual."""
+    @functools.wraps(funcao)
+    def embrulho(*args, **kwargs):
+        global L, A, ENSAIO
+        if ENSAIO == 1.0:
+            return funcao(*args, **kwargs)
+        guardado = (L, A, ENSAIO)
+        L, A, ENSAIO = REF_L, REF_A, 1.0
+        try:
+            return funcao(*args, **kwargs)
+        finally:
+            L, A, ENSAIO = guardado
+    return embrulho
+
+
+def camada_reduzida(funcao):
+    """Decora quem desenha uma camada do ecra inteiro, (cor, mascara) ou None: num ensaio a escala
+    desenha-a a 1080, como no filme, e reduz as duas para o ecra do ensaio."""
+    a_1080 = em_1080(funcao)
+
+    @functools.wraps(funcao)
+    def embrulho(*args, **kwargs):
+        if ENSAIO == 1.0:
+            return funcao(*args, **kwargs)
+        camada = a_1080(*args, **kwargs)
+        if camada is None:
+            return None
+        return tuple(im.resize((L, A), Image.LANCZOS) for im in camada)
+    return embrulho
+
+
+def letreiro_reduzido(funcao):
+    """Decora quem faz um letreiro (cartao, nome do bebe): num ensaio a escala faz-o como no filme,
+    com as linhas partidas na largura de 1920, e reduz a imagem na proporcao do ensaio. O
+    pousar_letreiro() poe-no no ecra pelas mesmas contas, que sao todas proporcionais."""
+    a_1080 = em_1080(funcao)
+
+    @functools.wraps(funcao)
+    def embrulho(*args, **kwargs):
+        if ENSAIO == 1.0:
+            return funcao(*args, **kwargs)
+        let = a_1080(*args, **kwargs)
+        return let.resize((max(1, int(round(let.width * ENSAIO))), max(1, int(round(let.height * ENSAIO)))),
+                          Image.LANCZOS)
+    return embrulho
+
+
+def fita_no_ecra(desenho, *args, **extra):
+    """Um fotograma do contador ou da fita de 1995 (linha_tempo.anos, datas ou meses) no ecra deste
+    render. As medidas dos textos dela sao de 1080: num ensaio a escala desenha-se a 1080 e reduz-se."""
+    if ENSAIO == 1.0:
+        return desenho(L, A, *args, **extra)
+    return desenho(REF_L, REF_A, *args, **extra).resize((L, A), Image.LANCZOS)
 # QUANTOS PROCESSOS DESENHAM OS FOTOGRAMAS quando ninguem diz --fatias. Sete, desde 16 de
 # setembro (decisao 073): o Tiago so o queria "se realmente a qualidade for igual a que
 # temos tido a fazer o render completo e se o tempo realmente baixar", e as medidas deram
@@ -604,10 +687,20 @@ SEM_LEGENDAS = False
 # em vez de sair do ecra, que com o dx de todas as legendas e uma frase comprida acontecia. O
 # alinhamento poe as linhas ao centro (como hoje), encostadas a margem da esquerda ou a da direita.
 LEGENDA_MARGEM_LADO = 130            # a margem de cada lado, a da largura util de hoje (L - 260)
-# A largura em que a legenda de um clip com x1 tem de caber para ficar numa linha: a largura util de
-# hoje, 1660 px a 1080 (o contrato: "a mesma margem lateral das legendas de hoje"). E um numero so, usado
-# pelo linhas_legenda() e pelo legenda_numa_linha(), para a regra se mudar num sitio se ele a mudar.
-LEGENDA_LARGURA_NUMA_LINHA = L - 2 * LEGENDA_MARGEM_LADO
+# A LARGURA EM QUE UMA LEGENDA COM x1 TEM DE CABER PARA FICAR NUMA LINHA, px a 1080. E O UNICO NUMERO DA
+# REGRA: decide-se aqui e em mais lado nenhum (o linhas_legenda(), o legenda_numa_linha(), os avisos do
+# render e do montar, o .srt e a margem do bloco, margem_do_bloco(), leem-no todos daqui). A Mesa tem a
+# sua copia na conta do "Numa so linha" e tem de mudar com ele.
+#   1660  COMO ESTA: a largura util de hoje, 130 px de margem de cada lado (o contrato: "a mesma margem
+#         lateral das legendas de hoje"). A legenda do clip 10, em Playfair a 59, precisa de 1762 px e
+#         nao cabe: sai em duas linhas, com aviso.
+#   1728  a zona segura dos creditos (90% da largura, 96 px de cada lado). O clip 10 continua a nao caber.
+#   1762  79 px de margem de cada lado: e o menor valor em que o clip 10 cabe numa linha a 59. Fica 17 px
+#         fora da zona segura de cada lado: um projetor que corte mais de 4% das bordas come as pontas.
+# NAO SE MUDA SEM ELE DECIDIR (3 de outubro): o pedido foi "numa so linha, sem alterar o tamanho da letra",
+# e a margem e a guarda do overscan do projetor. As legendas sem x1 partem-se sempre nos L - 260 de hoje.
+LEGENDA_LARGURA_UTIL = L - 2 * LEGENDA_MARGEM_LADO      # 1660 a 1080: a largura util de hoje
+LEGENDA_LARGURA_NUMA_LINHA = LEGENDA_LARGURA_UTIL
 POSICAO_DX = (-600, 600)             # px a 1080, positivo para a direita
 POSICAO_DY = (-500, 0)               # px a 1080, negativo para cima
 POSICAO_ALINHAMENTOS = ("centro", "esquerda", "direita")
@@ -670,13 +763,30 @@ def posicao_da_legenda(clip_leg=None):
     return dx, dy, pos.get("alinhamento", "centro")
 
 
+@em_1080
+def margem_do_bloco(larguras):
+    """A margem de cada lado do bloco das linhas da legenda: a de sempre, LEGENDA_MARGEM_LADO.
+
+    So e menor numa legenda numa linha (x1) mais larga do que a largura util de hoje, que so existe se
+    o LEGENDA_LARGURA_NUMA_LINHA subir acima dela: ai o bloco fica ao centro, com a margem que lhe sobra,
+    em vez de encostar a esquerda e sair pela direita. Com o 1660 de hoje e sempre a de sempre.
+    """
+    if LEGENDA_LARGURA_NUMA_LINHA <= LEGENDA_LARGURA_UTIL:
+        return LEGENDA_MARGEM_LADO          # como esta: nenhuma conta nova, em nenhuma resolucao
+    largo = max(larguras) if larguras else 0
+    if largo <= L - 2 * LEGENDA_MARGEM_LADO:
+        return LEGENDA_MARGEM_LADO
+    return (L - largo) / 2.0
+
+
+@em_1080
 def x_das_linhas(larguras, dx, alinhamento):
     """O x de cada linha da legenda, com o bloco das linhas sempre dentro da largura util.
 
     Ao centro e sem dx e o (L - w) / 2 de sempre, ao bit. Encostada a esquerda as linhas comecam na
     margem, a direita acabam nela, e o dx anda com o bloco ate ele tocar numa das margens.
     """
-    m = LEGENDA_MARGEM_LADO
+    m = margem_do_bloco(larguras)
     dx = dx_efetivo(larguras, dx, alinhamento)
     if alinhamento == "esquerda":
         return [m + dx for _w in larguras]
@@ -687,6 +797,7 @@ def x_das_linhas(larguras, dx, alinhamento):
     return [(L - w) / 2 + dx for w in larguras]
 
 
+@em_1080
 def dx_efetivo(larguras, dx, alinhamento):
     """O dx que o bloco das linhas anda de facto: o pedido, ate o bloco tocar numa margem."""
     folga = max(0, (L - 2 * LEGENDA_MARGEM_LADO) - (max(larguras) if larguras else 0))
@@ -710,6 +821,7 @@ def legenda_numa_linha(texto, tamanho=None):
     return precisa <= LEGENDA_LARGURA_NUMA_LINHA, int(math.ceil(precisa)), LEGENDA_LARGURA_NUMA_LINHA
 
 
+@em_1080
 def linhas_legenda(texto, tamanho=None, desenho=None, uma_linha=False):
     """Como o texto da legenda de baixo se parte: (tamanho, linhas, fonte).
 
@@ -745,6 +857,7 @@ def bloco_legenda(texto, tamanho=None, uma_linha=False):
     return int(tamanho * 1.35) * len(linhas)
 
 
+@camada_reduzida
 def faixa_texto(texto, tamanho=None, bloco_max=None, clip_leg=None):
     """Desenha a legenda uma vez. Devolve (cor, mascara) para colagem rapida.
 
@@ -887,9 +1000,14 @@ def legenda_por_foto(textos, tamanho=None, clip_leg=None):
     # primeira fila abaixo da banda, e essa mais um: sem o mais um, a ultima fila da
     # faixa ficava fora da mistura da troca e piscava. Com a posicao (3 de outubro) as duas
     # sobem o dy da faixa.
+    topo, fundo = A - LEGENDA_TEXTO - banda - LEGENDA_ALMOFADA + dy, A - LEGENDA_FUNDO + 1 + dy
+    if ENSAIO != 1.0:
+        # num ensaio a escala a banda conta-se a 1080, onde as faixas foram desenhadas, e reduz-se
+        topo = int(math.floor((REF_A - LEGENDA_TEXTO - banda - LEGENDA_ALMOFADA + dy) * ENSAIO))
+        fundo = min(A, int(math.ceil((REF_A - LEGENDA_FUNDO + 1 + dy) * ENSAIO)))
     return {"textos": list(textos), "tamanho": tamanho,
             "faixas": {t: faixa_texto(t, tamanho, banda, clip_leg) for t in distintos},
-            "topo": A - LEGENDA_TEXTO - banda - LEGENDA_ALMOFADA + dy, "fundo": A - LEGENDA_FUNDO + 1 + dy,
+            "topo": topo, "fundo": fundo,
             "_bandas": {}}
 
 
@@ -1113,6 +1231,7 @@ def _colorir_letreiro(m, semente, brilho_de=None):
     return Image.fromarray(np.clip(cor, 0, 255).astype(np.uint8), "RGB")
 
 
+@letreiro_reduzido
 def letreiro(linhas, tamanho, espaco, semente=7, entrelinha=1.45):
     m, cores = _pecas_do_letreiro(linhas, tamanho, espaco, entrelinha)
     if cores is None:
@@ -1147,6 +1266,7 @@ def _linhas_curtas(texto, tamanho=LETREIRO_CURTO_TAMANHO):
     return linhas + ([atual] if atual else [])
 
 
+@letreiro_reduzido
 def letreiro_do_cartao(texto):
     """O letreiro de um cartao com texto: curto (ate 3 palavras) espacado, frase como a de sempre.
 
@@ -1900,8 +2020,9 @@ def avisos_dos_textos(clips):
     que esta Pillow nao junta (texto_emojis.sequencias) e os emojis escuros, que quase nao se veem no
     preto (texto_emojis.emojis_escuros, corretor de 2 de outubro). `clips` sao linhas do CSV da montagem, ou as
     do montar_da_mesa.py, com tipo, ordem, texto_ecra, textos_fotos e destaque. Cada texto mede-se na
-    letra onde vai: os cartoes e os nomes na do cartao, a fita e os contadores no Arial Bold da
-    linha_tempo, o resto na da legenda. Cada aviso diz o clip ("clip N"), que o montar renumera.
+    letra onde vai: os cartoes e os nomes na do cartao, a fita e os contadores na letra do contador
+    (a do est.estilo.contador.fonte desde 3 de outubro, e sem ela o Arial Bold da linha_tempo, como
+    sempre), o resto na da legenda. Cada aviso diz o clip ("clip N"), que o montar renumera.
     """
     avisos = []
     fontes = {}
@@ -1927,7 +2048,8 @@ def avisos_dos_textos(clips):
         qual = "cartao" if tipo in ("cartao", "nome") else "fita" if tipo in ("contador", "marcos") else "legenda"
         if qual not in fontes:
             fontes[qual] = (letra("cartao", LETREIRO_CURTO_TAMANHO) if qual == "cartao" else
-                            ImageFont.truetype(linha_tempo.FONTE, linha_tempo.CORPO_ROTULO) if qual == "fita" else
+                            # a letra do contador, a mesma que o linha_tempo abre para desenhar
+                            linha_tempo._letra(linha_tempo.CORPO_ROTULO) if qual == "fita" else
                             letra("legenda", legenda_tamanho()))
         for onde, x in textos:
             avisos.extend(texto_emojis.avisos_do_texto(onde, x, fontes[qual]))
@@ -2268,7 +2390,7 @@ def lado_celulas(lay):
     LADO_INTERVALO uma da outra, pela ordem das celulas), por isso tambem nao atravessa
     nenhuma.
     """
-    W, H, g = L, A, LADO_FOLGA
+    W, H, g = L, A, (LADO_FOLGA if ENSAIO == 1.0 else max(1, int(round(LADO_FOLGA * ENSAIO))))
     if lay == "2v":
         w = (W - g) // 2
         return [((0, 0, w, H), "esq"), ((W - w, 0, w, H), "dir")]
@@ -2624,6 +2746,9 @@ def duracao_minima_monte(tipo, n, cross_entra=0.0, cross_sai=0.0):
 
 def moldura_monte(larg, alt):
     """Espessura da moldura: a do ensaio, 8 a 9 pixeis em fotos de 600, a escala."""
+    if ENSAIO != 1.0:
+        # num ensaio a escala o minimo de 6 px encolhe com o ecra, senao as molduras ficam grossas
+        return max(max(1, int(round(6 * ENSAIO))), int(round(0.016 * min(larg, alt))))
     return max(6, int(round(0.016 * min(larg, alt))))
 
 
@@ -3781,7 +3906,7 @@ def preparar_monte(tipo, imagens, focos, texto, cross_entra=0.0, cross_sai=None,
     # O piso so vai as disposicoes quando ha: sem posicao a chamada e a de sempre, com os argumentos
     # de sempre (ha testes que trocam uma disposicao por uma funcao de tres argumentos).
     _dx, dy_legenda, _alinhamento = posicao_da_legenda(clip_leg)
-    com_piso = {} if dy_legenda == 0 else {"piso": 0.5 * A + dy_legenda}
+    com_piso = {} if dy_legenda == 0 else {"piso": 0.5 * A + na_escala(dy_legenda)}
     livre_ate = None
     if legenda is not None:
         livre_ate = legenda["topo"] - MONTE_LEGENDA_FOLGA * A
@@ -4501,6 +4626,10 @@ def preparar_lado(lay, imagens, focos, texto, textos=None, opcoes=None, duracao=
             # baixo, como hoje: dentro de cada foto, duas fotos de formas diferentes ficavam com os
             # textos a alturas e larguras diferentes (visto no clip 71), e por cima da foto tapava
             # gente. Na celula fica sobre o desfocado sempre que a foto nao chega ao fundo.
+            # MENOS QUANDO HA LEGENDA DO GRUPO (revisao de 3 de outubro): ai a faixa sobe para cima da
+            # legenda, pela regra de setembro do lado_faixas(), e pode tapar o fundo de uma foto
+            # deitada (no clip 69 da Mesa, 60 e 83 px). E a mesma faixa que hoje tapa o fundo da foto
+            # que enche a celula; descer a foto ou mudar a faixa de sitio e escolha do Tiago.
             img, (pw, ph) = lado_inteira(im, w, h)
             e0 = 1.0 / (1.0 + LADO_ZOOM)
             if foco:
@@ -4590,7 +4719,7 @@ def limite_da_faixa_no_lado(texto, largura, tamanho=None):
     LEGENDA_TEXTO, como o da legenda: a faixa acaba uma almofada abaixo disso.
     """
     tamanho_px = linhas_texto_foto(texto, largura, tamanho)[0]
-    return A - LEGENDA_TEXTO + int(round(tamanho_px * TEXTO_FOTO_ALMOFADA))
+    return A - na_escala(LEGENDA_TEXTO) + int(round(tamanho_px * TEXTO_FOTO_ALMOFADA))
 
 
 def lado_faixas(celulas, textos, capa, lay, tamanho=None):
@@ -5220,21 +5349,30 @@ def preparar_destaque(zd, entra, sai, duracao, legenda="", nome="", clip_leg=Non
     # O TETO DO NOME: com legenda em baixo, a faixa do nome nunca desce ate ela. A Mesa poe o nome
     # ate 1,6 corpos do fundo do ecra, e a faixa da legenda comeca bem acima disso.
     tam = legenda_tamanho()
+    if ENSAIO != 1.0:
+        # num ensaio a escala o nome tem o corpo da legenda na proporcao do ensaio
+        tam = max(1, int(round(tam * ENSAIO)))
     d["teto"] = A - tam * 1.6
     if (legenda or "").strip():
         # COM A LEGENDA NOUTRO SITIO (3 de outubro) o teto sobe com ela, e uma legenda numa linha so
         # (x1) tem o bloco de uma linha. Sem nada disso e a conta de sempre.
         uma = bool(clip_leg and clip_leg["x1"])
         _dx, dy, _alinhamento = posicao_da_legenda(clip_leg)
-        d["teto"] = min(d["teto"], A - LEGENDA_TEXTO - bloco_legenda(legenda, uma_linha=uma) - LEGENDA_ALMOFADA
-                        - d["folga"] - tam * 1.45 + dy)
+        if ENSAIO == 1.0:
+            d["teto"] = min(d["teto"], A - LEGENDA_TEXTO - bloco_legenda(legenda, uma_linha=uma) - LEGENDA_ALMOFADA
+                            - d["folga"] - tam * 1.45 + dy)
+        else:
+            # a faixa da legenda conta-se a 1080, onde foi desenhada, e reduz-se
+            d["teto"] = min(d["teto"], A - (LEGENDA_TEXTO + bloco_legenda(legenda, uma_linha=uma) + LEGENDA_ALMOFADA
+                                            - dy) * ENSAIO - d["folga"] - tam * 1.45)
     if zd.get("texto"):
         # A FAIXA E A DA MESA: o texto centrado, 18 px de cada lado, 1,45 corpos de altura, a letra
         # a 0,22 corpos do cimo; o alfa da faixa e o da legenda do estilo, e a cor tambem.
         # A largura e a do avanco da letra, a mesma que o measureText() da Mesa.
         fonte = letra("legenda", tam)
         # com um emoji, o emoji a cores conta com a largura dele, e os equivalentes trocam-se (texto_emojis)
-        largura = int(math.ceil(texto_emojis.largura(zd["texto"], fonte))) + 36
+        largura = int(math.ceil(texto_emojis.largura(zd["texto"], fonte))) + (
+            36 if ENSAIO == 1.0 else max(2, int(round(36 * ENSAIO))))
         altura = int(math.ceil(tam * 1.45))
         # AS PERNAS DAS LETRAS NAO SE CORTAM (revisao de 2 de outubro). A faixa tem 1,45 corpos, como
         # na Mesa, e o desenho era feito dentro dela: numa letra de descendentes compridos (Playfair,
@@ -5275,7 +5413,7 @@ def onde_vai_o_nome(d, caixa):
     ty = caixa[3] + d["linha"] + d["folga"]
     if ty > d["teto"]:
         acima = caixa[1] - d["linha"] - d["folga"] - altura
-        ty = acima if acima >= LEGENDA_FUNDO else d["teto"]
+        ty = acima if acima >= na_escala(LEGENDA_FUNDO) else d["teto"]
     cx = (caixa[0] + caixa[2]) / 2.0
     borda = DESTAQUE_TEXTO_BORDA + largura / 2.0
     if L - borda >= borda:
@@ -5656,10 +5794,10 @@ def desenhar(pronto, t_rel, duracao):
             extra = {"fim_aceso": True}
             if pronto.get("modo") != "datas" and pronto.get("chegada"):
                 extra["chegada"] = pronto["chegada"]
-            return desenho(L, A, pronto["de"], pronto["para"],
-                           pronto["marcos"], min(t_rel, anda), anda, **extra)
-        return desenho(L, A, pronto["de"], pronto["para"],
-                       pronto["marcos"], t_rel, duracao)
+            return fita_no_ecra(desenho, pronto["de"], pronto["para"],
+                                pronto["marcos"], min(t_rel, anda), anda, **extra)
+        return fita_no_ecra(desenho, pronto["de"], pronto["para"],
+                            pronto["marcos"], t_rel, duracao)
     if pronto["tipo"] == "video":
         # O FOTOGRAMA MAIS PROXIMO, SEM INTERPOLAR. A cache foi extraida a 25 fps, a
         # cadencia do filme, portanto o fotograma k e o instante k/25 do troco e a conta e
@@ -5689,12 +5827,12 @@ def desenhar(pronto, t_rel, duracao):
             anda = max(1.0 / FPS, duracao - segura)
             congela = pronto.get("congela")
             ate = anda - 1.0 / FPS if congela is None else min(congela, anda - 1.0 / FPS)
-            return linha_tempo.meses(L, A, pronto["ano"], pronto["marcas"],
-                                     min(t_rel, ate), anda, pronto["troco"],
-                                     pronto.get("abre", True))
-        return linha_tempo.meses(L, A, pronto["ano"], pronto["marcas"],
-                                 t_rel, duracao, pronto["troco"],
-                                 pronto.get("abre", True))
+            return fita_no_ecra(linha_tempo.meses, pronto["ano"], pronto["marcas"],
+                                min(t_rel, ate), anda, pronto["troco"],
+                                pronto.get("abre", True))
+        return fita_no_ecra(linha_tempo.meses, pronto["ano"], pronto["marcas"],
+                            t_rel, duracao, pronto["troco"],
+                            pronto.get("abre", True))
     if pronto["tipo"] == "lado":
         # Cada foto e composta na sua propria celula, com sub-pixel e margem, e
         # so depois colada no ecra. A celula e que corta, portanto o zoom lento
@@ -6768,6 +6906,11 @@ def comando_da_fatia(nome, k, n, argv):
     for opcao in ("--ate", "--escala"):
         if opcao in argv:
             cmd += [opcao, argv[argv.index(opcao) + 1]]
+    # A PROPORCAO DOS TEXTOS E A DESTE PROCESSO, dita por extenso (3 de outubro): a fatia desenha
+    # como quem a lanca. O main() do pai ja a pos com o --escala; quem lanca uma fatia a mao com o
+    # ecra mudado e os textos de sempre (os testes) recebe os textos de sempre.
+    if "--escala" in argv:
+        cmd += ["--textos", repr(float(ENSAIO))]
     # O --sem-legendas desenha outros fotogramas, e por isso vai para cada fatia, como o estilo:
     # so no pai, o encoder recebia um fotograma com faixa e o seguinte sem ela, alternados. Sem
     # ele a linha de comando e a de sempre.
@@ -6896,13 +7039,24 @@ def main():
     ate = None
     if "--ate" in sys.argv:
         ate = float(sys.argv[sys.argv.index("--ate") + 1])
+    # O ENSAIO A ESCALA (3 de outubro), posto a cada chamada como o SEM_LEGENDAS: sem o --escala os
+    # textos tem as medidas do filme, mesmo que este processo tenha feito antes um ensaio.
+    global ENSAIO
+    ENSAIO = 1.0
     if "--escala" in sys.argv:
         # 720p para testes: 2,25 vezes menos pixeis, chega para julgar ritmo.
         global L, A
         f = float(sys.argv[sys.argv.index("--escala") + 1])
         L, A = int(L * f) // 2 * 2, int(A * f) // 2 * 2
+        # E OS TEXTOS NA MESMA PROPORCAO, ver ENSAIO. Uma fatia recebe a proporcao do pai por extenso
+        # (--textos), e nao a conta outra vez: desenha exatamente como o processo que a lancou.
+        ENSAIO = (float(sys.argv[sys.argv.index("--textos") + 1]) if "--textos" in sys.argv
+                  else A / float(REF_A))
         if fatia is None:
             print("Render a %dx%d" % (L, A))
+            if ENSAIO != 1.0:
+                print("  ensaio a escala: as legendas, os cartoes, o contador e a fita na mesma proporcao "
+                      "(x%s), com as linhas do filme" % ("%.3f" % ENSAIO).rstrip("0").rstrip("."))
     if "--montagens" in sys.argv:
         # A pasta das montagens, que o pai passa as fatias: pode nao ser a do repositorio.
         global MONTAGENS

@@ -204,6 +204,13 @@ decoração, é um sistema que ela construiu de propósito:
 
 Nenhuma versão pode apagar isto. Reordenar e aparar, sim. Apagar, não.
 
+**As canções com o nome são escolha dele desde 3 de outubro (decisão 111).** As fanfarras e a
+vinheta continuam protegidas. Mas ele mandou a lista das músicas (*"Quero ter a opcionalidade das
+músicas que quero"*), e os seis sons que o montar punha sozinho têm agora um interruptor cada, na
+versão, em `som_auto`: o piano da abertura, a fita a rebobinar, os foguetes, o Rei Leão e a Ana
+Faria a entrar com o nome do bebé, e a retoma do piano na fita antes da Clara (060). Estão ligados
+por omissão, e só ele os desliga.
+
 `Paris Filmes Reversed.MP3` não existe em disco e é preciso. O `aleluia.mp3` do `.wlmp`
 também não existe, mas **não se procura**: o Tiago disse a 16 de setembro que o aleluia
 está dentro do troço dos foguetes (`Candidato a vereador.mp3` a partir de 2:53), decisão 072.
@@ -213,7 +220,9 @@ está dentro do troço dos foguetes (`Candidato a vereador.mp3` a partir de 2:53
 ## O letreiro, e o som dos vídeos de abertura
 
 **Uma letra de marca e uma letra de leitura, decisão 084.** O Impact é a letra de marca: aparece
-uma vez, no letreiro da intro, a 288 px. Tudo o que é para ler é Arial Bold. A regra não é de
+uma vez, no letreiro da intro, a 288 px. Tudo o que é para ler é Arial Bold por omissão: a letra
+das legendas, dos cartões e, desde 3 de outubro, a do contador e da fita escolhem-se no Estilo da
+Mesa (decisões 104 e 111), e o montar avisa quando a escolhida se lê pior a 15 metros. A regra não é de
 gosto, é medida: o Arial Bold separa as letras a partir do corpo 58 e o Impact só a partir do 106,
 ou seja precisa de quase o dobro do tamanho para se ler igual a 15 metros. Nada de Impact abaixo
 de 132 px, e o Impact é a omissão do letreiro; outra letra só entra se for das oferecidas em
@@ -257,6 +266,30 @@ nunca o último fotograma, onde ela já se apagou. Um leitor novo do texto da fi
   `data/fins_de_frase.csv`, cada um com o segundo do ficheiro em que foi medido. Se a música chegar ao
   corte noutro sítio, o montar avisa "fim de frase por medir outra vez" e a música desce no corte, como
   antes.
+
+**As chaves de 3 de outubro (decisão 111).** Todas têm «Como está» por omissão: sem elas o montar, o
+filme e os créditos saem iguais ao byte.
+- **No clip:** `x1` (a legenda numa linha, se couber), `lp` (`{dx, dy}`, a posição só dessa legenda),
+  `li` (o lado a lado com as fotos inteiras, sem cortar) e `cp` (segundos parado no fim de um
+  contador). As três primeiras vão na coluna `opcoes_clip` do CSV, só quando há; o `cp` vai como
+  `~segundos` no fim do texto do contador, como a fita parada.
+- **A largura de uma linha é um número só,** `render.LEGENDA_LARGURA_NUMA_LINHA`, 1660 px. A legenda
+  do clip 10 precisa de 1762 em Playfair a 59 e sai em duas linhas, com aviso. Mudar o número é
+  decisão dele, por causa das bordas do projetor.
+- **No estilo:** `legenda.posicao` (`{dx, dy, alinhamento}`; a legenda sobe e nunca desce) e
+  `contador.fonte`.
+- **O contador `AAAA>dd/mm/aaaa`** anda por anos e acende a data inteira na chegada, com o texto dela
+  por baixo. O rótulo sem `=` é o da **partida**: em `2023>2026 | 4 de outubro de 2026` a data acende
+  por baixo de 2023. O contador do meio diz «conhecem-se» em 2011 e pára a 20/05/2012: são palavras
+  dele de 3 de outubro, mudam a 011, e não se corrigem de volta.
+- **Nos créditos:** `partes` (a lista, pela ordem, de `titulo`, `cargos` e `rolo`; sem `cargos` não há
+  cargo nenhum), `nomes_corridos` (sem os grupos) e `velocidade` (`{fotos, nomes}`, em px/s).
+- **Na versão:** `som_auto = {nome: false}` desliga um dos seis sons automáticos (`piano_abertura`,
+  `rebobinar`, `foguetes`, `rei_leao`, `ana_faria`, `retoma_piano`). Só o `false` desliga, a imagem
+  não muda, e nada entra no lugar do que saiu: se ficar silêncio, o montar avisa.
+- **Na marca de música:** `in: "continua"` entra onde a mesma música parou da última vez que tocou.
+  É a conta da retoma da 060, e serve para o Lang Lang dos contadores 57 e 143 em vez dos segundos
+  feitos à mão (43,7 e 52).
 
 **A pilha vai até 60 em monte, e só até 24 em leque** (decisões 091 e 102): desenhado a sério, o
 leque deixa de mostrar 20% de cada foto de baixo a partir de 25. O montar põe em monte um leque
@@ -641,6 +674,12 @@ os mesmos comandos do render, `scripts/colar_abertura.py`, ou faz-se o render in
 E para lhe mostrar o **fim** do filme sem esperar meia hora, recorta-se um troço da montagem com
 o `scripts/troco_da_montagem.py`: o corpo tira o seu zero do `inicio_s` do primeiro clip que
 sobra, mas o relógio do `som.csv` não, e por isso o som tem de andar para trás na mesma medida.
+
+**O ensaio à escala desenha os textos na proporção (decisão 111).** Com `--escala 0.25` as
+legendas, os cartões, o nome do bebé, o contador e a fita encolhem com o ecrã e partem nas mesmas
+linhas do filme (`render.ENSAIO`, que o pai passa a cada fatia com `--textos`). Dá o filme inteiro
+em cerca de seis minutos, para ver a montagem. Não se compara ao byte com um ensaio de antes de 3 de
+outubro, e não serve para julgar nitidez. A 1080 o `ENSAIO` é 1,0 e nada muda.
 
 **Antes de cada render, perguntar ao Tiago pelos textos marcados.** Decisão 082: os textos que
 passam depressa de mais não se corrigem sozinhos. A Mesa marca-os, ele edita, e antes de cada

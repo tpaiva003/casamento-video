@@ -29,6 +29,12 @@ AS LINHAS SAO AS DO RENDER: as falas em linhas separadas, e cada fala partida co
 na largura da faixa (render.linhas_legenda()). O DaVinci nao parte linhas sozinho; com --corpo N as
 linhas partem-se para outro corpo, para quem quiser a letra maior no DaVinci sem linhas fora do ecra.
 
+A LEGENDA NUMA SO LINHA VAI NUMA LINHA, E A POSICAO NAO VAI (3 de outubro). Um clip com a legenda
+numa linha (clip.x1, coluna opcoes_clip) sai no .srt como o render a escreve: numa linha se couber,
+partida como sempre se nao couber. A posicao (a de todas, est.estilo.legenda.posicao, e a de um clip,
+clip.lp) NAO CABE NUM .srt, que so tem tempos e texto: cada legenda leva-a consigo (posicao_de()) para
+o guia do pacote dizer onde por a faixa no DaVinci e que legendas se mexem a mao, e o main() di-lo.
+
 Uso:
     py -3.11 scripts/legendas_srt.py v3                         previsto pelas duracoes do CSV
     py -3.11 scripts/legendas_srt.py v3 --filme <render.mp4>    a abertura medida no filme
@@ -63,7 +69,13 @@ def plano_da_legenda(clip, inv_por_nome=None):
     nao tem faixa. Os avisos que o ler_textos_opcoes() da ja os deu o montar e o render: calam-se.
     """
     with contextlib.redirect_stdout(io.StringIO()):
-        return _plano(clip, inv_por_nome or {})
+        plano = _plano(clip, inv_por_nome or {})
+    # AS OPCOES DO CLIP (3 de outubro): a legenda numa linha e a posicao so deste clip. So entram no
+    # plano quando o clip as traz; sem elas o plano e o de sempre.
+    clip_leg = render.ler_opcoes_clip(clip.get(render.COLUNA_OPCOES_CLIP))
+    if plano is not None and clip_leg is not None and (clip_leg["x1"] or clip_leg["lp"] != (0, 0)):
+        plano["leg"] = clip_leg
+    return plano
 
 
 def _plano(clip, inv_por_nome):
@@ -252,6 +264,9 @@ def legendas_do_corpo(estado):
             continue
         if txt:
             atual = {"q0": q, "q1": q + 1, "texto": txt, "tamanho": tamanho_do_plano(plano)}
+            if plano is not None and plano.get("leg"):
+                # a legenda numa linha e a posicao do clip, so quando as tem
+                atual["leg"] = plano["leg"]
             saida.append(atual)
         else:
             atual = None
@@ -306,13 +321,40 @@ def abertura_medida(filme, estado):
 
 
 # ------------------------------------------------------------------ o ficheiro
-def linhas_da_legenda(texto, tamanho, corpo=None):
+def linhas_da_legenda(texto, tamanho, corpo=None, uma_linha=False):
     """As linhas da legenda como o render as escreve: (linhas, corpo com que ficam no ecra).
 
-    Com `corpo` partem-se para esse corpo, na mesma largura da faixa, para o DaVinci.
+    Com `corpo` partem-se para esse corpo, na mesma largura da faixa, para o DaVinci. `uma_linha` e o
+    clip.x1 (3 de outubro): a legenda inteira numa linha se couber na largura util, como no render.
     """
-    tam, linhas, _fonte = render.linhas_legenda(texto, corpo if corpo else tamanho)
+    if uma_linha:
+        tam, linhas, _fonte = render.linhas_legenda(texto, corpo if corpo else tamanho, uma_linha=True)
+    else:
+        tam, linhas, _fonte = render.linhas_legenda(texto, corpo if corpo else tamanho)
     return linhas, tam
+
+
+def posicao_de(entrada=None):
+    """(dx, dy, alinhamento) com que o render desenha a legenda de uma entrada: a de todas mais a do clip.
+
+    Sem entrada e a de todas (o estilo). (0, 0, "centro") e a posicao de sempre. O .srt nao a leva.
+    """
+    return render.posicao_da_legenda((entrada or {}).get("leg"))
+
+
+def com_posicao_propria(entradas):
+    """As entradas cuja legenda o render desenha noutro sitio que nao o de todas (clip.lp)."""
+    return [e for e in entradas if e.get("leg") and e["leg"]["lp"] != (0, 0)]
+
+
+def frase_da_posicao(dx, dy):
+    """«40 px para a direita e 120 px para cima», como se diz no guia; "" se nao anda."""
+    partes = []
+    if dx:
+        partes.append("%d px para a %s" % (abs(dx), "direita" if dx > 0 else "esquerda"))
+    if dy:
+        partes.append("%d px para %s" % (abs(dy), "cima" if dy < 0 else "baixo"))
+    return " e ".join(partes)
 
 
 def tempo_srt(fotograma):
@@ -337,9 +379,13 @@ def entradas_do_filme(legendas, abertura, corte=None, corpo=None):
             if q0 >= corte:
                 continue
             q1 = min(q1, corte)
-        linhas, no_ecra = linhas_da_legenda(leg["texto"], leg["tamanho"], corpo)
+        opcoes = leg.get("leg")
+        linhas, no_ecra = linhas_da_legenda(leg["texto"], leg["tamanho"], corpo,
+                                            uma_linha=bool(opcoes and opcoes["x1"]))
         saida.append({"n": len(saida) + 1, "q0": q0, "q1": q1, "linhas": linhas,
                       "texto": leg["texto"], "tamanho": leg["tamanho"], "no_ecra": no_ecra})
+        if opcoes:
+            saida[-1]["leg"] = opcoes
     return saida
 
 
@@ -401,6 +447,17 @@ def main():
     # no saida/legendas do repositorio (no .gitignore) o de antes da lugar ao novo; noutro sitio nunca
     escrever_srt(saida, entradas, por_cima=opcao("--saida") is None)
     print("%d legendas em %s" % (len(entradas), saida))
+    # A POSICAO NAO VAI NO .srt (3 de outubro): diz-se, para ninguem contar com ela no DaVinci
+    dx, dy, alinhamento = posicao_de()
+    if (dx, dy, alinhamento) != (0, 0, "centro"):
+        print("A posicao de todas as legendas nao vai no .srt: no filme estao %s%s. No DaVinci poe-se na faixa "
+              "(Inspector > Track)." % (frase_da_posicao(dx, dy) or "no sitio de sempre",
+                                        "" if alinhamento == "centro" else ", encostadas a " + alinhamento))
+    proprias = com_posicao_propria(entradas)
+    if proprias:
+        print("Legendas com posicao so delas, que o .srt nao leva: %s"
+              % "; ".join("%d (%s)" % (e["n"], frase_da_posicao(*posicao_de(e)[:2]) or "no sitio de sempre")
+                          for e in proprias[:20]))
 
 
 if __name__ == "__main__":
