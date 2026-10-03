@@ -57,6 +57,18 @@ primeiro os tais cargos"): com est.creditos.cargos_primeiro = true vem os cargos
 o titulo. O primeiro cargo nasce da ultima imagem do filme sem preto, como hoje o rolo, e o rolo entra do
 preto depois do ultimo cargo (tempos_dos_creditos diz as contas e porque). Sem a chave, e com tres cargos
 de uma pessoa, os creditos sao os de sempre, ao byte: o desenho, a duracao e o som.
+
+AS PARTES, OS NOMES CORRIDOS E A VELOCIDADE (3 de outubro, contrato saida/discussao/contrato_1003.md, pontos
+5 e 5b; o Tiago: "Coloca este fecho exatamente com a mesma animacao antes dos creditos", "vamos abolir isso"
+dos cargos, "so queremos os nomes dos convidados corridos" e "permite ajustar a velocidade dos nomes e/ou
+das fotos"):
+- est.creditos.partes: a lista, pela ordem, de "titulo", "cargos" e "rolo" (partes_da_escolha). Sem "cargos"
+  nao ha cargo nenhum: nem fotograma, nem segundo, nem aviso. A primeira parte nasce do fim do filme sem
+  preto, as outras do preto, e a ultima acaba no preto (tempos_dos_creditos diz as contas);
+- est.creditos.nomes_corridos = true: o rolo so com as linhas dos nomes, sem titulos, subtitulos nem espaco
+  entre grupos, pela mesma ordem (rolo_de_nomes);
+- est.creditos.velocidade = {fotos, nomes} em px/s (velocidade_da_escolha, avisos_da_velocidade).
+Sem estas chaves, tudo igual ao byte (teste_creditos_partes_e_nomes_corridos, teste_creditos_velocidade).
 """
 import csv
 import glob
@@ -107,6 +119,23 @@ CARGOS_MAX, PESSOAS_MAX = 8, 4
 QUEM_CORPO, QUEM_ESPACO, QUEM_ENTRELINHA, QUEM_Y = 110, 0.28, 1.45, 40
 CARGO_CORPO, CARGO_Y = 58, -80
 T_CARGO, CARGO_ENTRA = 4.2, 0.6
+# AS PARTES DOS CREDITOS E A ORDEM DELAS (contrato de 3 de outubro, pontos 5 e 5b). O Tiago: "Coloca este fecho
+# exatamente com a mesma animacao antes dos creditos a subir com as fotos e com os nomes", "vamos abolir isso" (os
+# cargos) e "quero mesmo poder remover integralmente". est.creditos.partes e a lista, pela ordem, de "titulo",
+# "cargos" e "rolo": cada uma no maximo uma vez, e o "rolo" sempre. Ausente e a de hoje (PARTES_HOJE), ou a da 109
+# com o cargos_primeiro (PARTES_CARGOS_PRIMEIRO). O titulo acende do preto em TITULO_ACENDE (o suave(u / 1.0) de
+# sempre) e apaga-se em TITULO_APAGA_FIM quando e a ultima parte (o fade a preto do fim); a meio apaga-se com o fade
+# dos cargos, CARGO_ENTRA (ver tempos_dos_creditos).
+PARTES_VALIDAS = ("titulo", "cargos", "rolo")
+PARTES_HOJE = ["rolo", "cargos", "titulo"]
+PARTES_CARGOS_PRIMEIRO = ["cargos", "rolo", "titulo"]
+TITULO_ACENDE, TITULO_APAGA_FIM = 1.0, 2.5
+# A VELOCIDADE DOS CREDITOS (contrato de 3 de outubro, 5b): est.creditos.velocidade = {fotos, nomes} em px/s, cada um
+# opcional. Fora destes limites fica como esta, com aviso. Avisa-se quando uma foto fica menos de FOTO_INTEIRA_MIN s
+# inteira no ecra, e quando uma linha de nomes passa depressa de mais para a regua de leitura das legendas (XF_CPS
+# da Mesa, 12 letras por segundo) no tempo em que esta no ecra.
+VEL_FOTOS_LIMITES, VEL_NOMES_LIMITES = (60.0, 300.0), (30.0, 200.0)
+FOTO_INTEIRA_MIN, LER_CPS = 2.0, 12.0
 TITULO, DATA = "CLARA & TIAGO", "4 DE OUTUBRO DE 2026"
 VELOCIDADE_NOMES = 150.0      # px/s: cada linha fica ~7 s no ecra, e o filme fica abaixo dos 900 s
 # A COLUNA DAS FOTOS NAO PASSA DISTO. Com as 11 fotos de 30/09 subia a 108 px/s; com as 27 de 1/10
@@ -387,11 +416,16 @@ def quem_que_encolhe(textos):
     return avisos
 
 
-def rolo_de_nomes(blocos):
+def rolo_de_nomes(blocos, corridos=False):
     """Os nomes todos numa imagem alta, preta, com a largura do painel da direita.
 
     Um titulo de grupo mais largo do que o painel encolhe ate caber (letreiro_do_titulo) e nunca
     para os creditos; o main() diz quais (titulos_que_encolhem).
+
+    OS NOMES CORRIDOS (contrato de 3 de outubro, ponto 5; o Tiago: "Retira dos creditos aquela parte das
+    divisoes por grupinhos. Nos so queremos os nomes dos convidados corridos"): com `corridos` saem os
+    titulos e os subtitulos dos grupos e o espaco entre grupos. Ficam so as linhas dos nomes, pela ordem
+    de hoje (a dos grupos, e dentro de cada grupo a de hoje), cada uma nos 78 px de sempre.
     """
     larg_texto = PAINEL_NOMES[1] - PAINEL_NOMES[0]
     larg = larg_texto + 2 * MARGEM_BRILHO
@@ -402,6 +436,11 @@ def rolo_de_nomes(blocos):
     cor_nome = cor_dos_nomes()
     pecas, anterior = [], None
     for titulo, sub, linhas in blocos:
+        if corridos:
+            for ln in linhas:
+                for parte in quebrar(ln, f_nome, larg_texto):
+                    pecas.append(("nome", parte))
+            continue
         if titulo != anterior:
             pecas.append(("gap", 90 if pecas else 0))
             pecas.append(("titulo", letreiro_do_titulo(titulo)))
@@ -507,6 +546,65 @@ def cargos_primeiro_da_escolha(cr, avisos):
     return False
 
 
+def partes_da_escolha(cr, avisos):
+    """A lista das partes dos creditos, pela ordem: o est.creditos.partes, ou a de hoje.
+
+    O CONTRATO DE 3 DE OUTUBRO (ponto 5): uma lista de "titulo", "cargos" e "rolo", cada uma no maximo uma
+    vez, com o "rolo" sempre. Ausente, null ou "" e a de hoje: PARTES_HOJE, ou PARTES_CARGOS_PRIMEIRO com o
+    cargos_primeiro da 109 (e so ai esse se le, com o aviso de sempre). Uma lista que nao presta (nao e
+    lista, uma parte que nao existe, uma repetida, sem o rolo) fica tambem na de hoje, com aviso: um valor
+    mal escrito nao muda o filme calado. Maiusculas e espacos nas pontas nao contam.
+    """
+    v = cr.get("partes") if isinstance(cr, dict) else None
+    if v is None or (isinstance(v, str) and v == ""):
+        return list(PARTES_CARGOS_PRIMEIRO if cargos_primeiro_da_escolha(cr, avisos) else PARTES_HOJE)
+    lista = [p.strip().lower() for p in v if isinstance(p, str)] if isinstance(v, list) else None
+    if lista is None or len(lista) != len(v) or any(p not in PARTES_VALIDAS for p in lista) \
+            or len(set(lista)) != len(lista) or "rolo" not in lista:
+        avisos.append("creditos.partes %r nao e uma lista de \"titulo\", \"cargos\" e \"rolo\", cada uma uma vez e com "
+                      "o rolo: fica como esta" % (v,))
+        return list(PARTES_CARGOS_PRIMEIRO if cargos_primeiro_da_escolha(cr, avisos) else PARTES_HOJE)
+    return lista
+
+
+def nomes_corridos_da_escolha(cr, avisos):
+    """True se o est.creditos.nomes_corridos e true; ausente, false, null ou "" e «Como esta». Outro valor fica
+    «Como esta», com aviso (a regra do cargos_primeiro)."""
+    v = cr.get("nomes_corridos") if isinstance(cr, dict) else None
+    if v is True:
+        return True
+    if v is None or v is False or (isinstance(v, str) and v == ""):
+        return False
+    avisos.append("creditos.nomes_corridos %r nao e true: fica como esta (os nomes por grupos)" % (v,))
+    return False
+
+
+def velocidade_da_escolha(cr, avisos):
+    """{"fotos": px/s, "nomes": px/s}, so com os que ele escolheu; {} e «Como esta».
+
+    O CONTRATO DE 3 DE OUTUBRO (5b): est.creditos.velocidade = {fotos, nomes}, cada um opcional. As fotos
+    vao de 60 a 300 px/s e os nomes de 30 a 200 (VEL_FOTOS_LIMITES, VEL_NOMES_LIMITES). Ausente, null ou ""
+    e como esta. Um numero fora dos limites, ou um valor que nao e numero, fica como esta, com aviso.
+    """
+    v = cr.get("velocidade") if isinstance(cr, dict) else None
+    if v is None or (isinstance(v, str) and v == "") or v == {}:
+        return {}
+    if not isinstance(v, dict):
+        avisos.append("creditos.velocidade %r nao e um objeto: fica como esta" % (v,))
+        return {}
+    saida = {}
+    for chave, (lo, hi) in (("fotos", VEL_FOTOS_LIMITES), ("nomes", VEL_NOMES_LIMITES)):
+        x = v.get(chave)
+        if x is None or (isinstance(x, str) and x == ""):
+            continue
+        if isinstance(x, bool) or not isinstance(x, (int, float)) or not (lo <= float(x) <= hi):
+            avisos.append("creditos.velocidade.%s %r nao e um numero de %d a %d px/s: fica como esta"
+                          % (chave, x, lo, hi))
+            continue
+        saida[chave] = float(x)
+    return saida
+
+
 def textos_dos_creditos(est, avisos=None):
     """Os textos que ele escreveu no painel dos creditos da Mesa, com os de hoje onde nao escreveu.
 
@@ -536,15 +634,25 @@ def textos_dos_creditos(est, avisos=None):
     sem ninguem saber porque.
     """
     avisos = [] if avisos is None else avisos
-    saida = {"cargos": list(CARGOS), "titulo": TITULO, "data": DATA, "grupos": {}, "cargos_primeiro": False}
+    saida = {"cargos": list(CARGOS), "titulo": TITULO, "data": DATA, "grupos": {}, "cargos_primeiro": False,
+             "partes": list(PARTES_HOJE), "nomes_corridos": False, "velocidade": {}}
     cr = est.get("creditos")
     if cr in (None, "", {}):
         return saida
     if not isinstance(cr, dict):
         avisos.append("o est.creditos nao e um objeto, ficam os textos de hoje")
         return saida
-    saida["cargos_primeiro"] = cargos_primeiro_da_escolha(cr, avisos)
-    cargos = cr.get("cargos")
+    # AS PARTES (contrato de 3 de outubro): sem a chave e a ordem de hoje, ou a da 109 com o cargos_primeiro. O
+    # cargos_primeiro fica True so na ordem da 109, que e a que o tempos_dos_creditos() de antes sabe fazer.
+    saida["partes"] = partes_da_escolha(cr, avisos)
+    saida["cargos_primeiro"] = saida["partes"] == PARTES_CARGOS_PRIMEIRO
+    saida["nomes_corridos"] = nomes_corridos_da_escolha(cr, avisos)
+    saida["velocidade"] = velocidade_da_escolha(cr, avisos)
+    # SEM "cargos" NAS PARTES NAO HA CARGOS NENHUNS: nem fotograma, nem segundo, nem aviso (5b). Os textos deles
+    # ficam na base (a Mesa guarda-os para os repor) e aqui nao se leem.
+    cargos = cr.get("cargos") if "cargos" in saida["partes"] else None
+    if "cargos" not in saida["partes"]:
+        saida["cargos"] = []
     if cargos is not None:
         if not isinstance(cargos, list):
             avisos.append("creditos.cargos nao e uma lista, ficam os cargos de hoje")
@@ -618,9 +726,16 @@ def textos_mudados(textos):
     Um cargo a mais do que os tres de hoje diz-se como mudado; com menos, "cargos: N"; com os cargos
     primeiro, "a ordem (os cargos primeiro)"."""
     cargos = textos["cargos"]
+    partes = textos.get("partes") or PARTES_HOJE
+    # as partes (3 de outubro): a ordem da 109 diz-se como sempre; outra diz a lista, e sem cargos nao se contam
+    novas = partes not in (PARTES_HOJE, PARTES_CARGOS_PRIMEIRO)
     return ([("cargo %d" % (k + 1)) for k, par in enumerate(cargos) if k >= len(CARGOS) or par != CARGOS[k]]
-            + (["cargos: %d" % len(cargos)] if len(cargos) < len(CARGOS) else [])
+            + (["cargos: %d" % len(cargos)] if len(cargos) < len(CARGOS) and "cargos" in partes else [])
             + (["a ordem (os cargos primeiro)"] if textos.get("cargos_primeiro") else [])
+            + (["as partes (%s)" % ", ".join(partes)] if novas else [])
+            + (["os nomes corridos"] if textos.get("nomes_corridos") else [])
+            + (["a velocidade (%s)" % ", ".join("%s %g px/s" % (k, v) for k, v in sorted(textos["velocidade"].items()))]
+               if textos.get("velocidade") else [])
             + (["titulo"] if textos["titulo"] != TITULO else []) + (["data"] if textos["data"] != DATA else [])
             + ["grupo %s" % e for e in textos["grupos"]])
 
@@ -791,13 +906,16 @@ def textos_que_nao_cabem(textos, blocos, t_titulo=7.0):
         if largura > cabe:
             problemas.append("%s tem %d px e cabem %d: encurta-o na Mesa" % (o_que, round(largura), cabe))
 
-    for _titulo, sub, _linhas in blocos:
+    # o que nao vai ao ecra nao se mede (3 de outubro): com os nomes corridos nao ha subtitulos, e sem o
+    # "titulo" nas partes nao ha titulo final nem data; os cargos ja vem vazios sem o "cargos"
+    for _titulo, sub, _linhas in ([] if textos.get("nomes_corridos") else blocos):
         mede("o subtitulo \"%s\"" % sub, render.texto_emojis.largura(sub, f_ler), painel)
     for k, (cargo, _quem) in enumerate(textos["cargos"]):
         mede("o cargo %d (\"%s\")" % (k + 1, cargo), render.texto_emojis.largura(cargo, f_ler), tela)
-    mede("o titulo final \"%s\"" % textos["titulo"],
-         largura_do_letreiro(textos["titulo"], 130, 0.18) * (1.0 + render.LETREIRO_EMPURRA * t_titulo), tela)
-    mede("a data \"%s\"" % textos["data"], largura_do_letreiro(textos["data"], 58, 0.30), tela)
+    if "titulo" in (textos.get("partes") or PARTES_HOJE):
+        mede("o titulo final \"%s\"" % textos["titulo"],
+             largura_do_letreiro(textos["titulo"], 130, 0.18) * (1.0 + render.LETREIRO_EMPURRA * t_titulo), tela)
+        mede("a data \"%s\"" % textos["data"], largura_do_letreiro(textos["data"], 58, 0.30), tela)
     return problemas
 
 
@@ -835,9 +953,11 @@ def caracteres_que_faltam(textos, blocos):
 
     def mau(p):
         return render.caracteres_sem_letra(p, f_ler) or render.texto_emojis.sequencias(p)
+    corridos = textos.get("nomes_corridos")
     for titulo, sub, linhas in blocos:
-        ve("o titulo de grupo \"%s\"" % titulo, titulo, f_cartao)
-        ve("o subtitulo \"%s\"" % sub, sub, f_ler)
+        if not corridos:              # com os nomes corridos os titulos e os subtitulos nao vao ao ecra
+            ve("o titulo de grupo \"%s\"" % titulo, titulo, f_cartao)
+            ve("o subtitulo \"%s\"" % sub, sub, f_ler)
         maus = [p for ln in linhas for p in ln if mau(p)]
         if maus:
             avisos.append("%d nome%s do grupo \"%s\" (%s) tem caracteres que nao saem como estao escritos "
@@ -848,8 +968,9 @@ def caracteres_que_faltam(textos, blocos):
         # cada pessoa do cargo a sua vez, com o texto dela (uma pessoa so: o aviso de sempre)
         for pessoa in pessoas_do_quem(quem):
             ve("quem fez o cargo %d (\"%s\")" % (k + 1, pessoa), pessoa, f_cartao)
-    ve("o titulo final \"%s\"" % textos["titulo"], textos["titulo"], f_cartao)
-    ve("a data \"%s\"" % textos["data"], textos["data"], f_cartao)
+    if "titulo" in (textos.get("partes") or PARTES_HOJE):
+        ve("o titulo final \"%s\"" % textos["titulo"], textos["titulo"], f_cartao)
+        ve("a data \"%s\"" % textos["data"], textos["data"], f_cartao)
     return avisos
 
 
@@ -882,6 +1003,61 @@ def avisos_da_letra():
             if como < corpo - 0.5:
                 avisos.append("nos creditos, %s em %s a %d: a 15 metros como o Arial Bold a %d, e hoje e %d"
                               % (quem, nome, corpo, int(math.floor(como + 0.5)), corpo))
+    return avisos
+
+
+def alturas_na_coluna(caminhos):
+    """[altura]: a altura de cada foto na coluna dos creditos, como o coluna_de_fotos() a faz (a rotacao do
+    EXIF, LARGURA_FOTO de largura, ate 900), sem abrir os pixeis."""
+    alturas = []
+    for c in caminhos:
+        im = Image.open(c)
+        w, h = im.size
+        if im.getexif().get(274) in (5, 6, 7, 8):
+            w, h = h, w
+        alturas.append(min(900, round(h * LARGURA_FOTO / w)))
+    return alturas
+
+
+def linhas_dos_nomes(blocos):
+    """[linha]: as linhas dos nomes do rolo, como o rolo_de_nomes() as parte (as mesmas com ou sem os nomes
+    corridos). Ficam so em memoria: sao nomes de convidados."""
+    f_nome = letra_de_ler(NOME_CORPO)
+    larg = PAINEL_NOMES[1] - PAINEL_NOMES[0]
+    return [parte for _t, _s, linhas in blocos for ln in linhas for parte in quebrar(ln, f_nome, larg)]
+
+
+def letras_de_ler(texto):
+    """As letras que contam para a regua de leitura, como a Mesa as conta (os caracteres, menos os invisiveis)."""
+    return len(re.sub("[​‍⁠︎️﻿\U000e0020-\U000e007f]", "", texto))
+
+
+def avisos_da_velocidade(T, alturas, linhas):
+    """[aviso] da velocidade que ele escolheu (5b). Sem velocidade, nenhum: «Como esta» nao muda.
+
+    - UMA FOTO QUE FICA MENOS DE FOTO_INTEIRA_MIN (2 s) INTEIRA NO ECRA: inteira e de quando a borda de baixo
+      dela entra pelo fundo ate a de cima sair pelo topo, (A - altura) / vel_fotos.
+    - OS NOMES QUE PASSAM DEPRESSA DE MAIS: cada linha fica A / vel_nomes no ecra (a 150 px/s, 7,2 s), e a
+      regua das legendas pede as letras dela / LER_CPS (12 por segundo, o XF_CPS da Mesa).
+    Nunca diz um nome: diz quantas e as letras da maior. As fotos so se dizem com a velocidade das fotos
+    escolhida: so com a dos nomes a coluna nunca anda mais depressa do que hoje.
+    """
+    if not T.get("velocidade"):
+        return []
+    avisos = []
+    vf, vn = T["vel_fotos"], T["vel_nomes"]
+    inteiras = [(k + 1, (A - h) / vf) for k, h in enumerate(alturas)] if "fotos" in T["velocidade"] else []
+    curtas = [(k, s) for k, s in inteiras if s < FOTO_INTEIRA_MIN]
+    if curtas:
+        k, s = min(curtas, key=lambda x: x[1])
+        avisos.append("a coluna das fotos a %.0f px/s: %d das %d fotos ficam menos de %.0f s inteiras no ecra (a %d.a "
+                      "fica %.1f s); abranda as fotos na Mesa" % (vf, len(curtas), len(alturas), FOTO_INTEIRA_MIN, k, s))
+    no_ecra = A / vn
+    longas = [letras_de_ler(ln) for ln in linhas if letras_de_ler(ln) / LER_CPS > no_ecra]
+    if longas:
+        avisos.append("os nomes a %.0f px/s: cada linha fica %.1f s no ecra, e %d linhas pedem mais para se lerem a 15 m "
+                      "(%d letras por segundo; a maior tem %d letras e pede %.1f s); abranda os nomes na Mesa"
+                      % (vn, no_ecra, len(longas), LER_CPS, max(longas), max(longas) / LER_CPS))
     return avisos
 
 
@@ -1026,7 +1202,7 @@ def som_dos_creditos(ultima, pos, antes, dur, escolha, avisos=None, medidas=None
     return [e], None
 
 
-def tempos_dos_creditos(alto_rolo, alto_coluna, n_cargos, cargos_primeiro=False):
+def tempos_dos_creditos(alto_rolo, alto_coluna, n_cargos, cargos_primeiro=False, partes=None, velocidade=None):
     """Os tempos dos creditos, pelas alturas do rolo de nomes e da coluna de fotos: um dicionario com
     t_rolo, vel_nomes, vel_fotos, t_cargo, t_titulo, t_entrada, t_fim_rolo, t_cargos e dur, e ainda
     primeiro ("rolo" ou "cargos"), n_cargos, t_rolo_entra e t_titulo_entra.
@@ -1057,12 +1233,79 @@ def tempos_dos_creditos(alto_rolo, alto_coluna, n_cargos, cargos_primeiro=False)
       t_rolo + t_fim_rolo, e dur = t_titulo_entra + t_titulo.
     Fica t_entrada - CARGO_ENTRA (0,9 s) mais comprido do que «Como esta» com os mesmos cargos: o
     primeiro cargo entra em 1,5 s em vez de 0,6, e o rolo continua a entrar em 1,5 s.
+
+    AS PARTES NOUTRA ORDEM (`partes`, contrato de 3 de outubro, ponto 5). Sem `partes` vale o
+    cargos_primeiro; as duas ordens de antes (PARTES_HOJE e PARTES_CARGOS_PRIMEIRO) fazem as contas acima,
+    ao bit. Outra lista faz-as parte a parte, pela ordem, e o T traz "janelas" [(parte, ini, fim)]:
+    - A PRIMEIRA PARTE NASCE DA ULTIMA IMAGEM DO FILME, SEM PRETO, como os cargos primeiro da 109: o main()
+      desfaz o fim do filme nela em t_entrada (1,5 s), e ela ja esta acesa. O rolo comeca no zero, como
+      hoje; o primeiro cargo t_entrada - CARGO_ENTRA (0,9 s) antes de ficar inteiro, como na 109; o titulo
+      t_entrada - TITULO_ACENDE (0,5 s) antes, para ficar inteiro o mesmo tempo que hoje (o filme desfaz-se
+      nele no lugar do segundo em que hoje acende do preto). Com o titulo primeiro, mais 0,5 s.
+    - AS OUTRAS ACENDEM DO PRETO: o rolo com a entrada de sempre (t_entrada, ja a andar), cada cargo em
+      CARGO_ENTRA, o titulo em TITULO_ACENDE, como hoje.
+    - UMA PARTE QUE NAO E A ULTIMA APAGA-SE PARA O PRETO antes da seguinte: os cargos e o rolo como sempre
+      (o rolo com o t_fim_rolo de hoje), e o titulo com o fade dos cargos (CARGO_ENTRA) em vez dos 2,5 s.
+    - A ULTIMA ACABA COM O FADE A PRETO DO FIM: o titulo com os TITULO_APAGA_FIM de hoje (T["titulo_apaga"]),
+      o rolo com o seu apagar e o t_fim_rolo, os cargos com o do ultimo cargo.
+    Cada parte dura o de hoje: o titulo t_titulo (7,0 s), os cargos n_cargos x t_cargo, o rolo t_entrada +
+    t_rolo + t_fim_rolo; e a primeira o que nasce antes (0, 0,9 ou 0,5 s). Sem "cargos" (ou sem cargos) nao
+    ha segundo nenhum deles, e t_cargos e None; sem "titulo", t_titulo_entra e None.
+
+    A VELOCIDADE (`velocidade`, {fotos, nomes} em px/s, contrato de 3 de outubro, 5b). Sem ela, a regra de
+    sempre, ao bit. Com ela: cada um que ele escolheu anda a essa velocidade; o outro anda pela regra de hoje
+    (ate 150 px/s, a acabar com o primeiro se der). t_rolo e o fim do que acaba depois, e o T traz
+    "fim_nomes" e "fim_fotos" (o tr em que cada um acaba) e "parado" (quem acaba primeiro e quantos segundos
+    fica parado no fim, ou None): o desenho para-o la (rolo_em).
     """
-    # do primeiro titulo a meio do ecra ate sair tudo; o que for mais lento, nomes ou fotos, manda
-    t_rolo = max((alto_rolo + A * 0.55) / VELOCIDADE_NOMES, (alto_coluna + A * 0.4) / VELOCIDADE_FOTOS_MAX)
-    vel_nomes = (alto_rolo + A * 0.55) / t_rolo
-    vel_fotos = (alto_coluna + A * 0.4) / t_rolo
+    if velocidade:
+        dn, df = alto_rolo + A * 0.55, alto_coluna + A * 0.4
+        vn_cap = velocidade.get("nomes") or VELOCIDADE_NOMES
+        vf_cap = velocidade.get("fotos") or VELOCIDADE_FOTOS_MAX
+        t_rolo = max(dn / vn_cap, df / vf_cap)
+        vel_nomes = vn_cap if velocidade.get("nomes") else dn / t_rolo
+        vel_fotos = vf_cap if velocidade.get("fotos") else df / t_rolo
+        fim_nomes, fim_fotos = dn / vel_nomes, df / vel_fotos
+        parado = None
+        if abs(fim_nomes - fim_fotos) > 0.02:
+            parado = ("nomes", t_rolo - fim_nomes) if fim_nomes < fim_fotos else ("fotos", t_rolo - fim_fotos)
+        extra = {"fim_nomes": fim_nomes, "fim_fotos": fim_fotos, "parado": parado, "velocidade": dict(velocidade)}
+    else:
+        # do primeiro titulo a meio do ecra ate sair tudo; o que for mais lento, nomes ou fotos, manda
+        t_rolo = max((alto_rolo + A * 0.55) / VELOCIDADE_NOMES, (alto_coluna + A * 0.4) / VELOCIDADE_FOTOS_MAX)
+        vel_nomes = (alto_rolo + A * 0.55) / t_rolo
+        vel_fotos = (alto_coluna + A * 0.4) / t_rolo
+        extra = {}
     t_cargo, t_titulo, t_entrada = T_CARGO, 7.0, 1.5
+    if partes is None:
+        partes = PARTES_CARGOS_PRIMEIRO if cargos_primeiro else PARTES_HOJE
+    partes = [p for p in partes if p != "cargos" or n_cargos > 0]
+    cargos_primeiro = partes == PARTES_CARGOS_PRIMEIRO
+    extra["partes"] = list(partes)
+    if partes not in (PARTES_HOJE, PARTES_CARGOS_PRIMEIRO):
+        t_fim_rolo = 1.0
+        t, janelas = 0.0, []
+        t_cargos = t_rolo_entra = t_titulo_entra = None
+        for k, p in enumerate(partes):
+            ini = t
+            if p == "rolo":
+                t_rolo_entra = t
+                t = t + t_entrada + t_rolo + t_fim_rolo
+            elif p == "cargos":
+                t_cargos = (t + t_entrada - CARGO_ENTRA) if k == 0 else t
+                t = t_cargos + n_cargos * t_cargo
+            else:
+                t_titulo_entra = (t + t_entrada - TITULO_ACENDE) if k == 0 else t
+                t = t_titulo_entra + t_titulo
+            janelas.append((p, ini, t))
+        extra.update({"janelas": janelas,
+                      "titulo_apaga": TITULO_APAGA_FIM if partes[-1] == "titulo" else CARGO_ENTRA})
+        T = {"t_rolo": t_rolo, "vel_nomes": vel_nomes, "vel_fotos": vel_fotos, "t_cargo": t_cargo,
+             "t_titulo": t_titulo, "t_entrada": t_entrada, "t_fim_rolo": t_fim_rolo, "t_cargos": t_cargos,
+             "dur": t, "primeiro": partes[0], "n_cargos": n_cargos if "cargos" in partes else 0,
+             "t_rolo_entra": t_rolo_entra, "t_titulo_entra": t_titulo_entra}
+        T.update(extra)
+        return T
     # O PRIMEIRO CARGO ENTRA COM O FADE, COMO OS OUTROS (2 de outubro). O rolo ainda ocupa o segundo a
     # seguir ao t_rolo (desvanece ate +0,8 s e fica preto ate +1,0, o "if tr < t_rolo + 1.0" do
     # desenho_dos_creditos), e os cargos contavam-se do t_rolo: o primeiro so aparecia com u = 1,0, ja
@@ -1079,10 +1322,12 @@ def tempos_dos_creditos(alto_rolo, alto_coluna, n_cargos, cargos_primeiro=False)
         t_cargos = t_entrada + t_rolo + t_fim_rolo        # no relogio dos creditos, onde entra o primeiro cargo
         dur = t_cargos + n_cargos * t_cargo + t_titulo
         t_rolo_entra, t_titulo_entra = 0.0, t_cargos + n_cargos * t_cargo
-    return {"t_rolo": t_rolo, "vel_nomes": vel_nomes, "vel_fotos": vel_fotos, "t_cargo": t_cargo,
-            "t_titulo": t_titulo, "t_entrada": t_entrada, "t_fim_rolo": t_fim_rolo, "t_cargos": t_cargos,
-            "dur": dur, "primeiro": "cargos" if cargos_primeiro else "rolo", "n_cargos": n_cargos,
-            "t_rolo_entra": t_rolo_entra, "t_titulo_entra": t_titulo_entra}
+    T = {"t_rolo": t_rolo, "vel_nomes": vel_nomes, "vel_fotos": vel_fotos, "t_cargo": t_cargo,
+         "t_titulo": t_titulo, "t_entrada": t_entrada, "t_fim_rolo": t_fim_rolo, "t_cargos": t_cargos,
+         "dur": dur, "primeiro": "cargos" if cargos_primeiro else "rolo", "n_cargos": n_cargos,
+         "t_rolo_entra": t_rolo_entra, "t_titulo_entra": t_titulo_entra}
+    T.update(extra)
+    return T
 
 
 def desenho_dos_creditos(rolo, coluna, textos, estilo, T):
@@ -1117,12 +1362,19 @@ def desenho_dos_creditos(rolo, coluna, textos, estilo, T):
     titulo_let = render.letreiro([TITULO], 130, 0.18, 11)
     data_let = letreiro_1x([DATA], 58, 0.30)
 
+    # A VELOCIDADE DELE (5b): cada lado para no fim dele (fim_nomes, fim_fotos); sem ela, o de sempre
+    fim_nomes, fim_fotos = T.get("fim_nomes"), T.get("fim_fotos")
+
     def rolo_em(tr):
         """O rolo dos nomes e a coluna das fotos no instante tr do rolo (0 = o primeiro titulo a meio)."""
         tela = preto.copy()
         y0 = int(A * 0.45 - tr * vel_nomes)                # o primeiro titulo comeca a meio do ecra
+        if fim_nomes is not None and tr > fim_nomes:       # os nomes ja acabaram: parados no fim deles
+            y0 = int(A * 0.45 - fim_nomes * vel_nomes)
         tela.paste(rolo, (PAINEL_NOMES[0] - MARGEM_BRILHO, y0))
         yf = int(A * 0.10 - tr * vel_fotos)
+        if fim_fotos is not None and tr > fim_fotos:       # a coluna ja acabou: parada no fim dela
+            yf = int(A * 0.10 - fim_fotos * vel_fotos)
         tela.paste(coluna, (CENTRO_FOTOS - coluna.width // 2, yf))
         tela = Image.composite(tela, preto, bordas)
         if tr > t_rolo - 0.8:
@@ -1143,16 +1395,41 @@ def desenho_dos_creditos(rolo, coluna, textos, estilo, T):
                                          anchor="mm")
         return Image.eval(tela, lambda v, a=alfa: int(v * a))
 
-    def titulo_em(u):
-        """O titulo final e a data no instante u deles, a acender em 1 s e a apagar nos ultimos 2,5 s."""
+    def titulo_em(u, ja_aceso=False, apaga=2.5):
+        """O titulo final e a data no instante u deles, a acender em 1 s e a apagar nos ultimos 2,5 s.
+
+        Com as partes noutra ordem (3 de outubro): `ja_aceso`, o titulo primeiro, nasce do fim do filme ja
+        aceso (o encadeado e o do main()); `apaga` e o fade do fim, ou o dos cargos se nao for a ultima."""
         fundo = render.pousar_letreiro(titulo_let, u)
         camada = preto.copy()
         camada.paste(data_let, ((L - data_let.width) // 2, A // 2 + 110 - data_let.height // 2))
         fundo = ImageChops.screen(fundo, camada)
         alfa = suave(u / 1.0) * (1.0 - suave((u - (t_titulo - 2.5)) / 2.5))
+        if ja_aceso or apaga != 2.5:
+            entra = 1.0 if (ja_aceso and u < TITULO_ACENDE) else suave(u / TITULO_ACENDE)
+            alfa = entra * (1.0 - suave((u - (t_titulo - apaga)) / apaga))
         return Image.eval(fundo, lambda v, a=alfa: int(v * a))
 
+    def creditos_por_partes(t):
+        """AS PARTES NOUTRA ORDEM (T["janelas"], tempos_dos_creditos): a parte em que t cai, ou a ultima."""
+        janelas = T["janelas"]
+        k = next((j for j, (_p, _ini, fim) in enumerate(janelas) if t < fim), len(janelas) - 1)
+        parte = janelas[k][0]
+        if parte == "rolo":
+            tr = t - T["t_rolo_entra"] - t_entrada
+            tela = rolo_em(tr)
+            if k > 0 and tr < 0:                    # a primeira e o main() que a desfaz do filme
+                tela = Image.blend(preto, tela, suave((tr + t_entrada) / t_entrada))
+            return tela
+        if parte == "cargos":
+            tc = t - T["t_cargos"]
+            j = min(int(tc // t_cargo) if tc > 0 else 0, len(cargos) - 1)
+            return cargo_em(j, tc - j * t_cargo, ja_aceso=(k == 0 and j == 0))
+        return titulo_em(t - T["t_titulo_entra"], ja_aceso=(k == 0), apaga=T["titulo_apaga"])
+
     def creditos(t):
+        if T.get("janelas"):
+            return creditos_por_partes(t)
         if primeiro == "cargos":
             # OS CARGOS PRIMEIRO: o primeiro ja aceso desde o zero (o main() desfaz o fim do filme nele),
             # depois um de cada vez do preto; o rolo a entrar do preto; e o titulo
@@ -1213,24 +1490,42 @@ def main():
                                        == os.path.splitdrive(C.REPO)[0].lower() else fonte))
     if not fotos:
         raise SystemExit("Nenhuma foto para a coluna dos creditos (%s)" % fonte)
-    for a in titulos_que_encolhem(blocos) + quem_que_encolhe(textos) + caracteres_que_faltam(textos, blocos):
+    # com os nomes corridos os titulos dos grupos nao vao ao ecra, e nao se dizem (3 de outubro)
+    corridos = textos["nomes_corridos"]
+    for a in (titulos_que_encolhem([] if corridos else blocos) + quem_que_encolhe(textos)
+              + caracteres_que_faltam(textos, blocos)):
         print("  AVISO: %s" % a)
     nao_cabem = textos_que_nao_cabem(textos, blocos)
     for p in nao_cabem:
         print("  NAO CABE: %s" % p)
     if nao_cabem and "--so-dizer" not in sys.argv:
         raise SystemExit("%d textos dos creditos nao cabem no ecra; nada foi desenhado" % len(nao_cabem))
-    rolo = rolo_de_nomes(blocos)
+    rolo = rolo_de_nomes(blocos, corridos) if corridos else rolo_de_nomes(blocos)
     coluna = coluna_de_fotos(fotos)
-    T = tempos_dos_creditos(rolo.height, coluna.height, len(textos["cargos"]), textos["cargos_primeiro"])
+    T = tempos_dos_creditos(rolo.height, coluna.height, len(textos["cargos"]), textos["cargos_primeiro"],
+                            textos["partes"], textos["velocidade"])
     t_rolo, vel_nomes, vel_fotos, dur = T["t_rolo"], T["vel_nomes"], T["vel_fotos"], T["dur"]
     t_cargo, t_entrada, t_cargos = T["t_cargo"], T["t_entrada"], T["t_cargos"]
     print("rolo de nomes %d px a %.0f px/s; coluna de fotos %d px a %.0f px/s; rolo %.1f s; creditos %.1f s"
           % (rolo.height, vel_nomes, coluna.height, vel_fotos, t_rolo, dur))
+    # AS PARTES, OS NOMES CORRIDOS E A VELOCIDADE (3 de outubro): diz-se o que nao e o de sempre
+    if T["partes"] not in (PARTES_HOJE, PARTES_CARGOS_PRIMEIRO) or corridos:
+        print("partes: %s%s; %s" % (" > ".join(T["partes"]), "" if "cargos" in T["partes"] else " (sem cargos)",
+                                    ", ".join("%s de %.2f a %.2f s" % j for j in T["janelas"]) if T.get("janelas")
+                                    else "a ordem de sempre"))
+        if corridos:
+            print("nomes corridos: sem titulos nem subtitulos de grupo, %d linhas de nomes" % len(linhas_dos_nomes(blocos)))
+    for a in avisos_da_velocidade(T, alturas_na_coluna(fotos) if T.get("velocidade") else [],
+                                  linhas_dos_nomes(blocos) if T.get("velocidade") else []):
+        print("  AVISO: %s" % a)
+    if T.get("parado"):
+        print("velocidade: os %s acabam %.1f s antes e ficam parados no fim (fora do ecra) esse tempo"
+              % (T["parado"][0], T["parado"][1]))
     # a ordem e as pessoas dizem-se quando nao sao as de sempre: os cargos primeiro, outro numero de cargos, ou
     # um cargo com mais de uma pessoa (corretor, 2 de outubro a noite: com tres cargos ficava calado das pessoas)
-    if textos["cargos_primeiro"] or len(textos["cargos"]) != len(CARGOS) \
-            or any(len(pessoas_do_quem(q)) > 1 for _c, q in textos["cargos"]):
+    if T["partes"] in (PARTES_HOJE, PARTES_CARGOS_PRIMEIRO) and (
+            textos["cargos_primeiro"] or len(textos["cargos"]) != len(CARGOS)
+            or any(len(pessoas_do_quem(q)) > 1 for _c, q in textos["cargos"])):
         print("ordem: %s; %d cargos (%s)" % (
             "os cargos primeiro, depois o rolo e o titulo" if textos["cargos_primeiro"]
             else "o rolo, depois os cargos e o titulo", len(textos["cargos"]),
@@ -1246,8 +1541,11 @@ def main():
         # agora contados de onde o rolo acaba (t_cargos); o rolo a 1, 12 e 40 s da entrada dele. Com os tres
         # cargos de sempre e o rolo primeiro sao os mesmos sete instantes de sempre.
         r0 = T["t_rolo_entra"]
-        for t in ((r0 + 1.0, r0 + 12.0, r0 + 40.0) + tuple(t_cargos + k * t_cargo + 2.0 for k in range(len(textos["cargos"])))
-                  + (T["t_titulo_entra"] + 2.5,)):
+        # sem cargos ou sem titulo nas partes (3 de outubro), so os que existem
+        for t in ((r0 + 1.0, r0 + 12.0, r0 + 40.0)
+                  + (tuple(t_cargos + k * t_cargo + 2.0 for k in range(len(textos["cargos"])))
+                     if t_cargos is not None else ())
+                  + ((T["t_titulo_entra"] + 2.5,) if T["t_titulo_entra"] is not None else ())):
             creditos(t).save(os.path.join(pasta, "_quadro_%05.1f.jpg" % t), quality=88)
         print("quadros em", pasta)
         return

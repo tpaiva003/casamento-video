@@ -1,0 +1,15 @@
+{
+ "cartao": {
+  "fonte": "playfair_display"
+ },
+ "intro": {
+  "fundo": "#0C0B09",
+  "letra": "#D4AA5A",
+  "papel": "#EEDCAE",
+  "tinta": "#4A3B24"
+ },
+ "legenda": {
+  "fonte": "playfair_display",
+  "tamanho": 59
+ }
+}

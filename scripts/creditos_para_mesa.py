@@ -65,7 +65,23 @@ MEDIDAS = {
     "final_entra": 1.0, "final_sai": 2.5,
     # mascara_das_bordas(): as pontas de cima e de baixo desvanecem em 170 px
     "bordas": 170,
+    # AS PARTES, OS NOMES CORRIDOS E A VELOCIDADE (contrato de 3 de outubro, pontos 5 e 5b). As constantes do ponto5
+    # (TITULO_ACENDE, TITULO_APAGA_FIM, VEL_FOTOS_LIMITES, VEL_NOMES_LIMITES, FOTO_INTEIRA_MIN, LER_CPS, PARTES_HOJE e
+    # PARTES_CARGOS_PRIMEIRO), com estes valores enquanto ele nao as tiver: o titulo que nasce do fim do filme ja aceso
+    # comeca titulo_acende antes do fim da entrada e, sem ser a ultima parte, apaga-se com o fade dos cargos; a coluna
+    # das fotos escolhe-se de 60 a 300 px/s e os nomes de 30 a 200; avisa-se quando uma foto fica menos de 2 s inteira
+    # no ecra e quando uma linha de nomes pede mais do que as 12 letras por segundo das legendas
+    "titulo_acende": 1.0, "titulo_apaga_fim": 2.5,
+    "vel_fotos_limites": [60.0, 300.0], "vel_nomes_limites": [30.0, 200.0],
+    "foto_inteira_min": 2.0, "ler_cps": 12.0,
+    "partes_hoje": ["rolo", "cargos", "titulo"], "partes_cargos_primeiro": ["cargos", "rolo", "titulo"],
 }
+# as medidas de cima que o ponto5 tem em constantes: (chave do MEDIDAS, nome no ponto5, como se le)
+CONSTANTES_DAS_PARTES = (("titulo_acende", "TITULO_ACENDE", float), ("titulo_apaga_fim", "TITULO_APAGA_FIM", float),
+                         ("vel_fotos_limites", "VEL_FOTOS_LIMITES", lambda v: [float(x) for x in v]),
+                         ("vel_nomes_limites", "VEL_NOMES_LIMITES", lambda v: [float(x) for x in v]),
+                         ("foto_inteira_min", "FOTO_INTEIRA_MIN", float), ("ler_cps", "LER_CPS", float),
+                         ("partes_hoje", "PARTES_HOJE", list), ("partes_cargos_primeiro", "PARTES_CARGOS_PRIMEIRO", list))
 
 
 def _ponto5():
@@ -252,6 +268,10 @@ def creditos_para_mesa():
                             ("pessoas_max", "PESSOAS_MAX")):
             if hasattr(p5, nome):
                 medidas[chave] = getattr(p5, nome)
+        # AS PARTES E A VELOCIDADE (contrato de 3 de outubro), das constantes do ponto5 quando as tem
+        for chave, nome, le in CONSTANTES_DAS_PARTES:
+            if hasattr(p5, nome):
+                medidas[chave] = le(getattr(p5, nome))
         omissoes = {"cargos": [{"cargo": c, "quem": q} for c, q in p5.CARGOS],
                     "titulo": p5.TITULO, "data": p5.DATA}
         vazios = [{"etiqueta": e, "titulo": t, "sub": s, "linhas": []} for e, t, s in p5.GRUPOS]

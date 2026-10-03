@@ -38,7 +38,8 @@ def chave_base(linha):
     # fim do texto de uma fita que segurou, e a Mesa nao tem isso no "x" dela: com o sufixo a
     # chave deixava de bater, e a Mesa perdia a fita, a duracao do render e cinco faixas do som.
     texto = linha["texto_ecra"] or ""
-    if tipo == "marcos":
+    # E O CONTADOR PARADO NO FIM (clip.cp, 3 de outubro) leva o mesmo "~segundos", pela mesma razao.
+    if tipo in ("marcos", "contador"):
         import linha_tempo
         texto = linha_tempo.sem_segura(texto)
     return tipo + ":" + " ".join(texto.split())

@@ -231,6 +231,15 @@ def teste_medidas_dos_creditos_iguais_ao_ponto5():
                             ("pessoas_max", "PESSOAS_MAX")):
             if M.get(chave) != getattr(p5, nome, None):
                 faltam.append("%s (Mesa %r, ponto5 %s = %r)" % (chave, M.get(chave), nome, getattr(p5, nome, None)))
+        # AS CONSTANTES DAS PARTES E DA VELOCIDADE (contrato de 3 de outubro), as do MEDIDAS e as que a pagina tem escritas
+        for chave, nome, le in cm.CONSTANTES_DAS_PARTES:
+            if not hasattr(p5, nome) or M.get(chave) != le(getattr(p5, nome)):
+                faltam.append("%s (Mesa %r, ponto5 %s = %r)" % (chave, M.get(chave), nome, getattr(p5, nome, None)))
+        pagina = io.open(EDITOR, encoding="utf-8").read()
+        if ('var CRED_PARTES_HOJE = %s, CRED_PARTES_PRIMEIRO = %s;' % (json.dumps(p5.PARTES_HOJE), json.dumps(p5.PARTES_CARGOS_PRIMEIRO))) not in pagina:
+            faltam.append("as duas ordens de antes escritas na pagina (CRED_PARTES_HOJE e CRED_PARTES_PRIMEIRO)")
+        if M.get("titulo_acende") != M.get("final_entra") or M.get("titulo_apaga_fim") != M.get("final_sai"):
+            faltam.append("o titulo acende e apaga no fim como sempre (titulo_acende e titulo_apaga_fim contra final_entra e final_sai)")
     except Exception as erro:  # noqa: BLE001
         faltam.append("nao consegui ler o ponto5 (%s)" % erro)
     verifica("Mesa: as medidas dos creditos sao as do ponto5", not faltam,
@@ -265,6 +274,12 @@ def teste_rolo_e_coluna_da_mesa_iguais_ao_ponto5():
     est = json.load(open(fonte, encoding="utf-8"))
     est = est.get("data", est) if isinstance(est.get("data"), dict) else est
     textos = p5.textos_dos_creditos(est)
+    # O ROLO MEDE-SE NA LETRA DA LEGENDA DO ESTILO DELE (3 de outubro): o ponto5 parte os nomes com ela (letra_de_ler) e a
+    # Mesa tambem, pelas quebras de cada letra. Sem o estilo posto no render, comparava-se o Arial com o Playfair dele
+    # e o teste falhava por 234 px (3 linhas) sem haver defeito nenhum.
+    import render
+    estilo_dele = est.get("estilo") if isinstance(est.get("estilo"), dict) and est.get("estilo") else None
+    blocos = None
     if cred["sem_nomes"]:
         salta("Mesa: rolo igual ao ponto5", "sem a folha de convidados: " + cred["sem_nomes"])
     else:
@@ -277,7 +292,12 @@ def teste_rolo_e_coluna_da_mesa_iguais_ao_ponto5():
         if linhas_p5 != linhas_mesa:
             problemas.append("as linhas de nomes da Mesa nao sao as do por_grupo() (%d grupos la, %d aqui)"
                              % (len(linhas_p5), len(linhas_mesa)))
-        alturas["rolo"] = p5.rolo_de_nomes(blocos).height
+        try:
+            render.aplicar_estilo(estilo_dele, [])
+            alturas["rolo"] = p5.rolo_de_nomes(blocos).height
+            alturas["corridos"] = p5.rolo_de_nomes(blocos, True).height
+        finally:
+            render.aplicar_estilo(None, [])
     alturas["coluna"] = p5.coluna_de_fotos(caminhos).height if caminhos else 0
     porid = {}
     # OS CARGOS (decisao 109): na mesma leitura, com os cargos primeiro e com cinco cargos (dois acrescentados, um com duas
@@ -286,6 +306,8 @@ def teste_rolo_e_coluna_da_mesa_iguais_ao_ponto5():
 var L = credLayout(), variantes = [];
 [[false, 0], [true, 0], [false, 2], [true, 2]].forEach(function(v){
   var guarda = est.creditos, cr = JSON.parse(JSON.stringify(est.creditos || {}));
+  /* as duas ordens de antes, por grupos e a velocidade de sempre, escolha ele o que escolher na base */
+  delete cr.partes; delete cr.cargos_primeiro; delete cr.nomes_corridos; delete cr.velocidade;
   if(v[0]) cr.cargos_primeiro = true;
   if(v[1]) cr.cargos = [0, 1, 2].map(function(k){ return credCargo(k); }).concat([{cargo: "Fotografia", quem: "OS PADRINHOS\\nAS MADRINHAS"},
                                                                                   {cargo: "Bolo", quem: "A AVÓ"}]);
@@ -294,12 +316,26 @@ var L = credLayout(), variantes = [];
   variantes.push({primeiro: v[0], n: X.nCargos, dur: X.dur, tCargos: X.tCargos, tRoloEntra: X.tRoloEntra, tTituloEntra: X.tTituloEntra});
   est.creditos = guarda; credLay = null;
 });
-console.log(JSON.stringify({Hr: L.Hr, Hc: L.Hc, n: L.col.length, tRolo: L.tRolo, vn: L.vn, vf: L.vf, dur: L.dur, variantes: variantes}));
-""", problemas)
+/* AS PARTES, OS NOMES CORRIDOS E A VELOCIDADE (3 de outubro), na mesma leitura: a tabela do contrato, secao 10.6 */
+var de3 = %s.map(function(mais){
+  var guarda = est.creditos, cr = JSON.parse(JSON.stringify(est.creditos || {}));
+  delete cr.partes; delete cr.cargos_primeiro; delete cr.nomes_corridos; delete cr.velocidade;
+  Object.keys(mais).forEach(function(k){ cr[k] = mais[k]; });
+  est.creditos = cr; credLay = null;
+  var X = credLayout(), o = {creditos: cr, Hr: X.Hr, dur: X.dur, tRolo: X.tRolo, vn: X.vn, vf: X.vf, tRoloEntra: X.tRoloEntra, tTituloEntra: X.tTituloEntra,
+                             tCargos: X.tCargos, n: X.nCargos, parado: X.parado ? [X.parado.quem, X.parado.s] : null};
+  est.creditos = guarda; credLay = null;
+  return o;
+});
+console.log(JSON.stringify({Hr: L.Hr, Hc: L.Hc, n: L.col.length, tRolo: L.tRolo, vn: L.vn, vf: L.vf, dur: L.dur, variantes: variantes, de3: de3}));
+""" % json.dumps(VARIANTES_DE_3_DE_OUTUBRO), problemas)
     if saida:
-        A = p5.A
-        if "rolo" in alturas and saida["Hr"] != alturas["rolo"]:
-            problemas.append("rolo: a Mesa conta %d px, o ponto5 desenha %d" % (saida["Hr"], alturas["rolo"]))
+        # O QUE ELE TIVER ESCOLHIDO NA BASE CONTA (3 de outubro): com os nomes corridos o rolo e o corrido, e os tempos
+        # sao os da ordem, dos cargos e da velocidade que o textos_dos_creditos() le do est.creditos dele
+        rolo_dele = "corridos" if textos["nomes_corridos"] else "rolo"
+        if rolo_dele in alturas and saida["Hr"] != alturas[rolo_dele]:
+            problemas.append("rolo%s: a Mesa conta %d px, o ponto5 desenha %d" % (" corrido" if textos["nomes_corridos"] else "",
+                                                                                 saida["Hr"], alturas[rolo_dele]))
         if saida["Hc"] != alturas["coluna"]:
             problemas.append("coluna: a Mesa conta %d px, o ponto5 desenha %d" % (saida["Hc"], alturas["coluna"]))
         if saida["n"] != len(caminhos):
@@ -308,7 +344,8 @@ console.log(JSON.stringify({Hr: L.Hr, Hc: L.Hc, n: L.col.length, tRolo: L.tRolo,
         # contam-se de onde o rolo acaba (t_rolo + 1,0), e uma conta escrita aqui a mao continuava a passar com a
         # duracao antiga (o render viu-o)
         hr = alturas.get("rolo", saida["Hr"])
-        T = p5.tempos_dos_creditos(hr, alturas["coluna"], len(p5.CARGOS))
+        T = p5.tempos_dos_creditos(alturas.get(rolo_dele, saida["Hr"]), alturas["coluna"], len(textos["cargos"]), textos["cargos_primeiro"],
+                                   textos["partes"], textos["velocidade"])
         t_rolo, dur = T["t_rolo"], T["dur"]
         if abs(saida["dur"] - dur) > 1e-6 or abs(saida["tRolo"] - t_rolo) > 1e-6:
             problemas.append("duracao: a Mesa da %.3f s, o ponto5 %.3f s" % (saida["dur"], dur))
@@ -318,11 +355,38 @@ console.log(JSON.stringify({Hr: L.Hr, Hc: L.Hc, n: L.col.length, tRolo: L.tRolo,
                                                                                 Tv["t_titulo_entra"]):
                 problemas.append("%d cargos%s: a Mesa da %.4f s, o ponto5 %.4f s" % (
                     v["n"], " primeiro" if v["primeiro"] else "", v["dur"], Tv["dur"]))
+        # AS PARTES, OS NOMES CORRIDOS E A VELOCIDADE: o rolo corrido e o proprio rolo_de_nomes(blocos, True), e os
+        # tempos os do tempos_dos_creditos() com o que o textos_dos_creditos() le do mesmo est.creditos
+        for v in saida["de3"]:
+            t3 = p5.textos_dos_creditos({"creditos": v["creditos"]}, [])
+            hr3 = alturas.get("corridos" if t3["nomes_corridos"] else "rolo", v["Hr"])
+            if v["Hr"] != hr3:
+                problemas.append("rolo%s: a Mesa conta %d px, o ponto5 desenha %d" % (" corrido" if t3["nomes_corridos"] else "", v["Hr"], hr3))
+            T3 = p5.tempos_dos_creditos(hr3, alturas["coluna"], len(t3["cargos"]), t3["cargos_primeiro"], t3["partes"], t3["velocidade"])
+            da_mesa = (v["dur"], v["tRolo"], v["vn"], v["vf"], v["tRoloEntra"], v["tTituloEntra"], v["tCargos"], v["n"], v["parado"])
+            do_p5 = (T3["dur"], T3["t_rolo"], T3["vel_nomes"], T3["vel_fotos"], T3["t_rolo_entra"], T3["t_titulo_entra"], T3["t_cargos"],
+                     T3["n_cargos"], list(T3["parado"]) if T3.get("parado") else None)
+            if da_mesa != do_p5:
+                problemas.append("%s%s%s: a Mesa da %.4f s, o ponto5 %.4f s" % (
+                    ", ".join(t3["partes"]), ", corridos" if t3["nomes_corridos"] else "",
+                    (", " + str(t3["velocidade"])) if t3["velocidade"] else "", v["dur"], T3["dur"]))
     verifica("Mesa: rolo, coluna e tempos iguais ao ponto5", not problemas,
              "; ".join(problemas)[:300] if problemas else
-             "rolo %s px, coluna %d px de %d fotos, creditos %.4f s; com os cargos primeiro e com cinco cargos, ao bit: %s"
-             % (alturas.get("rolo", "sem nomes"), alturas["coluna"], len(caminhos), saida["dur"],
-                ", ".join("%.4f" % v["dur"] for v in saida["variantes"])))
+             "rolo %s px (corrido %s), coluna %d px de %d fotos, creditos %.4f s; com os cargos primeiro e com cinco cargos, ao bit: %s; "
+             "e as partes, os corridos e a velocidade de 3 de outubro: %s"
+             % (alturas.get("rolo", "sem nomes"), alturas.get("corridos", "sem nomes"), alturas["coluna"], len(caminhos), saida["dur"],
+                ", ".join("%.4f" % v["dur"] for v in saida["variantes"]), ", ".join("%.3f" % v["dur"] for v in saida["de3"])))
+
+
+# as linhas da tabela do contrato de 3 de outubro (saida/discussao/contrato_1003.md, secao 10.6), na leitura mais recente
+VARIANTES_DE_3_DE_OUTUBRO = [
+    {"partes": ["titulo", "rolo"]}, {"partes": ["titulo", "rolo"], "nomes_corridos": True}, {"partes": ["titulo", "cargos", "rolo"]},
+    {"partes": ["rolo", "titulo"]}, {"partes": ["cargos", "titulo", "rolo"]},
+    {"partes": ["titulo", "rolo"], "nomes_corridos": True, "velocidade": {"fotos": 100}},
+    {"partes": ["titulo", "rolo"], "nomes_corridos": True, "velocidade": {"nomes": 60}},
+    {"partes": ["titulo", "rolo"], "nomes_corridos": True, "velocidade": {"fotos": 200, "nomes": 40}},
+    {"partes": ["titulo", "rolo"], "nomes_corridos": True, "velocidade": {"fotos": 300}},
+]
 
 
 def _cred_de_ensaio():
@@ -922,7 +986,9 @@ DECLARACOES_ESTILO = ["var ESTILO_OMISSAO = ", "var ESTILO_CORPOS = ", "var ESTI
                       "var ESTILO_ROTULOS = ",
                       "var ESTILO_ARIAL = ", "var ESTILO_DATA_AFASTA = ",
                       # a letra do letreiro da intro (2 de outubro, a noite)
-                      "var FONTES_INTRO = ", "var ESTILO_IMPACT = ", "var ESTILO_INTRO_CUSTO = "]
+                      "var FONTES_INTRO = ", "var ESTILO_IMPACT = ", "var ESTILO_INTRO_CUSTO = ",
+                      # a posicao das legendas e a letra do contador (3 de outubro)
+                      "var LEG_POS = ", "var ESTILO_TEXTOS_DO_CONTADOR = "]
 FUNCOES_ESTILO = ["function estiloFontes(", "function estiloFonte(", "function estiloForaDoPc(", "function estiloLetra(",
                   "function estiloCss(", "function estiloHastesFinas(", "function estiloNotasDaLetra(",
                   "function estiloLetraExiste(", "function estiloMedidor(", "function estiloHex(", "function estiloRgb(",
@@ -942,6 +1008,11 @@ FUNCOES_ESTILO = ["function estiloFontes(", "function estiloFonte(", "function e
                   "function estiloCorpoDaLetraDaIntro(", "function estiloLetraIntroAtual(", "function estiloAvisosDaLetraIntro(",
                   "function estiloPct(", "function estiloIntroOQueMudou(", "function estiloCustoDaLetraIntro(",
                   "function estiloIntroFeitaComCopia(", "function estiloPoeLetraIntro(", "function estiloMomentoDaIntro(",
+                  # a posicao das legendas e a letra do contador (3 de outubro): o estiloLimpo, o estiloPoe, o
+                  # estiloTextoDoValor e o estiloAvisos passam por elas
+                  "function estiloCorDoContador(", "function legInteiro(", "function legPosicaoLimpa(",
+                  "function legPosicaoCompacta(", "function legPosicaoTexto(", "function estiloAvisosDaPosicao(",
+                  "function estiloAvisosDaLetraDoContador(",
                   "function copiaFunda(", "function corpo(", "function aplicar("]
 # as funcoes da Mesa que partem os textos dos creditos como o render, e o que elas chamam fora das regras puras
 FUNCOES_COM_EMOJIS = ["function credLargura(", "function credLetreiro(", "function credTextoMeio("]
@@ -1045,6 +1116,15 @@ def teste_estilo_da_mesa_igual_ao_render():
             v = mesa["contador"].pop(escolha, "falta")
             if v is not False:
                 problemas.append("o contador.%s de omissao e %r, devia ser false (como esta)" % (escolha, v))
+        # A POSICAO DAS LEGENDAS E A LETRA DO CONTADOR (3 de outubro) tambem ficam fora do render.estilo_omissao(): a
+        # posicao e {0, 0, centro}, a legenda de hoje, e a letra do contador e a de hoje, o Arial Bold do render
+        posicao = mesa["legenda"].pop("posicao", "falta")
+        if posicao != {"dx": 0, "dy": 0, "alinhamento": render.POSICAO_ALINHAMENTOS[0]}:
+            problemas.append("a posicao das legendas de omissao e %r, devia ser dx 0, dy 0, centro" % (posicao,))
+        if "fonte" not in render.estilo_omissao()["contador"]:
+            letra = mesa["contador"].pop("fonte", "falta")
+            if letra != render.LETRA_OMISSAO:
+                problemas.append("a letra do contador de omissao e %r, devia ser %r" % (letra, render.LETRA_OMISSAO))
         if sorted(s["e"]) != sorted(render.ESCOLHAS_DO_CONTADOR):
             problemas.append("as escolhas do contador da Mesa %s nao sao as do render %s" % (s["e"], list(render.ESCOLHAS_DO_CONTADOR)))
         import linha_tempo
@@ -4302,7 +4382,9 @@ def teste_estilo_data_afastada_grava_desfaz_e_junta():
             "function palcoTexto(", "function palcoRgb(", "function estiloTextoMeio(", "function estiloCoresContador(",
             "function fitaLer(", "function estiloDesenhaFita(", "function estiloFitaDoFilme(", "function estiloClipsDoFilme(",
             "function estiloLinha(", "function estiloRgbCss(", "function estiloMistura(", "function estiloReporParte(",
-            "function estiloVoltarAoMeu("]
+            "function estiloVoltarAoMeu(",
+            # a letra do contador (3 de outubro): o palco e a amostra escrevem os textos da fita com ela
+            "function palcoCssContador(", "function estiloCssContador("]
     js = """
 var PALCO = {marcas: {}}, ESTILO_PALETAS_OK = true;
 function tela(){
@@ -5927,7 +6009,6 @@ console.log(JSON.stringify(r));
                       declaracoes=DECLARACOES_MUSICA if tem_som else ())
     detalhe = ""
     if r:
-        n_cargos = len(p5.CARGOS)
         durs = []
         for k, m in enumerate(r):
             e = m["corpo"]
@@ -5940,7 +6021,9 @@ console.log(JSON.stringify(r));
             if p5.ordem_das_fotos(e)[0] != m["ids"]:
                 problemas.append("passo %d: a lista da Mesa e a ordem_das_fotos() do ponto5 diferem" % k)
             alto = p5.coluna_de_fotos(caminhos).height if caminhos else 0
-            T = p5.tempos_dos_creditos(m["Hr"], alto, n_cargos)
+            # com a ordem, os cargos e a velocidade que ele tiver na base (3 de outubro), e nao so os tres cargos de hoje
+            t_dele = p5.textos_dos_creditos(e, [])
+            T = p5.tempos_dos_creditos(m["Hr"], alto, len(t_dele["cargos"]), t_dele["cargos_primeiro"], t_dele["partes"], t_dele["velocidade"])
             if alto != m["Hc"] or abs(T["dur"] - m["dur"]) > 1e-6:
                 problemas.append("passo %d: coluna %d px e %.3f s no ponto5, %d px e %.3f s na Mesa" % (k, alto, T["dur"], m["Hc"], m["dur"]))
             durs.append(m["dur"])
@@ -6015,8 +6098,12 @@ console.log(JSON.stringify(r));
 FUNCOES_CARGOS = ["function credLimpaQuem(", "function credCargosGuardados(", "function credCargosIguaisAosDeHoje(",
                   "function credCargosMax(", "function credPessoasMax(", "function credPoeCargos(", "function credDepoisDosCargos(",
                   "function credAcrescentaCargo(", "function credTiraCargo(", "function credMoveCargo(",
-                  "function credPuxaOsDeHoje(", "function credOrdemDosCargos(", "function credPessoasDoQuem(",
-                  "function credHtmlDosCargos("]
+                  "function credPuxaOsDeHoje(", "function credPessoasDoQuem(", "function credHtmlDosCargos(",
+                  # a ordem dos cargos e, desde 3 de outubro, a ordem das partes dos creditos (credPoePartes): a da 109
+                  # continua a gravar o cargos_primeiro: true
+                  "function credListasIguais(", "function credPartesEmPalavras(", "function credPoePartes(",
+                  "function credFraseDaOrdem("]
+DECLARACOES_CARGOS = ["var CRED_PARTES_HOJE = ", "var CRED_PARTE_NOME = "]
 FUNCOES_LAYOUT_CRED = ["function credSemAcentos(", "function credPid(", "function credVersao(", "function credMarcadas(",
                        "function credFotos(", "function credMedida(", "function credOmissoes(", "function credCargo(",
                        "function credTitulo(", "function credData(", "function credGrupoTexto(", "function credGrupoPorEtiqueta(",
@@ -6296,13 +6383,13 @@ function foto(rot){ r.passos.push({rot: rot, creditos: est.creditos === undefine
 r.passos = [];
 // A. COMO ESTA: abrir, pintar os cargos e escolher «Depois dos convidados» nao grava nada
 abrir(B0); marcas = 0; var antes = JSON.stringify(est.creditos);
-credHtmlDosCargos(); credCargosGuardados(); credContas(); var naoMudou = credOrdemDosCargos(false);
+credHtmlDosCargos(); credCargosGuardados(); credContas(); var naoMudou = credPoePartes(CRED_PARTES_HOJE);
 r.A = {marcas: marcas, igual: JSON.stringify(est.creditos) === antes, devolveu: naoMudou, pilha: pilhaDesfazer.length};
 // B. a ordem, e o anular
-credOrdemDosCargos(true); foto("os cargos primeiro");
+credPoePartes(CRED_PARTES_PRIMEIRO); foto("os cargos primeiro");
 var de = copia(est.creditos); desfazer(); r.B = {depois: copia(est.creditos), antes: de};
 // C. acrescentar, escrever, mudar a ordem, tirar
-credOrdemDosCargos(true);
+credPoePartes(CRED_PARTES_PRIMEIRO);
 credAcrescentaCargo(); foto("acrescentar (vazio)");
 credMudaTexto("cargo", "3", "Fotografia"); foto("o cargo do novo");
 credMudaTexto("quem", "3", "  OS PADRINHOS \\n\\n AS MADRINHAS\\r\\nOS IRMAOS  "); foto("as pessoas do novo");
@@ -6327,7 +6414,7 @@ credTiraCargo(0); foto("os tres de hoje sem o primeiro"); r.F2 = copia(est.credi
 // G. menos de tres: acrescentar no terceiro lugar nasce com o texto de hoje desse lugar
 credAcrescentaCargo(); foto("acrescentar no terceiro lugar"); r.G = copia(est.creditos.cargos);
 // H. dois aparelhos: aqui a ordem, la um cargo; juntam-se. Os dois nos cargos: conflito
-abrir(B0); credOrdemDosCargos(true);
+abrir(B0); credPoePartes(CRED_PARTES_PRIMEIRO);
 var la = com({creditos: Object.assign(copia(B0.creditos), {cargos: [{cargo: "A", quem: "QA"}, {cargo: "B", quem: "QB"}, {cargo: "C", quem: "QC"}, {cargo: "D", quem: "E\\nF"}]}), rev: 1436});
 var j = juntarComBase(la);
 r.H1 = {ok: j.ok, meus: j.meus, deles: j.deles, creditos: copia(est.creditos),
@@ -6335,7 +6422,7 @@ r.H1 = {ok: j.ok, meus: j.meus, deles: j.deles, creditos: copia(est.creditos),
 abrir(B0); credAcrescentaCargo(); credMudaTexto("cargo", "3", "AQUI");
 j = juntarComBase(la);
 r.H2 = {ok: j.ok, choque: j.choque, cargos: copia(est.creditos.cargos)};
-abrir(B0); credOrdemDosCargos(true);
+abrir(B0); credPoePartes(CRED_PARTES_PRIMEIRO);
 j = juntarComBase(com({creditos: Object.assign(copia(B0.creditos), {cargos_primeiro: true}), rev: 1436}));
 r.H3 = {ok: j.ok, primeiro: est.creditos.cargos_primeiro};
 // I. a Mesa 53 aberta num separador esquecido: muda o titulo e guarda a ordem e os cinco cargos (copia o est.creditos
@@ -6350,7 +6437,7 @@ j = juntarComBase(com({creditos: r.I1, rev: 1436}));
 r.J = {ok: j.ok, deles: j.deles, creditos: copia(est.creditos)};
 console.log(JSON.stringify(r));
 """ % {"b0": json.dumps(B0, ensure_ascii=False)}
-    r = _correr_js(DECLARACOES_JUNTAR, funcoes, prelude, corpo_js, problemas)
+    r = _correr_js(DECLARACOES_JUNTAR + DECLARACOES_CARGOS, funcoes, prelude, corpo_js, problemas)
     if r:
         A = r["A"]
         if A["marcas"] or not A["igual"] or A["devolveu"] is not False or A["pilha"]:
@@ -6438,7 +6525,9 @@ def teste_cargos_o_render_le_e_a_mesa_avisa():
     p5 = cm._ponto5()
     cred = _cred_dos_cargos(p5)
     funcoes = FUNCOES_LAYOUT_CRED + FUNCOES_CARGOS + ["function credAvisoDoTexto(", "function credCorpoDoQuem(",
-                                                      "function credMinimoDaLetra(", "function credLetraDe(", "function copiaFunda("]
+                                                      "function credMinimoDaLetra(", "function credLetraDe(", "function copiaFunda(",
+                                                      # a ordem esta na aba «Ordem e velocidade» desde 3 de outubro
+                                                      "function credHtmlDaOrdem(", "function fmtS(", "function mmssDec("]
     prelude = """
 var est = %(est)s, CRED = %(cred)s, credLay = null, credTemFinais = false, porId = {}, RENDER_LE = {}, credLargurasGuardadas = {};
 var CRED_ARIAL = {id: "arial_bold", nome: "Arial Bold", corpo_minimo: 58};
@@ -6455,14 +6544,14 @@ function credLargura(t, corpo, espaco){ var n = Array.from(String(t)).length; re
 var r = {}, largo = "UMA PESSOA COM UM NOME MUITO COMPRIDO";
 [["hoje", {cargos_primeiro: true, cargos_varios: true}], ["antigo", {cargos_primeiro: false, cargos_varios: false}], ["sem dizer", {}]].forEach(function(x){
   RENDER_LE = x[1];
-  var h = credHtmlDosCargos();
+  var h = credHtmlDaOrdem() + credHtmlDosCargos();
   r[x[0]] = {ordem: /A ordem dos cargos ainda não chega ao filme/.test(h), cargos: /Mais cargos e mais pessoas ainda não chegam ao filme/.test(h),
              um: credAvisoDoTexto("quem", largo), varias: credAvisoDoTexto("quem", "OS PADRINHOS\\n" + largo),
              seis: credAvisoDoTexto("quem", "A\\nB\\nC\\nD\\nE\\nF")};
 });
 console.log(JSON.stringify(r));
 """
-    r = _correr_js([], funcoes, prelude, corpo_js, problemas)
+    r = _correr_js(DECLARACOES_CARGOS, funcoes, prelude, corpo_js, problemas)
     if r:
         if r["hoje"]["ordem"] or r["hoje"]["cargos"] or r["sem dizer"]["ordem"] or r["sem dizer"]["cargos"]:
             problemas.append("a Mesa diz que nao chega com um render que ja le, ou sem saber: %s" % r)
@@ -6503,7 +6592,7 @@ def teste_mesa_montada_traz_os_cargos():
                         ("t_cargo", "T_CARGO"), ("cargo_entra", "CARGO_ENTRA"), ("quem_corpo", "QUEM_CORPO")):
         if medidas.get(chave) != getattr(p5, nome):
             problemas.append("%s na pagina %r, no ponto5 %r" % (chave, medidas.get(chave), getattr(p5, nome)))
-    for marca in ("function credHtmlDosCargos(", "function credGeometriaDoCargo(", 'data-ccordem="1"', "credMaisCargo"):
+    for marca in ("function credHtmlDosCargos(", "function credGeometriaDoCargo(", 'data-cpordem="hoje"', "credMaisCargo"):
         if marca not in html:
             problemas.append("a pagina nao traz %s" % marca)
     verifica("Mesa: a Mesa montada traz os cargos", not problemas, "; ".join(problemas)[:400] if problemas else
@@ -6552,6 +6641,1300 @@ console.log(JSON.stringify(r));
     verifica("Mesa: o texto depressa conta as letras do filme", not problemas, "; ".join(problemas)[:400] if problemas else
              "%d textos com emojis, tom de pele, ZWJ, bandeira, tecla, etiquetas e os que se tiram: %s letras, como o filme"
              % (len(textos), r))
+
+
+# ------------------------------------------------- as legendas de 3 de outubro (contrato_1003, pontos 1 a 4)
+# O Tiago, a 3 de outubro, de madrugada: a letra do contador, a legenda numa so linha, a posicao das legendas (a de todas e
+# a de cada clip) e as fotos inteiras do lado a lado. O render faz (render.py, linha_tempo.py, montar_da_mesa.py); a Mesa
+# deixa escolher, mostra com as mesmas contas e avisa. Guarda-se aqui que:
+#  17. as contas da Mesa sao as do render: os limites, a posicao de todas mais a do clip, o dx que encosta a margem, o x de
+#      cada linha, as celulas do lado a lado e quanto o enchimento corta;
+#  18. «como esta» nao grava nada, cada escolha grava so a sua chave (est.estilo.legenda.posicao, est.estilo.contador.fonte,
+#      clip.x1, clip.lp, clip.li), passa pelo anular, o montar e o render leem o que a Mesa grava sem um aviso, e a juncao
+#      de dois aparelhos e uma Mesa antiga nao as perdem;
+#  19. a Mesa avisa a legenda que nao cabe numa linha com as palavras do contrato, o lado a lado que corta mais de 25%, a
+#      letra do contador que se le pior a 15 m nos casos em que o render avisa, e diz «ainda nao chega ao filme» enquanto o
+#      render nao ler a chave;
+#  20. o gerar_mesa pergunta ao desenho do render, e nao so a limpeza do estilo.
+DECLARACOES_LEG = ["var LEGENDA_LADO = ", "var LADO_CORTE_AVISO = ", "var LADO_FOLGA_PX = ", "var LADO_INTEIRA = ",
+                   "var PISO_DA_LEGENDA = ", "var lpUltimoToque = "]
+FUNCOES_LEG = ["function lpDoClip(", "function x1Do(", "function liDo(", "function x1NoFilme(", "function liNoFilme(", "function legPosicao(", "function legDxEfetivo(",
+               "function legXs(", "function legJunta(", "function legNumaLinha(", "function legLinhas(",
+               "function legPisoDoGrupo(", "function ladoCelulas(", "function ladoCorte(", "function ladoCorteDoClip(",
+               "function ladoPct(", "function ladoCortadas(", "function avisoLadoCorta(", "function avisosNumaLinha(",
+               "function estiloMede(", "function estiloQuebra("]
+FUNCOES_LEG_INSPETOR = ["function temLegendaDeBaixo(", "function textoDaLegendaDoClip(", "function notaNumaLinha(",
+                        "function legNoLimite(", "function x1NaoCabe(", "function notaPosicaoDoClip(", "function lpSetaParada(",
+                        "function lpPoe(", "function lpPasso(", "function lpRepor(", "function x1Poe(", "function liPoe(",
+                        "function guardaDesfazerCampos(", "function desfazer(", "function ordemDoClip("]
+FUNCOES_LEG_ESTILO = ["function estiloPoePosicao(", "function estiloSetaPosicao(", "function estiloComoEsta(",
+                      "function estiloCssContador(", "function palcoCssContador(", "function estiloGaranteLetra("]
+APOIO_LEG = """
+var porId = %(porid)s, estiloPassoEm = 0, estiloLetrasPedidas = {}, clipAtivo = 0, selClips = [], ancoraSel = -1, marcas = 0, avisos = [];
+function eGrupo(c){ return c && (c.t === "lado" || c.t === "colagem" || c.t === "pilha"); }
+function modoTextos(c){ return c.vf ? (c.vm === "legenda" ? "legenda" : "foto") : ""; }
+function temTextosFotos(c){ return (c.xf || []).some(function(t){ return String(t || "").trim(); }); }
+function textosDasFotos(c){ return (c.fotos || []).map(function(_f, k){ return (c.xf || [])[k] || ""; }); }
+function tamanhoTextos(c){ return c.tt || estiloValor("legenda", "tamanho"); }
+function estiloDe(c){ return c.estilo || ""; }
+function estiloEsqueceMeu(){}
+function marcar(){ marcas++; }
+function avisar(t){ avisos.push(t); }
+function nada(){}
+var pintaClips = nada, pintaVersoes = nada, pintaInspetor = nada, pintaGrelha = nada;
+function aproximaAtivo(){ return false; }
+function temVozes(){ return false; }
+function videoNoCorpo(){ return false; }
+function opcoesTextos(){ return undefined; }
+"""
+
+
+def teste_legendas_1003_como_o_render():
+    """A posicao das legendas, o dx que encosta a margem, as celulas do lado a lado e o corte: as contas do render.
+
+    O DEFEITO QUE ISTO APANHA: a Mesa a mostrar a legenda 40 px acima e o filme a po-la noutro sitio (outro limite, outra
+    margem, a soma da de todas com a do clip cortada de outra maneira), uma legenda comprida que na Mesa anda os 200 px
+    pedidos e no filme encosta a margem, e a Mesa a dizer que uma foto perde 34% quando o render corta 41% (outra celula,
+    outra conta): ele decidia as «fotos inteiras» por um numero que nao e o do filme.
+    """
+    if not shutil.which("node"):
+        salta("Mesa: as legendas de 3 de outubro como o render", "sem node neste PC")
+        return
+    import render
+    problemas = []
+    precisos = ("LEGENDA_MARGEM_LADO", "POSICAO_DX", "POSICAO_DY", "POSICAO_ALINHAMENTOS", "LP_DX", "LP_DY", "LADO_CORTE_AVISO",
+                "LADO_FOLGA", "PISO_MINIMO_DA_LEGENDA", "posicao_da_legenda", "dx_efetivo", "x_das_linhas", "ler_opcoes_clip",
+                "lado_celulas", "lado_corte", "piso_da_legenda")
+    faltam = [n for n in precisos if not hasattr(render, n)]
+    if faltam:
+        salta("Mesa: as legendas de 3 de outubro como o render", "o render ainda nao tem %s" % ", ".join(faltam))
+        return
+    posicoes = [None, {}, {"dy": -40}, {"dx": 120, "dy": -500}, {"dx": -600, "alinhamento": "direita"}, {"dx": 601},
+                {"dy": 10}, {"dy": -501}, {"dx": "40", "dy": "-80", "alinhamento": "esquerda"}, {"dx": 40.0, "dy": -80.5},
+                {"dx": True, "alinhamento": "meio"}, {"alinhamento": "centro"}, "acima", {"dx": 300, "dy": -200, "x": 1}]
+    lps = [None, {}, {"dx": 10, "dy": -40}, {"dy": 500}, {"dy": 501}, {"dx": -1200, "dy": -500}, {"dx": 1201}, {"dx": "abc"},
+           {"dx": "-30", "dy": 40.0}, {"dy": 40.5}, [1, 2], {"dx": 900, "dy": 300}]
+    larguras = [[], [400.0], [1660.0], [1700.5], [300.0, 1200.25, 80.0], [1659.0, 20.0]]
+    dxs = [0, 1, -1, 130, -130, 229.75, 600, -600]
+    tamanhos = [[(4000, 3000), (3000, 4000)], [(1600, 1200), (1080, 1920), (1920, 1080)], [(956, 1080), (1000, 1000)],
+                [(4000, 3000)] * 4, [(3000, 4000)] * 6, [(4000, 3000), None, (0, 10)], [(2048, 1365), (1365, 2048), (4000, 3000)]]
+    js = """
+var r = {consts: {margem: LEGENDA_LADO, pos: LEG_POS, aviso: LADO_CORTE_AVISO, folga: LADO_FOLGA_PX, inteira: LADO_INTEIRA, piso: PISO_DA_LEGENDA,
+                  textos: ESTILO_TEXTOS_DO_CONTADOR.map(function(x){ return x[1]; })}};
+var P = %s, LP = %s, LARG = %s, DX = %s, TAM = %s;
+r.posicao = P.map(function(p){
+  return LP.map(function(lp){
+    if(p === null) delete est.estilo; else est.estilo = {legenda: {posicao: p}};
+    var q = legPosicao(lp === null ? {} : {lp: lp});
+    return [q.dx, q.dy, q.alinhamento];
+  });
+});
+r.limpa = P.map(function(p){ var l = p === null ? null : legPosicaoLimpa(p); return l ? legPosicaoCompacta(l) : {}; });
+delete est.estilo;
+r.xs = LARG.map(function(l){ return DX.map(function(dx){ return ["centro", "esquerda", "direita"].map(function(a){ return [legDxEfetivo(l, dx, a), legXs(l, dx, a)]; }); }); });
+r.celulas = {}; r.corte = {};
+["2v", "3v", "3s", "4q", "6g"].forEach(function(lay){
+  r.celulas[lay] = ladoCelulas(lay);
+  r.corte[lay] = TAM.map(function(t){ return ladoCorte(lay, t); });
+});
+r.piso = [0, -10, -200, -270, -400, -500].map(function(dy){ if(dy) est.estilo = {legenda: {posicao: {dy: dy}}}; else delete est.estilo; return legPisoDoGrupo({}, 1080); });
+delete est.estilo;
+/* numa so linha: junta as mudancas de linha, cabe ou parte como hoje (a medida do node e a de reserva, 0,58 do corpo por letra) */
+var curto = "Clara\\ne Tiago", longo = new Array(40).join("palavra ");
+r.linhas = {curtoHoje: legLinhas(curto, 46, false).linhas, curtoUma: legLinhas(curto, 46, true), longoHoje: legLinhas(longo, 46, false).linhas.length,
+            longoUma: legLinhas(longo, 46, true).linhas.length, longoCabe: legNumaLinha(longo, 46), curtoCabe: legNumaLinha(curto, 46), ha: legNumaLinha("", 46)};
+console.log(JSON.stringify(r));
+""" % (json.dumps(posicoes), json.dumps(lps), json.dumps(larguras), json.dumps(dxs),
+       json.dumps([[list(t) if t else None for t in grupo] for grupo in tamanhos]))
+    s = _correr_estilo({}, js, problemas, mais=FUNCOES_LEG, declaracoes=DECLARACOES_LEG)
+    contas = 0
+    if s:
+        c = s["consts"]
+        esperado = {"margem": render.LEGENDA_MARGEM_LADO, "aviso": render.LADO_CORTE_AVISO, "folga": render.LADO_FOLGA,
+                    "piso": render.PISO_MINIMO_DA_LEGENDA}
+        for k, v in esperado.items():
+            if c[k] != v:
+                problemas.append("a Mesa tem %s = %s e o render %s" % (k, c[k], v))
+        pos = c["pos"]
+        if (tuple(pos["dx"]), tuple(pos["dy"]), tuple(pos["lpDx"]), tuple(pos["lpDy"]), tuple(pos["alinhamentos"])) != \
+                (tuple(render.POSICAO_DX), tuple(render.POSICAO_DY), tuple(render.LP_DX), tuple(render.LP_DY), tuple(render.POSICAO_ALINHAMENTOS)):
+            problemas.append("os limites da posicao da Mesa %s nao sao os do render" % pos)
+        if hasattr(render, "CORPOS_DO_CONTADOR") and c["textos"] != [corpo for _q, corpo in render.CORPOS_DO_CONTADOR]:
+            problemas.append("os corpos do contador da Mesa %s nao sao os do render %s" % (c["textos"], render.CORPOS_DO_CONTADOR))
+        if hasattr(render, "lado_inteira"):
+            import inspect
+            fonte = inspect.getsource(render.lado_inteira)
+            if "GaussianBlur(%d)" % c["inteira"]["desfoque"] not in fonte or ", %s)" % c["inteira"]["brilho"] not in fonte:
+                problemas.append("o fundo das fotos inteiras da Mesa %s nao e o do render.lado_inteira()" % c["inteira"])
+        try:
+            for p, linha in zip(posicoes, s["posicao"]):
+                avisos = []
+                render.aplicar_estilo({} if p is None else {"legenda": {"posicao": p}}, avisos)
+                limpo = (render.estilo_ativo().get("legenda") or {}).get("posicao") or {}
+                if s["limpa"][posicoes.index(p)] != limpo:
+                    problemas.append("a posicao %r limpa-se %s na Mesa e %s no render" % (p, s["limpa"][posicoes.index(p)], limpo))
+                for lp, meu in zip(lps, linha):
+                    o = render.ler_opcoes_clip(json.dumps({"lp": lp})) if lp is not None else None
+                    dele = list(render.posicao_da_legenda(o))
+                    contas += 1
+                    if meu != dele:
+                        problemas.append("posicao %r com lp %r: a Mesa da %s e o render %s" % (p, lp, meu, dele))
+        finally:
+            render.aplicar_estilo({}, [])
+        for l, por_dx in zip(larguras, s["xs"]):
+            for dx, por_al in zip(dxs, por_dx):
+                for al, (ef, xs) in zip(("centro", "esquerda", "direita"), por_al):
+                    contas += 1
+                    if abs(ef - render.dx_efetivo(l, dx, al)) > 1e-9 or len(xs) != len(l) or \
+                            any(abs(a - b) > 1e-9 for a, b in zip(xs, render.x_das_linhas(l, dx, al))):
+                        problemas.append("larguras %s, dx %s, %s: a Mesa da %s %s e o render %s %s"
+                                         % (l, dx, al, ef, xs, render.dx_efetivo(l, dx, al), render.x_das_linhas(l, dx, al)))
+        for lay in ("2v", "3v", "3s", "4q", "6g"):
+            dele = [list(r) for r, _vem in render.lado_celulas(lay)]
+            if s["celulas"][lay] != dele:
+                problemas.append("as celulas do %s: a Mesa %s e o render %s" % (lay, s["celulas"][lay], dele))
+            for t, meu in zip(tamanhos, s["corte"][lay]):
+                certo = render.lado_corte(lay, t)
+                contas += 1
+                if len(meu) != len(certo) or any((a is None) != (b is None) or (a is not None and abs(a - b) > 1e-9)
+                                                 for a, b in zip(meu, certo)):
+                    problemas.append("o corte do %s com %s: a Mesa %s e o render %s" % (lay, t, meu, certo))
+        for dy, meu in zip([0, -10, -200, -270, -400, -500], s["piso"]):
+            certo = render.piso_da_legenda(None if dy == 0 else 0.5 * render.A + dy)
+            if abs(meu - certo) > 1e-9:
+                problemas.append("o piso das fotos com a legenda %d acima: a Mesa %s e o render %s" % (-dy, meu, certo))
+        li = s["linhas"]
+        if li["curtoHoje"] != ["Clara", "e Tiago"] or li["curtoUma"]["linhas"] != ["Clara e Tiago"] or not li["curtoUma"]["uma"] \
+                or li["curtoUma"]["tam"] != 46:
+            problemas.append("numa linha, o texto curto: %s e %s" % (li["curtoHoje"], li["curtoUma"]))
+        if li["longoUma"] != li["longoHoje"] or li["longoHoje"] < 2 or li["longoCabe"]["cabe"] or not li["curtoCabe"]["cabe"]:
+            problemas.append("numa linha, o texto que nao cabe devia partir como hoje: %s" % li)
+        if li["ha"]["ha"] != render.L - 2 * render.LEGENDA_MARGEM_LADO or li["longoCabe"]["ha"] != li["ha"]["ha"]:
+            problemas.append("a largura util da Mesa e %s e a do render %s" % (li["ha"]["ha"], render.L - 2 * render.LEGENDA_MARGEM_LADO))
+    verifica("Mesa: as legendas de 3 de outubro como o render", not problemas and contas > 0, "; ".join(problemas)[:500] if problemas else
+             "os limites, %d contas da posicao, da margem e do corte iguais, 5 disposicoes, o piso das fotos e a linha so" % contas)
+
+
+def teste_legendas_1003_gravam_desfazem_e_juntam():
+    """«Como está» nao grava nada; cada escolha grava a sua chave, desfaz-se, e o montar e o render leem-na sem aviso.
+
+    O DEFEITO QUE ISTO APANHA: abrir e fechar a deixar um x1 false, um lp {0, 0} ou uma posicao vazia na base (o montar
+    escrevia a coluna opcoes_clip e o estilo.json sem ninguem escolher nada, e o filme deixava de sair igual ao byte); uma
+    seta a passar dos limites (a legenda abaixo do sitio de hoje, que o projetor corta); dez toques numa seta a dar dez
+    entradas no anular; o «Como está (original)» das legendas a deixar a posicao; uma proposta de cores do contador a
+    apagar a letra dele; o montar a recusar o que a Mesa grava; e dois aparelhos, ou uma Mesa antiga, a perder a posicao.
+    """
+    if not shutil.which("node"):
+        salta("Mesa: as legendas de 3 de outubro gravam, desfazem e juntam", "sem node neste PC")
+        return
+    import render
+    problemas = []
+    base = {"versoes": [{"id": "v1", "nome": "demo", "clips": [
+        {"t": "foto", "i": "f1", "x": "Com a avó", "d": 4, "c": 0.7, "r": "fundo"},
+        {"t": "lado", "fotos": ["f1", "f2"], "lay": "2v", "x": "Os dois", "d": 5, "c": 0.7, "r": "fiel"},
+        {"t": "cartao", "x": "1995", "d": 3, "c": 0.7}]}], "atual": "v1", "pessoas": [], "tags": {}}
+    porid = {"f1": {"id": "f1", "w": 4000, "h": 3000}, "f2": {"id": "f2", "w": 3000, "h": 4000}}
+    js = (APOIO_LEG % {"porid": json.dumps(porid)}) + """
+var v = est.versoes[0], foto = v.clips[0], lado = v.clips[1], r = {};
+function c1(c){ return JSON.parse(JSON.stringify({x1: c.x1, lp: c.lp, li: c.li})); }
+function estilo(){ return est.estilo === undefined ? null : JSON.parse(JSON.stringify(est.estilo)); }
+/* 1. como esta: desligar o que ja esta desligado, repor o que nao tem posicao, nao mexe em nada nem abre o anular */
+r.nada = [x1Poe(foto, false), liPoe(lado, false), lpRepor(foto), estiloPoePosicao("dy", 0, "a"), estiloPoePosicao("alinhamento", "centro", "b"),
+          c1(foto), c1(lado), estilo(), pilhaDesfazer.length, marcas];
+/* 2. numa so linha e as fotos inteiras: so o true, e o anular tira a chave */
+x1Poe(foto, true); liPoe(lado, true); r.sim = [c1(foto), c1(lado), pilhaDesfazer.length];
+desfazer(); desfazer(); r.desfeito = [c1(foto), c1(lado), "x1" in foto, "li" in lado];
+x1Poe(foto, true); x1Poe(foto, false); liPoe(lado, true); liPoe(lado, false); r.voltou = [c1(foto), c1(lado), "x1" in foto, "li" in lado];
+pilhaDesfazer.length = 0;
+/* 3. as setas do clip: 10 px, toques seguidos numa entrada do anular, e os limites do total */
+for(var k = 0; k < 4; k++) lpPasso(foto, "cima");
+lpPasso(foto, "dir"); r.setas = [c1(foto), pilhaDesfazer.length, notaPosicaoDoClip(foto)];
+r.baixoNoZero = [lpPasso(lado, "baixo"), c1(lado), lpSetaParada(lado, "baixo"), lpSetaParada(lado, "cima")];
+for(k = 0; k < 80; k++) lpPasso(lado, "cima");
+for(k = 0; k < 80; k++) lpPasso(lado, "esq");
+r.limites = [c1(lado), lpSetaParada(lado, "cima"), lpSetaParada(lado, "esq"), legPosicao(lado)];
+desfazer(); r.anulaSetas = c1(lado);
+lpRepor(foto); r.reposto = [c1(foto), "lp" in foto]; desfazer(); r.repostoAnulado = c1(foto);
+/* com a de todas 100 acima, o clip pode descer ate ao sitio de hoje, e nao mais */
+est.estilo = {legenda: {posicao: {dy: -100}}}; delete lado.lp; pilhaDesfazer.length = 0;
+for(k = 0; k < 20; k++) lpPasso(lado, "baixo");
+r.desce = [c1(lado), legPosicao(lado), lpSetaParada(lado, "baixo")];
+delete est.estilo; delete lado.lp; delete foto.lp; pilhaDesfazer.length = 0;
+/* um lp mal escrito na base: vale zero, e a primeira seta limpa-o */
+foto.lp = {dx: "abc", dy: 9999}; r.lixo = [lpDoClip(foto), lpPasso(foto, "cima"), c1(foto)]; delete foto.lp; pilhaDesfazer.length = 0;
+/* 4. a posicao de todas: as setas, as barras e o alinhamento gravam so o que difere, e o «original» e o «Como está» tiram-na */
+for(k = 0; k < 6; k++) estiloSetaPosicao("cima");
+estiloSetaPosicao("dir"); r.estiloSetas = [estilo(), pilhaDesfazer.length, estiloTextoDoValor("legenda", "posicao", estiloValor("legenda", "posicao")),
+                                         estiloMudancas("legenda"), estiloParteMudada("legenda")];
+estiloPoePosicao("alinhamento", "esquerda", "x1"); r.alinha = estilo();
+estiloPoePosicao("dy", -700, "x2"); estiloPoePosicao("dx", 900, "x3"); r.estiloLimites = estilo();
+r.baixo = [estiloPoePosicao("dy", 40, "x4"), estilo().legenda.posicao.dy];
+estiloComoEsta("legenda.posicao"); r.original = estilo();
+pilhaDesfazer[pilhaDesfazer.length - 1].aoAnular(); r.originalAnulado = estilo();
+est.estilo.legenda.tamanho = 60; estiloReporParte("legenda"); r.comoEsta = estilo(); estiloVoltarAoMeu("legenda"); r.meu = estilo();
+delete est.estilo; pilhaDesfazer.length = 0;
+/* 5. a letra do contador: da lista das legendas, o Arial Bold tira a chave, e as propostas de cores nao lhe mexem */
+r.letra = [estiloPoe("contador", "fonte", "georgia_bold"), estilo(), estiloPoe("contador", "fonte", "nao_ha"), estiloPoe("contador", "fonte", "impact")];
+estiloPoePaleta("contador", 2); r.paleta = [estilo(), estiloPaletaAtiva("contador", 2), Object.keys(estiloCoresContador()).indexOf("fonte")];
+estiloPoePaleta("contador", 0); r.paleta0 = estilo();
+estiloPoe("contador", "fonte", "arial_bold"); r.arial = estilo();
+r.css = [palcoCssContador(46)];
+est.estilo = {contador: {fonte: "georgia_bold"}}; RENDER_LE = {contador_fonte: true}; r.css.push(palcoCssContador(46), estiloCssContador(46));
+RENDER_LE = {contador_fonte: false}; r.css.push(palcoCssContador(46), estiloCssContador(46)); RENDER_LE = {};
+delete est.estilo;
+/* 6. o que vai nas «Ordens para o Claude» */
+foto.x1 = true; foto.lp = {dx: 10, dy: -40}; lado.li = true;
+r.ordens = [ordemDoClip(v, foto, 0), ordemDoClip(v, lado, 1), ordemDoClip(v, v.clips[2], 2)].map(function(o){
+  return {x1: o.legenda_numa_linha, lp: o.legenda_posicao, li: o.fotos_inteiras}; });
+r.clips = v.clips;
+console.log(JSON.stringify(r));
+"""
+    s = _correr_estilo(base, js, problemas, mais=FUNCOES_LEG + FUNCOES_LEG_INSPETOR + FUNCOES_LEG_ESTILO + [
+        "function estiloPoePaleta(", "function estiloCoresContador(", "function estiloRgb(", "function estiloCss("],
+        declaracoes=DECLARACOES_LEG)
+    vazio = {}
+    if s:
+        if s["nada"] != [False, False, False, False, False, vazio, vazio, None, 0, 0]:
+            problemas.append("«como está» mexeu em alguma coisa: %s" % s["nada"])
+        if s["sim"] != [{"x1": True}, {"li": True}, 2] or s["desfeito"] != [vazio, vazio, False, False] or s["voltou"] != [vazio, vazio, False, False]:
+            problemas.append("numa linha e fotos inteiras: %s, desfeito %s, de volta %s" % (s["sim"], s["desfeito"], s["voltou"]))
+        if s["setas"][:2] != [{"lp": {"dx": 10, "dy": -40}}, 1] or "40 px acima, 10 px à direita" not in s["setas"][2]:
+            problemas.append("quatro toques para cima e um para a direita: %s" % s["setas"])
+        if s["baixoNoZero"] != [False, vazio, True, False]:
+            problemas.append("a seta para baixo no sitio de hoje devia nao fazer nada: %s" % s["baixoNoZero"])
+        if s["limites"][0] != {"lp": {"dx": -600, "dy": -500}} or s["limites"][1:3] != [True, True] or \
+                s["limites"][3] != {"dx": -600, "dy": -500, "alinhamento": "centro"} or s["anulaSetas"] != vazio:
+            problemas.append("os limites das setas do clip: %s, e o anular deu %s" % (s["limites"], s["anulaSetas"]))
+        if s["reposto"] != [vazio, False] or s["repostoAnulado"] != {"lp": {"dx": 10, "dy": -40}}:
+            problemas.append("o repor: %s, anulado %s" % (s["reposto"], s["repostoAnulado"]))
+        if s["desce"] != [{"lp": {"dx": 0, "dy": 100}}, {"dx": 0, "dy": 0, "alinhamento": "centro"}, True]:
+            problemas.append("com todas 100 acima, o clip desce ate hoje e nao mais: %s" % s["desce"])
+        if s["lixo"] != [{"dx": 0, "dy": 0}, True, {"lp": {"dx": 0, "dy": -10}}]:
+            problemas.append("um lp mal escrito: %s" % s["lixo"])
+        if s["estiloSetas"] != [{"legenda": {"posicao": {"dx": 10, "dy": -60}}}, 1, "60 px acima, 10 px à direita", ["a posição das legendas"], True]:
+            problemas.append("as setas do estilo: %s" % s["estiloSetas"])
+        if s["alinha"] != {"legenda": {"posicao": {"dx": 10, "dy": -60, "alinhamento": "esquerda"}}}:
+            problemas.append("o alinhamento: %s" % s["alinha"])
+        if s["estiloLimites"] != {"legenda": {"posicao": {"dx": 600, "dy": -500, "alinhamento": "esquerda"}}} or s["baixo"] != [True, None]:
+            problemas.append("os limites da posicao de todas: %s, e para baixo %s" % (s["estiloLimites"], s["baixo"]))
+        if s["original"] is not None or (s["originalAnulado"] or {}).get("legenda", {}).get("posicao", {}).get("alinhamento") != "esquerda":
+            problemas.append("o «original» da posicao deixou %s, e o anular deu %s" % (s["original"], s["originalAnulado"]))
+        if s["comoEsta"] is not None or "posicao" not in (s["meu"] or {}).get("legenda", {}) or s["meu"]["legenda"].get("tamanho") != 60:
+            problemas.append("«Como está» das legendas deixou %s e o teu de ha pouco voltou %s" % (s["comoEsta"], s["meu"]))
+        if s["letra"] != [True, {"contador": {"fonte": "georgia_bold"}}, False, False]:
+            problemas.append("a letra do contador: %s" % s["letra"])
+        if s["paleta"][0].get("contador", {}).get("fonte") != "georgia_bold" or not s["paleta"][1] or s["paleta"][2] != -1 or \
+                s["paleta0"] != {"contador": {"fonte": "georgia_bold"}} or s["arial"] is not None:
+            problemas.append("as propostas de cores mexeram na letra do contador: %s, %s, e o Arial deixou %s" % (s["paleta"], s["paleta0"], s["arial"]))
+        arial = "700 46px Arial, Helvetica, sans-serif"
+        if s["css"][0] != arial or "Georgia" not in s["css"][1] or "Georgia" not in s["css"][2] or s["css"][3] != arial or "Georgia" not in s["css"][4]:
+            problemas.append("a letra do contador no palco e na amostra: %s" % s["css"])
+        if s["ordens"] != [{"x1": True, "lp": {"dx": 10, "dy": -40}}, {"li": True}, {}]:
+            problemas.append("as ordens para o Claude levam %s" % s["ordens"])
+        # O QUE A MESA GRAVA E O QUE O RENDER E O MONTAR LEEM, sem um aviso
+        for estilo in (s["estiloSetas"][0], s["alinha"], s["estiloLimites"], s["letra"][1], s["paleta"][0]):
+            av = []
+            if render.normalizar_estilo(estilo, av) != estilo or av:
+                problemas.append("o render limpa %s de outra maneira: %s %s" % (estilo, render.normalizar_estilo(estilo), av))
+        try:
+            montar = _montar_calado()
+            for c, tipo in zip(s["clips"], ("foto", "lado", "cartao")):
+                av = []
+                coluna = montar.coluna_das_opcoes_clip(c, tipo, 1, av, render)
+                certo = {k: c[k] for k in ("x1", "lp", "li") if k in c}
+                if av or (json.loads(coluna) if coluna else {}) != certo:
+                    problemas.append("o montar escreve %r para %s, com os avisos %s" % (coluna, certo, av))
+                lido = render.ler_opcoes_clip(coluna)
+                if certo and (lido is None or lido["x1"] != (c.get("x1") is True) or lido["li"] != (c.get("li") is True)
+                              or list(lido["lp"]) != [(c.get("lp") or {}).get("dx", 0), (c.get("lp") or {}).get("dy", 0)]):
+                    problemas.append("o render le %s do que o montar escreve para %s" % (lido, certo))
+        except AttributeError as erro:
+            problemas.append("o montar ainda nao escreve a coluna opcoes_clip (%s)" % erro)
+    # A JUNCAO POR PARTES: a posicao e a letra do contador sao partes proprias; os clips vao com a montagem
+    B0 = {"versoes": [{"id": "v1", "nome": "demo", "clips": [{"t": "foto", "i": "f01", "x": "a"}]}],
+          "pessoas": [], "tags": {}, "atual": "v1", "estilo": {"legenda": {"tamanho": 59}},
+          "quando": "2026-10-03T05:00:00Z", "rev": 5, "pagina": "2026-10-02"}
+    corpo_js = """
+var r = {}, B0 = %s;
+function com(m){ var b = copia(B0); Object.keys(m).forEach(function(k){ if(m[k] === undefined) delete b[k]; else b[k] = m[k]; }); return b; }
+/* A. aqui a posicao das legendas, la o tamanho e a letra do contador: juntam-se */
+abrir(B0); est.estilo = {legenda: {tamanho: 59, posicao: {dy: -40}}};
+var j = juntarComBase(com({estilo: {legenda: {tamanho: 54}, contador: {fonte: "georgia_bold"}}, rev: 6}));
+r.A = {ok: j.ok, estilo: copia(est.estilo), partes: Object.keys(partesDe(corpo())).filter(function(k){ return /posicao|fonte/.test(k); }).sort()};
+/* B. os dois a mexer na posicao, de maneiras diferentes: e conflito, como dois na mesma parte */
+abrir(B0); est.estilo = {legenda: {tamanho: 59, posicao: {dy: -40}}};
+j = juntarComBase(com({estilo: {legenda: {tamanho: 59, posicao: {dx: 100}}}, rev: 6}));
+r.B = {ok: j.ok, choque: j.choque};
+/* C. uma Mesa antiga (sem pagina, sem o estilo) grava: a posicao e a letra do contador voltam a base */
+abrir(com({estilo: {legenda: {posicao: {dy: -40, alinhamento: "esquerda"}}, contador: {fonte: "georgia_bold"}}}));
+j = juntarComBase(com({estilo: undefined, pagina: undefined, rev: 6}));
+r.C = {ok: j.ok, repostos: j.repostos, estilo: corpo().estilo};
+/* D. uma Mesa de ontem, que nao conhece as chaves, muda o tamanho: copia o est.estilo inteiro e elas ficam */
+abrir(com({estilo: {legenda: {tamanho: 59, posicao: {dy: -40}}, contador: {fonte: "georgia_bold"}}}));
+j = juntarComBase(com({estilo: {legenda: {tamanho: 54, posicao: {dy: -40}}, contador: {fonte: "georgia_bold"}}, rev: 6}));
+r.D = {ok: j.ok, estilo: copia(est.estilo)};
+/* E. as escolhas dos clips vao com a montagem: la mexeram nos clips, aqui no estilo */
+abrir(B0); est.estilo = {legenda: {tamanho: 59, posicao: {dy: -40}}};
+j = juntarComBase(com({versoes: [{id: "v1", nome: "demo", clips: [{t: "foto", i: "f01", x: "a", x1: true, lp: {dx: 0, dy: -30}}]}], rev: 6}));
+r.E = {ok: j.ok, clip: est.versoes[0].clips[0], estilo: copia(est.estilo)};
+console.log(JSON.stringify(r));
+""" % json.dumps(B0)
+    r = _correr_js(DECLARACOES_JUNTAR, FUNCOES_JUNTAR, PRELUDE_JUNTAR, corpo_js, problemas)
+    if r:
+        if not r["A"]["ok"] or r["A"]["estilo"] != {"legenda": {"tamanho": 54, "posicao": {"dy": -40}}, "contador": {"fonte": "georgia_bold"}} \
+                or r["A"]["partes"] != ['["estilo","contador","fonte"]', '["estilo","legenda","posicao"]']:
+            problemas.append("a posicao aqui e o resto la: %s" % r["A"])
+        if r["B"]["ok"] or "estilo" not in (r["B"].get("choque") or []):
+            problemas.append("os dois na posicao, de maneiras diferentes, devia ser conflito: %s" % r["B"])
+        if not r["C"]["ok"] or r["C"]["repostos"] != ["estilo"] or \
+                r["C"]["estilo"] != {"legenda": {"posicao": {"dy": -40, "alinhamento": "esquerda"}}, "contador": {"fonte": "georgia_bold"}}:
+            problemas.append("a Mesa antiga: %s" % r["C"])
+        if not r["D"]["ok"] or r["D"]["estilo"] != {"legenda": {"tamanho": 54, "posicao": {"dy": -40}}, "contador": {"fonte": "georgia_bold"}}:
+            problemas.append("a Mesa de ontem que nao conhece as chaves: %s" % r["D"])
+        if not r["E"]["ok"] or r["E"]["clip"].get("x1") is not True or r["E"]["clip"].get("lp") != {"dx": 0, "dy": -30} or \
+                r["E"]["estilo"] != {"legenda": {"tamanho": 59, "posicao": {"dy": -40}}}:
+            problemas.append("os clips de la e o estilo daqui: %s" % r["E"])
+    verifica("Mesa: as legendas de 3 de outubro gravam, desfazem e juntam", not problemas, "; ".join(problemas)[:600] if problemas else
+             "como esta sem escritas, x1 e li so com true, as setas com limites e uma entrada no anular, a posicao e a letra do "
+             "contador, o render e o montar a ler sem avisos, e cinco juncoes")
+
+
+def teste_legendas_1003_avisam():
+    """A legenda que nao cabe numa linha, o lado a lado que corta, a letra do contador, e o «ainda não chega ao filme».
+
+    O DEFEITO QUE ISTO APANHA: ele a ligar «numa só linha» numa legenda que nao cabe e a Mesa calada (so via no filme,
+    uma hora depois, que ela continuava em duas); um lado a lado a cortar metade de uma foto sem a Mesa o dizer; a letra
+    do contador a ler-se pior a 15 m sem aviso, ou com aviso quando o render nao avisa; e um render que ainda nao le uma
+    chave com a Mesa a mostrar a escolha como se fosse ao filme.
+    """
+    if not shutil.which("node"):
+        salta("Mesa: as legendas de 3 de outubro avisam", "sem node neste PC")
+        return
+    import render
+    problemas = []
+    longo = " ".join(["palavra"] * 40)
+    base = {"versoes": [{"id": "v1", "nome": "demo", "clips": [
+        {"t": "foto", "i": "f1", "x": longo, "d": 4, "c": 0.7, "r": "fundo", "x1": True},
+        {"t": "foto", "i": "f1", "x": "Curta", "d": 4, "c": 0.7, "r": "fundo", "x1": True},
+        {"t": "lado", "fotos": ["f1", "f2"], "lay": "2v", "x": "Os dois", "d": 5, "c": 0.7, "r": "fiel"},
+        {"t": "lado", "fotos": ["f2", "f2"], "lay": "2v", "x": "", "d": 5, "c": 0.7, "r": "fiel"},
+        {"t": "lado", "fotos": ["f1", "f1", "f1"], "lay": "3s", "x": "", "d": 5, "c": 0.7, "r": "fiel"},
+        {"t": "lado", "fotos": ["f2", "f2"], "lay": "2v", "x": "Curta", "xf": [longo, ""], "vf": True, "vm": "legenda", "d": 5, "c": 0.7, "x1": True},
+        {"t": "foto", "i": "f1", "x": "", "d": 4, "c": 0.7, "r": "fundo"}]}], "atual": "v1", "pessoas": [], "tags": {}}
+    porid = {"f1": {"id": "f1", "w": 4000, "h": 3000}, "f2": {"id": "f2", "w": 3000, "h": 4000}}
+    letras = ["arial_bold", "georgia_bold", "montserrat_bold", "playfair_display", "bebas_neue", "calibri_bold", "great_vibes", "cinzel_regular"]
+    js = (APOIO_LEG % {"porid": json.dumps(porid)}) + """
+var v = est.versoes[0], r = {};
+r.x1 = v.clips.map(function(_c, i){ return avisosNumaLinha(v, i).map(function(a){ return a.t; }); });
+r.notas = v.clips.map(function(c, i){ return temLegendaDeBaixo(c) ? notaNumaLinha(v, i) : null; });
+r.corta = v.clips.map(function(c){ return c.t === "lado" ? [avisoLadoCorta(c), ladoCorteDoClip(c)] : null; });
+v.clips[2].li = true; r.inteiras = [avisoLadoCorta(v.clips[2]), ladoCortadas(v.clips[2])]; delete v.clips[2].li;
+/* a letra do contador, letra a letra */
+var LETRAS = %s;
+r.letras = LETRAS.map(function(id){
+  if(id === "arial_bold") delete est.estilo; else est.estilo = {contador: {fonte: id}};
+  RENDER_LE = {contador_fonte: true};
+  return estiloAvisos("contador").map(function(a){ return [!!a.forte, a.t]; });
+});
+/* o que ainda nao chega ao filme */
+RENDER_LE = {contador_fonte: false, legenda_posicao: false, numa_linha: false, posicao_clip: false, fotos_inteiras: false};
+est.estilo = {contador: {fonte: "georgia_bold"}, legenda: {posicao: {dy: -40}}};
+v.clips[1].lp = {dx: 0, dy: -20};
+r.falta = {contador: estiloAvisos("contador").filter(function(a){ return a.forte; }).map(function(a){ return a.t; }),
+           legenda: estiloAvisos("legenda").filter(function(a){ return a.forte; }).map(function(a){ return a.t; }),
+           x1: notaNumaLinha(v, 1), lp: notaPosicaoDoClip(v.clips[1]), css: palcoCssContador(46),
+           /* o palco mostra o filme: sem o render a ler, a legenda fica no sitio de sempre, parte como hoje e as fotos enchem */
+           palco: [legPosicao(v.clips[1], true), legPosicao(v.clips[1]), x1NoFilme(v.clips[1]), x1Do(v.clips[1]), legPisoDoGrupo(v.clips[2], 1080)]};
+v.clips[2].li = true; r.falta.palco.push(liNoFilme(v.clips[2]), liDo(v.clips[2])); delete v.clips[2].li;
+RENDER_LE = {contador_fonte: true, legenda_posicao: true, numa_linha: true, posicao_clip: true, fotos_inteiras: true};
+r.chega = {contador: estiloAvisos("contador").map(function(a){ return a.t; }).join(" "), legenda: estiloAvisos("legenda").map(function(a){ return a.t; }).join(" "),
+           x1: notaNumaLinha(v, 1), lp: notaPosicaoDoClip(v.clips[1])};
+/* uma letra que a base tem e esta Mesa nao conhece */
+est.estilo = {contador: {fonte: "letra_de_amanha"}}; r.desconhecida = [estiloValor("contador", "fonte"), estiloAvisos("contador").map(function(a){ return a.t; })];
+console.log(JSON.stringify(r));
+""" % json.dumps(letras)
+    s = _correr_estilo(base, js, problemas, mais=FUNCOES_LEG + FUNCOES_LEG_INSPETOR + FUNCOES_LEG_ESTILO, declaracoes=DECLARACOES_LEG)
+    if s:
+        x1 = s["x1"]
+        if len(x1[0]) != 1 or not re.fullmatch(r"A legenda do clip 1 não cabe numa linha: precisa de \d+ px e há 1660 px\. O filme parte-a como hoje\.", x1[0][0]):
+            problemas.append("a legenda que nao cabe numa linha diz %r" % (x1[0],))
+        if x1[1] or x1[2] or x1[6] or len(x1[5]) != 1 or "clip 6" not in x1[5][0]:
+            problemas.append("avisos de numa linha onde nao deviam, ou a faltar no texto de cada foto: %s" % x1[1:])
+        if "Fica numa linha" not in s["notas"][1] or "não cabe" not in s["notas"][0] or s["notas"][6] != "Este clip não tem legenda.":
+            problemas.append("as notas do inspetor: %s" % s["notas"])
+        corta = s["corta"]
+        certo = render.lado_corte("2v", [(4000, 3000), (3000, 4000)])
+        if not corta[2][0].startswith("A foto 1 fica %d %% de fora com o enchimento de hoje" % round(certo[0] * 100)) or "foto 2" in corta[2][0]:
+            problemas.append("o lado a lado com uma foto deitada: %r (o render corta %s)" % (corta[2][0], certo))
+        if corta[3][0] or any(x > render.LADO_CORTE_AVISO for x in corta[3][1]):
+            problemas.append("duas fotos em pe nas colunas nao deviam avisar: %s" % corta[3])
+        if "a foto 3" in corta[4][0] or corta[4][1][2] != 0 or "A foto 1 fica" not in corta[4][0] or " e a foto 2 fica" not in corta[4][0]:
+            problemas.append("o cartao do meio do 3s vai inteiro: %s" % corta[4])
+        if s["inteiras"] != ["", []]:
+            problemas.append("com as fotos inteiras nao ha corte a avisar: %s" % s["inteiras"])
+        # A LETRA DO CONTADOR: forte quando o render avisa a leitura (render._leitura_da_letra_do_contador), calada quando nao
+        entradas = render.letras_da_mesa()
+        for ident, lista in zip(letras, s["letras"]):
+            mesa_pior = any(f and "pode não se ler a 15 metros" in t for f, t in lista)
+            if hasattr(render, "_leitura_da_letra_do_contador"):
+                dele = render._leitura_da_letra_do_contador(entradas.get(ident) or {})
+                render_pior = any("pior" in a for a in dele)
+                if ident != "arial_bold" and mesa_pior != render_pior:
+                    problemas.append("a letra %s no contador: a Mesa %s e o render %s" % (ident, "avisa" if mesa_pior else "nao avisa", dele))
+            if ident == "arial_bold" and lista:
+                problemas.append("em Arial Bold o contador nao devia avisar nada: %s" % lista)
+            if ident == "great_vibes" and not any(f and "manuscrita" in t for f, t in lista):
+                problemas.append("uma manuscrita no contador devia avisar forte: %s" % lista)
+        falta = s["falta"]
+        if not any("ainda não chega ao filme" in t for t in falta["contador"]) or not any("ainda não chega ao filme" in t for t in falta["legenda"]) \
+                or "Ainda não chega ao filme" not in falta["x1"] or "Ainda não chega ao filme" not in falta["lp"] \
+                or falta["css"] != "700 46px Arial, Helvetica, sans-serif":
+            problemas.append("com o render sem ler, a Mesa nao o diz em todo o lado: %s" % falta)
+        if falta.get("palco") != [{"dx": 0, "dy": 0, "alinhamento": "centro"}, {"dx": 0, "dy": -60, "alinhamento": "centro"}, False, True, 540, False, True]:
+            problemas.append("com o render sem ler, o palco devia mostrar o filme como esta, e o inspetor a escolha: %s" % falta.get("palco"))
+        if any("chega ao filme" in t for t in s["chega"].values()):
+            problemas.append("com o render a ler, a Mesa ainda diz que nao chega: %s" % s["chega"])
+        if s["desconhecida"][0] != "arial_bold" or not any("não conhece" in t for t in s["desconhecida"][1]):
+            problemas.append("uma letra do contador que esta Mesa nao conhece: %s" % s["desconhecida"])
+    # quem chama: o inspetor, o Validar, o palco, a amostra e as ordens
+    html = io.open(EDITOR, encoding="utf-8").read()
+    for funcao, tem in (("function pintaInspetor(", "blocoLegendaDoClip(v, c)"), ("function pintaInspetor(", "blocoFotosInteiras(c)"),
+                        ("function ligaInspetor(", "ligaLegendaDoClip(v, c)"), ("function validar(", "avisosNumaLinha(v, i)"),
+                        ("function validar(", "avisoLadoCorta(c)"), ("function palcoLegenda(", "legDesenha("),
+                        ("function estiloDesenhaLegenda(", "legDesenha("), ("function legendaDoPalco(", "legSpan("),
+                        ("function mostraQuadro(", "liNoFilme(c)"), ("function mostraQuadro(", "legPisoDoGrupo(c, H)"),
+                        ("function palcoTexto(", "palcoCssContador(corpo)"), ("function estiloHtmlControlos(", 'estiloCampoLetra("contador", "Letra")'),
+                        ("function estiloHtmlControlos(", "estiloHtmlPosicao()"), ("function legendaDoMergulho(", "legPosicao(c, true).dy")):
+        if tem not in _bloco(html, funcao, problemas):
+            problemas.append("o %s deixou de chamar %s" % (funcao[9:-1], tem))
+    verifica("Mesa: as legendas de 3 de outubro avisam", not problemas, "; ".join(problemas)[:600] if problemas else
+             "a linha que nao cabe com as palavras do contrato, o corte acima de 25%%, %d letras do contador como o render, e o que "
+             "ainda nao chega ao filme" % len(letras))
+
+
+def teste_gerar_mesa_ve_as_legendas_de_3_de_outubro():
+    """O gerar_mesa pergunta ao desenho do render pelos pontos 1 a 4, e nao so a limpeza do estilo.
+
+    O DEFEITO QUE ISTO APANHA: a Mesa a dizer que a posicao das legendas chega ao filme porque o normalizar_estilo() a
+    guarda, com o faixa_texto() ainda a desenha-las no sitio de sempre (era o estado do render as 05:10 de 3 de outubro);
+    e um montar que nao escreve a coluna opcoes_clip com a Mesa a dar o x1 por lido.
+    """
+    import gerar_mesa
+    import render
+    problemas = []
+    chaves = ("contador_fonte", "legenda_posicao", "numa_linha", "posicao_clip", "fotos_inteiras")
+    montar = io.open(os.path.join(REPO, "scripts", "montar_da_mesa.py"), encoding="utf-8").read()
+    le = gerar_mesa.le_as_legendas_de_3_de_outubro(render, montar)
+    if sorted(le) != sorted(chaves):
+        problemas.append("as chaves sao %s" % sorted(le))
+    if render.estilo_ativo() != {}:
+        problemas.append("a pergunta deixou um estilo posto no render: %s" % render.estilo_ativo())
+
+    class RenderDeOntem:
+        """um render que limpa o estilo como o de hoje e desenha como o de 2 de outubro"""
+        LETRA_OMISSAO = render.LETRA_OMISSAO
+
+        def __getattr__(self, nome):
+            if nome in ("ler_opcoes_clip",):
+                raise AttributeError(nome)
+            return getattr(render, nome)
+
+        def faixa_texto(self, texto, tamanho=None, bloco_max=None):
+            guardado = render.estilo_ativo()
+            render.aplicar_estilo({}, [])
+            try:
+                return render.faixa_texto(texto, tamanho, bloco_max)
+            finally:
+                render.aplicar_estilo(guardado, [])
+
+    ontem = gerar_mesa.le_as_legendas_de_3_de_outubro(RenderDeOntem(), montar)
+    if ontem.get("legenda_posicao") is not False or any(ontem.get(k) is not False for k in ("numa_linha", "posicao_clip", "fotos_inteiras")):
+        problemas.append("com um render que nao desenha a posicao nem le as opcoes do clip, a pergunta deu %s" % ontem)
+    sem_montar = gerar_mesa.le_as_legendas_de_3_de_outubro(render, "def main():\n    pass\n")
+    if any(sem_montar.get(k) is not False for k in ("numa_linha", "posicao_clip", "fotos_inteiras")):
+        problemas.append("com um montar que nao escreve a coluna opcoes_clip, a pergunta deu %s" % sem_montar)
+    if sem_montar.get("legenda_posicao") != le.get("legenda_posicao") or sem_montar.get("contador_fonte") != le.get("contador_fonte"):
+        problemas.append("a posicao e a letra do contador nao dependem do montar: %s contra %s" % (sem_montar, le))
+    tudo = gerar_mesa.o_que_o_render_le()
+    if any(k not in tudo for k in chaves) or any(tudo[k] != le[k] for k in chaves):
+        problemas.append("o o_que_o_render_le() nao traz as mesmas respostas: %s" % {k: tudo.get(k) for k in chaves})
+    verifica("Mesa: o gerar_mesa pergunta ao desenho do render pelas legendas", not problemas, "; ".join(problemas)[:500] if problemas else
+             "hoje %s; um render de ontem e um montar sem a coluna dao False" % ", ".join("%s %s" % (k, le[k]) for k in chaves))
+
+
+# ------------------------------------------------------------- a ordem, os nomes corridos e a velocidade (3 de outubro)
+# O Tiago, as 04:50 e as 05:05 de 3 de outubro (saida/discussao/contrato_1003.md, pontos 5 e 5b): o titulo antes do rolo,
+# "vamos abolir" os cargos ("quero mesmo poder remover integralmente"), "so queremos os nomes dos convidados corridos", e
+# "permite ajustar a velocidade dos nomes e/ou das fotos". O render (ponto5_creditos.py) ja o faz; a Mesa deixa escolher
+# na aba «Ordem e velocidade» dos Creditos, com as mesmas contas, e so grava o que ele escolhe.
+CASOS_DAS_PARTES = [
+    ("como esta", None),
+    ("titulo, rolo", {"partes": ["titulo", "rolo"]}),
+    ("titulo, rolo, corridos", {"partes": ["titulo", "rolo"], "nomes_corridos": True}),
+    ("titulo, cargos, rolo", {"partes": ["titulo", "cargos", "rolo"]}),
+    ("rolo, titulo", {"partes": ["rolo", "titulo"]}),
+    ("cargos, titulo, rolo", {"partes": ["cargos", "titulo", "rolo"]}),
+    ("so o rolo", {"partes": ["rolo"]}),
+    ("rolo, cargos", {"partes": ["rolo", "cargos"]}),
+    ("rolo, titulo, cargos com cinco", {"partes": ["rolo", "titulo", "cargos"],
+                                        "cargos": [{}, {}, {}, {"cargo": "D", "quem": "E\nF"}, {"quem": "G"}]}),
+    ("a de hoje escrita", {"partes": ["rolo", "cargos", "titulo"], "cargos_primeiro": True}),
+    ("a da 109 escrita", {"partes": ["cargos", "rolo", "titulo"]}),
+    ("a da 109 pela chave de sempre", {"cargos_primeiro": True}),
+    ("maiusculas e espacos", {"partes": [" Titulo", "ROLO "]}),
+    ("sem rolo", {"partes": ["titulo", "cargos"], "cargos_primeiro": True}),
+    ("repetida", {"partes": ["rolo", "rolo"]}),
+    ("outra palavra", {"partes": ["rolo", "fim"]}),
+    ("um texto", {"partes": "titulo,rolo"}),
+    ("vazia", {"partes": []}),
+    ("null com a 109", {"partes": None, "cargos_primeiro": True}),
+    ("um numero la dentro", {"partes": ["rolo", 3]}),
+    ("sem cargos com a lista dele", {"partes": ["titulo", "rolo"],
+                                     "cargos": [{"cargo": "A", "quem": "QA"}, {"cargo": "B", "quem": "QB"}]}),
+    ("corridos nao e true", {"nomes_corridos": "sim"}),
+    ("corridos false", {"nomes_corridos": False}),
+    ("corridos", {"nomes_corridos": True}),
+    ("fotos a 100", {"velocidade": {"fotos": 100}}),
+    ("nomes a 60", {"velocidade": {"nomes": 60}}),
+    ("fotos 200 nomes 40", {"velocidade": {"fotos": 200, "nomes": 40}}),
+    ("fotos a 300", {"velocidade": {"fotos": 300}}),
+    ("nomes a 30.5", {"velocidade": {"nomes": 30.5}}),
+    ("os dois iguais ao de hoje", {"velocidade": {"fotos": 150, "nomes": 150}}),
+    ("fora dos limites", {"velocidade": {"fotos": 59, "nomes": 201}}),
+    ("um bom e um mau", {"velocidade": {"fotos": 120, "nomes": "depressa"}}),
+    ("booleano", {"velocidade": {"fotos": True}}),
+    ("nao e objeto", {"velocidade": 100}),
+    ("uma lista", {"velocidade": [100, 50]}),
+    ("vazio", {"velocidade": {}}),
+    ("as 10h", {"partes": ["titulo", "rolo"], "nomes_corridos": True, "velocidade": {"fotos": 100}}),
+    ("as 10h e os nomes a 60", {"partes": ["titulo", "rolo"], "nomes_corridos": True, "velocidade": {"nomes": 60}}),
+    ("as 10h e fotos 200, nomes 40", {"partes": ["titulo", "rolo"], "nomes_corridos": True,
+                                      "velocidade": {"fotos": 200, "nomes": 40}}),
+]
+
+
+def _blocos_do_cred(cred):
+    """Os blocos do por_grupo() do ponto5 a partir dos grupos de um CREDITOS_NOMES de ensaio: (titulo, subtitulo, agregados),
+    um agregado por linha, sem os grupos vazios."""
+    return [(g["titulo"], g["sub"], [ln.split(" · ") for ln in g["linhas"]]) for g in cred["grupos"] if g["linhas"]]
+
+
+def _lay_para_comparar():
+    """O JavaScript que tira do credContas() o que se compara com o textos_dos_creditos() e o tempos_dos_creditos()."""
+    return """
+function layDe(){
+  credLay = null;
+  var L = credContas();
+  return {cargos: L.cargos.map(function(x){ return [x.cargo, x.pessoas.join("\\n")]; }), escolhidas: L.partesEscolhidas, corridos: L.corridos,
+          vel: L.vel, Hr: L.Hr, Hc: L.Hc, guardados: L.cargosGuardados, linhas: L.pecas.filter(function(q){ return q.tipo === "nome"; }).length,
+          outras: L.pecas.filter(function(q){ return q.tipo !== "nome"; }).length,
+          t: {dur: L.dur, tCargos: L.tCargos, tRoloEntra: L.tRoloEntra, tTituloEntra: L.tTituloEntra, tRolo: L.tRolo, n: L.nCargos,
+              vn: L.vn, vf: L.vf, primeiro: L.primeiro, partes: L.partes,
+              janelas: L.janelas ? L.janelas.map(function(j){ return [j.parte, j.ini, j.fim]; }) : null,
+              tituloApaga: L.janelas ? L.tituloApaga : null, fimNomes: L.fimNomes, fimFotos: L.fimFotos,
+              parado: L.parado ? [L.parado.quem, L.parado.s] : null}};
+}
+"""
+
+
+def _tempos_diferentes(m, T):
+    """As diferencas, ao bit, entre o que a Mesa conta (o `t` do layDe) e o T do tempos_dos_creditos()."""
+    pares = (("dur", "dur"), ("tCargos", "t_cargos"), ("tRoloEntra", "t_rolo_entra"), ("tTituloEntra", "t_titulo_entra"),
+             ("tRolo", "t_rolo"), ("n", "n_cargos"), ("vn", "vel_nomes"), ("vf", "vel_fotos"), ("primeiro", "primeiro"),
+             ("partes", "partes"))
+    dif = ["%s %r contra %r" % (k, m[k], T[kp]) for k, kp in pares if m[k] != T[kp]]
+    janelas = [list(j) for j in T["janelas"]] if T.get("janelas") else None
+    if m["janelas"] != janelas:
+        dif.append("janelas %r contra %r" % (m["janelas"], janelas))
+    if janelas and m["tituloApaga"] != T["titulo_apaga"]:
+        dif.append("o fade do titulo %r contra %r" % (m["tituloApaga"], T["titulo_apaga"]))
+    for k, kp in (("fimNomes", "fim_nomes"), ("fimFotos", "fim_fotos")):
+        if m[k] != T.get(kp):
+            dif.append("%s %r contra %r" % (k, m[k], T.get(kp)))
+    parado = list(T["parado"]) if T.get("parado") else None
+    if m["parado"] != parado:
+        dif.append("parado %r contra %r" % (m["parado"], parado))
+    return dif, len(pares) + 5
+
+
+def teste_creditos_1003_partes_nomes_e_velocidade_como_o_ponto5():
+    """A ordem das partes, os nomes corridos e a velocidade da Mesa sao os do ponto5, ao bit (contrato de 3 de outubro).
+
+    O DEFEITO QUE ISTO APANHA: a pre-visualizacao com outra ordem, outros cargos, outro rolo ou outra duracao do que o
+    filme. O titulo primeiro sem os 0,5 s a mais, os cargos a contar segundos com o «Sem cargos», os nomes corridos com
+    os espacos dos grupos, a velocidade dele a mexer na do outro lado, ou um valor mal escrito (uma lista sem o rolo, um
+    `true` que e um texto, 59 px/s) a valer: a musica com «fim» entrava noutro sitio do ficheiro, e o Tiago e a Clara
+    decidiam a olhar para outro filme. Cada caso le-se dos dois lados: a lista, os cargos, os nomes corridos e a
+    velocidade pelo textos_dos_creditos(); a altura do rolo pelo rolo_de_nomes(); e os tempos, as janelas de cada
+    parte, o fim de cada lado e o que fica parado pelo tempos_dos_creditos(), com as alturas da Mesa.
+    """
+    if not shutil.which("node"):
+        salta("Mesa: as partes, os nomes corridos e a velocidade como o ponto5", "sem node neste PC")
+        return
+    import creditos_para_mesa as cm
+    import render
+    p5 = cm._ponto5()
+    problemas = []
+    cred = _cred_dos_cargos(p5)
+    corpo_js = _lay_para_comparar() + """
+var EST0 = %(est)s, casos = %(casos)s, r = [];
+casos.forEach(function(c){
+  est = JSON.parse(JSON.stringify(EST0));
+  if(c[1] !== null) est.creditos = c[1];
+  r.push(layDe());
+});
+console.log(JSON.stringify(r));
+""" % {"est": json.dumps(EST_DOS_CARGOS, ensure_ascii=False), "casos": json.dumps(CASOS_DAS_PARTES, ensure_ascii=False)}
+    saida = _correr_node(_prelude(cred, EST_DOS_CARGOS), corpo_js, problemas)
+    render.aplicar_estilo(None, [])
+    blocos = _blocos_do_cred(cred)
+    alturas = {False: p5.rolo_de_nomes(blocos).height, True: p5.rolo_de_nomes(blocos, True).height}
+    n_tempos, avisados = 0, 0
+    for (nome, cr), m in zip(CASOS_DAS_PARTES, saida or []):
+        avisos = []
+        t = p5.textos_dos_creditos({"creditos": cr} if cr is not None else {}, avisos)
+        avisados += 1 if avisos else 0
+        esperado = [[c, "\n".join(p5.pessoas_do_quem(q))] for c, q in t["cargos"]]
+        if m["cargos"] != esperado:
+            problemas.append("%s: a Mesa tem os cargos %s, o ponto5 %s" % (nome, m["cargos"], esperado))
+        if m["escolhidas"] != t["partes"]:
+            problemas.append("%s: a Mesa le as partes %s, o ponto5 %s" % (nome, m["escolhidas"], t["partes"]))
+        if m["corridos"] is not t["nomes_corridos"]:
+            problemas.append("%s: nomes corridos na Mesa %s, no ponto5 %s" % (nome, m["corridos"], t["nomes_corridos"]))
+        if {k: float(v) for k, v in m["vel"].items()} != t["velocidade"]:
+            problemas.append("%s: a velocidade na Mesa %s, no ponto5 %s" % (nome, m["vel"], t["velocidade"]))
+        if m["Hr"] != alturas[t["nomes_corridos"]]:
+            problemas.append("%s: o rolo da Mesa tem %d px, o do ponto5 %d" % (nome, m["Hr"], alturas[t["nomes_corridos"]]))
+        if t["nomes_corridos"] and m["outras"]:
+            problemas.append("%s: com os nomes corridos a Mesa ainda tem %d titulos ou subtitulos no rolo" % (nome, m["outras"]))
+        T = p5.tempos_dos_creditos(m["Hr"], m["Hc"], len(t["cargos"]), t["cargos_primeiro"], t["partes"], t["velocidade"])
+        dif, n = _tempos_diferentes(m["t"], T)
+        n_tempos += n
+        if dif:
+            problemas.append("%s: os tempos nao sao os do ponto5 ao bit: %s" % (nome, "; ".join(dif[:4])))
+    if saida:
+        por = dict(zip([c[0] for c in CASOS_DAS_PARTES], saida))
+        hoje = por["como esta"]["t"]["dur"]
+        # o que o contrato diz, em numeros: o titulo primeiro sao 0,5 s a mais; sem cargos, nem um segundo deles
+        tr = por["titulo, rolo"]["t"]
+        if abs(tr["dur"] - (hoje - 3 * 4.2 + 0.5)) > 1e-9 or tr["tCargos"] is not None or tr["n"] != 0 or por["titulo, rolo"]["cargos"]:
+            problemas.append("o titulo antes e sem cargos: %.4f s contra os %.4f de hoje, %s cargos" % (tr["dur"], hoje, tr["n"]))
+        if por["titulo, rolo"]["guardados"] != 3 or por["sem cargos com a lista dele"]["guardados"] != 2:
+            problemas.append("sem cargos, os textos que ficam guardados: %s e %s" % (por["titulo, rolo"]["guardados"],
+                                                                                    por["sem cargos com a lista dele"]["guardados"]))
+        if abs(por["rolo, titulo"]["t"]["dur"] - (hoje - 3 * 4.2)) > 1e-9 or por["so o rolo"]["t"]["tTituloEntra"] is not None:
+            problemas.append("o rolo e o titulo sem cargos: %.4f s; so o rolo com titulo aos %s" % (
+                por["rolo, titulo"]["t"]["dur"], por["so o rolo"]["t"]["tTituloEntra"]))
+        # os nomes corridos: as mesmas linhas, sem mais nada, a 78 px cada e 20 no fim
+        c = por["corridos"]
+        if c["linhas"] != por["como esta"]["linhas"] or c["Hr"] != 78 * c["linhas"] + 20 or c["Hr"] >= por["como esta"]["Hr"]:
+            problemas.append("os nomes corridos: %d linhas e %d px (por grupos %d linhas e %d px)" % (
+                c["linhas"], c["Hr"], por["como esta"]["linhas"], por["como esta"]["Hr"]))
+        # a velocidade: a escolhida e a que anda, e ha quem fique parado
+        if por["fotos a 100"]["t"]["vf"] != 100 or por["nomes a 60"]["t"]["vn"] != 60 or not por["fotos 200 nomes 40"]["t"]["parado"]:
+            problemas.append("a velocidade escolhida nao e a que anda: %s, %s, %s" % (
+                por["fotos a 100"]["t"]["vf"], por["nomes a 60"]["t"]["vn"], por["fotos 200 nomes 40"]["t"]["parado"]))
+        for nome in ("fora dos limites", "booleano", "nao e objeto", "uma lista", "vazio", "sem rolo", "repetida", "vazia"):
+            base = por["a da 109 pela chave de sempre"] if nome == "sem rolo" else por["como esta"]
+            if por[nome]["t"] != base["t"]:
+                problemas.append("%s nao fica como esta" % nome)
+    verifica("Mesa: as partes, os nomes corridos e a velocidade como o ponto5", saida is not None and not problemas,
+             "; ".join(problemas)[:600] if problemas else
+             "%d casos (a ordem, sem cargos, sem titulo, corridos, cada velocidade e as duas, e %d mal escritos que ficam como "
+             "esta): as mesmas partes, cargos, rolo e velocidades, e %d tempos ao bit" % (len(CASOS_DAS_PARTES), avisados, n_tempos))
+
+
+def teste_creditos_1003_desenho_como_o_ponto5():
+    """Com as partes noutra ordem e a velocidade dele, a Mesa desenha cada peca no instante e no sitio do ponto5.
+
+    O DEFEITO QUE ISTO APANHA, contra os fotogramas do proprio desenho_dos_creditos():
+    - o titulo primeiro a acender do preto (tem de nascer ja aceso da ultima imagem do filme: a sala aplaude no primeiro
+      preto), a apagar-se em 2,5 s a meio dos creditos em vez dos 0,6 s dos cargos, ou o rolo a aparecer de repente depois
+      dele em vez de entrar do preto;
+    - um cargo a aparecer com o «Sem cargos», ou o titulo sem "titulo" na lista;
+    - com a velocidade dele, os nomes ou as fotos noutro sitio do ecra do que no filme (o rolo e a coluna de ensaio tem
+      uma risca branca de 500 em 500 px, e mede-se onde ela cai em cada fotograma), ou o lado que acaba primeiro a
+      continuar a andar em vez de sair do ecra e ficar vazio.
+    """
+    if not shutil.which("node"):
+        salta("Mesa: o desenho das partes e da velocidade como o ponto5", "sem node neste PC")
+        return
+    import creditos_para_mesa as cm
+    import render
+    from PIL import Image, ImageDraw
+    p5 = cm._ponto5()
+    problemas = []
+    render.aplicar_estilo(None, [])
+    M = dict(cm.MEDIDAS)
+    M.update({"L": p5.L, "A": p5.A, "vel_nomes": p5.VELOCIDADE_NOMES, "vel_fotos_max": p5.VELOCIDADE_FOTOS_MAX,
+              "nome_corpo": p5.NOME_CORPO, "sub_corpo": p5.SUB_CORPO, "cor_nome": list(p5.COR_NOME), "cor_sub": list(p5.COR_SUB),
+              "painel_nomes": list(p5.PAINEL_NOMES), "margem_brilho": p5.MARGEM_BRILHO, "largura_foto": p5.LARGURA_FOTO,
+              "centro_fotos": p5.CENTRO_FOTOS, "titulo_corpo": p5.TITULO_CORPO, "titulo_espaco": p5.TITULO_ESPACO,
+              "titulo_altura": p5.letreiro_1x(["X"], p5.TITULO_CORPO, p5.TITULO_ESPACO).height - 2 * cm.MEDIDAS["corte_titulo"],
+              "letreiro_quente": list(render.LETREIRO_QUENTE), "letreiro_claro": list(render.LETREIRO_BRANCO),
+              "letreiro_brilho": list(render.LETREIRO_BRILHO), "letreiro_empurra": render.LETREIRO_EMPURRA,
+              "fade_fim_imagem": render.FADE_FIM_IMAGEM, "zona_segura": p5.ZONA_SEGURA})
+    for chave, nome_p5, le in cm.CONSTANTES_DAS_PARTES:
+        M[chave] = le(getattr(p5, nome_p5))
+    linhas = ["Pessoa %d · Outra %d" % (k, k) for k in range(40)]
+    grupos = [{"etiqueta": "G1", "titulo": "FAMÍLIA DA CLARA", "sub": "do lado da mãe", "linhas": linhas}]
+    # quatro fotos de alturas diferentes na coluna, para se saber qual e cada retangulo
+    fotos = {"f01": [4000, 3000, 570], "f02": [3000, 4000, 900], "f03": [1000, 1000, 760], "f04": [4000, 2000, 380]}
+    cred = {"medidas": M, "folha": "ensaio", "sem_nomes": "", "fotos": fotos, "grupos": grupos,
+            "omissoes": {"cargos": [{"cargo": c, "quem": q} for c, q in p5.CARGOS], "titulo": p5.TITULO, "data": p5.DATA}}
+    casos = [
+        ("titulo, cargos, rolo", {"partes": ["titulo", "cargos", "rolo"], "cargos": [{}, {"quem": "O NOIVO\nA NOIVA"}]}),
+        ("titulo, rolo, corridos (o das 10h)", {"partes": ["titulo", "rolo"], "nomes_corridos": True}),
+        ("rolo, titulo, fotos 200 e nomes 40", {"partes": ["rolo", "titulo"], "nomes_corridos": True, "velocidade": {"fotos": 200, "nomes": 40}}),
+        ("titulo, rolo, fotos 60 e nomes 150", {"partes": ["titulo", "rolo"], "nomes_corridos": True, "velocidade": {"fotos": 60, "nomes": 150}}),
+        ("so o rolo, nomes a 100", {"partes": ["rolo"], "nomes_corridos": True, "velocidade": {"nomes": 100}}),
+    ]
+    textos = {nome: p5.textos_dos_creditos({"creditos": cr}) for nome, cr in casos}
+    pessoas = sorted({p for t in textos.values() for _c, q in t["cargos"] for p in p5.pessoas_do_quem(q)})
+    cargos_txt = sorted({c for t in textos.values() for c, _q in t["cargos"] if c})
+    med = _medidas_das_letras(render, [{}], (list(range(1, max(p5.QUEM_CORPO, p5.TITULO_CORPO) + 1)) + [130],
+                                             pessoas + [p5.TITULO, p5.DATA, "FAMÍLIA DA CLARA"]),
+                              ([58], cargos_txt + ["do lado da mãe"] + linhas))
+    corpo_js = MEDIDOR_FALSO % {"med": json.dumps(med, ensure_ascii=False)} + """
+var CRED = %(cred)s, credLay = null, credTemFinais = true, porId = {};
+function credAberto(){ return false; }
+function credFonteDaFoto(){ return null; }
+var casos = %(casos)s, r = [];
+casos.forEach(function(c){
+  est.creditos = c[1]; credLay = null;
+  var Lay = credContas(), M = CRED.medidas, I = [0, 0.2, 0.5, 0.75, 1.0, 1.49, 1.6, 2.5], qy = {};
+  Lay.pecas.forEach(function(q){ if(q.tipo === "nome") qy[q.texto] = q.y; });
+  /* a volta de cada fronteira entre partes, e dentro do rolo: a entrada, a andar, cada lado a acabar, e o fim */
+  (Lay.janelas || []).forEach(function(j){ [-0.7, -0.45, -0.2, -0.01, 0.01, 0.2, 0.45, 0.8, 1.2, 1.6, 2.5, 4.0].forEach(function(u){ I.push(j.fim + u); I.push(j.ini + u); }); });
+  var r0 = Lay.tRoloEntra + M.t_entrada;
+  [0.3, 1, 2.4, 5, 9.7, 14, 21].forEach(function(u){ I.push(r0 + u); });
+  [Lay.fimNomes, Lay.fimFotos, Lay.tRolo].forEach(function(f){ if(f != null) [-6, -2.5, -0.9, -0.5, -0.1, 0.1, 0.5, 0.75, 0.95, 2].forEach(function(u){ I.push(r0 + f + u); }); });
+  I = I.filter(function(t){ return t >= 0 && t <= Lay.dur; });
+  var linhasDoCaso = {Hr: Lay.Hr, Hc: Lay.Hc, I: I, tempos: [], colY: Lay.col.map(function(p){ return [p.h, p.y]; })};
+  I.forEach(function(t){
+    var tela = telaFalsa(), rects = [];
+    tela.ctx.fillRect = function(x, y, w, h){ rects.push({x: x, y: y, w: w, h: h, fill: tela.ctx.fillStyle, alfa: tela.ctx.globalAlpha}); };
+    credDesenhaEm(tela, t, false, true);
+    var ops = tela.ctx.ops, nomes = ops.filter(function(x){ return qy[x.t] !== undefined; });
+    var fotosR = rects.filter(function(x){ return x.fill === "#2a2226" && x.w === M.largura_foto; });
+    var yf = null;
+    fotosR.forEach(function(x){ Lay.col.forEach(function(p){ if(p.h === x.h) yf = x.y - p.y; }); });
+    linhasDoCaso.tempos.push({alfa: ops.concat(fotosR).reduce(function(a, x){ return Math.max(a, x.alfa); }, 0),
+      tipo: nomes.length || fotosR.length ? "rolo" : ops.some(function(x){ return / 130px /.test(x.font); }) ? "titulo" : ops.length ? "cargos" : "preto",
+      nNomes: nomes.length, nFotos: fotosR.length, y0c: nomes.length ? nomes[0].y - qy[nomes[0].t] : null, yf: yf,
+      letras: ops.filter(function(x){ return x.fill && x.fill.grad && !x.sombra; }).length});
+  });
+  r.push(linhasDoCaso);
+});
+console.log(JSON.stringify(r));
+""" % {"cred": json.dumps(cred, ensure_ascii=False), "casos": json.dumps(casos, ensure_ascii=False)}
+    est = {"pessoas": [{"id": "p_c", "nome": "Créditos"}], "versoes": [], "tags": {k: ["p_c"] for k in fotos}}
+    s = _correr_estilo(est, corpo_js, problemas, mais=FUNCOES_DESENHO_CRED, declaracoes=["var CRED_ARIAL = ", "var credLetrasPedidas = "])
+
+    def suave(x):
+        x = max(0.0, min(1.0, x))
+        return x * x * (3 - 2 * x)
+
+    def riscado(largura, altura):
+        """uma imagem preta com uma risca branca de 4 px de 500 em 500 px, para se ver onde cai no fotograma"""
+        im = Image.new("RGB", (largura, altura), (0, 0, 0))
+        d = ImageDraw.Draw(im)
+        for y in range(0, altura, 500):
+            d.rectangle([0, y, largura, y + 3], fill=(255, 255, 255))
+        return im
+
+    def risca(quadro, x):
+        """o y, modulo 500, da primeira linha de uma risca na coluna x do fotograma, ou None se la nao ha nenhuma"""
+        col = quadro.convert("L").crop((x, 0, x + 1, quadro.height)).tobytes()      # um byte por linha
+        for y in range(200, 880):          # fora das pontas que desvanecem (170 px em cima e em baixo)
+            if col[y] > 0 and col[y - 1] == 0:
+                return y % 500
+        return None
+    conferidos = {"pecas": 0, "nomes": 0, "fotos": 0, "vazios": 0}
+    for (nome, cr), m in zip(casos, s or []):
+        t = textos[nome]
+        T = p5.tempos_dos_creditos(m["Hr"], m["Hc"], len(t["cargos"]), t["cargos_primeiro"], t["partes"], t["velocidade"])
+        if not T.get("janelas"):
+            problemas.append("%s: o caso nao passa pelas partes noutra ordem" % nome)
+            continue
+        desenho = p5.desenho_dos_creditos(riscado(1040, m["Hr"]), riscado(p5.LARGURA_FOTO, m["Hc"]), t, {}, T)
+        preto = p5.desenho_dos_creditos(Image.new("RGB", (1040, m["Hr"])), Image.new("RGB", (p5.LARGURA_FOTO, m["Hc"])), t, {}, T)
+        # e com o rolo e a coluna todos brancos, para saber se cada lado ainda esta no ecra
+        branco = p5.desenho_dos_creditos(Image.new("RGB", (1040, m["Hr"]), (255, 255, 255)),
+                                         Image.new("RGB", (p5.LARGURA_FOTO, m["Hc"]), (255, 255, 255)), t, {}, T)
+
+        def brilho(x):
+            return preto(x).convert("L").getextrema()[1]
+        cheio = {"titulo": brilho(T["t_titulo_entra"] + 2.5) if T["t_titulo_entra"] is not None else None}
+        for k in range(len(t["cargos"])):
+            cheio[k] = brilho(T["t_cargos"] + k * T["t_cargo"] + 2.0)
+        piores, consts = [], set()
+        for x, mm in zip(m["I"], m["tempos"]):
+            kj = next((j for j, (_p, _ini, fim) in enumerate(T["janelas"]) if x < fim), len(T["janelas"]) - 1)
+            peca = T["janelas"][kj][0]
+            conferidos["pecas"] += 1
+            if peca == "rolo":
+                tr = x - T["t_rolo_entra"] - T["t_entrada"]
+                alfa = (suave((tr + T["t_entrada"]) / T["t_entrada"]) if (kj > 0 and tr < 0) else 1.0) * \
+                       (1.0 - suave((tr - T["t_rolo"] + 0.8) / 1.6) if tr > T["t_rolo"] - 0.8 else 1.0)
+                quadro, qb = desenho(x), branco(x).convert("L")
+                yn, yf = risca(quadro, 1400), risca(quadro, p5.CENTRO_FOTOS)
+                ve_nomes = qb.crop((1000, 0, 1900, p5.A)).getextrema()[1] > 0
+                ve_fotos = qb.crop((100, 0, 800, p5.A)).getextrema()[1] > 0
+                # OS NOMES: onde a Mesa escreve a primeira linha que esta no ecra, contra a risca do rolo do ponto5. A
+                # distancia entre as duas e a mesma em todos os instantes (o meio da linha e a base da letra)
+                if mm["nNomes"] and alfa > 0.02:
+                    y0 = int(p5.A * 0.45 - min(tr, T.get("fim_nomes", tr) if T.get("fim_nomes") is not None else tr) * T["vel_nomes"])
+                    consts.add(round(mm["y0c"] - y0, 3))
+                    conferidos["nomes"] += 1
+                    if yn is not None and (y0 % 500) != yn and alfa > 0.2:
+                        piores.append("%.2f s: a risca dos nomes cai em %d e as contas dizem %d" % (x, yn, y0 % 500))
+                if mm["yf"] is not None and alfa > 0.2:
+                    conferidos["fotos"] += 1
+                    if yf is not None and (mm["yf"] % 500) != yf:
+                        piores.append("%.2f s: a coluna das fotos a %d na Mesa e a risca do ponto5 em %d" % (x, mm["yf"] % 500, yf))
+                # UM LADO QUE JA ACABOU SAI DO ECRA E FICA VAZIO, nos dois
+                for lado, fim, n_mesa, ve in (("nomes", T.get("fim_nomes"), mm["nNomes"], ve_nomes), ("fotos", T.get("fim_fotos"), mm["nFotos"], ve_fotos)):
+                    if fim is not None and tr > fim + 0.05 and alfa > 0.02:
+                        conferidos["vazios"] += 1
+                        if n_mesa or ve:
+                            piores.append("%.2f s: os %s ja acabaram e continuam no ecra (Mesa %d, ponto5 %s)" % (x, lado, n_mesa, ve))
+                if mm["tipo"] == "preto" and not (ve_nomes or ve_fotos):
+                    continue                # os dois lados ja sairam do ecra, nos dois: preto ate ao fim do rolo
+            else:
+                alfa = brilho(x) / float(cheio["titulo"] if peca == "titulo" else
+                                         cheio[min(int((x - T["t_cargos"]) // T["t_cargo"]) if x > T["t_cargos"] else 0, len(t["cargos"]) - 1)])
+            if mm["tipo"] != peca and not (mm["tipo"] == "preto" and alfa < 0.02):
+                piores.append("%.2f s: a Mesa desenha %s, o ponto5 %s" % (x, mm["tipo"], peca))
+            elif abs(mm["alfa"] - alfa) > (0.02 if peca == "titulo" else 0.008) and not (peca == "rolo" and mm["tipo"] == "preto"):
+                piores.append("%.2f s (%s): Mesa %.3f, ponto5 %.3f" % (x, peca, mm["alfa"], alfa))
+        if len(consts) > 1:
+            piores.append("os nomes nao andam com o rolo do ponto5: a distancia a risca muda (%s)" % sorted(consts)[:4])
+        if piores:
+            problemas.append("%s: %s" % (nome, "; ".join(piores[:4])))
+        # a primeira parte nasce do fim do filme ja acesa
+        if t["partes"][0] in ("titulo", "cargos") and m["tempos"][0]["alfa"] < 0.999:
+            problemas.append("%s: a primeira parte nao nasce acesa do fim do filme: %.3f no zero" % (nome, m["tempos"][0]["alfa"]))
+        if "cargos" not in t["partes"] and any(mm["tipo"] == "cargos" for mm in m["tempos"]):
+            problemas.append("%s: sem cargos, a Mesa desenhou um cargo" % nome)
+        if "titulo" not in t["partes"] and any(mm["tipo"] == "titulo" for mm in m["tempos"]):
+            problemas.append("%s: sem titulo, a Mesa desenhou o titulo" % nome)
+    if s and not (conferidos["nomes"] > 20 and conferidos["fotos"] > 10 and conferidos["vazios"] > 5):
+        problemas.append("o teste ja nao prova as posicoes: %s" % conferidos)
+    verifica("Mesa: o desenho das partes e da velocidade como o ponto5", s is not None and not problemas,
+             "; ".join(problemas)[:600] if problemas else
+             "%d casos, %d instantes com a peca e a opacidade dos fotogramas (o titulo aceso desde o zero e a apagar em 0,6 s a "
+             "meio, o rolo a entrar do preto), os nomes em %d e as fotos em %d no sitio da risca, e %d com o lado que acabou vazio"
+             % (len(casos), conferidos["pecas"], conferidos["nomes"], conferidos["fotos"], conferidos["vazios"]))
+
+
+DECLARACOES_FORMA = ["var CRED_PARTES_HOJE = ", "var CRED_PARTE_NOME = ", "var credVelModo = ", "var credVelGesto = ",
+                     "var credVelPorMarcar = "]
+FUNCOES_FORMA = ["function credListasIguais(", "function credPartesEmPalavras(", "function credContasCom(", "function credPoePartes(",
+                 "function credFraseDaOrdem(", "function credMoveParte(", "function credTiraParte(", "function credRepoeParte(",
+                 "function credNomesCorridos(", "function credVelLimites(", "function credVelMarcaJa(", "function credPoeVelocidade(",
+                 "function credDepoisDaVelocidade(", "function credVelocidadeModo(", "function credVelocidadePasso(",
+                 "function credLetrasDeLer(", "function credLeituraDaVelocidade(", "function credAvisosDaVelocidade(",
+                 "function credMusicaFraseDaDuracao(", "function credFormaDiz(", "function credHtmlDaOrdem(",
+                 "function credHtmlDosNomes(", "function credHtmlDaVelocidade(", "function credCampoNoFilme(",
+                 "function fmtS(", "function mmssDec("]
+
+
+def teste_creditos_1003_gravam_desfazem_e_juntam():
+    """A ordem, o «Sem cargos», os nomes corridos e a velocidade gravam so o que ele escolhe, desfazem-se e juntam-se.
+
+    O DEFEITO QUE ISTO APANHA:
+    - «como está» a gravar (abrir a aba, pinta-la, ou escolher o que ja esta), ou as duas ordens de antes a ficarem
+      escritas de outra maneira (a de hoje nao grava nada, e a da 109 e o cargos_primeiro: true de sempre);
+    - o «Sem cargos» a apagar os textos dos cargos (tem de os guardar para os repor), ou a deixar um cargo no filme;
+    - a regua da velocidade a encher o Anular (os acertos seguidos sao uma entrada), a gravar fora dos limites, ou o
+      «Como está» de um lado a levar a velocidade do outro;
+    - o que a Mesa grava a dar outro filme no ponto5: cada passo le-se pelo textos_dos_creditos(), sem avisos;
+    - a ordem num aparelho e a velocidade no outro a nao se juntarem, os dois na ordem sem conflito, ou uma Mesa de
+      ontem a deitar fora a ordem, os nomes corridos ou a velocidade quando muda um titulo.
+    """
+    if not shutil.which("node"):
+        salta("Mesa: a ordem, os nomes e a velocidade gravam, desfazem e juntam", "sem node neste PC")
+        return
+    import creditos_para_mesa as cm
+    p5 = cm._ponto5()
+    problemas = []
+    cred = _cred_dos_cargos(p5)
+    funcoes = FUNCOES_JUNTAR + FUNCOES_LAYOUT_CRED + FUNCOES_CARGOS + FUNCOES_FORMA
+    funcoes = [f for i, f in enumerate(funcoes) if f not in funcoes[:i]]
+    prelude = PRELUDE_JUNTAR + """
+var CRED = %(cred)s, credTemFinais = false, porId = {}, RENDER_LE = {}, mensagens = [];
+function credMsg(t){ mensagens.push(t); }
+function esc(s){ return String(s); }
+function credResumo(){ credLay = null; return {dur: credContas().dur}; }
+function credTextoCurtoDoEfeito(a, d){ return "[" + a.dur.toFixed(4) + " -> " + d.dur.toFixed(4) + "]"; }
+function credMusicaEscolha(){ return null; }
+var credPintaForma = nada;
+""" % {"cred": json.dumps(cred, ensure_ascii=False)} + MESA_53_CARGOS
+    quatro = [{"cargo": "A", "quem": "QA"}, {"cargo": "B", "quem": "QB"}, {"cargo": "C", "quem": "QC"}, {"cargo": "D", "quem": "E\nF"}]
+    B0 = dict(EST_DOS_CARGOS, versoes=[{"id": "v1", "nome": "demo", "clips": [{"t": "foto", "i": "f01"}]}], atual="v1",
+              quando="2026-10-03T06:00:00Z", rev=2373, pagina="2026-10-02",
+              creditos={"titulo": "CLARA & TIAGO", "musica": {"ficheiro": "x.mp3", "inicio": "fim"}, "ordem": ["f02", "f01"],
+                        "cargos": quatro})
+    corpo_js = """
+var r = {passos: []}, B0 = %(b0)s;
+function com(m){ var b = copia(B0); Object.keys(m).forEach(function(k){ if(m[k] === undefined) delete b[k]; else b[k] = m[k]; }); return b; }
+function foto(rot){
+  credLay = null;
+  var L = credContas();
+  r.passos.push({rot: rot, creditos: est.creditos === undefined ? null : copia(est.creditos), partes: L.partesEscolhidas, corridos: L.corridos,
+    vel: L.vel, dur: L.dur, cargos: L.cargos.map(function(x){ return [x.cargo, x.pessoas.join("\\n")]; }), guardados: L.cargosGuardados,
+    marcas: marcas, pilha: pilhaDesfazer.length, msg: mensagens[mensagens.length - 1] || ""});
+}
+// A. COMO ESTA: abrir, pintar a aba e escolher o que ja esta nao grava nada
+abrir(B0); marcas = 0; var antes = JSON.stringify(est.creditos);
+credHtmlDaOrdem(); credHtmlDosNomes(); credHtmlDaVelocidade(); credFormaDiz(); credHtmlDosCargos(); credAvisosDaVelocidade();
+var dev = [credPoePartes(CRED_PARTES_HOJE), credNomesCorridos(false), credVelocidadeModo("fotos", false), credVelocidadeModo("nomes", false),
+           credVelocidadeModo("fotos", true), credRepoeParte("cargos"), credRepoeParte("titulo"), credMoveParte("rolo", -1),
+           credMoveParte("titulo", 1), credTiraParte("rolo"), credPoeVelocidade("fotos", null), credPoeVelocidade("outra", 100)];
+credHtmlDaVelocidade();
+r.A = {marcas: marcas, igual: JSON.stringify(est.creditos) === antes, devolveu: dev, pilha: pilhaDesfazer.length};
+// B. o que eles decidiram, passo a passo, e a velocidade
+foto("o principio");
+credTiraParte("cargos"); foto("sem cargos");
+credMoveParte("titulo", -1); foto("o titulo primeiro");
+credNomesCorridos(true); foto("nomes corridos");
+var p0 = pilhaDesfazer.length;
+credPoeVelocidade("fotos", 100); foto("fotos a 100");
+credPoeVelocidade("fotos", 95); credPoeVelocidade("fotos", 90.4); foto("fotos a 90, o mesmo gesto");
+r.gesto = pilhaDesfazer.length - p0;
+credPoeVelocidade("nomes", 60); foto("nomes a 60");
+credVelocidadePasso("nomes", 5); foto("nomes mais 5");
+credPoeVelocidade("fotos", 1000); foto("fotos acima do limite");
+credPoeVelocidade("nomes", 3); foto("nomes abaixo do limite");
+credVelocidadeModo("fotos", false); foto("fotos como esta");
+credVelocidadeModo("nomes", false); foto("nomes como esta");
+credRepoeParte("cargos"); foto("repor os cargos");
+credMoveParte("cargos", -1); foto("os cargos antes do rolo");
+credMoveParte("cargos", -1); foto("os cargos primeiro de todos");
+credMoveParte("titulo", 1); foto("a ordem da 109");
+credMoveParte("cargos", 1); foto("a ordem de hoje");
+credTiraParte("titulo"); foto("sem titulo");
+credRepoeParte("titulo"); foto("repor o titulo");
+credNomesCorridos(false); foto("por grupos");
+r.B = {fim: copia(est.creditos), pilha: pilhaDesfazer.length};
+// C. o anular repoe cada passo, ate ao principio
+var n = 0;
+while(pilhaDesfazer.length){ desfazer(); n++; }
+r.C = {fim: copia(est.creditos), n: n};
+// D. um valor mal escrito a mao, que ja valia como esta, sai ao escolher «Como está»
+abrir(com({creditos: Object.assign(copia(B0.creditos), {partes: "titulo,rolo", velocidade: 100, nomes_corridos: "sim"})}));
+r.D = {partes: credPoePartes(CRED_PARTES_HOJE), nomes: credNomesCorridos(false), vel: credVelocidadeModo("fotos", false), fim: copia(est.creditos)};
+// E. a ordem da 109 e o «Sem cargos»: a lista sai escrita e o cargos_primeiro sai; repor poe-os a seguir aos convidados
+abrir(com({creditos: Object.assign(copia(B0.creditos), {cargos_primeiro: true})}));
+credTiraParte("cargos"); r.E1 = copia(est.creditos);
+credRepoeParte("cargos"); r.E2 = copia(est.creditos);
+// F. dois aparelhos: aqui a ordem, la a velocidade e os nomes corridos: juntam-se. Os dois na ordem: conflito
+abrir(B0); credTiraParte("cargos"); credMoveParte("titulo", -1);
+var la = com({creditos: Object.assign(copia(B0.creditos), {velocidade: {fotos: 100}, nomes_corridos: true}), rev: 2374});
+var j = juntarComBase(la);
+r.F1 = {ok: j.ok, meus: j.meus, deles: j.deles, creditos: copia(est.creditos),
+        partes: Object.keys(partesDe(corpo())).filter(function(k){ return /partes|nomes_corridos|velocidade/.test(k); })};
+abrir(B0); credTiraParte("cargos");
+j = juntarComBase(com({creditos: Object.assign(copia(B0.creditos), {partes: ["titulo", "cargos", "rolo"]}), rev: 2374}));
+r.F2 = {ok: j.ok, choque: j.choque, partes: copia(est.creditos.partes)};
+abrir(B0); credPoeVelocidade("fotos", 100);
+j = juntarComBase(com({creditos: Object.assign(copia(B0.creditos), {velocidade: {nomes: 60}}), rev: 2374}));
+r.F3 = {ok: j.ok, choque: j.choque};
+// G. depois de juntar o que o outro mudou nos creditos, o anular de antes sai: repunha a copia de antes por cima do dele
+abrir(B0); credNomesCorridos(true);
+j = juntarComBase(com({creditos: Object.assign(copia(B0.creditos), {partes: ["titulo", "rolo"]}), rev: 2374}));
+r.G = {ok: j.ok, pilha: pilhaDesfazer.length, creditos: copia(est.creditos)};
+// H. a Mesa de ontem (so conhece os textos e o cargos_primeiro): muda o titulo e guarda a ordem, os corridos e a velocidade
+var tudo = {partes: ["titulo", "rolo"], nomes_corridos: true, velocidade: {fotos: 100, nomes: 60}};
+abrir(com({creditos: Object.assign(copia(B0.creditos), tudo)}));
+credMudaTextoV53("titulo", "", "OUTRO TITULO"); r.H1 = copia(est.creditos);
+abrir(com({creditos: Object.assign(copia(B0.creditos), tudo)}));
+j = juntarComBase(com({creditos: r.H1, rev: 2374}));
+r.H2 = {ok: j.ok, creditos: copia(est.creditos)};
+console.log(JSON.stringify(r));
+""" % {"b0": json.dumps(B0, ensure_ascii=False)}
+    r = _correr_js(DECLARACOES_JUNTAR + DECLARACOES_FORMA, funcoes, prelude, corpo_js, problemas)
+    if r:
+        A = r["A"]
+        if A["marcas"] or not A["igual"] or any(A["devolveu"]) or A["pilha"]:
+            problemas.append("«como está» mexeu: %s" % A)
+        passos = {p["rot"]: p for p in r["passos"]}
+        # o que a Mesa grava, lido pelo ponto5: as mesmas partes, cargos, nomes e velocidade, e sem avisos
+        for p in r["passos"]:
+            av = []
+            t = p5.textos_dos_creditos({"creditos": p["creditos"]} if p["creditos"] is not None else {}, av)
+            esperado = [[c, "\n".join(p5.pessoas_do_quem(q))] for c, q in t["cargos"]]
+            if av or t["partes"] != p["partes"] or t["nomes_corridos"] is not p["corridos"] or esperado != p["cargos"] or \
+                    t["velocidade"] != {k: float(v) for k, v in p["vel"].items()}:
+                problemas.append("%s: o ponto5 le %s, %s, %s%s; a Mesa mostra %s, %s, %s" % (
+                    p["rot"], t["partes"], t["nomes_corridos"], t["velocidade"], (" e avisa " + "; ".join(av)) if av else "",
+                    p["partes"], p["corridos"], p["vel"]))
+            if (p["creditos"] or {}).get("cargos") != quatro:
+                problemas.append("%s: os textos dos cargos nao ficaram guardados: %s" % (p["rot"], (p["creditos"] or {}).get("cargos")))
+        sc = passos["sem cargos"]
+        if sc["creditos"].get("partes") != ["rolo", "titulo"] or sc["cargos"] or sc["guardados"] != 4 or "ficam guardados" not in sc["msg"] \
+                or abs(sc["dur"] - (passos["o principio"]["dur"] - 4 * 4.2)) > 1e-9:
+            problemas.append("o «Sem cargos»: %s, %d cargos no filme, %s guardados, %r" % (sc["creditos"].get("partes"), len(sc["cargos"]),
+                                                                                      sc["guardados"], sc["msg"][:80]))
+        tp = passos["o titulo primeiro"]
+        if tp["creditos"].get("partes") != ["titulo", "rolo"] or "cargos_primeiro" in tp["creditos"] or \
+                abs(tp["dur"] - sc["dur"] - 0.5) > 1e-9:
+            problemas.append("o titulo primeiro: %s, %.4f s" % (tp["creditos"], tp["dur"] - sc["dur"]))
+        if passos["nomes corridos"]["creditos"].get("nomes_corridos") is not True or "nomes_corridos" in passos["por grupos"]["creditos"]:
+            problemas.append("os nomes corridos: %s" % passos["nomes corridos"]["creditos"])
+        if passos["fotos a 100"]["creditos"].get("velocidade") != {"fotos": 100} or r["gesto"] != 1 or \
+                passos["fotos a 90, o mesmo gesto"]["creditos"]["velocidade"] != {"fotos": 90}:
+            problemas.append("a regua das fotos: %s, %s, %d entradas no anular para tres acertos" % (
+                passos["fotos a 100"]["creditos"].get("velocidade"), passos["fotos a 90, o mesmo gesto"]["creditos"].get("velocidade"), r["gesto"]))
+        if passos["nomes a 60"]["creditos"]["velocidade"] != {"fotos": 90, "nomes": 60} or \
+                passos["nomes mais 5"]["creditos"]["velocidade"] != {"fotos": 90, "nomes": 65} or \
+                passos["nomes mais 5"]["pilha"] != passos["nomes a 60"]["pilha"] or "[" not in passos["nomes mais 5"]["msg"]:
+            problemas.append("a velocidade dos nomes: %s, %s, %r" % (passos["nomes a 60"]["creditos"].get("velocidade"),
+                                                                    passos["nomes mais 5"]["creditos"].get("velocidade"), passos["nomes mais 5"]["msg"][:80]))
+        if passos["fotos acima do limite"]["creditos"]["velocidade"]["fotos"] != 300 or \
+                passos["nomes abaixo do limite"]["creditos"]["velocidade"]["nomes"] != 30:
+            problemas.append("os limites: %s" % passos["nomes abaixo do limite"]["creditos"].get("velocidade"))
+        if passos["fotos como esta"]["creditos"].get("velocidade") != {"nomes": 30} or "velocidade" in passos["nomes como esta"]["creditos"]:
+            problemas.append("o «Como está» de cada velocidade: %s, %s" % (passos["fotos como esta"]["creditos"].get("velocidade"),
+                                                                        passos["nomes como esta"]["creditos"].get("velocidade")))
+        rc = passos["repor os cargos"]
+        if rc["partes"] != ["titulo", "rolo", "cargos"] or [c[0] for c in rc["cargos"]] != ["A", "B", "C", "D"]:
+            problemas.append("repor os cargos: %s, %s" % (rc["partes"], rc["cargos"]))
+        d109, hoje = passos["a ordem da 109"]["creditos"], passos["a ordem de hoje"]["creditos"]
+        if d109.get("cargos_primeiro") is not True or "partes" in d109 or "partes" in hoje or "cargos_primeiro" in hoje:
+            problemas.append("as duas ordens de antes nao ficam escritas como sempre: %s; %s" % (
+                {k: d109.get(k) for k in ("partes", "cargos_primeiro")}, {k: hoje.get(k) for k in ("partes", "cargos_primeiro")}))
+        if passos["sem titulo"]["creditos"].get("partes") != ["rolo", "cargos"] or "partes" in passos["repor o titulo"]["creditos"]:
+            problemas.append("sem o titulo e repo-lo: %s, %s" % (passos["sem titulo"]["creditos"].get("partes"),
+                                                                passos["repor o titulo"]["creditos"].get("partes")))
+        if r["B"]["fim"] != B0["creditos"] or r["C"]["fim"] != B0["creditos"] or r["C"]["n"] != r["B"]["pilha"] or r["C"]["n"] < 14:
+            problemas.append("o fim e o anular: fica %s; %d anulados de %d" % (r["B"]["fim"], r["C"]["n"], r["B"]["pilha"]))
+        if r["D"]["partes"] is not True or r["D"]["nomes"] is not True or r["D"]["vel"] is not True or r["D"]["fim"] != B0["creditos"]:
+            problemas.append("o mal escrito nao sai com «Como está»: %s" % r["D"])
+        if r["E1"].get("partes") != ["rolo", "titulo"] or "cargos_primeiro" in r["E1"] or "partes" in r["E2"] or "cargos_primeiro" in r["E2"]:
+            problemas.append("a ordem da 109 e o «Sem cargos»: %s; %s" % (r["E1"], r["E2"]))
+        F1 = r["F1"]
+        if not F1["ok"] or F1["creditos"].get("partes") != ["titulo", "rolo"] or F1["creditos"].get("velocidade") != {"fotos": 100} or \
+                F1["creditos"].get("nomes_corridos") is not True or F1["creditos"].get("cargos") != quatro or \
+                sorted(F1["partes"]) != ['["creditos","nomes_corridos"]', '["creditos","partes"]', '["creditos","velocidade"]']:
+            problemas.append("a ordem aqui e a velocidade la: %s" % F1)
+        if r["F2"]["ok"] or r["F2"]["choque"] != ["creditos"] or r["F2"]["partes"] != ["rolo", "titulo"]:
+            problemas.append("a ordem nos dois: %s" % r["F2"])
+        if r["F3"]["ok"] or r["F3"]["choque"] != ["creditos"]:
+            problemas.append("a velocidade nos dois: %s" % r["F3"])
+        if not r["G"]["ok"] or r["G"]["pilha"] != 0 or r["G"]["creditos"].get("partes") != ["titulo", "rolo"] or \
+                r["G"]["creditos"].get("nomes_corridos") is not True:
+            problemas.append("o anular depois de juntar: %s" % r["G"])
+        for nome, cr in (("a Mesa de ontem a mudar o titulo", r["H1"]), ("a pagina nova a recebe-la", r["H2"]["creditos"])):
+            if cr.get("partes") != ["titulo", "rolo"] or cr.get("nomes_corridos") is not True or \
+                    cr.get("velocidade") != {"fotos": 100, "nomes": 60} or cr.get("titulo") != "OUTRO TITULO" or cr.get("cargos") != quatro:
+                problemas.append("%s perdeu a ordem, os corridos ou a velocidade: %s" % (nome, cr))
+    verifica("Mesa: a ordem, os nomes e a velocidade gravam, desfazem e juntam", r is not None and not problemas,
+             "; ".join(problemas)[:600] if problemas else
+             "como esta nao grava; %d passos lidos pelo ponto5 sem avisos (sem cargos com os 4 textos guardados, o titulo primeiro, "
+             "corridos, a regua numa so entrada do anular, os limites, repor); as ordens de antes como sempre; o anular volta ao "
+             "principio; juntam e chocam; a Mesa de ontem guarda tudo ao mudar o titulo" % len(r["passos"]))
+
+
+def teste_creditos_1003_avisam():
+    """Os avisos da velocidade sao os do ponto5, o «Sem cargos» ve-se, e a Mesa diz o que ainda nao chega ao filme.
+
+    O DEFEITO QUE ISTO APANHA:
+    - a Mesa a contar outras fotos com menos de 2 s inteiras no ecra, ou outras linhas de nomes depressa de mais, do que o
+      avisos_da_velocidade() do ponto5 (com as mesmas alturas e as mesmas linhas), ou a avisar sem velocidade escolhida;
+    - o lado que fica parado sem se dizer quantos segundos;
+    - o «Sem cargos» sem se ver no painel dos textos (os campos a continuarem la como se fossem ao filme), ou o Validar
+      a avisar de um cargo, de um titulo de grupo ou do titulo final que ja nao vao ao ecra;
+    - a Mesa a deixar escolher a ordem, os nomes corridos ou a velocidade sem dizer que o filme ainda os ignora, com um
+      render que nao os le; ou a dize-lo com o de agora.
+    """
+    if not shutil.which("node"):
+        salta("Mesa: os avisos da ordem, dos nomes e da velocidade", "sem node neste PC")
+        return
+    import gerar_mesa
+    import caracteres_para_mesa as cpm
+    import creditos_para_mesa as cm
+    import render
+    p5 = cm._ponto5()
+    problemas = []
+    render.aplicar_estilo(None, [])
+    cred = _cred_dos_cargos(p5)
+    # 24 linhas de ensaio, uma delas com mais de 100 letras numa pessoa so (o rolo so parte entre pessoas; a 150 px/s,
+    # como esta, ja pedia mais do que os 7,2 s que fica no ecra, e mesmo assim nao se avisa sem velocidade escolhida), e
+    # com os invisiveis, que nao contam
+    linhas = ["Pessoa %d · Outra %d" % (k, k) for k in range(22)] + ["Maria\u200d " + "de Sousa e Vasconcelos\ufe0f " * 4 + "Pereira\u2060",
+                                                                      "Ana\u200d \ufe0fRita\u2060"]
+    cred["grupos"] = [{"etiqueta": "Grupo 1", "titulo": "T1", "sub": "s1", "linhas": linhas}]
+    cred["fotos"] = {"f01": [4000, 3000, 570], "f02": [3000, 4000, 900], "f03": [1000, 1000, 760], "f04": [4000, 2000, 380]}
+    casos = [("como esta", None), ("fotos a 300", {"velocidade": {"fotos": 300}}), ("fotos a 60", {"velocidade": {"fotos": 60}}),
+             ("nomes a 200", {"velocidade": {"nomes": 200}}), ("nomes a 30", {"velocidade": {"nomes": 30}}),
+             ("fotos 250 nomes 180", {"velocidade": {"fotos": 250, "nomes": 180}, "nomes_corridos": True}),
+             ("fotos 150", {"velocidade": {"fotos": 150}, "partes": ["titulo", "rolo"]})]
+    funcoes = FUNCOES_LAYOUT_CRED + FUNCOES_CARGOS + FUNCOES_FORMA + ["function copiaFunda(", "function credGuardaDesfazer("]
+    funcoes = [f for i, f in enumerate(funcoes) if f not in funcoes[:i]]
+    prelude = """
+var est = %(est)s, CRED = %(cred)s, credLay = null, credTemFinais = true, porId = {}, RENDER_LE = {}, credCampoAberto = null, pilhaDesfazer = [];
+function esc(s){ return String(s); }
+function credMsg(){} function credPinta(){} function credPintaTextos(){} function credPintaForma(){} function marcar(){}
+function credAberto(){ return false; }
+function credResumo(){ return {dur: 0}; }
+function credTextoCurtoDoEfeito(){ return ""; }
+function credMusicaEscolha(){ return null; }
+""" % {"est": json.dumps(EST_DOS_CARGOS, ensure_ascii=False), "cred": json.dumps(cred, ensure_ascii=False)}
+    corpo_js = """
+var casos = %(casos)s, r = {casos: [], le: {}};
+casos.forEach(function(c){
+  if(c[1] === null) delete est.creditos; else est.creditos = c[1];
+  credLay = null;
+  var L = credContas(), V = credLeituraDaVelocidade(L);
+  r.casos.push({Hr: L.Hr, Hc: L.Hc, alturas: L.col.map(function(p){ return p.h; }), linhas: L.pecas.filter(function(q){ return q.tipo === "nome"; }).map(function(q){ return q.texto; }),
+                V: V, avisos: credAvisosDaVelocidade(), parado: L.parado ? [L.parado.quem, L.parado.s] : null, diz: credFormaDiz()});
+});
+// o que ainda nao chega ao filme, com um render de ontem, com o de hoje e sem se saber
+est.creditos = {partes: ["titulo", "rolo"], nomes_corridos: true, velocidade: {fotos: 100}}; credLay = null;
+[["hoje", {creditos_partes: true, nomes_corridos: true, creditos_velocidade: true, cargos_primeiro: true}],
+ ["ontem", {creditos_partes: false, nomes_corridos: false, creditos_velocidade: false, cargos_primeiro: true}], ["sem dizer", {}]].forEach(function(x){
+  RENDER_LE = x[1];
+  var h = credHtmlDaOrdem() + credHtmlDosNomes() + credHtmlDaVelocidade();
+  r.le[x[0]] = {partes: /data-cainda="partes"/.test(h), corridos: /data-cainda="corridos"/.test(h), velocidade: /data-cainda="velocidade"/.test(h)};
+});
+// com tudo como esta, um render de ontem nao tem nada de que avisar; e a ordem da 109 nao e uma ordem nova
+RENDER_LE = {creditos_partes: false, nomes_corridos: false, creditos_velocidade: false, cargos_primeiro: true};
+delete est.creditos; credLay = null;
+var h0 = credHtmlDaOrdem() + credHtmlDosNomes() + credHtmlDaVelocidade();
+est.creditos = {cargos_primeiro: true}; credLay = null;
+r.le.nada = /data-cainda/.test(h0) || /data-cainda/.test(credHtmlDaOrdem());
+RENDER_LE = {};
+// o «Sem cargos» no painel dos textos, e os cargos de volta
+est.creditos = {partes: ["titulo", "rolo"], cargos: [{cargo: "A", quem: "QA"}, {cargo: "B", quem: "QB"}]}; credLay = null;
+var hs = credHtmlDosCargos(), ho = credHtmlDaOrdem();
+r.sem = {caixa: /data-csemcargos/.test(hs), repor: /data-cprepoe="cargos"/.test(hs), campos: /data-ccampo/.test(hs), dois: /dos 2 cargos/.test(hs),
+         naOrdem: /Sem cargos/.test(ho) && /data-cprepoe="cargos"/.test(ho) && !/data-cptira="cargos"/.test(ho),
+         noFilme: [credCampoNoFilme("cargo"), credCampoNoFilme("quem"), credCampoNoFilme("titulo"), credCampoNoFilme("gtitulo")]};
+est.creditos = {nomes_corridos: true, partes: ["rolo", "cargos"]}; credLay = null;
+var hc = credHtmlDosCargos();
+r.com = {caixa: /data-csemcargos/.test(hc), campos: /data-ccampo="cargo"/.test(hc), irForma: /data-cabrir="forma"/.test(hc),
+         noFilme: [credCampoNoFilme("cargo"), credCampoNoFilme("titulo"), credCampoNoFilme("data"), credCampoNoFilme("gtitulo"), credCampoNoFilme("gsub")]};
+console.log(JSON.stringify(r));
+""" % {"casos": json.dumps(casos, ensure_ascii=False)}
+    r = _correr_js(DECLARACOES_FORMA, funcoes, prelude, corpo_js, problemas)
+    conferidos = 0
+    if r:
+        for (nome, cr), m in zip(casos, r["casos"]):
+            t = p5.textos_dos_creditos({"creditos": cr} if cr is not None else {}, [])
+            T = p5.tempos_dos_creditos(m["Hr"], m["Hc"], len(t["cargos"]), t["cargos_primeiro"], t["partes"], t["velocidade"])
+            do_p5 = p5.avisos_da_velocidade(T, m["alturas"], m["linhas"])
+            fotos = next((re.search(r": (\d+) das (\d+) fotos .* \(a (\d+)\.a fica ([\d.]+) s\)", a) for a in do_p5 if "coluna das fotos" in a), None)
+            nomes = next((re.search(r"cada linha fica ([\d.]+) s no ecra, e (\d+) linhas .* a maior tem (\d+) letras e pede ([\d.]+) s", a)
+                          for a in do_p5 if a.startswith("os nomes")), None)
+            V, da_mesa = m["V"], m["avisos"]
+            av_fotos = next((a for a in da_mesa if a.startswith("Com as fotos")), None)
+            av_nomes = next((a for a in da_mesa if a.startswith("Com os nomes")), None)
+            av_parado = next((a for a in da_mesa if "acabam" in a), None)
+            if bool(fotos) != bool(av_fotos) or bool(nomes) != bool(av_nomes):
+                problemas.append("%s: o ponto5 avisa %s e a Mesa %s" % (nome, [a[:40] for a in do_p5], [a[:40] for a in da_mesa]))
+                continue
+            if fotos:
+                esperado = (int(fotos.group(1)), int(fotos.group(2)), int(fotos.group(3)), fotos.group(4))
+                if (V["fotos"]["curtas"], V["fotos"]["n"], V["fotos"]["pior"], "%.1f" % V["fotos"]["s"]) != esperado or \
+                        ("%d das %d fotos" % esperado[:2]) not in av_fotos or ("a %d.ª fica" % esperado[2]) not in av_fotos:
+                    problemas.append("%s: as fotos no ponto5 %s, na Mesa %s (%r)" % (nome, esperado, V["fotos"], av_fotos[:90]))
+                conferidos += 1
+            if nomes:
+                esperado = (nomes.group(1), int(nomes.group(2)), int(nomes.group(3)), nomes.group(4))
+                if ("%.1f" % V["nomes"]["noEcra"], V["nomes"]["longas"], V["nomes"]["maior"], "%.1f" % V["nomes"]["pede"]) != esperado or \
+                        ("a maior tem %d letras" % esperado[2]) not in av_nomes:
+                    problemas.append("%s: os nomes no ponto5 %s, na Mesa %s" % (nome, esperado, V["nomes"]))
+                conferidos += 1
+            parado = list(T["parado"]) if T.get("parado") else None
+            if m["parado"] != parado or bool(parado) != bool(av_parado) or \
+                    (parado and (("%.1f" % parado[1]).replace(".", ",").rstrip("0").rstrip(",") + " s antes") not in av_parado.replace(",0 s", " s")):
+                problemas.append("%s: parado no ponto5 %s, na Mesa %s (%r)" % (nome, parado, m["parado"], (av_parado or "")[:70]))
+            if not t["velocidade"] and (da_mesa or 'class="aviso"' in m["diz"]["vel"]):
+                problemas.append("%s: sem velocidade escolhida a Mesa avisa: %s" % (nome, da_mesa))
+            # o que a aba diz: a duracao de agora e, com a escolha, a de como esta
+            if ("%d px/s" % round(T["vel_fotos"])) not in m["diz"]["vel"] or ("%d px/s" % round(T["vel_nomes"])) not in m["diz"]["vel"]:
+                problemas.append("%s: a aba nao diz as velocidades de agora: %s" % (nome, m["diz"]["vel"][:120]))
+            if bool(t["velocidade"]) != ("(à velocidade de sempre, " in m["diz"]["vel"]):
+                problemas.append("%s: a aba diz (ou cala) a velocidade de sempre ao contrario: %s" % (nome, m["diz"]["vel"][:160]))
+        por = dict(zip([c[0] for c in casos], r["casos"]))
+        # o de sempre sabe-se sem escolher nada: as fotos altas ficam menos de 2 s inteiras ja hoje, e diz-se como nota
+        if "Como está, " not in por["como esta"]["diz"]["vel"] or por["como esta"]["V"]["fotos"]["curtas"] < 1:
+            problemas.append("como esta, a aba nao diz as fotos que ja ficam menos de 2 s inteiras: %s" % por["como esta"]["diz"]["vel"][:200])
+        # as letras: os invisiveis nao contam (a linha comprida tem cinco, que o letras_de_ler() do ponto5 tira)
+        if por["nomes a 200"]["V"]["nomes"]["maior"] != p5.letras_de_ler(linhas[-2]) or p5.letras_de_ler(linhas[-2]) != len(linhas[-2]) - 6                 or por["como esta"]["V"]["nomes"]["longas"] != 1:
+            problemas.append("a maior linha tem %d letras e a Mesa conta %d" % (p5.letras_de_ler(linhas[-2]), por["nomes a 200"]["V"]["nomes"]["maior"]))
+        le = r["le"]
+        if le["hoje"] != {"partes": False, "corridos": False, "velocidade": False} or le["sem dizer"] != le["hoje"] or le["nada"]:
+            problemas.append("a Mesa diz que nao chega ao filme com um render que ja le, sem saber, ou sem nada escolhido: %s" % le)
+        if le["ontem"] != {"partes": True, "corridos": True, "velocidade": True}:
+            problemas.append("com um render de ontem a Mesa nao diz que ainda nao chega: %s" % le["ontem"])
+        if r["sem"] != {"caixa": True, "repor": True, "campos": False, "dois": True, "naOrdem": True, "noFilme": [False, False, True, True]}:
+            problemas.append("o «Sem cargos» no painel: %s" % r["sem"])
+        if r["com"] != {"caixa": False, "campos": True, "irForma": True, "noFilme": [True, False, False, False, False]}:
+            problemas.append("com cargos, sem titulo e com os nomes corridos: %s" % r["com"])
+    # O VALIDAR: so o que vai ao ecra, e os avisos da velocidade em «Confirma tu»
+    L = cpm.letras_do_render()
+    creditos = {"cargos": [{"cargo": "Cargo \ue000", "quem": "QUEM \ue000"}], "titulo": "FIM \ue000", "data": "4 \ue000",
+                "grupos": {"Grupo 1": {"titulo": "T1 \ue000", "sub": "s1 \ue000"}}}
+    feitos = {}
+    for nome, mais in (("tudo", {}), ("sem cargos", {"partes": ["titulo", "rolo"]}), ("corridos", {"nomes_corridos": True}),
+                       ("sem titulo", {"partes": ["rolo", "cargos"]}), ("depressa", {"velocidade": {"fotos": 300}})):
+        est = dict(EST_DOS_CARGOS, creditos=dict(creditos, **mais), estilo={})
+        saida = _correr_validador(est, """
+var CRED = %s, credLay = null, credTemFinais = true, porId = {};
+function credAvisoDoTexto(){ return ""; }
+function credCorpoDoTitulo(){ return 60; }
+function credMinimoDaLetra(){ return 58; }
+var a = validarCreditos();
+process.stdout.write(JSON.stringify(a.map(function(x){ return {grau: x.grau, campo: x.cred.campo, titulo: x.titulo}; })));
+""" % json.dumps(cred, ensure_ascii=False), problemas, L,
+                                  mais=FUNCOES_CRED_VALIDAR + ["function credAvisosDaVelocidade(", "function credLeituraDaVelocidade(",
+                                                               "function credLetrasDeLer(", "function fmtS("])
+        if saida is None:
+            break
+        feitos[nome] = sorted({x["campo"] for x in saida})
+        if nome == "depressa":
+            vel = [x for x in saida if x["campo"] == "forma"]
+            if len(vel) < 1 or any(x["grau"] != "confirma" for x in vel) or not any("fotos ficam menos de 2 s" in x["titulo"] for x in vel):
+                problemas.append("os avisos da velocidade no Validar: %s" % vel)
+    if feitos:
+        esperado = {"tudo": ["cargo", "data", "gsub", "gtitulo", "quem", "titulo"], "sem cargos": ["data", "gsub", "gtitulo", "titulo"],
+                    "corridos": ["cargo", "data", "quem", "titulo"], "sem titulo": ["cargo", "gsub", "gtitulo", "quem"],
+                    "depressa": ["cargo", "data", "forma", "gsub", "gtitulo", "quem", "titulo"]}
+        if feitos != esperado:
+            problemas.append("o Validar olha para textos que nao vao ao ecra: %s" % {k: v for k, v in feitos.items() if v != esperado.get(k)})
+    # O GERAR_MESA: o ponto5 de agora faz as tres coisas, e um de ontem nao
+    texto = io.open(PONTO5, encoding="utf-8").read()
+    hoje = gerar_mesa.le_as_partes_dos_creditos(texto, p5)
+    if hoje != {"creditos_partes": True, "nomes_corridos": True, "creditos_velocidade": True}:
+        problemas.append("o ponto5 de agora faz as partes, os corridos e a velocidade, e o gerar_mesa diz %s" % hoje)
+    ontem = gerar_mesa.le_as_partes_dos_creditos(re.sub(r'"partes"|"nomes_corridos"|"velocidade"', '"x"', texto))
+    if ontem != {"creditos_partes": False, "nomes_corridos": False, "creditos_velocidade": False}:
+        problemas.append("um ponto5 sem as chaves: %s" % ontem)
+
+    class Ponto5DeOntem:
+        """le as chaves no texto, mas faz as contas de 2 de outubro: sem as partes, o rolo corrido nem a velocidade"""
+        def __getattr__(self, nome_):
+            return getattr(p5, nome_)
+
+        def tempos_dos_creditos(self, alto_rolo, alto_coluna, n_cargos, cargos_primeiro=False, partes=None, velocidade=None):
+            return p5.tempos_dos_creditos(alto_rolo, alto_coluna, n_cargos, cargos_primeiro)
+
+        def rolo_de_nomes(self, blocos, corridos=False):
+            return p5.rolo_de_nomes(blocos)
+    meio = gerar_mesa.le_as_partes_dos_creditos(texto, Ponto5DeOntem())
+    if meio != {"creditos_partes": False, "nomes_corridos": False, "creditos_velocidade": False}:
+        problemas.append("um ponto5 que le as chaves e nao as faz: %s" % meio)
+    tudo = gerar_mesa.o_que_o_render_le()
+    if any(tudo.get(k) is not True for k in hoje):
+        problemas.append("o o_que_o_render_le() nao as traz: %s" % {k: tudo.get(k) for k in hoje})
+    verifica("Mesa: os avisos da ordem, dos nomes e da velocidade", r is not None and not problemas,
+             "; ".join(problemas)[:600] if problemas else
+             "%d casos com as fotos e os nomes contados como o avisos_da_velocidade() (%d avisos iguais), o que fica parado, o «Sem "
+             "cargos» no painel, o Validar so com o que vai ao ecra, e o render de ontem a dar «ainda não chega ao filme»"
+             % (len(casos), conferidos))
 
 
 def main():

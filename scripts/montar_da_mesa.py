@@ -408,7 +408,9 @@ def avisos_dos_creditos(estado, estilo):
     avisos = []
     textos = p5.textos_dos_creditos(estado, avisos)
     blocos = []
-    for etiqueta, titulo, sub in p5.GRUPOS:
+    # OS NOMES CORRIDOS (contrato de 3 de outubro): os titulos e os subtitulos dos grupos nao vao ao ecra, e nao se
+    # medem. Sem "cargos" nas partes o ponto5 ja devolve os cargos vazios, e sem "titulo" nao mede o titulo final.
+    for etiqueta, titulo, sub in ([] if textos.get("nomes_corridos") else p5.GRUPOS):
         titulo, sub = textos["grupos"].get(etiqueta, (titulo, sub))
         blocos.append((titulo, sub, []))
     avisos = ["creditos: %s" % a for a in avisos]
@@ -1336,6 +1338,33 @@ def caminho_do_video(nome):
     return caminho if caminho and os.path.exists(caminho) else None
 
 
+CONTADOR_PARADO_MAX = 30.0
+
+
+def parado_do_contador(c, ordem, avisos):
+    """O clip.cp de um contador em segundos (0 = como esta), validado com aviso.
+
+    Um numero de 0 a CONTADOR_PARADO_MAX; o que nao presta fica 0, com aviso, como as outras opcoes
+    do clip. Arredonda a centesima, que e o que o "~" do texto leva.
+    """
+    cp = c.get("cp")
+    if cp in (None, "", False, 0):
+        return 0.0
+    try:
+        v = float(cp)
+        if isinstance(cp, bool) or v != v:
+            raise ValueError
+    except (TypeError, ValueError):
+        avisos.append("o contador do clip %d tem parado no fim %r: tem de ser um numero de segundos, "
+                      "fica 0" % (ordem, cp))
+        return 0.0
+    if not 0.0 <= v <= CONTADOR_PARADO_MAX:
+        avisos.append("o contador do clip %d tem parado no fim %s s: tem de ser de 0 a %s s, fica 0"
+                      % (ordem, numero(v), numero(CONTADOR_PARADO_MAX)))
+        return 0.0
+    return round(v, 2)
+
+
 def contadores_seguidos(texto_anterior, texto):
     """Dois contadores em que o segundo comeca exatamente onde o primeiro acabou.
 
@@ -1968,10 +1997,17 @@ def main():
                                   "clip do tipo %s, e nao uma foto (clip %d)"
                                   % (NOME_DO_BEBE[quem_nasce], tipo, len(linhas) + 1))
         segura = float(c.get("_segura") or 0.0) if tipo == "marcos" else 0.0
+        # O CONTADOR PARADO NO FIM, clip.cp (contrato de 3 de outubro, ponto 6). O Tiago: "precisava
+        # que ficasse mais 3 segundos depois de chegar a data de 4 de outubro de 2026". Pela mesma
+        # regra da fita parada: a duracao cresce cp segundos e o texto leva "~cp", que o render le
+        # (o contador anda no d de sempre e fica parado na chegada). A musica e posta pelo relogio,
+        # e por isso conta com os segundos a mais sem mais nada. Sem cp, a linha de sempre ao byte.
+        if tipo == "contador":
+            segura = parado_do_contador(c, len(linhas) + 1, avisos)
         texto_clip = c.get("x", "")
         if segura > 0:
             texto_clip = "%s~%s" % (texto_clip, numero(segura))
-            if c.get("_congela") is not None:
+            if tipo == "marcos" and c.get("_congela") is not None:
                 texto_clip += "@%s" % numero(c["_congela"])
         junta_clip(tipo, ficheiro, ident, float(c.get("d", 4.0)) + segura,
                    texto_clip, c.get("r", "fiel"), trans, foco_txt,
@@ -2289,8 +2325,10 @@ def main():
                              linha_tempo.DIAS_MAXIMOS_DATAS // 366))
         if linha_tempo.contador_recua(l["texto_ecra"]):
             t_cont = l["inicio_s"] - desvio
-            junta_som(REBOBINAR, t_cont + l["duracao_s"] * 0.30,
-                      l["duracao_s"] * 0.42, 1.15, "fita a rebobinar")
+            # com o clip.cp o contador anda so na duracao menos o parado no fim (3 de outubro)
+            anda_c = l["duracao_s"] - linha_tempo.segura_de(l["texto_ecra"])
+            junta_som(REBOBINAR, t_cont + anda_c * 0.30,
+                      anda_c * 0.42, 1.15, "fita a rebobinar")
 
     if t_tiago is not None:
         junta_som(VINHETA, t_tiago, VINHETA_DURA, 2.0,

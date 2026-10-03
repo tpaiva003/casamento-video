@@ -604,6 +604,10 @@ SEM_LEGENDAS = False
 # em vez de sair do ecra, que com o dx de todas as legendas e uma frase comprida acontecia. O
 # alinhamento poe as linhas ao centro (como hoje), encostadas a margem da esquerda ou a da direita.
 LEGENDA_MARGEM_LADO = 130            # a margem de cada lado, a da largura util de hoje (L - 260)
+# A largura em que a legenda de um clip com x1 tem de caber para ficar numa linha: a largura util de
+# hoje, 1660 px a 1080 (o contrato: "a mesma margem lateral das legendas de hoje"). E um numero so, usado
+# pelo linhas_legenda() e pelo legenda_numa_linha(), para a regra se mudar num sitio se ele a mudar.
+LEGENDA_LARGURA_NUMA_LINHA = L - 2 * LEGENDA_MARGEM_LADO
 POSICAO_DX = (-600, 600)             # px a 1080, positivo para a direita
 POSICAO_DY = (-500, 0)               # px a 1080, negativo para cima
 POSICAO_ALINHAMENTOS = ("centro", "esquerda", "direita")
@@ -703,7 +707,7 @@ def legenda_numa_linha(texto, tamanho=None):
     linha = " ".join(texto_emojis.com_equivalentes(texto or "").split())
     precisa = texto_emojis.caixa(linha, letra("legenda", tamanho),
                                  desenho=ImageDraw.Draw(Image.new("L", (1, 1))))[2] if linha else 0
-    return precisa <= L - 2 * LEGENDA_MARGEM_LADO, int(math.ceil(precisa)), L - 2 * LEGENDA_MARGEM_LADO
+    return precisa <= LEGENDA_LARGURA_NUMA_LINHA, int(math.ceil(precisa)), LEGENDA_LARGURA_NUMA_LINHA
 
 
 def linhas_legenda(texto, tamanho=None, desenho=None, uma_linha=False):
@@ -725,7 +729,7 @@ def linhas_legenda(texto, tamanho=None, desenho=None, uma_linha=False):
     fonte = letra("legenda", tamanho)
     if uma_linha:
         linha = " ".join(texto_emojis.com_equivalentes(texto or "").split())
-        if linha and texto_emojis.caixa(linha, fonte, desenho=d)[2] <= L - 2 * LEGENDA_MARGEM_LADO:
+        if linha and texto_emojis.caixa(linha, fonte, desenho=d)[2] <= LEGENDA_LARGURA_NUMA_LINHA:
             return tamanho, [linha], fonte
     linhas = quebrar_paragrafos(texto, fonte, L - 260, d)
     while len(linhas) > LEGENDA_LINHAS and tamanho > minimo:
@@ -1311,7 +1315,9 @@ OPCOES_TEXTO_VALORES = {"modo": ("foto", "legenda"), "tapadas": ("some", "fica")
 #             continuo (true = a fita de 1995 numa so peca com o contador, ver
 #             linha_tempo._meses_numa_peca(); ausente = como esta) e a data_afastada (true = a
 #             data do nascimento mais longe do "SET" tambem na fita de duas pecas, ver
-#             linha_tempo.DATA_AFASTADA; ausente = como esta)
+#             linha_tempo.DATA_AFASTADA; ausente = como esta); e a fonte (3 de outubro), a letra
+#             de todos os textos do contador e da fita, um id de data/fontes.json como a das
+#             legendas, com o Arial Bold por omissao
 #   intro    as cores (fundo, papel, tinta, letra), o tamanho e a letra (fonte) do letreiro da
 #             intro. Quem a faz e o intro_flipbook.py, e quem a troca na fanfarra e o
 #             montar_da_mesa.py (intro_da_paleta()): o render so le o nome do ficheiro no CSV,
@@ -1327,8 +1333,9 @@ OPCOES_TEXTO_VALORES = {"modo": ("foto", "legenda"), "tapadas": ("some", "fica")
 # as letras de data/fontes_intro.json com oferecida true, as que mostram pelo menos dois tercos da
 # foto que o Impact mostra e separam as letras a 15 m no minimo da Mesa (132). A omissao continua a
 # ser o Impact, "como esta", e sem a chave (ou com "impact") nada muda, nem o nome do ficheiro. O
-# tamanho nunca abaixo de 132 e quer dizer sempre a altura do Impact a esse corpo. E o contador fica
-# em Arial Bold: o contrato so lhe da cores.
+# tamanho nunca abaixo de 132 e quer dizer sempre a altura do Impact a esse corpo. E o contador ficava
+# em Arial Bold (o contrato de 2 de outubro so lhe dava cores); desde 3 de outubro tem a sua fonte,
+# est.estilo.contador.fonte, com o Arial Bold por omissao.
 FONTES_DA_INTRO = os.path.join(REPO, "data", "fontes_intro.json")
 INTRO_FONTE = "impact"
 # A caixa em que cada letra da intro foi medida: o nome em Impact a 288. Uma letra vai ao corpo
@@ -1391,8 +1398,10 @@ def estilo_omissao():
                    "frase": LETREIRO_FRASE_TAMANHO, "quente": cor_hex(LETREIRO_QUENTE),
                    "claro": cor_hex(LETREIRO_BRANCO), "brilho": cor_hex(LETREIRO_BRILHO)},
         "nome": {"tamanho": NOME_TAMANHO},
-        "contador": {chave: cor_hex(linha_tempo._CORES_DE_SEMPRE[const])
-                     for chave, const in linha_tempo.CORES_DO_ESTILO.items()},
+        "contador": dict({chave: cor_hex(linha_tempo._CORES_DE_SEMPRE[const])
+                          for chave, const in linha_tempo.CORES_DO_ESTILO.items()},
+                         # a letra do contador (3 de outubro), como a das legendas: o Arial Bold de sempre
+                         fonte=LETRA_OMISSAO),
         "intro": {"fundo": cor_hex(INTRO_FUNDO), "papel": cor_hex(INTRO_PAPEL),
                   "tinta": cor_hex(INTRO_TINTA), "letra": cor_hex(INTRO_LETRA),
                   "tamanho": INTRO_TAMANHO, "fonte": INTRO_FONTE},
@@ -1565,6 +1574,38 @@ def _posicao_do_estilo(v, avisos):
     return limpo
 
 
+# OS CORPOS DOS TEXTOS DO CONTADOR E DA FITA DE 1995, a 1080 (linha_tempo): o rotulo e a data de
+# chegada, os meses da regua, os meses e as datas da fita, o texto dos marcos e os nascimentos.
+CORPOS_DO_CONTADOR = (("o rotulo e a data de chegada do contador", 46), ("os meses da fita de 1995", 38),
+                      ("as datas da fita de 1995", 40), ("o texto dos marcos da fita", 58))
+
+
+def _leitura_da_letra_do_contador(entrada):
+    """[aviso] da letra do contador a 15 m, pela regra das legendas (corpo_minimo, decisao 084).
+
+    Le-se como hoje quando o corpo esta para o minimo da letra como o de hoje esta para os 58 do
+    Arial Bold. Os corpos do contador nao mudam com a letra, e por isso diz-se o que cada um passa
+    a valer. Nao muda nada.
+    """
+    nome = entrada.get("nome") or entrada.get("id") or "a letra"
+    if entrada.get("ficheiro") and not os.path.exists(entrada["ficheiro"]):
+        return ["estilo: a letra %s nao esta em disco (%s): o contador sai em Arial Bold ate ela estar"
+                % (nome, entrada["ficheiro"])]
+    minimo = entrada.get("corpo_minimo")
+    if not minimo:
+        return ["estilo: o contador em %s: a letra ainda nao tem o corpo minimo medido, nao sei dizer se "
+                "se le a 15 metros" % nome]
+    piores = []
+    for quem, corpo in CORPOS_DO_CONTADOR:
+        como = corpo * 58.0 / float(minimo)
+        if como < corpo - 0.5:
+            piores.append("%s, a %d, como o Arial Bold a %d" % (quem, corpo, int(math.floor(como + 0.5))))
+    if not piores:
+        return []
+    return ["estilo: o contador em %s le-se a 15 metros pior do que em Arial Bold (corpo minimo %d contra "
+            "58): %s" % (nome, minimo, "; ".join(piores))]
+
+
 def normalizar_estilo(bruto, avisos=None):
     """O est.estilo da Mesa, ou o estilo.json, -> so o que difere da omissao, ja limpo.
 
@@ -1606,6 +1647,22 @@ def normalizar_estilo(bruto, avisos=None):
                     saida.setdefault(parte, {})[chave] = True
                 elif v is not False and v not in (None, ""):
                     avisos.append("estilo.contador.%s %r tem de ser true ou false, fica como esta" % (chave, v))
+                continue
+            if (parte, chave) == ("contador", "fonte"):
+                # A LETRA DO CONTADOR (contrato de 3 de outubro, ponto 1): a mesma lista e a mesma regra
+                # das legendas, um id de data/fontes.json. Fica fora do estilo_omissao(), como as
+                # escolhas do contador, e o Arial Bold (a omissao) nao se guarda: "como esta".
+                if v in (None, ""):
+                    continue
+                if letras is None:
+                    letras = letras_da_mesa()
+                    letras.setdefault(LETRA_OMISSAO, {})
+                if isinstance(v, str) and v.strip() in letras:
+                    if v.strip() != LETRA_OMISSAO:
+                        saida.setdefault(parte, {})[chave] = v.strip()
+                        avisos.extend(_leitura_da_letra_do_contador(letras.get(v.strip()) or {}))
+                else:
+                    avisos.append("estilo.contador.fonte %r nao esta em data/fontes.json, fica o Arial Bold" % (v,))
                 continue
             if (parte, chave) == ("legenda", "posicao"):
                 # A POSICAO DAS LEGENDAS (contrato de 3 de outubro, ponto 3), fora do estilo_omissao()
@@ -1670,9 +1727,14 @@ def aplicar_estilo(estilo=None, avisos=None):
     _FONTES.clear()
     _LETRAS_AVISADAS.clear()
     contador = _ESTILO.get("contador", {})
-    linha_tempo.aplicar_cores({k: cor_rgb(v) for k, v in contador.items() if k not in ESCOLHAS_DO_CONTADOR},
+    # A letra do contador (3 de outubro): o linha_tempo abre-a por aqui, com o peso das letras variaveis;
+    # sem ela fica o Arial Bold de sempre, aberto como sempre.
+    letra_contador = contador.get("fonte")
+    linha_tempo.aplicar_cores({k: cor_rgb(v) for k, v in contador.items()
+                               if k not in ESCOLHAS_DO_CONTADOR and k != "fonte"},
                               continuo=contador.get("continuo") is True,
-                              data_afastada=contador.get("data_afastada") is True)
+                              data_afastada=contador.get("data_afastada") is True,
+                              letra=(lambda corpo: abrir_letra(letra_contador, corpo)) if letra_contador else None)
     if avisos is None:
         for a in proprios:
             print("  AVISO: %s" % a)
@@ -1889,7 +1951,12 @@ def legendas_do_clip(c):
     textos = ler_textos_fotos(c.get("textos_fotos") or "") or []
     mergulho = c.get("tipo") == "colagem" and (c.get("tratamento") or "").strip() == MERGULHO_ESTILO
     if c.get("tipo") in ("lado", "colagem", "pilha") and textos and any(textos) and not mergulho:
-        opcoes = ler_textos_opcoes(c.get("textos_opcoes") or "")
+        # CALADO: o ler_textos_opcoes() avisa do que nao presta na coluna, e quem diz esse aviso e o
+        # preparar(), uma vez (teste_fatias_pelo_main_dao_o_mesmo_ficheiro). Aqui so se le.
+        import contextlib
+        import io
+        with contextlib.redirect_stdout(io.StringIO()):
+            opcoes = ler_textos_opcoes(c.get("textos_opcoes") or "")
         if opcoes["modo"] == "legenda":
             return [(t, opcoes["tamanho"]) for t in dict.fromkeys(x or texto for x in textos) if t]
     return [(texto, None)] if texto else []
@@ -1920,7 +1987,7 @@ def avisos_das_legendas(clips):
                 cabe, precisa, ha = legenda_numa_linha(t, tam)
                 if not cabe:
                     avisos.append("%s nao cabe numa linha: precisa de %d px e ha %d px; parte-se como hoje (%s)"
-                                  % (quem, precisa, ha, t))
+                                  % (quem, precisa, ha, " ".join(t.split())))
         if o and o["lp"] != (0, 0):
             pedido = (pos.get("dx", 0) + o["lp"][0], pos.get("dy", 0) + o["lp"][1])
             fica = posicao_da_legenda(o)[:2]
@@ -1938,7 +2005,7 @@ def avisos_das_legendas(clips):
             anda = dx_efetivo([texto_emojis.caixa(x, fonte, desenho=d)[2] for x in linhas], dx, alinhamento)
             if abs(anda - dx) >= 1:
                 avisos.append("%s encosta a margem: anda %d px dos %d pedidos, para nao sair da largura util (%s)"
-                              % (quem, int(round(anda)), dx, t))
+                              % (quem, int(round(anda)), dx, " ".join(t.split())))
                 break
     return avisos
 
@@ -3219,7 +3286,7 @@ def colagem_espalhada(aspetos, focos=None, livre_ate=None, piso=None):
     if not opcoes:
         # Nenhum afastamento assentou em dez voltas. Nunca aconteceu nas formas medidas; se
         # acontecer, a das filas tem as mesmas garantias e e melhor do que nada.
-        return colagem_disposicao(aspetos, focos, livre_ate, piso)
+        return colagem_disposicao(aspetos, focos, livre_ate, **({} if piso is None else {"piso": piso}))
     topo = max(o[0] for o in opcoes)
     quase = [o for o in opcoes if o[0] >= ESPALHADA_QUASE * topo]
     return min(quase, key=lambda o: (fotos_soltas(o[4]), o[1], o[2], -o[3]))[4]
@@ -3711,8 +3778,10 @@ def preparar_monte(tipo, imagens, focos, texto, cross_entra=0.0, cross_sai=None,
     # dela. Nos fotogramas de controlo a faixa tapava a fila de baixo da colagem, e a
     # 15 metros uma cara meio escondida por uma faixa preta nao se le. Com a legenda subida
     # (3 de outubro) o piso sobe com ela, ver piso_da_legenda(); sem posicao fica a metade.
+    # O piso so vai as disposicoes quando ha: sem posicao a chamada e a de sempre, com os argumentos
+    # de sempre (ha testes que trocam uma disposicao por uma funcao de tres argumentos).
     _dx, dy_legenda, _alinhamento = posicao_da_legenda(clip_leg)
-    piso = None if dy_legenda == 0 else 0.5 * A + dy_legenda
+    com_piso = {} if dy_legenda == 0 else {"piso": 0.5 * A + dy_legenda}
     livre_ate = None
     if legenda is not None:
         livre_ate = legenda["topo"] - MONTE_LEGENDA_FOLGA * A
@@ -3729,16 +3798,16 @@ def preparar_monte(tipo, imagens, focos, texto, cross_entra=0.0, cross_sai=None,
     some = tipo == "pilha" and textos is not None and opcoes["tapadas"] == "some"
     if tipo == "colagem":
         if estilo == "espalhada":
-            lugares = colagem_espalhada(aspetos, focos, livre_ate, piso)
+            lugares = colagem_espalhada(aspetos, focos, livre_ate, **com_piso)
         else:
-            lugares = colagem_disposicao(aspetos, focos, livre_ate, piso)
+            lugares = colagem_disposicao(aspetos, focos, livre_ate, **com_piso)
         cresce = 1.0 + COLAGEM_RESPIRA      # no fim, a respirar, fica a 1:1
         fundo = None                        # a primeira foto desfocada, feita no ciclo com ela aberta
     else:
         if estilo == "leque":
-            lugares = pilha_leque(aspetos, livre_ate, piso)
+            lugares = pilha_leque(aspetos, livre_ate, **com_piso)
         else:
-            lugares = pilha_disposicao(aspetos, livre_ate, piso)
+            lugares = pilha_disposicao(aspetos, livre_ate, **com_piso)
         cresce = 1.0                        # a pilha so recua, nunca cresce
         fundo = Image.new("RGB", (L, A), (10, 10, 12))
     fotos = []
@@ -4428,11 +4497,12 @@ def preparar_lado(lay, imagens, focos, texto, textos=None, opcoes=None, duracao=
         elif inteiras:
             # AS FOTOS INTEIRAS (clip.li, 3 de outubro): a foto encaixada na celula, sem cortar, com o
             # fundo da celula desfocado a partir dela. Respira como as outras, e cabe inteira ate no
-            # fim do zoom lento; a faixa do texto fica dentro dela no primeiro fotograma.
+            # fim do zoom lento. A FAIXA DO TEXTO CONTINUA A SER A DA CELULA, de lado a lado e em
+            # baixo, como hoje: dentro de cada foto, duas fotos de formas diferentes ficavam com os
+            # textos a alturas e larguras diferentes (visto no clip 71), e por cima da foto tapava
+            # gente. Na celula fica sobre o desfocado sempre que a foto nao chega ao fundo.
             img, (pw, ph) = lado_inteira(im, w, h)
             e0 = 1.0 / (1.0 + LADO_ZOOM)
-            foto = (int(math.ceil((w - pw * e0) / 2.0)), int(math.ceil((h - ph * e0) / 2.0)),
-                    int(math.floor((w + pw * e0) / 2.0)), int(math.floor((h + ph * e0) / 2.0)))
             if foco:
                 foco_na_celula = [(w / 2.0 + (foco[0] - 0.5) * pw * e, h / 2.0 + (foco[1] - 0.5) * ph * e)
                                   for e in (e0, 1.0)]
@@ -5388,6 +5458,12 @@ def preparar(clip, inv_por_nome):
         # carregar_montagem() ja avisou ao arrancar, que e onde isto se ve a tempo.
         try:
             modo, de, para, marcos = linha_tempo.ler_contador(texto)
+            # O DE ANOS ATE UMA DATA E O PARADO NO FIM (contrato de 3 de outubro, pontos 6 e 7):
+            # "1995>20/05/2012" acende na chegada a data inteira e o texto dela, e o "~segundos"
+            # que o montar escreve com o clip.cp deixa o contador parado na chegada esse tempo.
+            # Sem os dois, o pronto e o de sempre, sem chaves novas.
+            chegada = linha_tempo.chegada_do_contador(texto)
+            parado = linha_tempo.segura_de(texto)
         except (ValueError, AttributeError, TypeError):
             return None
         if modo == "datas" and abs((para - de).days) > linha_tempo.DIAS_MAXIMOS_DATAS:
@@ -5400,6 +5476,9 @@ def preparar(clip, inv_por_nome):
                      linha_tempo.DIAS_MAXIMOS_DATAS))
             modo, de, para = "anos", de.year, para.year
             marcos = [(d.year, t) for d, t in marcos]
+        if chegada is not None or parado > 0:
+            return {"tipo": "contador", "modo": modo, "de": de, "para": para,
+                    "marcos": marcos, "chegada": chegada, "parado": parado}
         return {"tipo": "contador", "modo": modo, "de": de, "para": para,
                 "marcos": marcos}
     if clip["tipo"] == "marcos":
@@ -5569,6 +5648,16 @@ def desenhar(pronto, t_rel, duracao):
         # O modo foi decidido no preparar, e so la: um clip preparado como anos desenha
         # sempre anos, mesmo que as duas datas de onde veio ainda estejam no texto.
         desenho = linha_tempo.datas if pronto.get("modo") == "datas" else linha_tempo.anos
+        if "parado" in pronto:
+            # PARADO NA CHEGADA (clip.cp, 3 de outubro): o contador anda no tempo de sempre, a
+            # duracao menos os segundos parados, e fica no ultimo fotograma ate ao fim do clip, com
+            # o rotulo da chegada aceso. A data inteira da chegada vai no de anos (`chegada`).
+            anda = max(1.0 / FPS, duracao - pronto["parado"])
+            extra = {"fim_aceso": True}
+            if pronto.get("modo") != "datas" and pronto.get("chegada"):
+                extra["chegada"] = pronto["chegada"]
+            return desenho(L, A, pronto["de"], pronto["para"],
+                           pronto["marcos"], min(t_rel, anda), anda, **extra)
         return desenho(L, A, pronto["de"], pronto["para"],
                        pronto["marcos"], t_rel, duracao)
     if pronto["tipo"] == "video":

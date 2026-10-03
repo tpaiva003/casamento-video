@@ -183,6 +183,18 @@ section:last-child{border-right:0}
 .ladoLinha{display:flex; align-items:center; gap:6px; margin-bottom:5px}
 .ladoLinha .tmb{width:40px; height:40px; flex:0 0 40px; border-radius:3px; background-repeat:no-repeat; background-color:var(--fundo2)}
 .ladoNome{flex:1; min-width:0; font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+/* quanto o enchimento de hoje corta, por baixo do nome (3 de outubro) */
+.ladoNome .ladoCorta{display:block; font-size:11px; color:var(--tenue); overflow:hidden; text-overflow:ellipsis}
+.ladoNome .ladoCorta.somAviso{color:#8A3B2E; font-weight:600}
+/* a legenda deste clip: numa so linha e as setas (3 de outubro) */
+.legClip .legX1{display:flex; gap:7px; align-items:center; font-size:12.5px; text-transform:none; letter-spacing:0; color:var(--texto,inherit); font-weight:400; margin:2px 0 0; cursor:pointer}
+.legClip .legX1 input{width:auto; flex:0 0 auto; margin:0; padding:0}
+.legClip .legPos{display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin-top:8px}
+.legClip .legPosRot{font-size:12px; color:var(--suave)}
+.legClip .legSetas{display:inline-flex; gap:4px}
+.legClip .legSeta{min-width:36px; min-height:32px; font-size:14px}
+.legClip .legSeta:disabled{opacity:.35; cursor:default}
+@media (max-width:700px){ .legClip .legSeta{min-width:44px; min-height:40px} .legClip .legX1{font-size:14px} }
 .ladoLinha button{border:1px solid var(--linha); background:var(--superficie); border-radius:4px; width:24px; height:22px; font-size:11px; color:var(--suave); padding:0}
 .ladoLinha button.tira{font-size:14px; line-height:1}
 .ladoLinha button.tira:hover, .ladoLinha button.tira:focus-visible{border-color:var(--vinho); color:var(--vinho)}
@@ -437,6 +449,10 @@ section:last-child{border-right:0}
      --palco-reserva e a altura dessa barra, medida por medePalco(). */
   position:absolute; left:var(--palco-mx,0px); right:var(--palco-mx,0px);
   bottom:max(calc(var(--palco-my,0px) + 34px * var(--palco-k,.7)), var(--palco-reserva,0px)); text-align:center; z-index:3;
+  /* A LEGENDA SUBIDA (3 de outubro, est.estilo.legenda.posicao e clip.lp): a --leg-sobe e o -dy, em pixeis a 1080, posta
+     pelo legDom() so quando ha posicao. Soma-se ao sitio de sempre, e pelo `bottom`, nao por translacao: o offsetTop ve-a,
+     e as fotos dos grupos continuam acima dela, como o livre_ate do render. */
+  bottom:calc(max(calc(var(--palco-my,0px) + 34px * var(--palco-k,.7)), var(--palco-reserva,0px)) + var(--leg-sobe,0px) * var(--palco-k,.7));
   font-size:calc(46px * var(--palco-k,.7) * var(--e-leg-escala,1)); font-weight:var(--e-leg-peso,700);
   line-height:1.35;
   white-space:pre-line;   /* as falas em linhas separadas, como o render as desenha */
@@ -447,6 +463,8 @@ section:last-child{border-right:0}
   color:var(--e-leg-cor,#fff); background:var(--e-leg-faixa,rgba(0,0,0,.647));
   padding:calc(26px * var(--palco-k,.7)) calc(130px * var(--palco-k,.7)) calc(36px * var(--palco-k,.7));
 }
+/* o texto da legenda a andar o dx por dentro da faixa, que fica de borda a borda (3 de outubro, legDom) */
+#palco .legenda .legTxt{position:relative}
 #palco .cartaoTxt{
   font-family:Fraunces, Georgia, serif; font-size:clamp(26px,5vw,66px);
   color:#F2E9EE; text-align:center; padding:0 8%; line-height:1.22;
@@ -734,8 +752,44 @@ dialog input.campoTexto{
 .credAbas button.on{color:var(--vinho); border-bottom-color:var(--vinho)}
 .credAbas button[data-caba="fotos"]{display:none}
 .credCorpo[data-aba="fotos"] .credAbas button[data-caba="textos"]{color:var(--vinho); border-bottom-color:var(--vinho)}
-.credCorpo[data-aba="musica"] #credTextos{display:none}
+.credCorpo[data-aba="musica"] #credTextos, .credCorpo[data-aba="forma"] #credTextos{display:none}
 .credCorpo:not([data-aba="musica"]) #credMusica{display:none}
+.credCorpo:not([data-aba="forma"]) #credForma{display:none}
+/* A ORDEM, OS NOMES CORRIDOS E A VELOCIDADE (3 de outubro): a aba «Ordem e velocidade». A ordem e uma lista de tres
+   partes, cada uma com as setas e o «Sem»; as que estao de fora ficam por baixo, a tracejado, com o «Repor». A
+   velocidade e uma regua por lado, com o − e o + para o dedo. Por baixo de cada escolha, o que ela faz ao filme. */
+.credForma .estEscolha{margin:2px 0 8px}
+.credPartes{list-style:none; margin:0 0 8px; padding:0}
+.credParte{display:flex; align-items:center; gap:8px; margin:0 0 5px; padding:6px 8px; border:1px solid var(--linha);
+  border-radius:var(--r); background:var(--superficie)}
+.credParte.fora{background:var(--fundo2); border-style:dashed}
+.credParteN{flex:0 0 18px; font-size:12px; font-weight:700; color:var(--tenue); text-align:right; font-variant-numeric:tabular-nums}
+.credParte.fora .credParteN{color:var(--alerta)}
+.credParteNome{flex:1; min-width:0; font-size:13px; line-height:1.3}
+.credParteNome b{display:block; font-weight:700}
+.credParteNome small{display:block; font-size:11.5px; color:var(--suave); overflow-wrap:anywhere}
+.credParte .credCargoBts{flex:0 0 auto}
+.credCargoBts .credParteRepoe{color:var(--vinho); font-size:12px; font-weight:700; padding:0 10px}
+.credFormaDiz{font-size:12.5px; line-height:1.5; color:var(--texto); margin:0 0 6px}
+.credFormaDiz:empty{display:none}
+.credFormaDiz p{margin:0 0 5px}
+.credFormaDiz b{font-weight:700}
+#dlgCreditos .credFormaDiz .aviso{margin:6px 0}
+.credVel{margin:0 0 4px}
+.credVelNome{font-size:11.5px; font-weight:600; color:var(--texto); margin:0 0 3px}
+.credVelRegua{display:flex; align-items:center; gap:8px; margin:0 0 10px}
+.credVelRegua input[type=range]{flex:1; min-width:0; height:30px; accent-color:var(--vinho)}
+.credVelRegua button{flex:0 0 auto; width:34px; height:34px; padding:0; border:1px solid var(--linha2); border-radius:var(--r);
+  background:var(--superficie); color:var(--texto); font-size:19px; line-height:1; cursor:pointer}
+.credVelRegua button:hover:not(:disabled), .credVelRegua button:focus-visible{border-color:var(--vinho); color:var(--vinho)}
+.credVelRegua button:disabled{opacity:.35; cursor:default}
+.credVelVal{flex:0 0 auto; min-width:70px; text-align:right; font-size:13px; font-variant-numeric:tabular-nums}
+.credVelVal b{font-weight:700}
+.credVelVal small{display:block; font-size:10.5px; color:var(--tenue)}
+.credSemCargos{margin:0 0 10px; padding:8px 10px 9px; font-size:13px; line-height:1.5; background:var(--fundo2);
+  border-left:3px solid var(--alerta); border-radius:0 var(--r) var(--r) 0}
+.credSemCargos p{margin:0 0 6px}
+.credIrForma{margin:0 0 8px}
 /* na aba da musica, num ecra largo, a pre-visualizacao encolhe um pouco: a escolha, o que vai tocar e os botoes de
    ouvir cabem por baixo dela sem rolar (num portatil de 900 px de alto a coluna de baixo tinha 250 px) */
 @media (min-width:1001px){
@@ -901,14 +955,16 @@ dialog input.campoTexto{
   .credCorpo{display:block; overflow:auto; padding:0 12px 10px}
   .credPalco{position:sticky; top:0; z-index:3; background:var(--superficie); padding-bottom:6px}
   .credFotos, .credTextos{overflow:visible}
-  .credAbas{display:grid; grid-template-columns:repeat(3,1fr); gap:0; margin-top:6px; border-bottom:1px solid var(--linha)}
-  .credAbas button{border:0; background:none; padding:9px 4px; font-size:13px; font-weight:600; color:var(--suave);
-    border-bottom:2px solid transparent}
+  .credAbas{display:flex; gap:0; margin-top:6px; border-bottom:1px solid var(--linha)}
+  .credAbas button{flex:1 1 auto; border:0; background:none; padding:9px 3px; font-size:13px; font-weight:600; color:var(--suave);
+    border-bottom:2px solid transparent; white-space:nowrap}
   .credAbas button[data-caba="fotos"]{display:block}
   .credCorpo[data-aba="fotos"] .credAbas button[data-caba="textos"]{color:var(--suave); border-bottom-color:transparent}
   .credAbas button.on{color:var(--vinho); border-bottom-color:var(--vinho)}
   .credCorpo[data-aba="fotos"] .credTextos{display:none}
-  .credCorpo[data-aba="textos"] .credFotos, .credCorpo[data-aba="musica"] .credFotos{display:none}
+  .credCorpo[data-aba="textos"] .credFotos, .credCorpo[data-aba="musica"] .credFotos, .credCorpo[data-aba="forma"] .credFotos{display:none}
+  .credVelRegua button{width:42px; height:42px; font-size:22px}
+  .credVelRegua input[type=range]{height:42px}
   .credMusOuvir .bt{padding:8px 12px; font-size:13px}
   .credSetas button{width:40px; height:32px; font-size:13px}
   .credCargoBts button{min-width:40px; height:36px; font-size:13px}
@@ -1050,6 +1106,18 @@ dialog input.campoTexto{
 .estLetraTxt b{font-weight:700}
 .estLetraTxt small{display:block; font-size:11px; color:var(--suave); margin-top:1px}
 .estLetraTxt small.forte{color:var(--alerta); font-weight:600}
+/* A POSICAO DAS LEGENDAS (3 de outubro): as quatro setas, as duas barras e o alinhamento */
+.estCampo .estRotPos{flex-wrap:wrap; row-gap:2px}
+.estRotPos label{white-space:nowrap}
+.estSetas{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:5px; margin:2px 0 6px}
+.estSeta{min-height:34px; white-space:nowrap}
+.estSeta:disabled{opacity:.35; cursor:default}
+.estLinhaPos{margin-top:4px}
+.estPosRot{flex:0 0 86px; font-size:12px; color:var(--suave)}
+.estSegAlinha{display:flex; flex-wrap:wrap}
+.estSegAlinha button{flex:1 1 auto}
+.estSeg button[aria-checked="true"]{background:var(--vinho); color:#fff}
+@media (max-width:520px){ .estSetas{grid-template-columns:repeat(2,minmax(0,1fr))} .estSeta{min-height:42px; font-size:14px} .estSegAlinha button{padding:9px 8px} }
 @media (max-width:1000px){
   #dlgEstilo{width:100vw; height:100vh; height:100dvh; margin:0; border:0; border-radius:0}
   #dlgEstilo .dcabeca{padding:10px 12px 0}
@@ -1341,7 +1409,10 @@ dialog input.campoTexto{
      simples e pratica enquanto os nomes movem" e "editar os textos que aparecem na parte final dos
      creditos". A pre-visualizacao corre com as contas do ponto5_creditos.py, a lista muda a ordem
      (arrastar pela pega, setas, ou o numero), e os textos sao os do fecho e os titulos dos grupos.
-     Grava em est.creditos; ver o bloco "os creditos" no script. -->
+     Grava em est.creditos; ver o bloco "os creditos" no script.
+     AS ABAS (3 de outubro): as fotos (so no telemovel; num ecra largo a lista esta sempre a vista), os
+     textos do fim, a ordem e a velocidade (a ordem das partes com o «Sem cargos», os nomes corridos e
+     a velocidade das fotos e dos nomes) e a musica. -->
 <dialog id="dlgCreditos" aria-labelledby="credTituloDlg">
   <div class="dcabeca credCabeca"><span id="credTituloDlg">Créditos</span><span class="credTempos" id="credTempos"></span></div>
   <div class="painelSync" data-psync role="status" hidden></div>
@@ -1354,8 +1425,9 @@ dialog input.campoTexto{
         <span class="credRelogio" id="credRelogio">0:00 / 0:00</span>
       </div>
       <div class="credAbas">
-        <button data-caba="fotos" class="on">Ordem das fotos</button>
+        <button data-caba="fotos" class="on">Fotos</button>
         <button data-caba="textos">Textos do fim</button>
+        <button data-caba="forma">Ordem e velocidade</button>
         <button data-caba="musica">Música</button>
       </div>
     </div>
@@ -1388,6 +1460,8 @@ dialog input.campoTexto{
         <p class="credMusSemSom">«Ver a correr», por cima, passa os créditos sem som. Para os ouvir com a música, usa estes botões ou o Pré-visualizar.</p>
         <div class="credMusAvisos" id="credMusAvisos"></div>
       </div>
+      <!-- a ordem das partes, os nomes corridos e a velocidade (3 de outubro): a aba «Ordem e velocidade» -->
+      <div class="credForma" id="credForma" role="region" aria-label="A ordem e a velocidade dos créditos"></div>
       <div id="credTextos"></div>
     </div>
   </div>
@@ -1920,13 +1994,22 @@ function legendaDoMergulho(c){
   while(linhas.length > LEGENDA_RENDER.linhas && tam > LEGENDA_RENDER.minimo){
     tam = Math.max(LEGENDA_RENDER.minimo, tam - 4); linhas = linhasDaLegendaAprox(x, tam);
   }
+  /* A LEGENDA NUMA SO LINHA E A POSICAO (3 de outubro, clip.x1, clip.lp e est.estilo.legenda.posicao): numa linha no
+     corpo de hoje se couber, e a faixa e o texto sobem o dy. `dy` e o que a faixa subiu, e `topo` ja o conta. Com as
+     guardas de typeof, estas contas tambem correm sozinhas (os testes recortam-nas do editor sem a posicao). */
+  var dy = 0;
+  if(typeof x1NoFilme === "function" && x1NoFilme(c) && typeof legNumaLinha === "function" && legNumaLinha(x).cabe){
+    tam = LEGENDA_RENDER.tamanho; linhas = [legJunta(x)];
+  }
+  if(typeof legPosicao === "function") dy = legPosicao(c, true).dy;
   var bloco = Math.floor(tam * 1.35) * Math.max(1, linhas.length);
-  return {tam: tam, linhas: linhas, bloco: bloco, topo: 1080 - LEGENDA_RENDER.texto - bloco - LEGENDA_RENDER.almofada};
+  return {tam: tam, linhas: linhas, bloco: bloco, dy: dy, topo: 1080 - LEGENDA_RENDER.texto - bloco - LEGENDA_RENDER.almofada + dy};
 }
-/* a altura da grelha: 1080, ou com legenda ate 2% acima da faixa dela, como o render.mergulho_altura() */
+/* a altura da grelha: 1080, ou com legenda ate 2% acima da faixa dela, como o render.mergulho_altura(); nunca abaixo
+   de um quarto do ecra, que so uma legenda subida com a posicao alcanca (render.PISO_MINIMO_DA_LEGENDA) */
 function alturaMergulho(c){
   var leg = legendaDoMergulho(c);
-  return leg ? leg.topo - LEGENDA_RENDER.folgaMonte * 1080 : 1080;
+  return leg ? Math.max(0.25 * 1080, leg.topo - LEGENDA_RENDER.folgaMonte * 1080) : 1080;
 }
 /* quanto a celula cresce para cobrir o ecra, a escala da camara no fim do mergulho */
 function cobreMergulho(cel){ return Math.max(1920 / cel[2], 1080 / cel[3]); }
@@ -2957,7 +3040,7 @@ function faixaTextoFoto(texto, id, H, esq, dir, baixo, cima, op){
 function legendaDoPalco(c, pecas, passo, H){
   var inicio = function(i){ return Array.isArray(passo) ? passo[i] : i * passo; };
   if(modoTextos(c) !== "legenda" || !temTextosFotos(c))
-    return c.x ? '<span class="legenda">' + esc(c.x) + '</span>' : "";
+    return c.x ? legSpan(c.x, c) : "";
   var xf = textosDasFotos(c), grupo = String(c.x || "").trim(), seg = [], n = pecas.length;
   pecas.forEach(function(p, i){
     var t = (xf[p.k] || "").trim() || grupo;
@@ -2974,8 +3057,9 @@ function legendaDoPalco(c, pecas, passo, H){
   return seg.map(function(s, i){
     if(!s.t) return "";
     var seguinte = i + 1 < seg.length ? seg[i + 1] : null;
-    return '<span class="legenda' + (i ? ' entra' : '') + (seguinte ? ' sai' : '') + '" style="font-size:calc(46px * var(--palco-k,.7) * var(--e-leg-escala,1) * ' + escala +
-      ');--ini:' + s.ini + 's;--entra:' + s.troca + 's' + (seguinte ? ';--fim:' + seguinte.ini + 's;--sai:' + seguinte.troca + 's' : '') + '">' + esc(s.t) + '</span>';
+    /* a posicao e o numa so linha do clip (3 de outubro) vao em cada texto, pelo legSpan */
+    return legSpan(s.t, c, (i ? ' entra' : '') + (seguinte ? ' sai' : ''), 'font-size:calc(46px * var(--palco-k,.7) * var(--e-leg-escala,1) * ' + escala +
+      ');--ini:' + s.ini + 's;--entra:' + s.troca + 's' + (seguinte ? ';--fim:' + seguinte.ini + 's;--sai:' + seguinte.troca + 's' : '') + ';', +escala);
   }).join("");
 }
 /* `estilo`, quando vem (do Tratamento de uma foto solta), fica logo no grupo novo; o de
@@ -5040,8 +5124,12 @@ function credTextosParaValidar(){
     vistos[chave] = 1;
     r.push(x);
   };
-  /* pela ordem do filme: o rolo, os cargos, o titulo e a data */
-  (CRED.grupos || []).forEach(function(g){
+  /* pela ordem do filme: o rolo, os cargos, o titulo e a data. SO O QUE VAI AO ECRA (3 de outubro): com os nomes
+     corridos os titulos e os subtitulos dos grupos nao aparecem, sem "cargos" nas partes nao ha cargos (o credContas()
+     ja os traz vazios) e sem "titulo" nao ha titulo final nem data. O ponto5 tambem nao os mede. */
+  credLay = null;
+  var LayV = credContas();
+  (LayV.corridos ? [] : (CRED.grupos || [])).forEach(function(g){
     if(!CRED.sem_nomes && !(g.linhas && g.linhas.length)) return;   /* sem ninguem, o grupo nao aparece */
     var t = credGrupoTexto(g);
     poe({campo: "gtitulo", k: g.etiqueta, rotulo: "título do grupo " + g.etiqueta, texto: t.titulo, parte: "cartao"});
@@ -5061,8 +5149,10 @@ function credTextosParaValidar(){
       poe({campo: "quem", k: String(k), rotulo: "quem fez o cargo " + (k + 1), texto: todas.join("\n"), parte: "cartao", soLargura: true});
     }
   });
-  poe({campo: "titulo", k: "", rotulo: "título final", texto: credTitulo(), parte: "cartao"});
-  poe({campo: "data", k: "", rotulo: "data", texto: credData(), parte: "cartao"});
+  if(LayV.partesEscolhidas.indexOf("titulo") >= 0){
+    poe({campo: "titulo", k: "", rotulo: "título final", texto: credTitulo(), parte: "cartao"});
+    poe({campo: "data", k: "", rotulo: "data", texto: credData(), parte: "cartao"});
+  }
   return r;
 }
 /* O GRAU DE UM AVISO DA LARGURA, pelo que ele diz: no limite e «Confirma tu»; o que para o render dos creditos, ou fica
@@ -5107,6 +5197,11 @@ function validarCreditos(){
                     (seq ? seq + " com um emoji que o render não junta" : "") + "). Corrige-os na folha dos convidados.",
             campo: "créditos · nomes do grupo " + g.etiqueta, detalhe: ""});
   });
+  /* A VELOCIDADE DOS CREDITOS (3 de outubro): os avisos de leitura do painel (as fotos menos de 2 s inteiras, os nomes
+     depressa de mais, um lado parado). O filme sai como ele escolheu, por isso «Confirma tu»; a linha leva a aba. */
+  var av = [];
+  try{ av = credAvisosDaVelocidade(); }catch(e){ av = []; }
+  av.forEach(function(t){ a.push({grau: "confirma", cred: {campo: "forma", k: ""}, titulo: t, campo: "créditos · a velocidade", detalhe: ""}); });
   return a;
 }
 
@@ -5160,6 +5255,11 @@ function validar(v){
       var zl = zdLida(c);
       (x.grau === "erro" ? erro : confirma)(i, x.texto, {campo: "zona de destaque", detalhe: zl && zl.texto ? zl.texto : undefined});
     });
+    /* a legenda numa so linha que nao cabe, e o lado a lado que corta mais de 25% de uma foto (3 de outubro): o mesmo
+       que o inspetor diz. Nao sai errado no render (parte-se como hoje; enche como hoje), por isso «Confirma tu». */
+    if(c.x1 !== undefined) avisosNumaLinha(v, i).forEach(function(x){ confirma(i, x.t, {campo: "texto no ecrã", detalhe: x.texto}); });
+    var ladoCorta = c.t === "lado" ? avisoLadoCorta(c) : "";
+    if(ladoCorta) confirma(i, ladoCorta, {campo: "as fotos nas células"});
     /* 2. O TEXTO A MAIS PARA O TEMPO, pela MESMA conta da etiqueta da lista de clips. Se aqui
           fosse outra, ele via um clip com sinal que o validador nao menciona, e a partir dai
           nao confiava em nenhum dos dois. Uma conta, um sitio. */
@@ -5626,6 +5726,16 @@ function pintaClips(){
           (c.t === "foto" && c.zd
             ? '<span class="etiq '+(!zdLida(c) || (c.r === "rajada" && !zdVeSeNaRajada(v, idx)) ? 'render' : 'fiel')+'" title="'+
               esc(zdTituloDaEtiqueta(c, v, idx))+'">destaque</span>' : '')+
+          /* as escolhas de 3 de outubro, para se verem na lista sem abrir o clip: a legenda numa so linha (a vermelho
+             quando nao cabe e o filme a parte como hoje), a legenda mexida so neste clip, e as fotos inteiras */
+          (temLegendaDeBaixo(c) && x1Do(c)
+            ? '<span class="etiq '+(x1NaoCabe(v, idx) ? 'render' : 'fiel')+'" title="'+esc(x1NaoCabe(v, idx)
+                ? "Numa só linha, mas não cabe: o filme parte-a como hoje" : "A legenda numa só linha")+'">1 linha</span>' : '')+
+          (temLegendaDeBaixo(c) && (lpDoClip(c).dx || lpDoClip(c).dy)
+            ? '<span class="etiq fiel" title="'+esc("A legenda deste clip fica " + legPosicaoTexto({dx: lpDoClip(c).dx, dy: lpDoClip(c).dy, alinhamento: "centro"}).replace(", ao centro", "") +
+              " em relação às outras")+'">legenda mexida</span>' : '')+
+          (c.t === "lado" && liDo(c)
+            ? '<span class="etiq fiel" title="Cada foto entra inteira na sua célula, sem cortar">fotos inteiras</span>' : '')+
           (temTextosFotos(c) && !textosForaDoFilme(c) ? (modoTextos(c) === "legenda"
             ? '<span class="etiq fiel" title="Os textos das fotos vão para a legenda de baixo, a mudar com cada foto">texto na legenda</span>'
             : '<span class="etiq fiel" title="Cada foto deste grupo leva o seu texto">texto nas fotos</span>') : '')+
@@ -6523,6 +6633,8 @@ function pintaInspetor(){
     partes.push('<div class="focoAjuda' + (dnI && dnI.demais ? ' somAviso' : '') +
       '" id="notaDenso" style="margin:-7px 0 12px"' + (dnI ? '' : ' hidden') + '>' +
       esc(dnI ? avisoDenso(dnI) : "") + '</div>');
+    /* A LEGENDA DESTE CLIP (3 de outubro): numa so linha e a posicao so dele, logo a seguir ao texto */
+    if(temLegendaDeBaixo(c)) partes.push(blocoLegendaDoClip(v, c));
     if(f && f.l && f.l !== c.x)
       partes.push('<div class="aviso">Legenda da mãe da Clara: “'+esc(f.l)+'”'+
         ' <button class="bt pequeno" id="btLegenda" style="margin-top:5px">Usar esta</button></div>');
@@ -6698,16 +6810,21 @@ function pintaInspetor(){
         opc.map(function(k){
           return '<button class="pessoa'+(c.lay===k?" on":"")+'" data-lay="'+k+'">'+NOMES_LADO[k]+'</button>';
         }).join("") + '</div></div>');
+      /* AS FOTOS INTEIRAS (3 de outubro, clip.li): a escolha, e quanto cada foto perde com o enchimento de hoje */
+      partes.push(blocoFotosInteiras(c));
+      var cortesL = ladoCorteDoClip(c);
       partes.push('<div class="campo"><label>Fotografias, pela ordem de entrada</label>' + blocoTextosFotos(c, v) + '<div id="ladoFotos">' +
         (c.fotos || []).map(function(id, k){
           var ff = porId[id];
           return '<div class="ladoLinha">' +
             (ff ? '<span class="tmb fo'+ff.fo+'" style="'+posMini(ff,40)+'"></span>' : '') +
-            '<span class="ladoNome">'+(k+1)+'. '+esc(ff ? ff.f : id)+'</span>' +
+            '<span class="ladoNome">'+(k+1)+'. '+esc(ff ? ff.f : id) + ladoCorteDaFoto(c, cortesL[k], k) + '</span>' +
             '<button data-lsobe="'+k+'" title="Entra mais cedo">▲</button>' +
             '<button data-ldesce="'+k+'" title="Entra mais tarde">▼</button>' +
             '<button class="tira" data-ltira="'+k+'" title="Tirar esta foto" aria-label="Tirar a foto '+(k+1)+'">×</button></div>' + campoXf(c, k, v) +
-            blocoFoco(ff, aspetoCelula(c.lay, k), 0.32, tapadoPeloCartao(c, k));
+            /* com as fotos inteiras (3 de outubro) nada se corta: o retangulo e a foto toda, e o ponto de foco so
+               serve para a faixa do texto nao tapar a cara */
+            blocoFoco(ff, liDo(c) && ff && ff.w && ff.h && !(c.lay === "3s" && k === 2) ? ff.w / ff.h : aspetoCelula(c.lay, k), 0.32, tapadoPeloCartao(c, k));
         }).join("") + '</div>' +
         '<button class="bt pequeno" id="btSeparar" style="margin-top:8px">Separar em fotos soltas</button></div>');
     }
@@ -6786,7 +6903,7 @@ function ligaInspetor(){
   function liga(id, ev, fn){ var e = document.getElementById(id); if(e) e.addEventListener(ev, fn); }
   if(c){
     liga("cTexto","input",function(e){
-      c.x = e.target.value; mostraRepete(c); atualizaAvisoDenso(c);
+      c.x = e.target.value; mostraRepete(c); atualizaAvisoDenso(c); atualizaLegendaDoClip(v, c);
       escreveCamposDoContador(c, "cTexto"); pintaClips(); marcar();
     });
     liga("cTexto2","input",function(e){
@@ -7164,6 +7281,8 @@ function ligaInspetor(){
   liga("vNotas","input",function(e){ v.notas = e.target.value; marcar(); });
   /* a zona de destaque da foto aberta (ou nenhuma: larga o editor de antes) */
   ligaDestaque(c && c.t === "foto" ? c : null);
+  /* a legenda deste clip e as fotos inteiras do lado a lado (3 de outubro) */
+  ligaLegendaDoClip(v, c);
 }
 function poeTag(fid, pid){
   if(!est.tags[fid]) est.tags[fid] = [];
@@ -8235,11 +8354,18 @@ function decorridoAte(v, idx){
 function legendaDoMergulhoNoPalco(c, k){
   var leg = legendaDoMergulho(c);
   if(!leg) return "";
-  var linha = Math.floor(leg.tam * 1.35);
-  return '<div class="mergulhoFaixa" style="top:' + (leg.topo * k) + 'px;height:' + ((1080 - LEGENDA_RENDER.fundo - leg.topo) * k) +
+  var linha = Math.floor(leg.tam * 1.35), dy = leg.dy || 0;
+  /* a faixa e o texto sobem o dy juntos (3 de outubro); o dx e o alinhamento andam o texto por dentro dela */
+  var pos = typeof legPosicao === "function" ? legPosicao(c, true) : {dx: 0, alinhamento: "centro"}, alinha = "";
+  if(pos.dx || pos.alinhamento !== "centro"){
+    var dxe = legDxEfetivo(leg.linhas.map(function(l){ return larguraTexto(l, leg.tam); }), pos.dx, pos.alinhamento);
+    alinha = ";text-align:" + (pos.alinhamento === "esquerda" ? "left" : pos.alinhamento === "direita" ? "right" : "center") +
+      ";padding:0 " + (LEGENDA_LADO * k) + "px;transform:translateX(" + (dxe * k) + "px)";
+  }
+  return '<div class="mergulhoFaixa" style="top:' + (leg.topo * k) + 'px;height:' + ((1080 - LEGENDA_RENDER.fundo + dy - leg.topo) * k) +
     'px;background:rgba(0,0,0,' + (LEGENDA_RENDER.alfa / 255).toFixed(3) + ')"></div>' +
-    '<div class="mergulhoLegenda" style="bottom:' + (LEGENDA_RENDER.texto * k) + 'px;font-size:' + (leg.tam * k) +
-    'px;line-height:' + (linha * k) + 'px">' + leg.linhas.map(function(l){ return esc(l); }).join("<br>") + '</div>';
+    '<div class="mergulhoLegenda" style="bottom:' + ((LEGENDA_RENDER.texto - dy) * k) + 'px;font-size:' + (leg.tam * k) +
+    'px;line-height:' + (linha * k) + 'px' + alinha + '">' + leg.linhas.map(function(l){ return esc(l); }).join("<br>") + '</div>';
 }
 /* O QUADRO 16:9 DO FILME, entre a barra de cima e a calha (2 de outubro): com a legenda e os botoes do palco
    no mesmo sitio, a faixa de baixo do filme ficava por baixo do Continuar num portatil. Agora o quadro fica
@@ -8459,7 +8585,9 @@ function mostraQuadro(qual, c){
              topo: (pecasG[k].t || "").trim() ? zonaFaixaFoto(c, pecasG[k].k, ff, pecasG[k].t).topo : undefined}) + '</div>';
       }).join("") + legendaDoPalco(c, pecasG, iniG, H);
     };
-    pintaPecas(temLegG ? H * 0.80 : H);
+    /* com a legenda subida (3 de outubro) a estimativa sobe com ela; a medida de baixo acerta */
+    var estimaG = temLegG ? Math.max(legPisoDoGrupo(c, H), H * 0.80 + legPosicao(c, true).dy * H / 1080) : H;
+    pintaPecas(estimaG);
     if(temLegG){
       /* na opcao "na legenda de baixo" ha uma .legenda por texto, todas no mesmo sitio: conta
          a mais alta, que e a que deixa menos espaco. Sem nenhuma medida (o palco escondido,
@@ -8476,10 +8604,11 @@ function mostraQuadro(qual, c){
       for(q = 0; q < legsG.length; q++)
         if(legsG[q].offsetHeight) topoLegG = topoLegG === null ? legsG[q].offsetTop : Math.min(topoLegG, legsG[q].offsetTop);
       /* a folga entre as fotos e a faixa e o MONTE_LEGENDA_FOLGA do render, 2% da altura, e
-         nunca se tira mais de metade do ecra as fotos, como no `baixo` das disposicoes */
+         nunca se tira mais de metade do ecra as fotos, como no `baixo` das disposicoes; com a legenda
+         subida (3 de outubro) essa metade sobe com ela, nunca acima de um quarto (legPisoDoGrupo) */
       if(topoLegG !== null){
-        var HvG = Math.max(0.5 * H, topoLegG - 0.02 * H);
-        if(Math.abs(HvG - H * 0.80) > 1) pintaPecas(HvG);
+        var HvG = Math.max(legPisoDoGrupo(c, H), topoLegG - 0.02 * H);
+        if(Math.abs(HvG - estimaG) > 1) pintaPecas(HvG);
       }
     }
   } else if(c.t === "lado"){
@@ -8499,11 +8628,25 @@ function mostraQuadro(qual, c){
        deitada. As medidas sao as da grelha (o gap de 4 px) e as do cartao de cima do 3s (46% x 66%). */
     var Wl = rq.width || 960, Hl = rq.height || 540;
     var cw = (Wl - 4 * (colunas - 1)) / colunas, ch = (Hl - 4 * (filas - 1)) / filas;
+    /* AS FOTOS INTEIRAS (3 de outubro, clip.li), como o render.lado_inteira(): a foto encaixada na celula, sem cortar,
+       e por tras a propria foto a cobrir a celula, desfocada (46 a 1080) e a 55% do brilho */
+    var inteiraL = liNoFilme(c), kL = Hl / 1080;
+    var fotoDaCelula = function(ff, k, cima){
+      var W0 = cima ? Wl * 0.46 : cw, H0 = cima ? Hl * 0.66 : ch;
+      if(!inteiraL || cima)
+        return '<div class="fo' + ff.fo + '" style="position:absolute;inset:0;background-repeat:no-repeat;' +
+          fotoNaCaixa(ff, W0, H0, focoDe(ff.id), 0.32) + '"></div>';
+      var a = ff.w && ff.h ? ff.w / ff.h : 4 / 3, pw = Math.min(W0, H0 * a), ph = pw / a, bl = LADO_INTEIRA.desfoque * kL;
+      return '<div class="fo' + ff.fo + '" style="position:absolute;left:' + (-2 * bl) + 'px;top:' + (-2 * bl) + 'px;width:' + (W0 + 4 * bl) +
+          'px;height:' + (H0 + 4 * bl) + 'px;background-repeat:no-repeat;filter:blur(' + bl.toFixed(1) + 'px) brightness(' + LADO_INTEIRA.brilho + ');' +
+          fotoNaCaixa(ff, W0 + 4 * bl, H0 + 4 * bl, null, 0.5) + '"></div>' +
+        '<div class="fo' + ff.fo + '" style="position:absolute;left:' + ((W0 - pw) / 2) + 'px;top:' + ((H0 - ph) / 2) + 'px;width:' + pw +
+          'px;height:' + ph + 'px;background-repeat:no-repeat;' + fotoNaCaixa(ff, pw, ph) + '"></div>';
+    };
     el.innerHTML = '<div class="ladoGrelha lay' + esc(c.lay || "") + '">' + fsL.map(function(ff, k){
       var cima = c.lay === "3s" && k === 2;
       return '<div class="ladoCel' + (cima ? " cima" : "") + '" style="animation-delay:' + (k * 0.45) + 's">' +
-        '<div class="fo' + ff.fo + '" style="position:absolute;inset:0;background-repeat:no-repeat;' +
-        fotoNaCaixa(ff, cima ? Wl * 0.46 : cw, cima ? Hl * 0.66 : ch, focoDe(ff.id), 0.32) + '"></div>' +
+        fotoDaCelula(ff, k, cima) +
         faixaTextoFoto(pecasL[k].t, ff.id, rq.height || 540, 0, 0, 0, 0, {tt: ttL}) + '</div>';
     }).join("") + '</div>' + legendaDoPalco(c, pecasL, 0.45, rq.height || 540);
     /* A faixa de uma celula nunca fica por baixo da legenda do grupo: se a celula
@@ -8546,7 +8689,7 @@ function mostraQuadro(qual, c){
       "calc(50% - " + ((f.cx - (D.colunas - 1) / 2) * ladoQ - (apx ? apx.dx : 0)) + "px) " +
       "calc(50% - " + ((f.cy - (D.linhas - 1) / 2) * ladoQ - (apx ? apx.dy : 0)) + "px)";
     el.innerHTML = (apx ? fotoDoAproxima(c, f, apx) : "") +
-      (c.x ? '<span class="legenda">' + esc(c.x) + '</span>' : "") +
+      (c.x ? legSpan(c.x, c) : "") +
       (apx ? '<span class="caixa169" style="left:' + apx.caixa.x + 'px;top:' + apx.caixa.y + 'px;width:' +
              apx.caixa.w + 'px;height:' + apx.caixa.h + 'px"></span>' +
              '<span class="marcaEnq">' + esc(apx.nota) + '</span>' : "");
@@ -8875,24 +9018,19 @@ function palcoPreCarrega(F, T){
 /* ---------- o que se desenha num canvas, a 1920 x 1080 ---------- */
 /* A LEGENDA COMO A faixa_texto() DO RENDER: a letra, o tamanho, a cor e a faixa do estilo; desce de 4 em 4
    ate caber em 4 linhas em 1660 px; as linhas acabam a 70 do fundo e a faixa vai de 26 acima delas a 34 */
-function palcoLegendaLinhas(texto){
-  var f = estiloLetra("legenda"), tam0 = estiloValor("legenda", "tamanho"), chave = texto + "|" + tam0 + "|" + f.id;
+/* `uma` e o clip.x1 (3 de outubro): o texto numa linha, se couber (legLinhas) */
+function palcoLegendaLinhas(texto, uma){
+  var f = estiloLetra("legenda"), tam0 = estiloValor("legenda", "tamanho"), chave = texto + "|" + tam0 + "|" + f.id + (uma ? "|1" : "");
   var c = palcoCache.legenda[chave];
   if(c) return c;
   estiloGaranteLetra(estiloCss(f, 40));
-  var tam = tam0, minimo = Math.floor(tam0 * 30 / 46 + 0.5), linhas = estiloQuebra(texto, f, tam, 1660);
-  while(linhas.length > 4 && tam > minimo){ tam = Math.max(minimo, tam - 4); linhas = estiloQuebra(texto, f, tam, 1660); }
-  return (palcoCache.legenda[chave] = {f: f, tam: tam, linhas: linhas});
+  return (palcoCache.legenda[chave] = legLinhas(texto, tam0, !!uma));
 }
-function palcoLegenda(ctx, texto){
+/* `c` e o clip: a posicao das legendas (a de todas e a dele) e o numa so linha, como o render (legDesenha) */
+function palcoLegenda(ctx, texto, c){
   texto = String(texto == null ? "" : texto).trim();
   if(!texto) return;
-  var l = palcoLegendaLinhas(texto), alt = Math.floor(l.tam * 1.35), topo = 1080 - 70 - alt * l.linhas.length;
-  ctx.fillStyle = "rgba(0,0,0," + (Math.round(estiloValor("legenda", "fundo") * 255) / 255).toFixed(3) + ")";
-  ctx.fillRect(0, topo - 26, 1920, (1080 - 34) - (topo - 26) + 1);
-  ctx.font = estiloCss(l.f, l.tam); ctx.fillStyle = estiloValor("legenda", "cor"); ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
-  var asc = estiloAscendente(ctx, l.tam);
-  l.linhas.forEach(function(ln, i){ ctx.fillText(ln, 960, topo + i * alt + asc); });
+  legDesenha(ctx, texto, c || null, palcoLegendaLinhas(texto, x1NoFilme(c)), true);
 }
 /* a foto a cobrir (x, y, w, h), cortada ao meio como o render.cobrir() */
 function palcoCobre(ctx, fo, x, y, w, h){
@@ -9063,7 +9201,7 @@ function palcoFoto(ctx, seg, u){
     ctx.drawImage(fo.img, fo.sx, fo.sy, fo.sw, fo.sh, caixa.x, caixa.y, caixa.w, caixa.h);
   }
   palcoDestaque(ctx, c, seg, u, caixa.x, caixa.y, caixa.w, caixa.h);
-  palcoLegenda(ctx, c.x);
+  palcoLegenda(ctx, c.x, c);
 }
 /* ONDE A FOTO INTEIRA FICA NO ECRA no instante u do clip, {x, y, w, h} a 1920 x 1080, mesmo a parte que sai do
    quadro: na rajada a encher, pelo ponto de foco (o janela_foco do render, que o palcoCobreFoco desenha) ou ao meio;
@@ -9180,7 +9318,10 @@ function palcoLinha(ctx, x0, y0, x1, y1, cor, largura){
   ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
 }
 /* texto com o meio da tinta em (x, y), como o _texto() do linha_tempo */
-function palcoTexto(ctx, texto, corpo, cor, x, y){ estiloTextoMeio(ctx, texto, "700 " + corpo + "px Arial, Helvetica, sans-serif", cor, x, y); }
+/* NA LETRA DO CONTADOR (3 de outubro): o palco desenha o contador e a fita de 1995 com ela, e o cartao do video que nao tem
+   copia (que nao e do filme) com o Arial de sempre, pelo palcoTextoArial */
+function palcoTexto(ctx, texto, corpo, cor, x, y){ estiloTextoMeio(ctx, texto, palcoCssContador(corpo), cor, x, y); }
+function palcoTextoArial(ctx, texto, corpo, cor, x, y){ estiloTextoMeio(ctx, texto, "700 " + corpo + "px Arial, Helvetica, sans-serif", cor, x, y); }
 function palcoRasto(px_s, unidade){ return {n: Math.min(4, Math.floor(px_s / unidade)), larg: Math.min(unidade * 0.42, px_s * 0.035)}; }
 function palcoPonteiro(ctx, k, y){
   var cima = y - Math.floor(1080 * 0.072), baixo = y + Math.floor(1080 * 0.132), meia = Math.floor(1080 * 0.010), alto = Math.floor(1080 * 0.024);
@@ -9208,7 +9349,7 @@ function palcoRegua(ctx, k, y, ancora, menor, maiores, nitidez, corpoNome){
     if(x < -menor || x > 1920 + menor) return;
     palcoLinha(ctx, x, y + 1, x, y + 22, palcoRgb(m[1] ? k.regua : k.linha), 3);
     if(m[2] && corpoNome){
-      ctx.font = "700 " + corpoNome + "px Arial, Helvetica, sans-serif";
+      ctx.font = palcoCssContador(corpoNome);
       var vao = Math.abs(x - 960) - ctx.measureText(m[2]).width / 2 - 2.5, aceso = Math.min(1, Math.max(0, (vao - 12) / 36));
       if(aceso > 0) palcoTexto(ctx, m[2], corpoNome, palcoRgb(aceso >= 1 ? k.regua_texto : palcoMistura(k.fundo, k.regua_texto, aceso)), x, y + 58);
     }
@@ -9396,10 +9537,10 @@ function palcoCartaoVideo(ctx, seg){
   ctx.fillStyle = "#0D0910"; ctx.fillRect(0, 0, 1920, 1080);
   var nome = String(seg.c.f || "vídeo").replace(/\.[^.]+$/, "");
   if(nome.length > 54) nome = nome.slice(0, 52) + "…";
-  palcoTexto(ctx, "VÍDEO", 46, "#968490", 960, 400);
-  palcoTexto(ctx, nome, 64, "#F2E9EE", 960, 500);
-  palcoTexto(ctx, fmtS(seg.dur) + " s" + (+seg.c.vin ? " · do segundo " + fmtS(+seg.c.vin) : ""), 46, "#B0A4AC", 960, 590);
-  palcoTexto(ctx, "sem cópia na Mesa: a imagem só no render", 36, "#6C6068", 960, 690);
+  palcoTextoArial(ctx, "VÍDEO", 46, "#968490", 960, 400);
+  palcoTextoArial(ctx, nome, 64, "#F2E9EE", 960, 500);
+  palcoTextoArial(ctx, fmtS(seg.dur) + " s" + (+seg.c.vin ? " · do segundo " + fmtS(+seg.c.vin) : ""), 46, "#B0A4AC", 960, 590);
+  palcoTextoArial(ctx, "sem cópia na Mesa: a imagem só no render", 36, "#6C6068", 960, 690);
 }
 /* a copia pequena de um video, se o audio_para_mesa.py a fez: a do mesmo ficheiro e do mesmo troco (no
    window.AUDIO_INFO.videos; o window.AUDIO e so o som, ficheiro a ficheiro) */
@@ -9482,7 +9623,7 @@ function palcoDesenhaNoSlot(sl, s, u){
     if(play.pausa){ if(!v.paused) v.pause(); }
     else if(v.paused && u < s.dur - 0.05){ var pr = v.play(); if(pr && pr.catch) pr.catch(function(){}); }
     ctx.clearRect(0, 0, 1920, 1080);
-    if(!s.abertura) palcoLegenda(ctx, s.c.x);
+    if(!s.abertura) palcoLegenda(ctx, s.c.x, s.c);
     return;
   }
   sl.modo = "tela"; sl.vid.style.display = "none";
@@ -9490,7 +9631,7 @@ function palcoDesenhaNoSlot(sl, s, u){
   else if(s.t === "cartao") palcoCartao(ctx, s, u, sl.tela.width);
   else if(s.t === "contador") palcoContador(ctx, s, u);
   else if(s.t === "marcos") palcoFita(ctx, s, u);
-  else if(s.t === "video"){ palcoCartaoVideo(ctx, s); if(!s.abertura) palcoLegenda(ctx, s.c.x); }
+  else if(s.t === "video"){ palcoCartaoVideo(ctx, s); if(!s.abertura) palcoLegenda(ctx, s.c.x, s.c); }
   else { ctx.fillStyle = "#000"; ctx.fillRect(0, 0, 1920, 1080); }
 }
 /* O FOTOGRAMA DO INSTANTE T, como o render.fotograma(): os clips ativos nas duas camadas, o mais novo por
@@ -10429,7 +10570,13 @@ function ordemDoClip(v, c, i){
           textos_fotos: temTextosFotos(c) ? textosDasFotos(c) : undefined,
           textos_opcoes: opcoesTextos(c),
           /* a zona de destaque (clip.zd), que o montar le e escreve na coluna destaque: so nas fotos soltas */
-          destaque: c.t === "foto" && c.zd ? c.zd : undefined};
+          destaque: c.t === "foto" && c.zd ? c.zd : undefined,
+          /* a legenda numa so linha, a posicao so deste clip e as fotos inteiras do lado a lado (3 de outubro: clip.x1,
+             clip.lp e clip.li), que o montar le e escreve na coluna opcoes_clip. Escrito sem chamar mais nada, porque
+             esta funcao tambem corre sozinha nos testes. */
+          legenda_numa_linha: c.x1 === true ? true : undefined,
+          legenda_posicao: c.lp && typeof c.lp === "object" ? c.lp : undefined,
+          fotos_inteiras: c.t === "lado" && c.li === true ? true : undefined};
 }
 function exportar(){
   var v = versaoAtual(); if(!v) return;
@@ -10475,7 +10622,9 @@ function exportar(){
 
    GRAVA EM est.creditos (contrato de 2 de outubro): cargos, titulo, data, grupos e ordem, cada um
    so quando difere do de hoje; ausente quer dizer o do ponto5, e sem nada mudado o est.creditos nem
-   existe. Tudo passa pelo anular de sempre (cada entrada traz a sua reposicao, ver desfazer) e pelo
+   existe. Desde 3 de outubro tambem a ordem das partes (partes, com o «Sem cargos»), os nomes
+   corridos (nomes_corridos) e a velocidade das fotos e dos nomes (velocidade), na aba «Ordem e
+   velocidade»: ver o bloco "a ordem das partes, os nomes corridos e a velocidade". Tudo passa pelo anular de sempre (cada entrada traz a sua reposicao, ver desfazer) e pelo
    marcar(), e nada aqui corrige sozinho: um texto que nao cabe e avisado, nao encurtado (083).
 
    AS CONTAS SAO AS DO ponto5 E OS NUMEROS VEM DELE, pelo window.CREDITOS_NOMES que o gerar_mesa.py
@@ -10637,8 +10786,18 @@ function credLayout(){
     q.forEach(function(n){ out.push(pessoas.slice(k, k + n).join(" · ")); k += n; });
     return out;
   };
+  /* OS NOMES CORRIDOS (contrato de 3 de outubro, ponto 5; o rolo_de_nomes(blocos, corridos) do ponto5). O Tiago:
+     "Retira dos creditos aquela parte das divisoes por grupinhos. Nos so queremos os nomes dos convidados corridos".
+     Com est.creditos.nomes_corridos = true (so o true; o resto e «Como está») o rolo sao so as linhas dos nomes, as
+     mesmas linhas pela mesma ordem, a M.linha cada: sem titulos, sem subtitulos e sem os espacos entre grupos. */
+  var crD = est.creditos && typeof est.creditos === "object" && !Array.isArray(est.creditos) ? est.creditos : {};
+  var corridos = crD.nomes_corridos === true;
   (CRED.grupos || []).forEach(function(g){
     if(!g.linhas || !g.linhas.length) return;      /* o por_grupo() salta os grupos sem ninguem */
+    if(corridos){
+      linhasDe(g).forEach(function(l){ pecas.push({tipo: "nome", y: y, h: M.linha, texto: l, g: g}); y += M.linha; });
+      return;
+    }
     var t = credGrupoTexto(g);
     if(t.titulo !== anterior){
       y += pecas.length ? M.gap_titulo : 0;
@@ -10658,7 +10817,32 @@ function credLayout(){
     yc += x.medida.alt + M.gap_fotos;
   });
   var Hc = col.length ? yc - M.gap_fotos + M.margem_coluna : 0;
-  var tRolo = Math.max((Hr + A * M.fracao_nomes) / M.vel_nomes, (Hc + A * M.fracao_fotos) / M.vel_fotos_max);
+  /* A VELOCIDADE (contrato de 3 de outubro, 5b; o velocidade_da_escolha e o tempos_dos_creditos do ponto5). O Tiago:
+     "nos creditos permite ajustar a velocidade dos nomes e/ou das fotos". est.creditos.velocidade = {fotos, nomes} em
+     px/s, cada um opcional: as fotos de 60 a 300 e os nomes de 30 a 200 (M.vel_fotos_limites, M.vel_nomes_limites); um
+     valor fora disso, ou que nao e um numero, fica como esta. Sem nenhum, a regra de sempre, ao bit: a coluna nao passa
+     dos 150 px/s e os nomes abrandam para acabarem com ela. Com um escolhido, esse anda a essa velocidade e o outro pela
+     regra de hoje; o rolo dura o que acaba depois (tRolo), e o que acaba primeiro fica parado no fim dele, ja fora do
+     ecra (fimNomes, fimFotos e parado, que o desenho e o painel usam). As contas pela ordem das do ponto5. */
+  var vel = {}, vcr = crD.velocidade;
+  if(vcr && typeof vcr === "object" && !Array.isArray(vcr))
+    [["fotos", M.vel_fotos_limites || [60, 300]], ["nomes", M.vel_nomes_limites || [30, 200]]].forEach(function(p){
+      var x = vcr[p[0]];
+      if(typeof x === "number" && isFinite(x) && x >= p[1][0] && x <= p[1][1]) vel[p[0]] = x;
+    });
+  var dn = Hr + A * M.fracao_nomes, df = Hc + A * M.fracao_fotos, tRolo, velN, velF, fimNomes = null, fimFotos = null, parado = null;
+  if(vel.fotos !== undefined || vel.nomes !== undefined){
+    var capN = vel.nomes || M.vel_nomes, capF = vel.fotos || M.vel_fotos_max;
+    tRolo = Math.max(dn / capN, df / capF);
+    velN = vel.nomes ? capN : dn / tRolo;
+    velF = vel.fotos ? capF : df / tRolo;
+    fimNomes = dn / velN; fimFotos = df / velF;
+    if(Math.abs(fimNomes - fimFotos) > 0.02)
+      parado = fimNomes < fimFotos ? {quem: "nomes", s: tRolo - fimNomes} : {quem: "fotos", s: tRolo - fimFotos};
+  } else {
+    tRolo = Math.max((Hr + A * M.fracao_nomes) / M.vel_nomes, (Hc + A * M.fracao_fotos) / M.vel_fotos_max);
+    velN = (Hr + A * M.fracao_nomes) / tRolo; velF = (Hc + A * M.fracao_fotos) / tRolo;
+  }
   /* OS CARGOS QUE VALEM (contrato dos cargos, 2 de outubro a noite; o p5.textos_dos_creditos): a lista guardada inteira,
      pela ordem, ou os tres de hoje sem ela (uma lista vazia tambem). Uma entrada com o cargo e o quem vazios nao entra
      (e a que o «Acrescentar» poe antes de ele escrever); das que entram ficam as primeiras M.cargos_max (8). O quem: as
@@ -10676,7 +10860,26 @@ function credLayout(){
   }
   var cargosFora = Math.max(0, cargos.length - maxC);
   cargos = cargos.slice(0, maxC);
-  var nCargos = cargos.length, primeiro = !!(est.creditos && est.creditos.cargos_primeiro === true);
+  /* AS PARTES E A ORDEM DELAS (contrato de 3 de outubro, pontos 5 e 5b; o partes_da_escolha do ponto5). O Tiago: "Coloca
+     este fecho exatamente com a mesma animacao antes dos creditos a subir", "vamos abolir isso" (os cargos) e "quero
+     mesmo poder remover integralmente". est.creditos.partes e a lista, pela ordem, de "titulo", "cargos" e "rolo": cada
+     uma no maximo uma vez e o "rolo" sempre (maiusculas e espacos nas pontas nao contam). Ausente, ou mal escrita, vale
+     a de hoje, ou a da 109 com o cargos_primeiro. SEM "cargos" NA LISTA NAO HA CARGOS NENHUNS: nem fotograma, nem
+     segundo, nem aviso; os textos deles ficam guardados na base (cargosGuardados diz quantos) para os poder repor. */
+  var PARTES_HOJE = M.partes_hoje || ["rolo", "cargos", "titulo"], PARTES_PRIMEIRO = M.partes_cargos_primeiro || ["cargos", "rolo", "titulo"];
+  var listasIguais = function(a, b){ return a.length === b.length && a.every(function(x, i){ return x === b[i]; }); };
+  var partes = null, pv = crD.partes;
+  if(Array.isArray(pv)){
+    var lp = pv.filter(function(p){ return typeof p === "string"; }).map(function(p){ return p.trim().toLowerCase(); });
+    if(lp.length === pv.length && lp.indexOf("rolo") >= 0 &&
+       lp.every(function(p, i){ return (p === "titulo" || p === "cargos" || p === "rolo") && lp.indexOf(p) === i; })) partes = lp;
+  }
+  if(!partes) partes = (crD.cargos_primeiro === true ? PARTES_PRIMEIRO : PARTES_HOJE).slice();
+  var partesEscolhidas = partes.slice(), cargosGuardados = cargos.length;
+  if(partes.indexOf("cargos") < 0){ cargos = []; cargosFora = 0; }
+  var nCargos = cargos.length;
+  partes = partes.filter(function(p){ return p !== "cargos" || nCargos > 0; });
+  var primeiro = listasIguais(partes, PARTES_PRIMEIRO), deHoje = listasIguais(partes, PARTES_HOJE);
   /* OS CARGOS CONTAM-SE DE ONDE O ROLO ACABA (o ponto5 de 2 de outubro, tempos_dos_creditos): o rolo ainda
      ocupa o segundo a seguir ao tRolo (fim_do_rolo), e o primeiro cargo entra depois dele, com o fade dos
      outros. Os creditos ficam 1 s mais compridos: 170,8 s com as 30 fotos, e nao 169,8.
@@ -10684,21 +10887,43 @@ function credLayout(){
      aceso, sem preto (a conta dele comeca 0,6 s antes do fim da entrada, tCargos = 0,9); o rolo entra do preto depois
      do ultimo cargo (tRoloEntra), e o titulo no fim (tTituloEntra). Ficam 0,9 s mais compridos do que «Como está» com
      os mesmos cargos. As somas vao pela ordem das do ponto5, para dar o mesmo bit; «Como está» e a conta de sempre. */
-  var tCargos, tRoloEntra, tTituloEntra, dur;
+  var tCargos = null, tRoloEntra = null, tTituloEntra = null, dur, janelas = null, tituloApaga = M.final_sai;
   if(primeiro){
     tCargos = M.t_entrada - M.cargo_entra;
     tRoloEntra = tCargos + nCargos * M.t_cargo;
     tTituloEntra = tRoloEntra + M.t_entrada + tRolo + M.fim_do_rolo;
     dur = tTituloEntra + M.t_titulo;
-  } else {
+  } else if(deHoje){
     tCargos = M.t_entrada + tRolo + M.fim_do_rolo;
     tRoloEntra = 0;
     tTituloEntra = tCargos + nCargos * M.t_cargo;
     dur = M.t_entrada + tRolo + M.fim_do_rolo + nCargos * M.t_cargo + M.t_titulo;
+  } else {
+    /* AS PARTES NOUTRA ORDEM (o tempos_dos_creditos do ponto5 de 3 de outubro), parte a parte, pela ordem das somas dele:
+       - a PRIMEIRA nasce da ultima imagem do filme, sem preto: o rolo no zero, como hoje; o primeiro cargo
+         t_entrada - cargo_entra (0,9 s) antes de ficar inteiro, como na 109; o titulo t_entrada - titulo_acende (0,5 s)
+         antes, ja aceso, para ficar inteiro o mesmo tempo de hoje (com o titulo primeiro, mais 0,5 s de creditos);
+       - as outras acendem do preto, e uma que nao e a ultima apaga-se para o preto antes da seguinte: o titulo com o
+         fade dos cargos (cargo_entra) em vez dos 2,5 s do fim (tituloApaga);
+       - cada parte dura o de hoje: o titulo t_titulo, os cargos N x t_cargo, o rolo t_entrada + tRolo + fim_do_rolo.
+       Sem cargos o tCargos e null, e sem titulo o tTituloEntra. `janelas` diz de onde a onde vai cada parte. */
+    var tP = 0, acende = M.titulo_acende || M.final_entra;
+    janelas = [];
+    partes.forEach(function(p, k){
+      var ini = tP;
+      if(p === "rolo"){ tRoloEntra = tP; tP = tP + M.t_entrada + tRolo + M.fim_do_rolo; }
+      else if(p === "cargos"){ tCargos = k === 0 ? tP + M.t_entrada - M.cargo_entra : tP; tP = tCargos + nCargos * M.t_cargo; }
+      else { tTituloEntra = k === 0 ? tP + M.t_entrada - acende : tP; tP = tTituloEntra + M.t_titulo; }
+      janelas.push({parte: p, ini: ini, fim: tP});
+    });
+    dur = tP;
+    tituloApaga = partes[partes.length - 1] === "titulo" ? (M.titulo_apaga_fim || M.final_sai) : M.cargo_entra;
   }
   return {pecas: pecas, Hr: Hr, col: col, Hc: Hc, fotos: fotos, tRolo: tRolo, nCargos: nCargos, cargos: cargos,
-          cargosFora: cargosFora, primeiro: primeiro ? "cargos" : "rolo", tCargos: tCargos, tRoloEntra: tRoloEntra,
-          tTituloEntra: tTituloEntra, vn: (Hr + A * M.fracao_nomes) / tRolo, vf: (Hc + A * M.fracao_fotos) / tRolo, dur: dur};
+          cargosFora: cargosFora, primeiro: partes[0], tCargos: tCargos, tRoloEntra: tRoloEntra,
+          tTituloEntra: tTituloEntra, vn: velN, vf: velF, dur: dur,
+          partes: partes, partesEscolhidas: partesEscolhidas, janelas: janelas, tituloApaga: tituloApaga,
+          cargosGuardados: cargosGuardados, corridos: corridos, vel: vel, fimNomes: fimNomes, fimFotos: fimFotos, parado: parado};
 }
 function credContas(){ return credLay || (credLay = credLayout()); }
 /* O QUE ESTA NO ECRA QUANDO A FOTO k DA COLUNA PASSA NO MEIO: o segundo em que o centro dela
@@ -10709,11 +10934,15 @@ function credNomesNaFoto(Lay, k){
   if(!p) return null;
   var tr = Lay.vf > 0 ? (A * M.inicio_fotos + p.y + p.h / 2 - A / 2) / Lay.vf : 0;
   tr = Math.max(0, Math.min(Lay.tRolo, tr));
-  var y0 = A * M.inicio_nomes - tr * Lay.vn, grupos = [], vistos = [], nomes = [];
+  /* com a velocidade dele os nomes podem ja ter acabado quando a foto passa (fimNomes): ficam parados no fim deles,
+     fora do ecra, e a foto passa sem nomes ao lado */
+  var trN = Lay.fimNomes != null && tr > Lay.fimNomes ? Lay.fimNomes : tr;
+  var y0 = A * M.inicio_nomes - trN * Lay.vn, grupos = [], vistos = [], nomes = [];
   Lay.pecas.forEach(function(q){
     var c = y0 + q.y + q.h / 2;
     if(c < M.bordas || c > A - M.bordas) return;
-    if(vistos.indexOf(q.g) < 0){
+    /* com os nomes corridos os titulos e os subtitulos dos grupos nao vao ao ecra: so os nomes */
+    if(!Lay.corridos && vistos.indexOf(q.g) < 0){
       vistos.push(q.g);
       var t = credGrupoTexto(q.g);
       grupos.push(t.titulo + " · " + t.sub);
@@ -10901,7 +11130,10 @@ function credDesenhaEm(tela, t, grande, noPalco){
   function rolo(tr, alfa){
     if(tr > Lay.tRolo - M.fade_rolo) alfa *= 1 - credSuave((tr - Lay.tRolo + M.fade_rolo) / (2 * M.fade_rolo));
     ctx.globalAlpha = alfa;
-    var yf = Math.trunc(A * M.inicio_fotos - tr * Lay.vf), x0 = M.centro_fotos - M.largura_foto / 2, perto = 1e9;
+    /* A VELOCIDADE DELE (contrato de 3 de outubro, 5b; o rolo_em do ponto5): cada lado para no fim dele (fimNomes,
+       fimFotos), ja fora do ecra; sem velocidade escolhida sao null, e e o desenho de sempre */
+    var trF = Lay.fimFotos != null && tr > Lay.fimFotos ? Lay.fimFotos : tr, trN = Lay.fimNomes != null && tr > Lay.fimNomes ? Lay.fimNomes : tr;
+    var yf = Math.trunc(A * M.inicio_fotos - trF * Lay.vf), x0 = M.centro_fotos - M.largura_foto / 2, perto = 1e9;
     Lay.col.forEach(function(p, k){
       var y = yf + p.y;
       if(Math.abs(y + p.h / 2 - A / 2) < perto){ perto = Math.abs(y + p.h / 2 - A / 2); atual = k; }
@@ -10914,7 +11146,7 @@ function credDesenhaEm(tela, t, grande, noPalco){
       if(fonte) ctx.drawImage(fonte.img, fonte.sx, fonte.sy, fonte.sw, fonte.sh, x0, y, M.largura_foto, p.h);
       else { ctx.fillStyle = "#2a2226"; ctx.fillRect(x0, y, M.largura_foto, p.h); }
     });
-    var y0 = Math.trunc(A * M.inicio_nomes - tr * Lay.vn);
+    var y0 = Math.trunc(A * M.inicio_nomes - trN * Lay.vn);
     var cx = M.painel_nomes[0] + (M.painel_nomes[1] - M.painel_nomes[0]) / 2, corNome = credCorDosNomes();
     Lay.pecas.forEach(function(q){
       var y = y0 + q.y;
@@ -10932,7 +11164,7 @@ function credDesenhaEm(tela, t, grande, noPalco){
     var g2 = ctx.createLinearGradient(0, A - M.bordas, 0, A);
     g2.addColorStop(0, "rgba(0,0,0,0)"); g2.addColorStop(1, "rgba(0,0,0,1)");
     ctx.fillStyle = g2; ctx.fillRect(0, A - M.bordas, L, M.bordas);
-    if(tr > Lay.tRolo) atual = -1;
+    if(tr > Lay.tRolo || (Lay.fimFotos != null && tr > Lay.fimFotos)) atual = -1;
   }
   /* UM CARGO no instante u dele (0 a t_cargo), a acender e a apagar em cargo_entra; `jaAceso`: o primeiro com os cargos
      primeiro, que nasce do fim do filme ja aceso e so se apaga (o cargo_em do ponto5). As pessoas umas por baixo das
@@ -10945,10 +11177,15 @@ function credDesenhaEm(tela, t, grande, noPalco){
     if(c.cargo) credTextoMeio(ctx, c.cargo, M.cargo_corpo, M.cor_sub, L / 2, g.yCargo, "legenda");
     ctx.globalAlpha = 1;
   }
-  /* O TITULO E A DATA no instante u2 deles, o titulo a aproximar-se devagar como o pousar_letreiro do render */
-  function titulo(u2){
-    var z = 1 + M.letreiro_empurra * Math.max(0, u2);
-    ctx.globalAlpha = credSuave(u2 / M.final_entra) * (1 - credSuave((u2 - (M.t_titulo - M.final_sai)) / M.final_sai));
+  /* O TITULO E A DATA no instante u2 deles, o titulo a aproximar-se devagar como o pousar_letreiro do render. Com as
+     partes noutra ordem (3 de outubro, o titulo_em do ponto5): `jaAceso`, o titulo primeiro, nasce do fim do filme ja
+     aceso; `apaga` e o fade do fim (2,5 s), ou o dos cargos (0,6 s) quando o titulo nao e a ultima parte. Sem eles, o
+     de sempre. */
+  function titulo(u2, jaAceso, apaga){
+    var z = 1 + M.letreiro_empurra * Math.max(0, u2), acende = M.titulo_acende || M.final_entra;
+    if(apaga == null) apaga = M.final_sai;
+    var entra = (jaAceso && u2 < acende) ? 1 : credSuave(u2 / acende);
+    ctx.globalAlpha = entra * (1 - credSuave((u2 - (M.t_titulo - apaga)) / apaga));
     ctx.save();
     ctx.translate(L / 2, A / 2); ctx.scale(z, z);
     credLetreiro(ctx, credTitulo(), M.final_corpo, M.final_espaco, 0, 0, s * z, cores);
@@ -10956,7 +11193,20 @@ function credDesenhaEm(tela, t, grande, noPalco){
     credLetreiro(ctx, credData(), M.data_corpo, M.data_espaco, L / 2, A / 2 + M.data_y, s, cores);
     ctx.globalAlpha = 1;
   }
-  if(Lay.primeiro === "cargos"){
+  if(Lay.janelas){
+    /* AS PARTES NOUTRA ORDEM (contrato de 3 de outubro, o creditos_por_partes(t) do ponto5): a parte em cuja janela o t
+       cai, ou a ultima. A primeira nasce do fim do filme ja acesa (no palco, a opacidade do quadro; aqui, o «o fim do
+       filme» por cima): o rolo como hoje, o primeiro cargo e o titulo ja acesos. As outras entram do preto. */
+    var jn = Lay.janelas, kj = jn.length - 1;
+    for(var qj = 0; qj < jn.length; qj++) if(t < jn[qj].fim){ kj = qj; break; }
+    if(jn[kj].parte === "rolo"){
+      var trJ = t - Lay.tRoloEntra - M.t_entrada;
+      rolo(trJ, kj > 0 ? (trJ < 0 ? credSuave((trJ + M.t_entrada) / M.t_entrada) : 1) : entrada);
+    } else if(jn[kj].parte === "cargos"){
+      var tcJ = t - Lay.tCargos, jc = Math.min(tcJ > 0 ? Math.floor(tcJ / M.t_cargo) : 0, Lay.nCargos - 1);
+      cargo(jc, tcJ - jc * M.t_cargo, kj === 0 && jc === 0);
+    } else titulo(t - Lay.tTituloEntra, kj === 0, Lay.tituloApaga);
+  } else if(Lay.primeiro === "cargos"){
     /* OS CARGOS PRIMEIRO (decisao 109, o creditos(t) do ponto5): os cargos um de cada vez, o primeiro ja aceso desde o
        zero (o fim do filme desfaz-se nele: no palco, a opacidade do quadro; aqui, o «o fim do filme» por cima); depois o
        rolo a entrar do preto em t_entrada; e no fim o titulo */
@@ -11536,13 +11786,16 @@ function credMudaTexto(campo, chave, valor){
    - cargos: a lista inteira, de 1 a 8 entradas {cargo, quem}, cada uma com os dois campos escritos (nos tres primeiros
      lugares um vazio vale o de hoje DESSE lugar, por isso mudar a ordem ou tirar um cargo nunca deixa um vazio a puxar
      outro texto calado). Com os tres de hoje, sem mais nada, a chave sai: «como está» nao grava nada;
-   - cargos_primeiro: so o true, «Os cargos antes dos convidados». «Depois dos convidados (como está)» tira a chave.
+   - cargos_primeiro: so o true, os cargos antes dos convidados. Desde 3 de outubro a ordem escolhe-se na aba «Ordem e
+     velocidade», com as outras partes (credPoePartes): esta ordem continua a gravar o cargos_primeiro: true, e a de
+     hoje a tirar a chave.
    Na juncao por partes sao duas partes, ["creditos","cargos"] e ["creditos","cargos_primeiro"] (partesDe): a ordem num
    aparelho e um cargo no outro juntam-se; dois a mexer nos cargos e o conflito de sempre.
 
    Um cargo acrescentado nasce vazio e nao entra no filme ate ele escrever (o render deixa-o de fora, sem aviso); no
-   terceiro lugar ou antes nasce com o texto de hoje desse lugar, que e o que la vale. Fica sempre pelo menos um cargo: o
-   contrato diz de 1 a 8, e uma lista vazia volta aos tres de hoje. */
+   terceiro lugar ou antes nasce com o texto de hoje desse lugar, que e o que la vale. Fica sempre pelo menos um cargo na
+   lista: o contrato diz de 1 a 8, e uma lista vazia volta aos tres de hoje. Para o filme nao ter cargo nenhum ha o
+   «Sem cargos» (3 de outubro), que tira os cargos das partes e deixa esta lista como esta. */
 function credLimpaQuem(q){
   return String(q == null ? "" : q).replace(/\r\n?/g, "\n").split("\n").map(function(p){ return p.trim(); }).filter(Boolean).join("\n");
 }
@@ -11593,7 +11846,7 @@ function credAcrescentaCargo(){
 function credTiraCargo(k){
   var lista = credCargosGuardados();
   if(!lista[k]) return false;
-  if(lista.length <= 1){ credMsg("Fica pelo menos um cargo: o filme não tem créditos sem nenhum."); return false; }
+  if(lista.length <= 1){ credMsg("Fica pelo menos um cargo na lista. Para o filme não ter cargos nenhuns, usa «Sem cargos», em «Ordem e velocidade»."); return false; }
   var tirado = lista.splice(k, 1)[0];
   credPoeCargos(lista, "tirar o cargo " + (k + 1) + " dos créditos",
     "Tiraste o cargo " + (k + 1) + (tirado.cargo ? " («" + tirado.cargo + "»)" : "") + "." + credPuxaOsDeHoje(lista));
@@ -11616,18 +11869,467 @@ function credPuxaOsDeHoje(lista){
   lista.forEach(function(x, j){ if(j < om.length && (!x.cargo || !x.quem)) puxa.push(j + 1); });
   return puxa.length ? " No lugar " + puxa.join(" e ") + " um campo vazio vale o texto de hoje desse lugar, e é esse que aparece." : "";
 }
-/* A ORDEM: os cargos antes dos convidados (true) ou depois, como esta (tira a chave) */
-function credOrdemDosCargos(primeiro){
-  /* nada a fazer se ja esta assim; «como está» tambem tira um valor que nao e o true (escrito a mao), que ja valia como esta */
-  var cr0 = est.creditos || {};
-  if(primeiro ? cr0.cargos_primeiro === true : cr0.cargos_primeiro === undefined) return false;
+/* ---------- os creditos: a ordem das partes, os nomes corridos e a velocidade (3 de outubro) ----------
+   O TIAGO, as 04:50 e as 05:05 de 3 de outubro (saida/discussao/contrato_1003.md, pontos 5 e 5b): "Coloca este fecho
+   exatamente com a mesma animacao antes dos creditos a subir com as fotos e com os nomes", "Decidimos tambem remover as
+   funcoes tipo creative e assim, vamos abolir isso", "quero mesmo poder remover integralmente", "Retira dos creditos
+   aquela parte das divisoes por grupinhos. Nos so queremos os nomes dos convidados corridos" e "tambem nos creditos
+   permite ajustar a velocidade dos nomes e/ou das fotos".
+
+   GRAVA EM est.creditos, pelo credGuardaDesfazer e pelo credPoe (o marcar() de sempre), so o que ele escolhe:
+   - partes: a lista pela ordem, so quando nao e nenhuma das duas ordens de antes. A de hoje (rolo, cargos, titulo) nao
+     grava nada; a da 109 (cargos, rolo, titulo) grava o cargos_primeiro: true de sempre, que as Mesas e os renders de
+     ontem ja conhecem. Com `partes` escrita o cargos_primeiro sai: o render so o le sem ela.
+   - nomes_corridos: so o true. «Como está» tira a chave.
+   - velocidade: {fotos, nomes} em px/s, so os que ele escolheu; sem nenhum a chave sai.
+   SEM CARGOS e a lista sem "cargos": o est.creditos.cargos NAO SE TOCA, e por isso «Repor os cargos» traz os textos dele
+   de volta. Na juncao por partes cada chave e a sua parte (partesDe: ["creditos","partes"], ["creditos",
+   "nomes_corridos"] e ["creditos","velocidade"]), e uma Mesa de ontem que mude um texto leva-as consigo, porque copia o
+   est.creditos inteiro.
+   A MESA AVISA, NUNCA CORRIGE (083): diz a duracao, onde a musica entra, o que fica parado e os avisos de leitura, e nao
+   muda nenhuma velocidade sozinha. A PRE-VISUALIZACAO, o «Ver a correr», o «Ouvir tudo» e o palco seguem tudo isto pelo
+   credLayout() e pelo credDesenhaEm(), com as contas do ponto5 (tempos_dos_creditos e creditos_por_partes). */
+var CRED_PARTES_HOJE = ["rolo", "cargos", "titulo"], CRED_PARTES_PRIMEIRO = ["cargos", "rolo", "titulo"];
+var CRED_PARTE_NOME = {rolo: "os convidados e as fotos", cargos: "os cargos", titulo: "o título e a data"};
+var credVelModo = {};          /* {fotos: true}: carregou em «Outra velocidade» e ainda nao mexeu na regua */
+var credVelGesto = null;       /* {qual, entrada, antes}: a entrada do anular da velocidade em que ele esta a mexer */
+var credVelPorMarcar = 0;      /* a regua a andar: o marcar() espera que ela pare (credVelMarcaJa) */
+function credListasIguais(a, b){ return a.length === b.length && a.every(function(x, i){ return x === b[i]; }); }
+/* a ordem em palavras: "o título e a data, depois os convidados e as fotos; sem cargos" */
+function credPartesEmPalavras(partes){
+  return partes.map(function(p){ return CRED_PARTE_NOME[p]; }).join(", depois ") +
+    (partes.indexOf("cargos") < 0 ? "; sem cargos" : "") + (partes.indexOf("titulo") < 0 ? "; sem o título" : "");
+}
+/* AS CONTAS COM OUTROS CREDITOS, sem mexer nos dele: poe, conta e repoe. Para dizer «como está» ao lado do que ele escolheu. */
+function credContasCom(muda){
+  var guarda = est.creditos, cr = copiaFunda(est.creditos) || {};
+  muda(cr);
+  try{
+    if(Object.keys(cr).length) est.creditos = cr; else delete est.creditos;
+    return credLayout();
+  } finally {
+    if(guarda === undefined) delete est.creditos; else est.creditos = guarda;
+  }
+}
+/* GRAVA A ORDEM DAS PARTES (e o anular de antes), pinta e diz o que mudou na duracao e na musica. Devolve false sem
+   gravar quando ja esta escrita assim; um valor mal escrito a mao, que ja valia como esta, sai ao escolher. */
+function credPoePartes(lista, rotulo, frase){
+  var cr0 = est.creditos || {}, novo = {};
+  if(credListasIguais(lista, CRED_PARTES_PRIMEIRO)) novo.cargos_primeiro = true;
+  else if(!credListasIguais(lista, CRED_PARTES_HOJE)) novo.partes = lista.slice();
+  var mesmo = function(a, b){ return a === undefined || b === undefined ? a === b : JSON.stringify(a) === JSON.stringify(b); };
+  if(mesmo(cr0.partes, novo.partes) && mesmo(cr0.cargos_primeiro, novo.cargos_primeiro)) return false;
   var antes = credResumo(), cr = copiaFunda(est.creditos) || {};
-  credGuardaDesfazer(primeiro ? "pôr os cargos antes dos convidados" : "pôr os cargos depois dos convidados");
-  if(primeiro) cr.cargos_primeiro = true; else delete cr.cargos_primeiro;
+  credGuardaDesfazer(rotulo || "mudar a ordem dos créditos");
+  delete cr.partes; delete cr.cargos_primeiro;
+  if(novo.partes) cr.partes = novo.partes;
+  if(novo.cargos_primeiro) cr.cargos_primeiro = true;
+  credCampoAberto = null;
   credPoe(cr);
-  credDepoisDosCargos(antes, primeiro ? "Os cargos passam a vir antes dos convidados: o primeiro nasce do fim do filme, depois o rolo e no fim o título."
-                                      : "Os cargos voltam a vir depois dos convidados, como está.");
+  credDepoisDosCargos(antes, frase || credFraseDaOrdem(lista));
   return true;
+}
+function credFraseDaOrdem(lista){
+  if(credListasIguais(lista, CRED_PARTES_HOJE)) return "Os créditos voltam à ordem de sempre: os convidados e as fotos, depois os cargos e o título.";
+  return "A ordem passa a ser: " + credPartesEmPalavras(lista) + "." +
+    (lista[0] === "titulo" ? " O título nasce do fim do filme, já aceso." : lista[0] === "cargos" ? " O primeiro cargo nasce do fim do filme." : "");
+}
+/* UMA PARTE UM LUGAR PARA CIMA (-1) OU PARA BAIXO (+1) */
+function credMoveParte(parte, para){
+  var l = credContas().partesEscolhidas.slice(), k = l.indexOf(parte), j = k + para;
+  if(k < 0 || j < 0 || j >= l.length) return false;
+  l.splice(k, 1); l.splice(j, 0, parte);
+  return credPoePartes(l, "mudar a ordem dos créditos");
+}
+/* SEM CARGOS (ou sem o titulo): a parte sai da lista, e os textos dela ficam guardados. O rolo fica sempre. */
+function credTiraParte(parte){
+  var Lay = credContas(), l = Lay.partesEscolhidas.slice(), k = l.indexOf(parte), n = Lay.cargosGuardados;
+  if(parte === "rolo" || k < 0) return false;
+  l.splice(k, 1);
+  return credPoePartes(l, parte === "cargos" ? "tirar os cargos dos créditos" : "tirar o título dos créditos",
+    parte === "cargos" ? "Sem cargos: saem do filme por inteiro, sem um segundo. Os textos " + (n === 1 ? "do cargo" : "dos " + n + " cargos") +
+                         " ficam guardados, e «Repor os cargos» trá-los de volta."
+                       : "Sem o título e a data no filme. O texto fica guardado, e «Repor o título» trá-lo de volta.");
+}
+/* REPOE os cargos (a seguir aos convidados, onde estao hoje) ou o titulo (no fim), com os textos que la estavam */
+function credRepoeParte(parte){
+  var l = credContas().partesEscolhidas.slice();
+  if((parte !== "cargos" && parte !== "titulo") || l.indexOf(parte) >= 0) return false;
+  if(parte === "cargos") l.splice(l.indexOf("rolo") + 1, 0, "cargos"); else l.push("titulo");
+  return credPoePartes(l, parte === "cargos" ? "repor os cargos nos créditos" : "repor o título nos créditos",
+    parte === "cargos" ? "Os cargos voltam, com os textos que tinhas, a seguir aos convidados. Muda-lhes o lugar com as setas."
+                       : "O título e a data voltam, no fim. Muda-lhes o lugar com as setas.");
+}
+/* OS NOMES CORRIDOS (true) ou por grupos, como esta (tira a chave) */
+function credNomesCorridos(sim){
+  var cr0 = est.creditos || {};
+  if(sim ? cr0.nomes_corridos === true : cr0.nomes_corridos === undefined) return false;
+  var L0 = credContas(), antes = credResumo(), cr = copiaFunda(est.creditos) || {};
+  credGuardaDesfazer(sim ? "pôr os nomes dos créditos corridos" : "voltar aos nomes por grupos nos créditos");
+  if(sim) cr.nomes_corridos = true; else delete cr.nomes_corridos;
+  credPoe(cr);
+  var L1 = credContas();
+  credDepoisDosCargos(antes, (sim ? "Os nomes passam a ir corridos, sem os títulos nem os subtítulos dos grupos, pela mesma ordem."
+                                  : "Os nomes voltam a ir por grupos, como está.") +
+    " O rolo dos nomes passa de " + L0.Hr + " para " + L1.Hr + " px, e os nomes sobem a " + Math.round(L1.vn) + " px/s (antes " + Math.round(L0.vn) + ").");
+  return true;
+}
+/* ---------- a velocidade ---------- */
+function credVelLimites(qual){
+  var M = CRED.medidas;
+  return (qual === "fotos" ? M.vel_fotos_limites : M.vel_nomes_limites) || (qual === "fotos" ? [60, 300] : [30, 200]);
+}
+/* POE a velocidade das fotos ou dos nomes em px/s, ou tira-a (null: «Como está»). Os acertos seguidos da mesma
+   velocidade (a regua a andar, o − e o +) ficam numa so entrada do anular, enquanto nada mais entrar na pilha; `nova`
+   pede uma entrada so sua. Nao pinta: quem chama diz o que mudou (credDepoisDaVelocidade). Devolve true se mudou.
+   `aAndar` e a regua a meio do gesto: a velocidade muda ja (a pre-visualizacao segue o dedo), mas o marcar(), que
+   escreve a montagem inteira na copia deste aparelho e pede a gravacao, espera 0,4 s sem mexidas ou o fim do gesto
+   (credVelMarcaJa): eram dezenas de escritas por segundo com a regua a correr. */
+function credVelMarcaJa(){
+  if(!credVelPorMarcar) return;
+  clearTimeout(credVelPorMarcar); credVelPorMarcar = 0;
+  marcar();
+}
+function credPoeVelocidade(qual, valor, nova, aAndar){
+  if(qual !== "fotos" && qual !== "nomes") return false;
+  if(valor !== null){
+    var lim = credVelLimites(qual);
+    valor = Math.round(+valor);
+    if(!isFinite(valor)) return false;
+    valor = Math.max(lim[0], Math.min(lim[1], valor));
+  }
+  var cr = copiaFunda(est.creditos) || {}, antesTxt = JSON.stringify(cr.velocidade);
+  var v = cr.velocidade && typeof cr.velocidade === "object" && !Array.isArray(cr.velocidade) ? cr.velocidade : {};
+  if(valor === null) delete v[qual]; else v[qual] = valor;
+  if(Object.keys(v).length) cr.velocidade = v; else delete cr.velocidade;
+  if(JSON.stringify(cr.velocidade) === antesTxt) return false;
+  var g = credVelGesto, topo = pilhaDesfazer[pilhaDesfazer.length - 1];
+  if(nova || !g || g.qual !== qual || g.entrada !== topo){
+    var antes = credResumo();
+    credGuardaDesfazer(valor === null ? "voltar à velocidade de sempre " + (qual === "fotos" ? "das fotos" : "dos nomes") + " dos créditos"
+                                      : "mudar a velocidade " + (qual === "fotos" ? "das fotos" : "dos nomes") + " dos créditos");
+    credVelGesto = {qual: qual, entrada: pilhaDesfazer[pilhaDesfazer.length - 1], antes: antes};
+  }
+  if(!aAndar){ if(credVelPorMarcar){ clearTimeout(credVelPorMarcar); credVelPorMarcar = 0; } credPoe(cr); return true; }
+  if(Object.keys(cr).length) est.creditos = cr; else delete est.creditos;
+  credLay = null;
+  clearTimeout(credVelPorMarcar);
+  credVelPorMarcar = setTimeout(function(){ credVelPorMarcar = 0; marcar(); }, 400);
+  return true;
+}
+/* depois de a velocidade mudar: pinta o painel e diz a duracao nova e a musica, contra o que estava antes de ele pegar
+   nesta velocidade (credVelGesto.antes) */
+function credDepoisDaVelocidade(frase){
+  credLay = null;
+  var antes = credVelGesto ? credVelGesto.antes : null, depois = credResumo(), curto = antes ? credTextoCurtoDoEfeito(antes, depois, true) : "";
+  credPinta();
+  credMsg(frase + (curto ? " " + curto : "") + " Anular volta atrás.");
+}
+/* «Como está» ou «Outra velocidade»: a segunda so mostra a regua, na velocidade de agora; nada se grava ate ele a mexer */
+function credVelocidadeModo(qual, outra){
+  var nome = qual === "fotos" ? "das fotos" : "dos nomes";
+  if(outra){
+    credVelModo[qual] = true;
+    credPintaForma();
+    if(credContas().vel[qual] === undefined) credMsg("Mexe na régua para escolher a velocidade " + nome + ". Até lá fica como está.");
+    return false;
+  }
+  credVelModo[qual] = false;
+  if(credPoeVelocidade(qual, null, true)){ credDepoisDaVelocidade("A velocidade " + nome + " volta a ser a de sempre."); credVelGesto = null; return true; }
+  credPintaForma();
+  credMsg("");
+  return false;
+}
+/* o − e o +: a velocidade escolhida (ou a de agora, se ainda nao escolheu) mais ou menos `passo` px/s */
+function credVelocidadePasso(qual, passo){
+  var Lay = credContas(), lim = credVelLimites(qual);
+  var de = Lay.vel[qual] !== undefined ? Lay.vel[qual] : Math.max(lim[0], Math.min(lim[1], Math.round(qual === "fotos" ? Lay.vf : Lay.vn)));
+  credVelModo[qual] = true;
+  if(!credPoeVelocidade(qual, de + passo)) return false;
+  credDepoisDaVelocidade((qual === "fotos" ? "As fotos passam a subir a " : "Os nomes passam a subir a ") + credContas().vel[qual] + " px/s.");
+  return true;
+}
+/* AS LETRAS QUE CONTAM PARA A REGUA DE LEITURA (o letras_de_ler do ponto5 e o corridaDoTexto da Mesa): cada ponto de
+   codigo, sem os que nao se veem */
+function credLetrasDeLer(t){
+  return Array.from(String(t == null ? "" : t).replace(/[\u200B\u200D\u2060\uFE0E\uFE0F\uFEFF]|[\u{E0020}-\u{E007F}]/gu, "")).length;
+}
+/* O QUE A VELOCIDADE FAZ A LEITURA (o avisos_da_velocidade do ponto5): {fotos: {curtas, n, pior, s, min, max}, nomes:
+   {noEcra, linhas, longas, maior, pede}}. As fotos: quanto tempo cada uma fica inteira no ecra, (A - altura) /
+   vel_fotos; as que ficam menos de M.foto_inteira_min (2 s) sao as curtas, e `pior` e o lugar da que fica menos. Os
+   nomes: cada linha fica A / vel_nomes no ecra e pede as letras dela / M.ler_cps (12 por segundo, a regua das
+   legendas); as que pedem mais sao as longas. Conta sempre: quem decide se e aviso e quem chama (o render so avisa com
+   a velocidade escolhida, e das fotos so com a das fotos). */
+function credLeituraDaVelocidade(Lay){
+  var M = CRED.medidas, A = M.A, min = M.foto_inteira_min || 2, cps = M.ler_cps || 12;
+  var f = {curtas: 0, n: Lay.col.length, pior: 0, s: null, min: null, max: null};
+  Lay.col.forEach(function(p, k){
+    var s = (A - p.h) / Lay.vf;
+    if(s < min){ f.curtas++; if(f.s === null || s < f.s){ f.s = s; f.pior = k + 1; } }
+    if(f.min === null || s < f.min) f.min = s;
+    if(f.max === null || s > f.max) f.max = s;
+  });
+  var n = {noEcra: A / Lay.vn, linhas: 0, longas: 0, maior: 0, pede: 0};
+  Lay.pecas.forEach(function(q){
+    if(q.tipo !== "nome") return;
+    n.linhas++;
+    var l = credLetrasDeLer(q.texto);
+    if(l / cps > n.noEcra){ n.longas++; if(l > n.maior) n.maior = l; }
+  });
+  n.pede = n.maior / cps;
+  return {fotos: f, nomes: n};
+}
+/* OS AVISOS DA VELOCIDADE QUE ELE ESCOLHEU, com as regras do ponto5: sem velocidade escolhida, nenhum; as fotos so com a
+   das fotos. Nunca dizem um nome: quantas linhas e as letras da maior. Vao para o painel e para o Validar. */
+function credAvisosDaVelocidade(){
+  if(!CRED) return [];
+  var Lay = credContas(), M = CRED.medidas, a = [];
+  if(Lay.vel.fotos === undefined && Lay.vel.nomes === undefined) return a;
+  var L = credLeituraDaVelocidade(Lay), min = M.foto_inteira_min || 2;
+  if(Lay.vel.fotos !== undefined && L.fotos.curtas)
+    a.push("Com as fotos a " + Math.round(Lay.vf) + " px/s, " + L.fotos.curtas + " das " + L.fotos.n + " fotos ficam menos de " + fmtS(min) +
+           " s inteiras no ecrã (a " + L.fotos.pior + ".ª fica " + fmtS(L.fotos.s) + " s). Abranda as fotos.");
+  if(L.nomes.longas)
+    a.push("Com os nomes a " + Math.round(Lay.vn) + " px/s, cada linha fica " + fmtS(L.nomes.noEcra) + " s no ecrã, e " + L.nomes.longas +
+           (L.nomes.longas === 1 ? " linha pede" : " linhas pedem") + " mais para se ler a 15 metros (a maior tem " + L.nomes.maior +
+           " letras e pede " + fmtS(L.nomes.pede) + " s). Abranda os nomes.");
+  if(Lay.parado)
+    a.push(Lay.parado.quem === "nomes"
+      ? "Os nomes acabam " + fmtS(Lay.parado.s) + " s antes das fotos: saem do ecrã, e o lado dos nomes fica vazio até ao fim do rolo."
+      : "As fotos acabam " + fmtS(Lay.parado.s) + " s antes dos nomes: saem do ecrã, e o lado das fotos fica vazio até ao fim do rolo.");
+  return a;
+}
+/* A MUSICA ESCOLHIDA NOS CREDITOS COM ESTA DURACAO E COM A DE ANTES, numa frase; "" em «Como está» (a do fim do filme
+   continua de onde esta, e a aba Musica diz ate onde chega) ou quando a duracao nao muda */
+function credMusicaFraseDaDuracao(dur, dur0, quando){
+  if(Math.abs(dur - dur0) < 0.05) return "";
+  var e1 = null, e0 = null, f = null, ini = null;
+  try{
+    var escolha = credMusicaEscolha();
+    if(escolha && !escolha.erro){
+      f = somResolve(escolha.ficheiro, "musica");
+      if(f && credMusicaFim(f) != null){ ini = escolha.inicio; e1 = credMusicaEntrada(f, ini, dur); e0 = credMusicaEntrada(f, ini, dur0); }
+    }
+  }catch(err){ e1 = null; }
+  if(!e1 || !e0) return "";
+  var nome = "«" + esc(credMusicaNome(f)) + "»";
+  if(ini === "fim" && !e1.curta) return "A música, " + nome + ", acaba com os créditos: entra aos <b>" + mmssDec(e1.in_s) + "</b> do ficheiro (" + quando + ", " + mmssDec(e0.in_s) + ").";
+  if(e1.falta > 0.5) return "A música, " + nome + ", " + (ini === "fim" ? "só tem " + fmtS(e1.fim) + " s até se calar: começa do início e " : "começa no mesmo sítio e ") +
+                            "cala-se <b>" + fmtS(e1.falta) + " s</b> antes do fim dos créditos.";
+  return "A música, " + nome + ", começa no mesmo sítio e toca até ao fim dos créditos.";
+}
+/* O QUE A ORDEM, OS NOMES CORRIDOS E A VELOCIDADE FAZEM AO FILME, em HTML: {ordem, nomes, vel}. As contas de «como
+   está» de cada escolha fazem-se com os creditos dele sem essa chave (credContasCom), ou seja com as outras escolhas
+   postas: por isso cada uma se diz pelo nome («na ordem de sempre», «por grupos», «à velocidade de sempre»), e nao
+   «como está», que se lia como o filme de hoje. */
+function credFormaDiz(){
+  var M = CRED.medidas, Lay = credContas(), r = {ordem: "", nomes: "", vel: ""};
+  var p = function(t, cls){ return '<p' + (cls ? ' class="' + cls + '"' : '') + '>' + t + '</p>'; };
+  /* 1. A ORDEM */
+  var P = Lay.partesEscolhidas, hoje = credListasIguais(P, CRED_PARTES_HOJE);
+  var L0 = hoje ? Lay : credContasCom(function(c){ delete c.partes; delete c.cargos_primeiro; });
+  if(hoje) r.ordem += p("Os convidados e as fotos nascem da última imagem do filme; depois os cargos, um de cada vez, e no fim o título e a data, com o fade a preto. Os créditos têm <b>" +
+                        mmssDec(Lay.dur) + "</b>.");
+  else {
+    var t = "Os créditos ficam com <b>" + mmssDec(Lay.dur) + "</b> (na ordem de sempre, " + mmssDec(L0.dur) + ").";
+    if(P[0] === "titulo") t += " O título nasce da última imagem do filme, já aceso, fica o tempo de hoje e apaga-se para o preto antes de " +
+                               (P[1] === "rolo" ? "os convidados e as fotos entrarem" : "os cargos entrarem") + ": são 0,5 s a mais.";
+    else if(P[0] === "cargos") t += " O primeiro cargo nasce da última imagem do filme, sem preto: são 0,9 s a mais.";
+    t += " No fim, " + CRED_PARTE_NOME[P[P.length - 1]] + " acabam com o fade a preto.";
+    r.ordem += p(t);
+    if(P.indexOf("cargos") < 0)
+      r.ordem += p("<b>Sem cargos:</b> nem um segundo deles no filme" + (Lay.cargosGuardados ? " (eram " + fmtS(Lay.cargosGuardados * M.t_cargo) + " s)" : "") +
+                   ". Os textos " + (Lay.cargosGuardados === 1 ? "do cargo" : "dos " + Lay.cargosGuardados + " cargos") + " ficam guardados.");
+    if(P.indexOf("titulo") < 0) r.ordem += p("<b>Sem o título e a data.</b> O texto fica guardado.");
+    var mo = credMusicaFraseDaDuracao(Lay.dur, L0.dur, "na ordem de sempre");
+    if(mo) r.ordem += p(mo);
+  }
+  /* 2. OS NOMES */
+  var G = Lay.corridos ? credContasCom(function(c){ delete c.nomes_corridos; }) : Lay;
+  var C = Lay.corridos ? Lay : credContasCom(function(c){ c.nomes_corridos = true; });
+  var linhas = C.pecas.length, mesma = Math.abs(G.dur - C.dur) < 0.05;
+  if(!linhas) r.nomes += p("Não há nomes nesta Mesa: sem a folha de convidados, o rolo só leva as fotos.");
+  else {
+    r.nomes += p((Lay.corridos ? "Corridos: só os nomes, " : "Corridos seriam só os nomes, ") + linhas + (linhas === 1 ? " linha" : " linhas") +
+                 ", as mesmas e pela mesma ordem, sem os títulos nem os subtítulos dos grupos. O rolo dos nomes " +
+                 (Lay.corridos ? "tem <b>" + C.Hr + " px</b> (por grupos, " + G.Hr + ")." : "passava de " + G.Hr + " para <b>" + C.Hr + " px</b>."));
+    r.nomes += p(mesma ? "A duração dos créditos não muda, porque quem manda é a coluna das fotos: os nomes " + (Lay.corridos ? "sobem" : "passavam a subir") + " a <b>" +
+                         Math.round(C.vn) + " px/s</b> (por grupos, " + Math.round(G.vn) + ")."
+                       : "Os créditos " + (Lay.corridos ? "ficam com" : "ficavam com") + " <b>" + mmssDec(C.dur) + "</b> (por grupos, " + mmssDec(G.dur) + ").");
+    if(Lay.corridos){
+      r.nomes += p("Os títulos e os subtítulos dos grupos ficam guardados nos Textos do fim.");
+      var mn = credMusicaFraseDaDuracao(C.dur, G.dur, "por grupos");
+      if(mn) r.nomes += p(mn);
+    }
+  }
+  /* 3. A VELOCIDADE */
+  var tem = Lay.vel.fotos !== undefined || Lay.vel.nomes !== undefined;
+  var S = tem ? credContasCom(function(c){ delete c.velocidade; }) : Lay, L = credLeituraDaVelocidade(Lay), min = M.foto_inteira_min || 2;
+  r.vel += p("As fotos sobem a <b>" + Math.round(Lay.vf) + " px/s</b> e os nomes a <b>" + Math.round(Lay.vn) + " px/s</b>" +
+             (tem ? " (à velocidade de sempre, " + Math.round(S.vf) + " e " + Math.round(S.vn) + ")." : ", como está.") +
+             " O rolo dura <b>" + mmssDec(Lay.tRolo) + "</b> e os créditos <b>" + mmssDec(Lay.dur) + "</b>" +
+             (tem && Math.abs(Lay.dur - S.dur) >= 0.05 ? " (à velocidade de sempre, " + mmssDec(S.dur) + ")." : "."));
+  if(L.fotos.n)
+    r.vel += p("Cada foto fica inteira no ecrã de " + fmtS(L.fotos.min) + " a " + fmtS(L.fotos.max) + " s" + (linhas ? ", e cada linha de nomes " + fmtS(L.nomes.noEcra) + " s." : ".") +
+               (Lay.vel.fotos === undefined && L.fotos.curtas ? " Como está, " + L.fotos.curtas + " das " + L.fotos.n + " fotos ficam menos de " + fmtS(min) + " s inteiras." : ""));
+  var mv = tem ? credMusicaFraseDaDuracao(Lay.dur, S.dur, "à velocidade de sempre") : "";
+  if(mv) r.vel += p(mv);
+  credAvisosDaVelocidade().forEach(function(t){ r.vel += p(esc(t), "aviso"); });
+  return r;
+}
+/* ---------- a ordem, os nomes e a velocidade: o painel ---------- */
+/* A ORDEM DAS PARTES: «Como está (original)» ou outra, e a lista das partes pela ordem em que aparecem, cada uma com as
+   setas e, nos cargos e no titulo, o «Sem»; as que estao de fora por baixo, com o «Repor». O HTML so, para o teste o
+   ler no node. Diz «ainda não chega ao filme» enquanto o render nao le a lista (RENDER_LE.creditos_partes), e a ordem
+   da 109 enquanto nao le o cargos_primeiro. */
+function credHtmlDaOrdem(){
+  var Lay = credContas(), M = CRED.medidas, P = Lay.partesEscolhidas, hoje = credListasIguais(P, CRED_PARTES_HOJE);
+  var da109 = credListasIguais(P, CRED_PARTES_PRIMEIRO), n = P.length;
+  var h = '<h4 class="credSec" id="credOrdemTitulo">A ordem dos créditos</h4>';
+  if(!hoje && !da109 && RENDER_LE.creditos_partes === false)
+    h += '<p class="aviso forte" data-cainda="partes"><b>Esta ordem ainda não chega ao filme:</b> a equipa do render liga-a a seguir. ' +
+         'Fica guardada e a pré-visualização já a mostra, mas o filme sai com a ordem de sempre até lá.</p>';
+  if(RENDER_LE.cargos_primeiro === false)
+    h += '<p class="aviso forte" data-cainda="ordem"><b>A ordem dos cargos ainda não chega ao filme:</b> a equipa do render liga-a a seguir. ' +
+         'Fica guardada e a pré-visualização já a mostra, mas o filme sai com os cargos depois dos convidados até lá.</p>';
+  h += '<div class="estEscolha credOrdemPartes" role="radiogroup" aria-labelledby="credOrdemTitulo">' +
+      '<button type="button" role="radio" data-cpordem="hoje" aria-checked="' + hoje + '"><span class="estOrigBola" aria-hidden="true"></span>' +
+        '<span><b>Como está (original)</b><small>os convidados e as fotos, depois os cargos, e no fim o título e a data</small></span></button>' +
+      '<button type="button" role="radio" data-cpordem="outra" aria-checked="' + !hoje + '"><span class="estOrigBola" aria-hidden="true"></span>' +
+        '<span><b>Outra ordem</b><small>' + (hoje ? 'muda-a em baixo, com as setas e o «Sem cargos»' : esc(credPartesEmPalavras(P))) + '</small></span></button>' +
+    '</div>' +
+    '<ol class="credPartes" aria-label="As partes dos créditos, pela ordem em que aparecem">';
+  P.forEach(function(parte, k){
+    var nome = parte === "rolo" ? "Os convidados e as fotos" : parte === "cargos" ? "Os cargos" : "O título e a data";
+    var sub = parte === "rolo" ? "os nomes e as fotos a subir, " + mmssDec(M.t_entrada + Lay.tRolo + M.fim_do_rolo)
+            : parte === "cargos" ? Lay.nCargos + (Lay.nCargos === 1 ? " cargo, " : " cargos, um de cada vez, ") + fmtS(Lay.nCargos * M.t_cargo) + " s"
+            : "«" + esc(credTitulo()) + "», " + fmtS(M.t_titulo) + " s";
+    sub += k === 0 ? "; nasce do fim do filme" : k === n - 1 ? "; acaba com o fade a preto" : "";
+    h += '<li class="credParte" data-parte="' + parte + '"><span class="credParteN">' + (k + 1) + '</span>' +
+      '<span class="credParteNome"><b>' + nome + '</b><small>' + sub + '</small></span>' +
+      '<span class="credCargoBts">' +
+        '<button type="button" data-cpsobe="' + parte + '" title="Aparece mais cedo" aria-label="Pôr ' + CRED_PARTE_NOME[parte] + ' mais cedo"' + (k === 0 ? ' disabled' : '') + '>▲</button>' +
+        '<button type="button" data-cpdesce="' + parte + '" title="Aparece mais tarde" aria-label="Pôr ' + CRED_PARTE_NOME[parte] + ' mais tarde"' + (k === n - 1 ? ' disabled' : '') + '>▼</button>' +
+        (parte === "rolo" ? '' : '<button type="button" class="credCargoTira" data-cptira="' + parte + '" title="' +
+          (parte === "cargos" ? 'Tira os cargos do filme por inteiro. Os textos ficam guardados.' : 'Tira o título e a data do filme. O texto fica guardado.') +
+          '"><span aria-hidden="true">✕</span> ' + (parte === "cargos" ? 'Sem cargos' : 'Sem título') + '</button>') +
+      '</span></li>';
+  });
+  ["cargos", "titulo"].forEach(function(parte){
+    if(P.indexOf(parte) >= 0) return;
+    var ng = Lay.cargosGuardados;
+    h += '<li class="credParte fora" data-parte="' + parte + '"><span class="credParteN" aria-hidden="true">✕</span>' +
+      '<span class="credParteNome"><b>' + (parte === "cargos" ? "Sem cargos" : "Sem o título e a data") + '</b><small>' +
+        (parte === "cargos" ? "fora do filme, sem um segundo; os textos " + (ng === 1 ? "do cargo" : "dos " + ng + " cargos") + " ficam guardados"
+                            : "fora do filme; o texto fica guardado") + '</small></span>' +
+      '<span class="credCargoBts"><button type="button" class="credParteRepoe" data-cprepoe="' + parte + '">+ Repor ' + (parte === "cargos" ? "os cargos" : "o título") + '</button></span></li>';
+  });
+  h += '</ol><div class="credFormaDiz" id="credOrdemDiz" aria-live="polite"></div>';
+  return h;
+}
+/* OS NOMES: por grupos, como esta, ou corridos */
+function credHtmlDosNomes(){
+  var Lay = credContas(), sim = Lay.corridos;
+  var h = '<h4 class="credSec" id="credNomesTitulo">Os nomes dos convidados</h4>';
+  if(sim && RENDER_LE.nomes_corridos === false)
+    h += '<p class="aviso forte" data-cainda="corridos"><b>Os nomes corridos ainda não chegam ao filme:</b> a equipa do render liga-os a seguir. ' +
+         'Ficam guardados e a pré-visualização já os mostra, mas o filme sai com os nomes por grupos até lá.</p>';
+  h += '<div class="estEscolha" role="radiogroup" aria-labelledby="credNomesTitulo">' +
+      '<button type="button" role="radio" data-cpnomes="0" aria-checked="' + !sim + '"><span class="estOrigBola" aria-hidden="true"></span>' +
+        '<span><b>Como está (original)</b><small>por grupos, cada um com o título e o subtítulo</small></span></button>' +
+      '<button type="button" role="radio" data-cpnomes="1" aria-checked="' + sim + '"><span class="estOrigBola" aria-hidden="true"></span>' +
+        '<span><b>Nomes corridos</b><small>só os nomes, sem títulos nem subtítulos de grupo</small></span></button>' +
+    '</div><div class="credFormaDiz" id="credNomesDiz" aria-live="polite"></div>';
+  return h;
+}
+/* A VELOCIDADE das fotos e dos nomes: cada uma «Como está (original)» ou outra, com a regua, o − e o + (5 px/s) */
+function credHtmlDaVelocidade(){
+  var Lay = credContas();
+  var h = '<h4 class="credSec" id="credVelTitulo">A velocidade</h4>';
+  if((Lay.vel.fotos !== undefined || Lay.vel.nomes !== undefined) && RENDER_LE.creditos_velocidade === false)
+    h += '<p class="aviso forte" data-cainda="velocidade"><b>A velocidade ainda não chega ao filme:</b> a equipa do render liga-a a seguir. ' +
+         'Fica guardada e a pré-visualização já a mostra, mas o filme sai com a velocidade de sempre até lá.</p>';
+  h += '<p class="credNota">Como está, as fotos sobem o mais devagar que dá sem passar dos 150 px/s, e os nomes à velocidade que os faz acabar com elas. ' +
+       'Mais devagar, os créditos ficam mais compridos; mais depressa, mais curtos.</p>';
+  ["fotos", "nomes"].forEach(function(q){
+    var lim = credVelLimites(q), escolhida = Lay.vel[q] !== undefined, outra = escolhida || !!credVelModo[q];
+    var val = escolhida ? Math.round(Lay.vel[q]) : Math.max(lim[0], Math.min(lim[1], Math.round(q === "fotos" ? Lay.vf : Lay.vn)));
+    var nome = q === "fotos" ? "As fotos" : "Os nomes", de = q === "fotos" ? "das fotos" : "dos nomes";
+    h += '<div class="credVel" data-cvel="' + q + '"><div class="credVelNome" id="credVelNome_' + q + '">' + nome + '</div>' +
+      '<div class="estEscolha" role="radiogroup" aria-labelledby="credVelNome_' + q + '">' +
+        '<button type="button" role="radio" data-cvmodo="' + q + ':como" aria-checked="' + !outra + '"><span class="estOrigBola" aria-hidden="true"></span>' +
+          '<span><b>Como está (original)</b><small>' + (q === "fotos" ? "até 150 px/s, a acabar com os nomes" : "a acabar com as fotos") + '</small></span></button>' +
+        '<button type="button" role="radio" data-cvmodo="' + q + ':outra" aria-checked="' + outra + '"><span class="estOrigBola" aria-hidden="true"></span>' +
+          '<span><b>Outra velocidade</b><small>' + (escolhida ? val + ' px/s' : 'de ' + lim[0] + ' a ' + lim[1] + ' px/s') + '</small></span></button>' +
+      '</div>';
+    if(outra)
+      h += '<div class="credVelRegua">' +
+        '<button type="button" data-cvpasso="' + q + ':-5" title="5 px/s mais devagar" aria-label="' + nome + ' 5 píxeis por segundo mais devagar"' + (val <= lim[0] ? ' disabled' : '') + '>−</button>' +
+        '<input type="range" id="credVel_' + q + '" data-cvregua="' + q + '" min="' + lim[0] + '" max="' + lim[1] + '" step="1" value="' + val +
+          '" aria-label="A velocidade ' + de + ', em píxeis por segundo">' +
+        '<button type="button" data-cvpasso="' + q + ':5" title="5 px/s mais depressa" aria-label="' + nome + ' 5 píxeis por segundo mais depressa"' + (val >= lim[1] ? ' disabled' : '') + '>+</button>' +
+        '<output class="credVelVal" id="credVelVal_' + q + '" for="credVel_' + q + '"><b>' + val + '</b> px/s' + (escolhida ? '' : '<small>ainda como está</small>') + '</output>' +
+      '</div>';
+    h += '</div>';
+  });
+  h += '<div class="credFormaDiz" id="credVelDiz" aria-live="polite"></div>';
+  return h;
+}
+/* o que cada escolha faz, por baixo dela; e, nas reguas que ficam no sitio a meio de um gesto, o numero ao lado, o
+   que a escolha «Outra velocidade» diz e o − e o + nos limites */
+function credPintaFormaDiz(){
+  if(!CRED || typeof document === "undefined") return;
+  var d = credFormaDiz(), Lay = credContas();
+  [["credOrdemDiz", d.ordem], ["credNomesDiz", d.nomes], ["credVelDiz", d.vel]].forEach(function(x){
+    var e = document.getElementById(x[0]);
+    if(e) e.innerHTML = x[1];
+  });
+  ["fotos", "nomes"].forEach(function(q){
+    var v = Lay.vel[q], lim = credVelLimites(q);
+    var o = document.getElementById("credVelVal_" + q), r = document.getElementById("credVel_" + q);
+    if(v === undefined){
+      /* ainda por escolher: a regua fica na velocidade de agora, que anda com a outra velocidade e com as fotos */
+      var agora = Math.max(lim[0], Math.min(lim[1], Math.round(q === "fotos" ? Lay.vf : Lay.vn)));
+      if(o) o.innerHTML = "<b>" + agora + "</b> px/s<small>ainda como está</small>";
+      if(r && document.activeElement !== r && +r.value !== agora) r.value = agora;
+      return;
+    }
+    v = Math.round(v);
+    if(o) o.innerHTML = "<b>" + v + "</b> px/s";
+    if(r && document.activeElement !== r && +r.value !== v) r.value = v;
+    var pq = document.querySelector('#credForma [data-cvmodo="' + q + ':outra"] small');
+    if(pq) pq.textContent = v + " px/s";
+    [[-5, v <= lim[0]], [5, v >= lim[1]]].forEach(function(b){
+      var bt = document.querySelector('#credForma [data-cvpasso="' + q + ':' + b[0] + '"]');
+      if(bt) bt.disabled = b[1];
+    });
+  });
+}
+/* A ABA «Ordem e velocidade»: a ordem, os nomes e a velocidade. A REGUA A ANDAR NAO PASSA POR AQUI (o `input` dela so
+   acerta o que as escolhas dizem, credPintaFormaDiz): refaze-la a meio do gesto tirava-a de debaixo do dedo. No fim do
+   gesto refaz-se tudo, e o cursor volta ao mesmo controlo, para as setas do teclado continuarem na regua. Num browser
+   em que tocar num botao nao lhe da o cursor (o Safari), a regua de antes ficava com ele: por isso nao se guarda
+   nenhuma caixa so por ter o cursor la dentro. */
+function credPintaForma(){
+  var alvo = document.getElementById("credForma");
+  if(!alvo) return;
+  if(!CRED){ alvo.innerHTML = ""; return; }
+  var a = document.activeElement, foco = a && a.id && alvo.contains(a) ? a.id : "";
+  alvo.innerHTML = credHtmlDaOrdem() + credHtmlDosNomes() + credHtmlDaVelocidade();
+  credPintaFormaDiz();
+  if(foco){
+    var n = document.getElementById(foco);
+    if(n && n !== document.activeElement){ try{ n.focus({preventScroll: true}); }catch(e){ n.focus(); } }
+  }
+}
+/* a aba de baixo do painel: "fotos", "forma", "textos" ou "musica" */
+function credMostraAba(nome){
+  var corpoC = document.getElementById("credCorpo");
+  if(corpoC) corpoC.setAttribute("data-aba", nome);
+  document.querySelectorAll("#dlgCreditos [data-caba]").forEach(function(x){ x.classList.toggle("on", x.getAttribute("data-caba") === nome); });
+  /* a escrever nos textos o painel so acerta o que se ve mudar; ao chegar a esta aba, ela conta outra vez (os cargos
+     que entram, o titulo) */
+  if(nome === "forma" && CRED){ credLay = null; credPintaForma(); }
 }
 function credTextosMudados(){
   var cr = est.creditos || {};
@@ -11824,7 +12526,10 @@ function credAvisoDosCaracteres(campo, texto){
 }
 function credAvisosDosCampos(){
   document.querySelectorAll("#credTextos [data-ccampo]").forEach(function(el){
-    var valor = credValorDoCampo(el), aviso = [credAvisoDoTexto(el.getAttribute("data-ccampo"), valor),
+    /* um texto que nao vai ao filme (sem cargos, sem titulo, ou os titulos dos grupos com os nomes corridos) nao leva
+       avisos: o ponto5 nao o mede nem o desenha */
+    var valor = credValorDoCampo(el), noFilme = credCampoNoFilme(el.getAttribute("data-ccampo"));
+    var aviso = !noFilme ? "" : [credAvisoDoTexto(el.getAttribute("data-ccampo"), valor),
       credAvisoDosCaracteres(el.getAttribute("data-ccampo"), valor)].filter(Boolean).join(" ");
     el.classList.toggle("mudado", valor !== credOmissaoDoCampo(el));
     var a = el.parentNode.querySelector('[data-caviso="' + el.getAttribute("data-ccampo") + '"]');
@@ -11841,6 +12546,16 @@ function credAvisosDosCampos(){
   });
   var r = document.getElementById("credRepor");
   if(r) r.disabled = !credTextosMudados();
+}
+/* ESTE TEXTO VAI AO FILME? (3 de outubro; o textos_que_nao_cabem e o caracteres_que_faltam do ponto5 nao olham para o
+   que nao vai ao ecra): os cargos so com "cargos" nas partes, o titulo e a data so com "titulo", e os titulos e os
+   subtitulos dos grupos so sem os nomes corridos */
+function credCampoNoFilme(campo){
+  var Lay = credContas();
+  if(campo === "cargo" || campo === "quem") return Lay.partesEscolhidas.indexOf("cargos") >= 0;
+  if(campo === "titulo" || campo === "data") return Lay.partesEscolhidas.indexOf("titulo") >= 0;
+  if(campo === "gtitulo" || campo === "gsub") return !Lay.corridos;
+  return true;
 }
 /* ---------- os creditos: o painel ---------- */
 function credVersaoDoFilme(){
@@ -11862,7 +12577,10 @@ function credPintaTempos(){
   el.innerHTML = '<span><b>' + mmss(Lay.dur) + '</b> de créditos</span>' +
     (filme ? '<span><b>' + mmss(filme) + '</b> de filme</span><span><b>' + mmss(total) + '</b> com os créditos</span>' : '') +
     '<span class="credVel">' + Lay.col.length + (Lay.col.length === 1 ? ' foto' : ' fotos') +
-    ' a ' + Math.round(Lay.vf) + ' px/s, nomes a ' + Math.round(Lay.vn) + ' px/s</span>';
+    ' a ' + Math.round(Lay.vf) + ' px/s, nomes a ' + Math.round(Lay.vn) + ' px/s' +
+    /* a ordem, os cargos e os nomes corridos quando nao sao os de sempre (3 de outubro) */
+    (Lay.partesEscolhidas.indexOf("cargos") < 0 ? ', sem cargos' : '') + (Lay.partesEscolhidas[0] === "titulo" ? ', o título primeiro' : '') +
+    (Lay.corridos ? ', nomes corridos' : '') + '</span>';
   el.title = v ? "O filme é a versão «" + v.nome + "», contado como o render o faz (com o nome dos bebés e as fitas paradas). Os créditos entram por cima dos últimos " +
     String(M.fade_fim_imagem).replace(".", ",") + " s dele, onde o filme ia para preto." : "";
 }
@@ -11920,8 +12638,9 @@ function credPintaLista(){
     var marcas = (x.nova ? '<span class="etiq somEfeito" title="É dos créditos e ainda não tinha lugar na tua ordem">nova</span>' : '') +
       (x.semEtiqueta ? '<span class="etiq render" title="Está na versão Créditos mas não tem a etiqueta Créditos">sem a etiqueta</span>' : '') +
       (x.medida.falta ? '<span class="etiq render" title="Ainda não tem versão final: o render deixa-a de fora">sem versão final</span>' : '');
+    /* com os nomes corridos (3 de outubro) nao ha grupos no ecra: so os nomes que passam ao lado da foto */
     var nomes = nn ? (nn.grupos.length ? '<b>' + esc(nn.grupos.join(", ")) + '</b>' + (nn.nomes.length ? ': ' + esc(nn.nomes.join(" · ")) : '')
-                                       : '<i>sem nomes no ecrã quando passa</i>')
+                      : nn.nomes.length ? esc(nn.nomes.join(" · ")) : '<i>sem nomes no ecrã quando passa</i>')
                    : '<i>fica de fora no render</i>';
     /* A ESCOLHER VARIAS, a pega da lugar a uma caixa, carregar na linha escolhe-a, e as setas e o «Tirar» saem */
     return '<li class="credLinha' + (x.nova ? ' nova' : '') + (i === credAtual ? ' noEcra' : '') + (escolher ? ' escolher' : '') +
@@ -11934,7 +12653,7 @@ function credPintaLista(){
       (f ? '<span class="credTmb fo' + f.fo + '" style="' + posMini(f, 52) + '" data-cir="' + i + '" title="' + (escolher ? 'Escolher' : 'Ver quando passa') + '"></span>' : '<span class="credTmb"></span>') +
       '<span class="credInfo" data-cir="' + i + '" title="' + (escolher ? 'Escolher' : 'Ver quando passa') + '">' +
         '<span class="credFich"><span class="credNomeFich">' + nomeF + '</span>' + marcas + '</span>' +
-        '<span class="credNomes"' + (nn && nn.nomes.length ? ' title="' + esc(nn.grupos.join(", ") + ": " + nn.nomes.join(" · ")) + '"' : '') + '>' + nomes + '</span></span>' +
+        '<span class="credNomes"' + (nn && nn.nomes.length ? ' title="' + esc((nn.grupos.length ? nn.grupos.join(", ") + ": " : "") + nn.nomes.join(" · ")) + '"' : '') + '>' + nomes + '</span></span>' +
       (escolher ? '' :
       '<span class="credSetas">' +
         '<button data-csobe="' + i + '" title="Sobe mais cedo" aria-label="Subir a foto ' + (i + 1) + '"' + (i === 0 ? ' disabled' : '') + '>▲</button>' +
@@ -11957,6 +12676,9 @@ function credPintaTextos(){
     '<p class="credNota credLetras" id="credLetras"></p>' +
     credHtmlDosCargos() +
     '<h4 class="credSec">O título e a data</h4>';
+  var LayT = credContas();
+  if(LayT.partesEscolhidas.indexOf("titulo") < 0)
+    h += '<p class="aviso" data-csemtitulo="1">Os créditos estão sem o título e a data (em «Ordem e velocidade»): este texto fica guardado e não aparece no filme.</p>';
   h += '<div class="credCampo"><label for="credTituloFinal">Título</label>' +
     '<input id="credTituloFinal" class="credQuem" data-ccampo="titulo" data-ck="" value="' + esc(credTitulo()) + '" placeholder="' + esc(om.titulo) + '" autocomplete="off">' +
     '<span class="credAvisoCampo" data-caviso="titulo"></span></div>' +
@@ -11964,6 +12686,7 @@ function credPintaTextos(){
     '<input id="credDataFinal" data-ccampo="data" data-ck="" value="' + esc(credData()) + '" placeholder="' + esc(om.data) + '" autocomplete="off">' +
     '<span class="credAvisoCampo" data-caviso="data"></span></div>' +
     '<h4 class="credSec">Os títulos dos grupos de nomes</h4>' +
+    (LayT.corridos ? '<p class="aviso" data-ccorridos="1">Com os nomes corridos (em «Ordem e velocidade») estes títulos e subtítulos ficam guardados e não aparecem no filme.</p>' : '') +
     '<p class="credNota">Dois grupos seguidos com o mesmo título partilham-no: só aparece uma vez. Os nomes mudam-se na folha de convidados, não aqui.</p>';
   (CRED.grupos || []).forEach(function(g, k){
     var t = credGrupoTexto(g), n = (g.linhas || []).length;
@@ -11979,25 +12702,25 @@ function credPintaTextos(){
   credPintaLetras();
   credAvisosDosCampos();
 }
-/* OS CARGOS NO PAINEL (2 de outubro, a noite): a ordem (depois dos convidados, como esta, ou antes), e a lista, cada cargo
-   com as setas para mudar o lugar, o «Tirar», o cargo e quem o fez (uma pessoa por linha), e no fim o «Acrescentar um
-   cargo». O HTML so, para o teste o ler no node; as acoes estao no credAcrescentaCargo, credTiraCargo, credMoveCargo e
-   credOrdemDosCargos, e os textos no credMudaTexto, como os outros campos. Diz «ainda não chega ao filme» enquanto o
-   render nao le a ordem (RENDER_LE.cargos_primeiro) ou os cargos e as pessoas a mais (RENDER_LE.cargos_varios). */
+/* OS CARGOS NO PAINEL (2 de outubro, a noite): a lista, cada cargo com as setas para mudar o lugar, o «Tirar», o cargo e
+   quem o fez (uma pessoa por linha), e no fim o «Acrescentar um cargo». O HTML so, para o teste o ler no node; as acoes
+   estao no credAcrescentaCargo, credTiraCargo e credMoveCargo, e os textos no credMudaTexto, como os outros campos. Diz
+   «ainda não chega ao filme» enquanto o render nao le os cargos e as pessoas a mais (RENDER_LE.cargos_varios). O LUGAR
+   DOS CARGOS (antes ou depois dos convidados) e o «Sem cargos» passaram a 3 de outubro para a aba «Ordem e velocidade»
+   (credHtmlDaOrdem); sem cargos, aqui fica so a caixa que o diz, com o «Repor os cargos». */
 function credHtmlDosCargos(){
   var om = credOmissoes(), lista = credCargosGuardados(), max = credCargosMax(), maxP = credPessoasMax(), M = CRED.medidas;
-  var primeiro = !!(est.creditos && est.creditos.cargos_primeiro === true), n = lista.length;
+  var Lay = credContas(), primeiro = Lay.partesEscolhidas[0] === "cargos", n = lista.length;
   var seg = String(M.t_cargo).replace(".", ",");
-  var h = '<h4 class="credSec" id="credCargosTitulo">Os cargos</h4>' +
-    '<div class="estEscolha credOrdemCargos" role="radiogroup" aria-labelledby="credCargosTitulo">' +
-      '<button type="button" role="radio" data-ccordem="0" aria-checked="' + !primeiro + '"><span class="estOrigBola" aria-hidden="true"></span>' +
-        '<span><b>Depois dos convidados (como está)</b><small>o rolo dos convidados e das fotos, depois os cargos e o título</small></span></button>' +
-      '<button type="button" role="radio" data-ccordem="1" aria-checked="' + primeiro + '"><span class="estOrigBola" aria-hidden="true"></span>' +
-        '<span><b>Antes dos convidados</b><small>os cargos primeiro, a sair do fim do filme; depois o rolo e o título</small></span></button>' +
-    '</div>';
-  if(RENDER_LE.cargos_primeiro === false)
-    h += '<p class="aviso forte" data-cainda="ordem"><b>A ordem dos cargos ainda não chega ao filme:</b> a equipa do render liga-a a seguir. ' +
-         'Fica guardada e a pré-visualização já a mostra, mas o filme sai com os cargos depois dos convidados até lá.</p>';
+  var h = '<h4 class="credSec" id="credCargosTitulo">Os cargos</h4>';
+  /* SEM CARGOS (3 de outubro; a lista das partes sem "cargos"): os campos saem do painel, porque nada disto vai ao
+     filme, e os textos ficam na base como estavam; o «Repor os cargos» devolve-os ao filme e ao painel */
+  if(Lay.partesEscolhidas.indexOf("cargos") < 0)
+    return h + '<div class="credSemCargos" data-csemcargos="1"><p><b>Sem cargos.</b> Os créditos não têm cargos: nem um segundo deles no filme. Os textos ' +
+      (Lay.cargosGuardados === 1 ? 'do cargo' : 'dos ' + Lay.cargosGuardados + ' cargos') + ' ficam guardados, e voltam como estavam.</p>' +
+      '<button type="button" class="bt pequeno" data-cprepoe="cargos">+ Repor os cargos</button></div>';
+  h += '<p class="credNota credIrForma">O lugar dos cargos (antes ou depois dos convidados) e o «Sem cargos» estão em ' +
+       '<button type="button" class="bt pequeno" data-cabrir="forma">Ordem e velocidade</button></p>';
   h += '<p class="credNota">Cada cargo fica ' + seg + ' s no ecrã, a acender e a apagar como os outros: um cargo a mais são mais ' + seg +
        ' s de créditos, e a música que acaba com eles entra mais cedo. Até ' + max + ' cargos, e em cada um até ' + maxP +
        ' pessoas, uma por linha. Se uma não couber, encolhem todas por igual.' +
@@ -12060,7 +12783,7 @@ function credPintaAnular(){
 function credPinta(){
   if(!credAberto()) return;
   credLay = null;
-  credPintaTempos(); credPintaLista(); credPintaAnular(); credPintaLetras();
+  credPintaTempos(); credPintaLista(); credPintaAnular(); credPintaLetras(); credPintaForma();
   if(CRED){ credT = Math.min(credT, credContas().dur); credDesenha(); }
   /* a musica depende da duracao dos creditos (as fotos, os titulos que se juntam) e da escolha dele */
   credPintaMusica();
@@ -12070,6 +12793,7 @@ function credAbrir(){
   credLay = null; credAtual = -1; credCampoAberto = null; credAToca = false;
   credMusModo = null; credMusListaAberta = false; credMusCampoAberto = false; credMusEstado("");
   credEsc = null; credTiradasAberto = false; credPintaEfeito("");
+  credVelModo = {}; credVelGesto = null;
   /* a primeira vez abre com o rolo a comecar, e nao no fim do filme ainda a desfazer-se */
   if(!credJaAberto && CRED){ credT = CRED.medidas.t_entrada; credJaAberto = true; }
   credMsg("");
@@ -12084,17 +12808,23 @@ function credTempoDoCampo(el){
   var M = CRED.medidas, Lay = credContas(), campo = el.getAttribute("data-ccampo"), k = el.getAttribute("data-ck");
   /* OS CARGOS PELA ORDEM EM QUE APARECEM (credLayout: tCargos, e com os cargos primeiro o rolo e o titulo depois deles).
      O campo k e o do lugar guardado: um cargo vazio que ainda nao entra salta para onde vai entrar (o seguinte) */
+  /* SEM CARGOS OU SEM TITULO NAS PARTES (3 de outubro) esse texto nao aparece: a pre-visualizacao fica onde esta */
   if(campo === "cargo" || campo === "quem"){
+    if(Lay.tCargos == null || !Lay.cargos.length) return null;
     var j = 0;
     while(j < Lay.cargos.length - 1 && Lay.cargos[j].k < +k) j++;
     return Lay.tCargos + j * M.t_cargo + 2.0;
   }
-  if(campo === "titulo" || campo === "data") return Lay.tTituloEntra + 2.5;
+  if(campo === "titulo" || campo === "data") return Lay.tTituloEntra == null ? null : Lay.tTituloEntra + 2.5;
+  /* com os nomes corridos os titulos e os subtitulos dos grupos nao vao ao ecra */
+  if(Lay.corridos) return null;
   for(var i = 0; i < Lay.pecas.length; i++){
     var q = Lay.pecas[i];
     if(q.g.etiqueta !== k) continue;
-    /* o primeiro pedaco do grupo (o titulo ou o subtitulo) a 40% da altura do ecra */
-    return Lay.tRoloEntra + M.t_entrada + Math.max(0, Math.min(Lay.tRolo, (M.A * M.inicio_nomes + q.y - M.A * 0.4) / Lay.vn));
+    /* o primeiro pedaco do grupo (o titulo ou o subtitulo) a 40% da altura do ecra; com a velocidade dele, nunca depois
+       de os nomes acabarem */
+    var fimN = Lay.fimNomes != null ? Lay.fimNomes : Lay.tRolo;
+    return Lay.tRoloEntra + M.t_entrada + Math.max(0, Math.min(fimN, (M.A * M.inicio_nomes + q.y - M.A * 0.4) / Lay.vn));
   }
   return null;
 }
@@ -12853,6 +13583,7 @@ function credOuvirPara(){
 document.getElementById("btCreditos").addEventListener("click", credAbrir);
 document.getElementById("credFechar").addEventListener("click", function(){ document.getElementById("dlgCreditos").close(); });
 document.getElementById("dlgCreditos").addEventListener("close", function(){
+  credVelMarcaJa();
   credAToca = false;
   credEsc = null;
   if(credRaf){ cancelAnimationFrame(credRaf); credRaf = 0; }
@@ -12866,20 +13597,50 @@ document.getElementById("credBarra").addEventListener("input", function(e){ cred
 document.getElementById("credAnular").addEventListener("click", credAnular);
 document.getElementById("dlgCreditos").addEventListener("click", function(e){
   var aba = e.target.closest("[data-caba]");
-  if(aba){
-    document.getElementById("credCorpo").setAttribute("data-aba", aba.getAttribute("data-caba"));
-    document.querySelectorAll("#dlgCreditos [data-caba]").forEach(function(x){ x.classList.toggle("on", x === aba); });
-    return;
+  if(aba){ credMostraAba(aba.getAttribute("data-caba")); return; }
+  /* a ordem das partes, os nomes corridos e a velocidade (3 de outubro). Depois de cada um o foco fica no mesmo botao
+     do sitio novo (credFocaDepois), como nas setas dos cargos */
+  var bp;
+  if((bp = e.target.closest("[data-cabrir]"))){ credMostraAba(bp.getAttribute("data-cabrir")); return; }
+  if((bp = e.target.closest("[data-cpordem]"))){
+    if(bp.getAttribute("data-cpordem") === "hoje") credPoePartes(CRED_PARTES_HOJE, "voltar à ordem de sempre nos créditos");
+    else if(credListasIguais(credContas().partesEscolhidas, CRED_PARTES_HOJE))
+      credMsg("Muda a ordem na lista de baixo: as setas mudam o lugar de cada parte, e «Sem cargos» tira os cargos do filme.");
+    credFocaDepois(['#credForma [data-cpordem="' + bp.getAttribute("data-cpordem") + '"]']); return;
+  }
+  if((bp = e.target.closest("[data-cpsobe]"))){
+    var ps = bp.getAttribute("data-cpsobe"); credMoveParte(ps, -1);
+    credFocaDepois(['#credForma [data-cpsobe="' + ps + '"]', '#credForma [data-cpdesce="' + ps + '"]']); return;
+  }
+  if((bp = e.target.closest("[data-cpdesce]"))){
+    var pd = bp.getAttribute("data-cpdesce"); credMoveParte(pd, 1);
+    credFocaDepois(['#credForma [data-cpdesce="' + pd + '"]', '#credForma [data-cpsobe="' + pd + '"]']); return;
+  }
+  if((bp = e.target.closest("[data-cptira]"))){
+    var pt = bp.getAttribute("data-cptira"); credTiraParte(pt);
+    credFocaDepois(['#credForma [data-cprepoe="' + pt + '"]', '#dlgCreditos [data-cprepoe="' + pt + '"]']); return;
+  }
+  if((bp = e.target.closest("[data-cprepoe]"))){
+    var pr2 = bp.getAttribute("data-cprepoe"); credRepoeParte(pr2);
+    credFocaDepois(['#credForma [data-cptira="' + pr2 + '"]', "#credMaisCargo", '#credTextos [data-ccampo]']); return;
+  }
+  if((bp = e.target.closest("[data-cpnomes]"))){
+    var pn = bp.getAttribute("data-cpnomes") === "1"; credNomesCorridos(pn);
+    credFocaDepois(['#credForma [data-cpnomes="' + (pn ? 1 : 0) + '"]']); return;
+  }
+  if((bp = e.target.closest("[data-cvmodo]"))){
+    var vm = bp.getAttribute("data-cvmodo").split(":"); credVelocidadeModo(vm[0], vm[1] === "outra");
+    credFocaDepois(['#credForma [data-cvmodo="' + vm.join(":") + '"]']); return;
+  }
+  if((bp = e.target.closest("[data-cvpasso]"))){
+    var vp = bp.getAttribute("data-cvpasso").split(":"); credVelocidadePasso(vp[0], +vp[1]);
+    credFocaDepois(['#credForma [data-cvpasso="' + vp.join(":") + '"]', '#credForma [data-cvregua="' + vp[0] + '"]']); return;
   }
   if(e.target.closest("#credAceitar")){ credAceitarNovas(); return; }
   if(e.target.closest("#credRepor")){ credRepor(); credFocaDepois(["#credRepor", "#credTextos [data-ccampo]"]); return; }
   /* os cargos (2 de outubro, a noite): a ordem, as setas, o «Tirar» e o «Acrescentar». Depois de cada um o foco fica
      perto de onde estava (credFocaDepois), como nas setas */
   var bc;
-  if((bc = e.target.closest("[data-ccordem]"))){
-    var pr = bc.getAttribute("data-ccordem") === "1";
-    credOrdemDosCargos(pr); credFocaDepois(['#dlgCreditos [data-ccordem="' + (pr ? 1 : 0) + '"]']); return;
-  }
   if((bc = e.target.closest("[data-ccsobe]"))){ var ks = +bc.getAttribute("data-ccsobe"); credMoveCargoComSeta(ks, ks - 1); return; }
   if((bc = e.target.closest("[data-ccdesce]"))){ var kd = +bc.getAttribute("data-ccdesce"); credMoveCargoComSeta(kd, kd + 1); return; }
   if((bc = e.target.closest("[data-cctira]"))){
@@ -12966,6 +13727,28 @@ document.getElementById("credLista").addEventListener("pointerup", function(e){
 });
 document.getElementById("credLista").addEventListener("pointercancel", function(e){
   if(credArrasto && e.pointerId === credArrasto.id) credFimDoArrasto(false);
+});
+/* A REGUA DA VELOCIDADE (3 de outubro). A andar (input), grava-se e pinta-se so o que se ve mudar: o cabecalho, o
+   quadro e o que as escolhas dizem; a lista das fotos, a musica e o rodape so no fim do gesto (change), que e quando
+   a regua larga. Tudo numa so entrada do anular (credPoeVelocidade). */
+document.getElementById("credForma").addEventListener("input", function(e){
+  var r = e.target.closest("[data-cvregua]");
+  if(!r || !CRED) return;
+  if(!credPoeVelocidade(r.getAttribute("data-cvregua"), +r.value, false, true)) return;
+  credPintaTempos(); credPintaAnular();
+  credT = Math.min(credT, credContas().dur); credDesenha();
+  credPintaFormaDiz();
+});
+document.getElementById("credForma").addEventListener("change", function(e){
+  var r = e.target.closest("[data-cvregua]");
+  if(!r || !CRED) return;
+  var q = r.getAttribute("data-cvregua");
+  /* o fim do gesto: a velocidade ja la esta (ou poe-se agora, num browser que so manda o `change`), e grava-se */
+  credPoeVelocidade(q, +r.value);
+  credVelMarcaJa();
+  var v = credContas().vel[q];
+  if(v === undefined) return;
+  credDepoisDaVelocidade((q === "fotos" ? "As fotos passam a subir a " : "Os nomes passam a subir a ") + Math.round(v) + " px/s.");
 });
 document.getElementById("credTextos").addEventListener("focusin", function(e){
   var el = e.target.closest("[data-ccampo]");
@@ -13121,11 +13904,16 @@ window.addEventListener("resize", function(){ if(credAberto()){ credMedeTela(); 
    duas sao escolhas e nao cores (render.ESCOLHAS_DO_CONTADOR), e a omissao e false, «como esta». A `fonte` da
    intro (2 de outubro, a noite) e a letra do letreiro: "impact" e «como esta» e nao se guarda, e as outras so as
    oferecidas em data/fontes_intro.json (window.FONTES_INTRO), como o render.normalizar_estilo() as aceita. */
+/* A POSICAO DAS LEGENDAS E A LETRA DO CONTADOR (3 de outubro, contrato_1003, pontos 1 e 3) ficam fora do
+   render.estilo_omissao(), que e so de cores, corpos e letras das partes de 2 de outubro, como as escolhas do
+   contador: a `posicao` e {dx, dy, alinhamento} e a omissao e a legenda de hoje, ao centro e no sitio de sempre; a
+   `fonte` do contador e o Arial Bold de hoje (render.LETRA_OMISSAO). O teste_estilo_da_mesa_igual_ao_render tira-as
+   antes de comparar, e confere-as a parte. */
 var ESTILO_OMISSAO = {
-  legenda: {fonte: "arial_bold", tamanho: 46, cor: "#FFFFFF", fundo: 0.647},
+  legenda: {fonte: "arial_bold", tamanho: 46, cor: "#FFFFFF", fundo: 0.647, posicao: {dx: 0, dy: 0, alinhamento: "centro"}},
   cartao: {fonte: "arial_bold", curto: 100, frase: 78, quente: "#E2B88C", claro: "#FFF7EA", brilho: "#FF9646"},
   nome: {tamanho: 120},
-  contador: {linha: "#5C4E58", regua: "#968490", regua_texto: "#B0A4AC", ponteiro: "#968A92", marco: "#C83E56",
+  contador: {fonte: "arial_bold", linha: "#5C4E58", regua: "#968490", regua_texto: "#B0A4AC", ponteiro: "#968A92", marco: "#C83E56",
              marco_texto: "#FFE2E8", ano: "#F6F0F4", ano_longe: "#6C6068", nascimento: "#ECCCA8", continuo: false,
              data_afastada: false},
   intro: {fundo: "#96161C", papel: "#F7E9D2", tinta: "#2E0E10", letra: "#FCFAFA", tamanho: 288, fonte: "impact"}
@@ -13160,7 +13948,8 @@ function estiloVerbo(p, plural, singular){ return ESTILO_PARTE_PLURAL[p] ? plura
 function estiloNomeMaiusculo(p){ return ESTILO_NOME_DA_PARTE[p].charAt(0).toUpperCase() + ESTILO_NOME_DA_PARTE[p].slice(1); }
 var ESTILO_ROTULOS = {
   "legenda.fonte": "a letra da legenda", "legenda.tamanho": "o tamanho da legenda", "legenda.cor": "a cor da legenda",
-  "legenda.fundo": "a faixa da legenda", "cartao.fonte": "a letra dos cartões", "cartao.curto": "o cartão curto",
+  "legenda.fundo": "a faixa da legenda", "legenda.posicao": "a posição das legendas", "contador.fonte": "a letra do contador",
+  "cartao.fonte": "a letra dos cartões", "cartao.curto": "o cartão curto",
   "cartao.frase": "as frases dos cartões", "cartao.quente": "a cor quente", "cartao.claro": "a cor clara",
   "cartao.brilho": "o brilho", "nome.tamanho": "o nome do bebé", "contador.linha": "a linha do contador",
   "contador.regua": "os traços grandes da régua", "contador.regua_texto": "os meses da régua",
@@ -13285,6 +14074,19 @@ function estiloLetraIntroAtual(){ return estiloLetraDaIntro(estiloValor("intro",
 function estiloCss(f, corpo){
   return (f.estilo_css === "italic" ? "italic " : "") + (f.peso_css || 700) + " " + corpo + "px " + (f.web || "Arial, sans-serif");
 }
+/* A LETRA DO CONTADOR E DA FITA DE 1995 (3 de outubro, contrato_1003, ponto 1): a do est.estilo.contador.fonte, da mesma
+   lista das legendas, para todos os textos deles (o ano grande, os anos do lado, os meses, as datas, o texto dos marcos e
+   o rotulo); sem ela, o Arial Bold de hoje. Na amostra do Estilo e sempre a escolhida. No palco, que mostra o filme, so
+   se o render ja a usa (RENDER_LE.contador_fonte): ate la o filme sai em Arial Bold, e o palco tambem. */
+function estiloCssContador(corpo){
+  var f = estiloLetra("contador");
+  if(f.id !== "arial_bold") estiloGaranteLetra(estiloCss(f, 40));
+  return estiloCss(f, corpo);
+}
+function palcoCssContador(corpo){
+  if(RENDER_LE.contador_fonte === false || estiloValor("contador", "fonte") === "arial_bold") return "700 " + corpo + "px Arial, Helvetica, sans-serif";
+  return estiloCssContador(corpo);
+}
 /* o <link> do Google Fonts, uma vez: so descarrega o ficheiro de uma letra quando alguem a usa */
 function estiloPedeLetras(){
   if(!FONTES_MESA || !FONTES_MESA.css || document.getElementById("letrasDoEstilo")) return;
@@ -13356,6 +14158,8 @@ function estiloMistura(a, b, f){ return [0, 1, 2].map(function(k){ return Math.r
 /* AS ESCOLHAS DO CONTADOR QUE NAO SAO CORES (render.ESCOLHAS_DO_CONTADOR): uma so peca e a data do nascimento
    afastada. Sao true ou «como esta», ficam fora das propostas de cores e de tudo o que pinta com as cores. */
 function estiloEscolhaDoContador(chave){ return chave === "continuo" || chave === "data_afastada"; }
+/* AS CORES DO CONTADOR, as que as propostas mudam e as que o palco pinta: tudo menos as escolhas e a letra (3 de outubro) */
+function estiloCorDoContador(chave){ return chave !== "fonte" && !estiloEscolhaDoContador(chave); }
 /* UM VALOR COMO O render.normalizar_estilo() O ACEITA, ou null se nao presta: a letra tem de estar
    na lista, o corpo tem de ser inteiro e dentro dos limites, o fundo de 0 a 1, a cor #RRGGBB. Um
    valor que nao presta (so num estado escrito a mao) vale a omissao, como no render. */
@@ -13364,6 +14168,9 @@ function estiloLimpo(parte, chave, v){
   /* a letra da intro nao e uma das de data/fontes.json: e uma das oferecidas em data/fontes_intro.json, pelo id exato
      (o render.letra_da_intro() tambem recusa um "Bernard" com maiuscula) */
   if(parte === "intro" && chave === "fonte") return (typeof v === "string" && estiloLetraDaIntro(v.trim())) ? v.trim() : null;
+  /* a posicao das legendas: {dx, dy, alinhamento} inteiro e limpo, como o render._posicao_do_estilo() (o que nao
+     presta fica 0 ou "centro"); null so se nem for um objeto */
+  if(parte === "legenda" && chave === "posicao") return legPosicaoLimpa(v);
   if(chave === "fonte") return (typeof v === "string" && estiloFonte(v.trim())) ? v.trim() : null;
   if(parte === "contador" && estiloEscolhaDoContador(chave)) return typeof v === "boolean" ? v : null;
   var faixa = ESTILO_CORPOS[parte + "." + chave];
@@ -13382,6 +14189,7 @@ function estiloLimpo(parte, chave, v){
    barra os poe nos 0,647 (estiloValorDoCampo). */
 function estiloIgualHoje(parte, chave, limpo){
   if(parte === "legenda" && chave === "fundo") return Math.round(limpo * 255) === ESTILO_ALFA_HOJE;
+  if(parte === "legenda" && chave === "posicao") return !limpo || (!limpo.dx && !limpo.dy && limpo.alinhamento === "centro");
   return limpo === ESTILO_OMISSAO[parte][chave];
 }
 function estiloValor(parte, chave){
@@ -13404,10 +14212,545 @@ function estiloPoe(parte, chave, valor){
     if(novo[parte]){ delete novo[parte][chave]; if(!Object.keys(novo[parte]).length) delete novo[parte]; }
   } else {
     novo[parte] = novo[parte] || {};
-    novo[parte][chave] = limpo;
+    /* a posicao vai so com o que difere de {0, 0, "centro"}, como o render.normalizar_estilo() a guarda */
+    novo[parte][chave] = parte === "legenda" && chave === "posicao" ? legPosicaoCompacta(limpo) : limpo;
   }
   if(Object.keys(novo).length) est.estilo = novo; else delete est.estilo;
   return true;
+}
+
+/* ---------- as legendas de 3 de outubro: a posicao, numa so linha, e as fotos inteiras do lado a lado ----------
+   O Tiago, a 3 de outubro, de madrugada (saida/discussao/contrato_1003.md, pontos 2, 3 e 4): "Na foto na posicao
+   10, meter a legenda numa so linha, sem alterar o tamanho da letra", "Permite-me ajustar o posicionamento das
+   legendas, cima, baixo, direita, esquerda" e "Quando meto lado a lado esta a focar em excesso, acabando por cortar
+   pessoas".
+   - est.estilo.legenda.posicao = {dx, dy, alinhamento}: todas as legendas de baixo (a das fotos, a dos videos, a
+     dos grupos e a que muda com cada foto). dx de -600 a 600, positivo para a direita; dy de -500 a 0, negativo
+     para cima: a legenda nunca desce abaixo de hoje, pelo overscan do projetor. O alinhamento e centro (a
+     omissao), esquerda ou direita. A faixa escura sobe com o texto e continua de borda a borda.
+   - clip.lp = {dx, dy}: soma-se a de todas, so neste clip, e o total fica nos mesmos limites.
+   - clip.x1 = true: a legenda deste clip numa so linha, no corpo do estilo, se couber na largura util (1660 px);
+     se nao couber parte-se como hoje, e a Mesa e o render dizem quanto precisa.
+   - clip.li = true: no lado a lado, cada foto inteira na sua celula, encaixada, com a propria foto desfocada por
+     tras (render.lado_inteira); sem ele enche a celula e corta, e a Mesa diz quanto (render.lado_corte).
+   SEM NENHUMA DESTAS CHAVES A MESA E O QUE ELA GRAVA FICAM IGUAIS. As contas sao as do render.py, com os nomes de
+   la (posicao_da_legenda, dx_efetivo, x_das_linhas, legenda_numa_linha, linhas_legenda, lado_celulas, lado_corte),
+   e o teste_legendas_1003_como_o_render compara-as com as dele. As larguras das linhas medem-se no browser, como
+   a Mesa sempre as mediu: no limite, uma legenda pode caber numa linha aqui e nao no render, e o montar diz. */
+var LEGENDA_LADO = 130;                                   /* render.LEGENDA_MARGEM_LADO: a largura util e L - 260 */
+var LEG_POS = {dx: [-600, 600], dy: [-500, 0], lpDx: [-1200, 1200], lpDy: [-500, 500],   /* POSICAO_DX, POSICAO_DY, LP_DX, LP_DY */
+               alinhamentos: ["centro", "esquerda", "direita"], passo: 10};             /* POSICAO_ALINHAMENTOS */
+var LADO_CORTE_AVISO = 0.25;                              /* render.LADO_CORTE_AVISO */
+var LADO_FOLGA_PX = 8;                                    /* render.LADO_FOLGA, a linha preta entre as celulas */
+var LADO_INTEIRA = {desfoque: 46, brilho: 0.55};          /* render.lado_inteira: GaussianBlur(46) e 55% sobre preto */
+var PISO_DA_LEGENDA = 0.25;                               /* render.PISO_MINIMO_DA_LEGENDA */
+
+/* um numero de pixeis como inteiro, o render._inteiro_com_sinal(): -40, -40.0 e "-40" valem; o booleano nao */
+function legInteiro(v){
+  if(typeof v === "boolean" || v === null || v === undefined) return null;
+  if(typeof v === "string"){ v = v.trim(); return /^[-+]?\d+$/.test(v) ? parseInt(v, 10) : null; }
+  return typeof v === "number" && isFinite(v) && Math.floor(v) === v ? v : null;
+}
+/* a posicao de todas as legendas, inteira e limpa: {dx, dy, alinhamento}; um campo que nao presta fica 0 ou "centro",
+   como no render._posicao_do_estilo() (que avisa); null se nem for um objeto */
+function legPosicaoLimpa(v){
+  if(!v || typeof v !== "object" || Array.isArray(v)) return null;
+  var r = {dx: 0, dy: 0, alinhamento: "centro"};
+  [["dx", LEG_POS.dx], ["dy", LEG_POS.dy]].forEach(function(x){
+    var n = legInteiro(v[x[0]]);
+    if(n !== null && n >= x[1][0] && n <= x[1][1]) r[x[0]] = n;
+  });
+  if(LEG_POS.alinhamentos.indexOf(v.alinhamento) >= 0) r.alinhamento = v.alinhamento;
+  return r;
+}
+/* so o que difere de {0, 0, "centro"}, como o render a guarda */
+function legPosicaoCompacta(p){
+  var r = {};
+  if(p && p.dx) r.dx = p.dx;
+  if(p && p.dy) r.dy = p.dy;
+  if(p && p.alinhamento && p.alinhamento !== "centro") r.alinhamento = p.alinhamento;
+  return r;
+}
+/* "40 px acima, 20 px à direita, encostada à esquerda", ou "no sítio de hoje" */
+function legPosicaoTexto(p){
+  var t = [];
+  if(p.dy < 0) t.push((-p.dy) + " px acima");
+  if(p.dy > 0) t.push(p.dy + " px abaixo");
+  if(p.dx > 0) t.push(p.dx + " px à direita");
+  if(p.dx < 0) t.push((-p.dx) + " px à esquerda");
+  if(p.alinhamento === "esquerda") t.push("encostada à esquerda");
+  if(p.alinhamento === "direita") t.push("encostada à direita");
+  return t.length ? t.join(", ") : "no sítio de hoje, ao centro";
+}
+/* o lp do clip como o render.ler_opcoes_clip() o le: fora de LP_DX ou de LP_DY, ou mal escrito, vale 0 */
+function lpDoClip(c){
+  var lp = c && c.lp && typeof c.lp === "object" && !Array.isArray(c.lp) ? c.lp : {};
+  var dx = legInteiro(lp.dx === undefined ? 0 : lp.dx), dy = legInteiro(lp.dy === undefined ? 0 : lp.dy);
+  return {dx: dx !== null && dx >= LEG_POS.lpDx[0] && dx <= LEG_POS.lpDx[1] ? dx : 0,
+          dy: dy !== null && dy >= LEG_POS.lpDy[0] && dy <= LEG_POS.lpDy[1] ? dy : 0};
+}
+/* o x1 e o li valem so com true, como no render (ler_opcoes_clip: `is True`) */
+function x1Do(c){ return !!c && c.x1 === true; }
+function liDo(c){ return !!c && c.li === true; }
+/* NO PALCO, QUE MOSTRA O FILME, so vale o que o render ja le (RENDER_LE, do gerar_mesa.o_que_o_render_le): ate la o filme
+   sai como esta, e o palco tambem. O inspetor e a amostra do Estilo mostram sempre a escolha, e dizem que ainda nao chega. */
+function x1NoFilme(c){ return x1Do(c) && RENDER_LE.numa_linha !== false; }
+function liNoFilme(c){ return liDo(c) && RENDER_LE.fotos_inteiras !== false; }
+/* o render.posicao_da_legenda(): a de todas mais a do clip, nos limites. Com `filme` (o palco), so o que o render ja le. */
+function legPosicao(c, filme){
+  var p = filme && RENDER_LE.legenda_posicao === false ? {dx: 0, dy: 0, alinhamento: "centro"} : estiloValor("legenda", "posicao");
+  var lp = filme && RENDER_LE.posicao_clip === false ? {dx: 0, dy: 0} : lpDoClip(c);
+  return {dx: Math.min(LEG_POS.dx[1], Math.max(LEG_POS.dx[0], p.dx + lp.dx)),
+          dy: Math.min(LEG_POS.dy[1], Math.max(LEG_POS.dy[0], p.dy + lp.dy)), alinhamento: p.alinhamento};
+}
+/* o render.dx_efetivo(): o dx que o bloco das linhas anda de facto, ate tocar numa das margens */
+function legDxEfetivo(larguras, dx, al){
+  var folga = Math.max(0, (1920 - 2 * LEGENDA_LADO) - (larguras.length ? Math.max.apply(null, larguras) : 0));
+  if(al === "esquerda") return Math.min(folga, Math.max(0, dx));
+  if(al === "direita") return Math.max(-folga, Math.min(0, dx));
+  return Math.min(folga / 2, Math.max(-folga / 2, dx));
+}
+/* o render.x_das_linhas(): o x da esquerda de cada linha */
+function legXs(larguras, dx, al){
+  var d = legDxEfetivo(larguras, dx, al);
+  return larguras.map(function(w){
+    return al === "esquerda" ? LEGENDA_LADO + d : al === "direita" ? 1920 - LEGENDA_LADO - w + d : (1920 - w) / 2 + d;
+  });
+}
+/* o texto numa so linha: as mudancas de linha escritas tambem se juntam, como no render */
+function legJunta(texto){ return String(texto == null ? "" : texto).split(/\s+/).filter(Boolean).join(" "); }
+/* o render.legenda_numa_linha(): {cabe, precisa, ha} na letra e no corpo do estilo */
+function legNumaLinha(texto, tamanho){
+  var f = estiloLetra("legenda"), tam = tamanho || estiloValor("legenda", "tamanho"), linha = legJunta(texto);
+  var precisa = linha ? Math.ceil(estiloMede(linha, f, tam) - 1e-9) : 0, ha = 1920 - 2 * LEGENDA_LADO;
+  return {cabe: precisa <= ha, precisa: precisa, ha: ha};
+}
+/* o render.linhas_legenda(): {f, tam, linhas, uma}. Desce de 4 em 4 ate caber em 4 linhas, nunca abaixo do minimo
+   proporcional; com `uma` (o clip.x1) e o texto todo numa linha no corpo pedido, se couber */
+function legLinhas(texto, tamanho, uma){
+  var f = estiloLetra("legenda"), tam0 = tamanho || estiloValor("legenda", "tamanho"), larg = 1920 - 2 * LEGENDA_LADO;
+  if(uma){
+    var linha = legJunta(texto);
+    if(linha && estiloMede(linha, f, tam0) <= larg) return {f: f, tam: tam0, linhas: [linha], uma: true};
+  }
+  var tam = tam0, minimo = Math.floor(tam0 * 30 / 46 + 0.5), linhas = estiloQuebra(texto, f, tam, larg);
+  while(linhas.length > 4 && tam > minimo){ tam = Math.max(minimo, tam - 4); linhas = estiloQuebra(texto, f, tam, larg); }
+  return {f: f, tam: tam, linhas: linhas, uma: false};
+}
+/* A LEGENDA NUM CANVAS DE 1920 x 1080, como o render.faixa_texto(): a faixa escura de borda a borda, da almofada (26
+   acima das linhas) ate 34 do fundo; as linhas a 1,35 do corpo, a acabar a 70 do fundo; a faixa e o texto sobem o
+   dy juntos, e as linhas andam o dx, alinhadas como pedido. `c` e o clip (o x1 e o lp), ou null para a de todas.
+   `l` sao as linhas, se ja vierem feitas (o palco guarda-as), e `filme` diz que e o palco (so o que o render ja le). Sem
+   posicao e o desenho de sempre. */
+function legDesenha(ctx, texto, c, l, filme){
+  l = l || legLinhas(texto, null, filme ? x1NoFilme(c) : x1Do(c));
+  var pos = legPosicao(c, filme), alt = Math.floor(l.tam * 1.35), topo = 1080 - 70 - alt * l.linhas.length;
+  ctx.fillStyle = "rgba(0,0,0," + (Math.round(estiloValor("legenda", "fundo") * 255) / 255).toFixed(3) + ")";
+  ctx.fillRect(0, topo - 26 + pos.dy, 1920, (1080 - 34) - (topo - 26) + 1);
+  ctx.font = estiloCss(l.f, l.tam); ctx.fillStyle = estiloValor("legenda", "cor"); ctx.textBaseline = "alphabetic";
+  var asc = estiloAscendente(ctx, l.tam);
+  if(!pos.dx && pos.alinhamento === "centro"){
+    ctx.textAlign = "center";
+    l.linhas.forEach(function(ln, i){ ctx.fillText(ln, 960, topo + pos.dy + i * alt + asc); });
+  } else {
+    var xs = legXs(l.linhas.map(function(ln){ return ctx.measureText(ln).width; }), pos.dx, pos.alinhamento);
+    ctx.textAlign = "left";
+    l.linhas.forEach(function(ln, i){ ctx.fillText(ln, xs[i], topo + pos.dy + i * alt + asc); });
+  }
+  return l;
+}
+/* A LEGENDA EM HTML (a dos grupos no palco): {estilo, html} para o <span class="legenda">. O dy vai na --leg-sobe, que
+   a .legenda soma ao sitio dela (e o offsetTop ve, para as fotos dos grupos ficarem acima, como o livre_ate do
+   render); o dx anda o texto por dentro da faixa, que fica de borda a borda; o x1 junta as linhas. `escala` e a do
+   tamanho dos textos da opcao «na legenda de baixo» (1 na legenda do grupo). Sem posicao e sem x1 e o de sempre:
+   o texto tal e qual e nenhum estilo a mais. */
+function legDom(texto, c, escala){
+  var tam = Math.round(estiloValor("legenda", "tamanho") * (escala || 1));
+  var pos = legPosicao(c, true), uma = x1NoFilme(c) ? legLinhas(texto, tam, true) : null, junta = !!(uma && uma.uma);
+  var r = {estilo: "", html: esc(texto)};
+  if(pos.dy) r.estilo += "--leg-sobe:" + (-pos.dy) + "px;";
+  if(pos.alinhamento !== "centro") r.estilo += "text-align:" + (pos.alinhamento === "esquerda" ? "left" : "right") + ";";
+  if(pos.dx || junta){
+    var l = junta ? uma : legLinhas(texto, tam, false);
+    var d = legDxEfetivo(l.linhas.map(function(ln){ return estiloMede(ln, l.f, l.tam); }), pos.dx, pos.alinhamento);
+    r.html = '<span class="legTxt" style="' + (d ? "left:calc(" + d.toFixed(1) + "px * var(--palco-k,.7));" : "") +
+      (junta ? "white-space:nowrap;" : "") + '">' + esc(junta ? uma.linhas[0] : texto) + '</span>';
+  }
+  return r;
+}
+/* o <span class="legenda"> de um texto, com a posicao e o x1 do clip; `classes` e `estiloMais` sao os da troca de
+   textos da opcao «na legenda de baixo» */
+function legSpan(texto, c, classes, estiloMais, escala){
+  var d = legDom(texto, c, escala), st = (estiloMais || "") + d.estilo;
+  return '<span class="legenda' + (classes || "") + '"' + (st ? ' style="' + st + '"' : "") + '>' + d.html + '</span>';
+}
+/* ATE ONDE AS FOTOS DE UM GRUPO DESCEM, com a legenda subida: o render.piso_da_legenda() com o piso que o
+   preparar_monte() conta (metade do ecra sem posicao; com ela, a metade sobe com a legenda, nunca acima de um quarto) */
+function legPisoDoGrupo(c, H){
+  var dy = legPosicao(c, true).dy;
+  return dy === 0 ? 0.5 * H : Math.max(PISO_DA_LEGENDA * H, 0.5 * H + dy * H / 1080);
+}
+
+/* O LADO A LADO: as celulas e quanto o enchimento de hoje corta */
+/* o render.lado_celulas(): [x, y, w, h] de cada celula a 1920 x 1080 */
+function ladoCelulas(lay){
+  var W = 1920, H = 1080, g = LADO_FOLGA_PX, w, h, cw, ch, meio;
+  if(lay === "2v"){ w = Math.floor((W - g) / 2); return [[0, 0, w, H], [W - w, 0, w, H]]; }
+  if(lay === "3v"){ w = Math.floor((W - 2 * g) / 3); return [[0, 0, w, H], [w + g, 0, W - 2 * (w + g), H], [W - w, 0, w, H]]; }
+  if(lay === "4q"){
+    w = Math.floor((W - g) / 2); h = Math.floor((H - g) / 2);
+    return [[0, 0, w, h], [W - w, 0, w, h], [0, H - h, w, h], [W - w, H - h, w, h]];
+  }
+  if(lay === "3s"){
+    w = Math.floor((W - g) / 2); cw = Math.floor(W * 0.46); ch = Math.floor(H * 0.66);
+    return [[0, 0, w, H], [W - w, 0, w, H], [Math.floor((W - cw) / 2), Math.floor((H - ch) / 2), cw, ch]];
+  }
+  if(lay === "6g"){
+    w = Math.floor((W - 2 * g) / 3); h = Math.floor((H - g) / 2); meio = W - 2 * (w + g);
+    return [[0, 0, w, h], [w + g, 0, meio, h], [W - w, 0, w, h], [0, H - h, w, h], [w + g, H - h, meio, h], [W - w, H - h, w, h]];
+  }
+  return [];
+}
+/* o render.lado_corte(): a fracao de cada foto que o enchimento de hoje deixa de fora, de 0 a 1, pela ordem das
+   celulas, ou null sem as medidas da foto. A foto cresce ate cobrir a celula e o que passa corta-se: 1 - min(r, 1/r),
+   com r a razao entre a forma da foto e a da celula. Nao conta o zoom lento (mais 4% no fim) nem o ponto de foco, que
+   so escolhe o que se corta. O cartao do meio do 3s vai inteiro e da 0. */
+function ladoCorte(lay, tamanhos){
+  return ladoCelulas(lay).map(function(cel, k){
+    var t = tamanhos[k];
+    if(!t || !t[0] || !t[1]) return null;
+    if(lay === "3s" && k === 2) return 0;
+    var r = (t[0] / t[1]) / (cel[2] / cel[3]);
+    return 1 - Math.min(r, 1 / r);
+  });
+}
+function ladoCorteDoClip(c){
+  return ladoCorte(c.lay, (c.fotos || []).map(function(id){ var f = porId[id]; return f && f.w && f.h ? [f.w, f.h] : null; }));
+}
+/* "38 %": a percentagem como o inspetor a diz */
+function ladoPct(x){ return Math.round(x * 100) + " %"; }
+/* as fotos do clip que o enchimento de hoje corta acima do aviso: [{k, corte}] (vazio com as fotos inteiras) */
+function ladoCortadas(c){
+  if(!c || c.t !== "lado" || liDo(c)) return [];
+  var r = [], n = (c.fotos || []).length;
+  ladoCorteDoClip(c).forEach(function(x, k){ if(x !== null && k < n && x > LADO_CORTE_AVISO + 1e-9) r.push({k: k, corte: x}); });
+  return r;
+}
+/* o aviso do inspetor e do Validar para um lado a lado que corta de mais */
+function avisoLadoCorta(c){
+  var l = ladoCortadas(c);
+  if(!l.length) return "";
+  var ditas = l.map(function(x){ return "a foto " + (x.k + 1) + " fica " + ladoPct(x.corte) + " de fora"; });
+  var frase = ditas.length > 1 ? ditas.slice(0, -1).join(", ") + " e " + ditas[ditas.length - 1] : ditas[0];
+  return frase.charAt(0).toUpperCase() + frase.slice(1) +
+    " com o enchimento de hoje: pode estar a cortar pessoas. «Fotos inteiras» mostra-as todas, sem cortar.";
+}
+/* O AVISO DA LEGENDA NUMA SO LINHA QUE NAO CABE, com as palavras do contrato: «a legenda do clip N nao cabe numa linha:
+   precisa de P px e ha U px». Na opcao «na legenda de baixo» de um grupo contam tambem os textos de cada foto, no
+   tamanho deles. */
+function avisosNumaLinha(v, i){
+  var c = v && v.clips[i];
+  if(!x1Do(c)) return [];
+  /* as legendas que o clip mostra, como o render.legendas_do_clip(): na opcao «na legenda de baixo» (fora do mergulho,
+     que so leva a do clip) e o texto de cada foto, ou o do grupo nas que nao tem, no tamanho escolhido */
+  var grupo = String(c.x || "").trim(), textos = [[grupo, null]];
+  if(eGrupo(c) && modoTextos(c) === "legenda" && temTextosFotos(c) && !(c.t === "colagem" && estiloDe(c) === "mergulho"))
+    textos = textosDasFotos(c).map(function(t){ return [String(t || "").trim() || grupo, tamanhoTextos(c)]; });
+  var vistos = {}, r = [];
+  textos.forEach(function(x){
+    if(!x[0] || vistos[x[0]]) return;
+    vistos[x[0]] = 1;
+    var m = legNumaLinha(x[0], x[1]);
+    if(!m.cabe) r.push({texto: x[0], t: "A legenda do clip " + (i + 1) + " não cabe numa linha: precisa de " + m.precisa + " px e há " +
+      m.ha + " px. O filme parte-a como hoje."});
+  });
+  return r;
+}
+
+/* ---------- as legendas de 3 de outubro: o inspetor de cada clip ----------
+   A LEGENDA DESTE CLIP, logo a seguir ao texto: «Numa só linha» (clip.x1) e a posicao so dele (clip.lp), com quatro
+   setas de 10 px e o «Repor». So nos clips com legenda de baixo (as fotos, os videos e os grupos). Diz sempre o que
+   o filme vai fazer com as medidas de agora, e o que ainda nao chega ao filme (RENDER_LE). Nunca muda o texto (083).
+   E AS FOTOS INTEIRAS, nos clips lado a lado: a escolha (clip.li) e quanto cada foto perde com o enchimento de hoje.
+   Tudo passa pelo anular (guardaDesfazerCampos) e pela gravacao de sempre (marcar). */
+function temLegendaDeBaixo(c){ return !!c && (c.t === "foto" || c.t === "video" || eGrupo(c)); }
+/* o texto da legenda de baixo do clip (a do grupo, ou o primeiro texto da opcao «na legenda de baixo») */
+function textoDaLegendaDoClip(c){
+  var x = String((c && c.x) || "").trim();
+  if(x || !eGrupo(c) || modoTextos(c) !== "legenda") return x;
+  return textosDasFotos(c).map(function(t){ return String(t || "").trim(); }).filter(Boolean)[0] || "";
+}
+/* o que se diz por baixo do «Numa só linha» */
+function notaNumaLinha(v, i){
+  var c = v.clips[i], x = textoDaLegendaDoClip(c), le = RENDER_LE.numa_linha;
+  if(!x) return x1Do(c) ? "Este clip ainda não tem legenda: quando a escreveres, fica numa linha se couber." : "Este clip não tem legenda.";
+  var falta = le === false ? " Ainda não chega ao filme: fica guardado, mas o render de hoje parte a legenda como está." : "";
+  if(x1Do(c)){
+    var av = avisosNumaLinha(v, i);
+    if(av.length) return av.map(function(a){ return a.t; }).join(" ") + falta;
+    var m = legNumaLinha(x);
+    return "Fica numa linha: precisa de " + m.precisa + " px e há " + m.ha + " px." + legNoLimite(m) + falta;
+  }
+  var n = legLinhas(x, null, false).linhas.length;
+  if(n <= 1) return "Já cabe numa linha.";
+  var m2 = legNumaLinha(x);
+  return "Hoje parte-se em " + n + " linhas. " + (m2.cabe ? "Numa linha cabe: precisa de " + m2.precisa + " px e há " + m2.ha + " px." + legNoLimite(m2)
+    : "Numa linha não cabe: precisa de " + m2.precisa + " px e há " + m2.ha + " px, e o filme parte-a como hoje.");
+}
+/* A MEDIDA E A DO BROWSER, e o render mede com a letra do PC dele: na legenda do clip 10 da leitura 66 (Playfair a 59)
+   a Mesa deu 1741 px e o render 1762. Uma linha que cabe por menos de 3% pode nao caber no render, e diz-se. */
+function legNoLimite(m){
+  return m.cabe && m.precisa > m.ha * 0.97 ? " Está no limite: o render mede com a letra do PC dele e pode dar mais uns píxeis; se não couber, parte-a como hoje e o montar diz." : "";
+}
+/* o «Numa só linha» ligado numa legenda que nao cabe: a nota fica com a cor dos avisos */
+function x1NaoCabe(v, i){ return avisosNumaLinha(v, i).length > 0; }
+/* o que se diz por baixo das setas */
+function notaPosicaoDoClip(c){
+  var lp = lpDoClip(c), todas = estiloValor("legenda", "posicao"), pos = legPosicao(c);
+  var falta = RENDER_LE.posicao_clip === false && (lp.dx || lp.dy) ? " Ainda não chega ao filme: fica guardada, mas o render de hoje põe-na no sítio de todas." : "";
+  if(!lp.dx && !lp.dy)
+    return "No sítio de todas as legendas: " + legPosicaoTexto(todas) + ". Para mudar todas, é no Estilo, aba Legendas.";
+  var soma = {dx: todas.dx + lp.dx, dy: todas.dy + lp.dy};
+  var preso = soma.dx !== pos.dx || soma.dy !== pos.dy;
+  return "Esta legenda fica " + legPosicaoTexto({dx: lp.dx, dy: lp.dy, alinhamento: "centro"}).replace(", ao centro", "") +
+    " em relação às outras; no filme, " + legPosicaoTexto(pos) + "." +
+    (preso ? " Chegou ao limite: nunca abaixo do sítio de hoje, por causa do projetor, nem mais de 500 px acima, nem 600 px para cada lado." : "") + falta;
+}
+/* as setas que ja nao andam, pelos limites do total (a de todas mais a do clip) */
+function lpSetaParada(c, seta){
+  var pos = legPosicao(c), lp = lpDoClip(c), t = estiloValor("legenda", "posicao");
+  if(seta === "cima") return t.dy + lp.dy <= LEG_POS.dy[0] || lp.dy <= LEG_POS.lpDy[0];
+  if(seta === "baixo") return t.dy + lp.dy >= LEG_POS.dy[1] || lp.dy >= LEG_POS.lpDy[1];
+  if(seta === "esq") return t.dx + lp.dx <= LEG_POS.dx[0] || lp.dx <= LEG_POS.lpDx[0];
+  return pos && (t.dx + lp.dx >= LEG_POS.dx[1] || lp.dx >= LEG_POS.lpDx[1]);
+}
+function blocoLegendaDoClip(v, c){
+  var i = v.clips.indexOf(c), lp = lpDoClip(c);
+  var seta = function(s, txt, rot){
+    return '<button type="button" class="bt pequeno legSeta" data-lpseta="' + s + '" aria-label="' + rot + '"' +
+      (lpSetaParada(c, s) ? ' disabled' : '') + '>' + txt + '</button>';
+  };
+  return '<div class="campo legClip" id="legClip"><label>A legenda deste clip</label>' +
+    '<label class="legX1"><input type="checkbox" id="legX1"' + (x1Do(c) ? ' checked' : '') + '> Numa só linha, com a letra do mesmo tamanho</label>' +
+    '<div class="focoAjuda' + (x1NaoCabe(v, i) ? ' somAviso' : '') + '" id="legX1Nota" aria-live="polite">' + esc(notaNumaLinha(v, i)) + '</div>' +
+    '<div class="legPos"><span class="legPosRot">Mexer só esta</span>' +
+      '<span class="legSetas" role="group" aria-label="Mexer só a legenda deste clip, 10 px de cada vez">' +
+        seta("cima", "▲", "Subir 10 px") + seta("baixo", "▼", "Descer 10 px") + seta("esq", "◀", "10 px para a esquerda") + seta("dir", "▶", "10 px para a direita") +
+      '</span>' +
+      '<button type="button" class="bt pequeno" id="legRepor"' + (lp.dx || lp.dy ? '' : ' hidden') + '>Repor</button></div>' +
+    '<div class="focoAjuda" id="legPosNota" aria-live="polite">' + esc(notaPosicaoDoClip(c)) + '</div></div>';
+}
+/* depois de uma mexida, sem repintar o inspetor (o foco fica na seta, para tocar outra vez) */
+function atualizaLegendaDoClip(v, c){
+  var i = v ? v.clips.indexOf(c) : -1;
+  if(i < 0) return;
+  var n = document.getElementById("legX1Nota"); if(n){ n.textContent = notaNumaLinha(v, i); n.classList.toggle("somAviso", x1NaoCabe(v, i)); }
+  var p = document.getElementById("legPosNota"); if(p) p.textContent = notaPosicaoDoClip(c);
+  var lp = lpDoClip(c), r = document.getElementById("legRepor"); if(r) r.hidden = !(lp.dx || lp.dy);
+  document.querySelectorAll("#legClip [data-lpseta]").forEach(function(b){ b.disabled = lpSetaParada(c, b.getAttribute("data-lpseta")); });
+  var x = document.getElementById("legX1"); if(x) x.checked = x1Do(c);
+}
+/* o lp com os dois campos, ou sem lp nenhum no sitio de todas */
+function lpPoe(c, dx, dy){
+  if(!dx && !dy) delete c.lp; else c.lp = {dx: dx, dy: dy};
+}
+/* UMA SETA: 10 px, sem passar os limites do total. Toques seguidos no mesmo clip sao uma entrada do anular, como o - e
+   o + dos tamanhos no Estilo. Devolve se mexeu. */
+var lpUltimoToque = {c: null, em: 0};
+function lpPasso(c, seta){
+  var t = estiloValor("legenda", "posicao"), lp = lpDoClip(c), n = LEG_POS.passo, dx = lp.dx, dy = lp.dy;
+  if(seta === "cima") dy -= n; else if(seta === "baixo") dy += n; else if(seta === "esq") dx -= n; else if(seta === "dir") dx += n; else return false;
+  dy = Math.max(Math.max(LEG_POS.lpDy[0], LEG_POS.dy[0] - t.dy), Math.min(Math.min(LEG_POS.lpDy[1], LEG_POS.dy[1] - t.dy), dy));
+  dx = Math.max(Math.max(LEG_POS.lpDx[0], LEG_POS.dx[0] - t.dx), Math.min(Math.min(LEG_POS.lpDx[1], LEG_POS.dx[1] - t.dx), dx));
+  var bruto = c.lp && typeof c.lp === "object" ? c.lp : null;
+  if(dx === lp.dx && dy === lp.dy && !(bruto && (bruto.dx !== lp.dx || bruto.dy !== lp.dy))) return false;
+  if(lpUltimoToque.c !== c || Date.now() - lpUltimoToque.em > 1500) guardaDesfazerCampos("mexer a legenda deste clip", c, ["lp"]);
+  lpUltimoToque = {c: c, em: Date.now()};
+  lpPoe(c, dx, dy);
+  return true;
+}
+function lpRepor(c){
+  if(c.lp === undefined) return false;
+  guardaDesfazerCampos("repor a legenda deste clip no sítio de todas", c, ["lp"]);
+  lpUltimoToque = {c: null, em: 0};
+  delete c.lp;
+  return true;
+}
+function x1Poe(c, sim){
+  if(x1Do(c) === !!sim && (sim || c.x1 === undefined)) return false;
+  guardaDesfazerCampos(sim ? "pôr a legenda numa só linha" : "deixar a legenda partir como hoje", c, ["x1"]);
+  if(sim) c.x1 = true; else delete c.x1;
+  return true;
+}
+function liPoe(c, sim){
+  if(liDo(c) === !!sim && (sim || c.li === undefined)) return false;
+  guardaDesfazerCampos(sim ? "pôr as fotos inteiras" : "pôr as fotos a encher a célula, como está", c, ["li"]);
+  if(sim) c.li = true; else delete c.li;
+  return true;
+}
+function ligaLegendaDoClip(v, c){
+  var bloco = document.getElementById("legClip");
+  if(bloco && c){
+    var x = document.getElementById("legX1");
+    if(x) x.addEventListener("change", function(){ if(x1Poe(c, x.checked)){ atualizaLegendaDoClip(v, c); pintaClips(); marcar(); } });
+    bloco.querySelectorAll("[data-lpseta]").forEach(function(b){
+      b.addEventListener("click", function(){ if(lpPasso(c, b.getAttribute("data-lpseta"))){ atualizaLegendaDoClip(v, c); pintaClips(); marcar(); } });
+    });
+    var r = document.getElementById("legRepor");
+    if(r) r.addEventListener("click", function(){
+      if(lpRepor(c)){ atualizaLegendaDoClip(v, c); pintaClips(); marcar(); avisar("A legenda voltou ao sítio de todas. Ctrl+Z para anular."); }
+    });
+  }
+  var li = document.getElementById("ladoInteiras");
+  if(li && c) li.querySelectorAll("[data-li]").forEach(function(b){
+    b.addEventListener("click", function(){ if(liPoe(c, b.getAttribute("data-li") === "1")){ pintaClips(); pintaInspetor(); marcar(); } });
+  });
+}
+/* AS FOTOS INTEIRAS, no inspetor do lado a lado */
+function blocoFotosInteiras(c){
+  var li = liDo(c), av = avisoLadoCorta(c);
+  var opcao = function(sim, txt){
+    return '<button type="button" class="pessoa' + (li === sim ? ' on' : '') + '" role="radio" aria-checked="' + (li === sim) + '" data-li="' + (sim ? 1 : 0) + '">' + txt + '</button>';
+  };
+  return '<div class="campo" id="ladoInteiras"><label>As fotos nas células</label>' +
+    '<div class="pessoas" role="radiogroup" aria-label="As fotos nas células">' + opcao(false, "Como está: enchem e cortam") + opcao(true, "Fotos inteiras") + '</div>' +
+    '<div class="focoAjuda">' + (li
+      ? "Cada foto entra inteira na sua célula, sem cortar, com a própria foto desfocada e mais escura por trás, como as fotos encaixadas de hoje."
+      : "Cada foto enche a sua célula e o que sobra corta-se. Ao lado de cada foto, quanto fica de fora.") + '</div>' +
+    (av ? '<div class="focoAjuda somAviso" id="ladoCortaAviso">' + esc(av) + '</div>' : '') +
+    (li && RENDER_LE.fotos_inteiras === false ? '<div class="focoAjuda somAviso">«Fotos inteiras» ainda não chega ao filme: fica guardada, mas o render de hoje enche as células e corta, como está.</div>' : '') +
+    '</div>';
+}
+/* o que fica de fora de uma foto, por baixo do nome dela na lista */
+function ladoCorteDaFoto(c, x, k){
+  if(c.lay === "3s" && k === 2) return '<small class="ladoCorta">inteira, no cartão do meio</small>';
+  if(liDo(c)) return '<small class="ladoCorta">inteira' + (x ? ' (como está, ' + ladoPct(x) + ' ficava de fora)' : '') + '</small>';
+  if(x === null || x === undefined) return '';
+  if(x < 0.005) return '<small class="ladoCorta">não corta nada</small>';
+  return '<small class="ladoCorta' + (x > LADO_CORTE_AVISO + 1e-9 ? ' somAviso' : '') + '">fica ' + ladoPct(x) + ' de fora</small>';
+}
+
+/* ---------- o estilo: a posicao das legendas (3 de outubro, contrato_1003, ponto 3) ----------
+   Na aba Legendas, por baixo da faixa: quatro setas de 10 px, duas barras (subir de 0 a 500 e para o lado de -600 a
+   600) e o alinhamento. Grava est.estilo.legenda.posicao so com o que difere de hoje ({dy: -40}), pelo anular e pela
+   gravacao de sempre; «Como está (original)» das legendas tambem a tira. Toques seguidos nas setas e a mesma barra a
+   ser arrastada sao uma so entrada do anular, como o - e o + dos tamanhos. */
+function estiloHtmlPosicao(){
+  var p = estiloValor("legenda", "posicao");
+  var seta = function(s, txt, rot){ return '<button type="button" class="bt pequeno estSeta" data-eseta="' + s + '" aria-label="' + rot + '">' + txt + '</button>'; };
+  var alinha = function(a, txt){
+    return '<button type="button" role="radio" data-ealinha="' + a + '" aria-checked="' + (p.alinhamento === a) + '">' + txt + '</button>';
+  };
+  return '<h4 class="estSec">Posição</h4>' +
+    '<div class="estCampo">' + estiloRot("legenda", "posicao", "Onde ficam", "est_legenda_pos_dy").replace('class="estRot"', 'class="estRot estRotPos"') +
+      '<div class="estSetas" role="group" aria-label="Mexer todas as legendas, 10 px de cada vez">' +
+        seta("cima", "▲ Cima", "Subir 10 px") + seta("baixo", "▼ Baixo", "Descer 10 px") +
+        seta("esq", "◀ Esquerda", "10 px para a esquerda") + seta("dir", "▶ Direita", "10 px para a direita") + '</div>' +
+      '<div class="estLinha estLinhaPos"><span class="estPosRot">Subir</span><input type="range" id="est_legenda_pos_dy" data-epos="dy" min="0" max="' + (-LEG_POS.dy[0]) +
+        '" step="2" value="' + (-p.dy) + '" aria-label="Quanto sobem, em pixéis"></div>' +
+      '<div class="estLinha estLinhaPos"><span class="estPosRot">Para o lado</span><input type="range" id="est_legenda_pos_dx" data-epos="dx" min="' + LEG_POS.dx[0] +
+        '" max="' + LEG_POS.dx[1] + '" step="2" value="' + p.dx + '" aria-label="Quanto andam para a direita, em pixéis"></div>' +
+      '<span class="estAjuda">Sobem até 500 px; nunca descem abaixo de onde estão hoje, por causa do projetor. Para o lado, até 600 px; uma legenda comprida encosta à margem e anda menos. A faixa escura sobe com o texto e vai de lado a lado.</span></div>' +
+    '<div class="estCampo"><div class="estRot"><label>Alinhamento</label></div>' +
+      '<span class="estSeg estSegAlinha" role="radiogroup" aria-label="Alinhamento das legendas">' +
+        alinha("centro", "Ao centro, como está") + alinha("esquerda", "À esquerda") + alinha("direita", "À direita") + '</span>' +
+      '<span class="estAjuda">Cada clip pode ainda subir ou descer a sua, no inspetor do clip.</span></div>';
+}
+/* uma mudanca da posicao: `campo` e dx, dy ou alinhamento; `chave` junta as mexidas seguidas numa entrada do anular */
+function estiloPoePosicao(campo, valor, chave){
+  var p = estiloValor("legenda", "posicao"), novo = {dx: p.dx, dy: p.dy, alinhamento: p.alinhamento};
+  novo[campo] = valor;
+  novo.dx = Math.max(LEG_POS.dx[0], Math.min(LEG_POS.dx[1], novo.dx));
+  novo.dy = Math.max(LEG_POS.dy[0], Math.min(LEG_POS.dy[1], novo.dy));
+  if(novo.dx === p.dx && novo.dy === p.dy && novo.alinhamento === p.alinhamento) return false;
+  if(estiloCampoAberto !== chave || Date.now() - estiloPassoEm > 1500){
+    estiloCampoAberto = chave; estiloGuardaDesfazer("mudar a posição das legendas");
+  }
+  estiloPassoEm = Date.now();
+  estiloPoe("legenda", "posicao", novo);
+  estiloEsqueceMeu("legenda");
+  estiloDepois(campo === "alinhamento");
+  return true;
+}
+function estiloSetaPosicao(seta){
+  var p = estiloValor("legenda", "posicao"), n = LEG_POS.passo;
+  if(seta === "cima") return estiloPoePosicao("dy", p.dy - n, "posicao:setas");
+  if(seta === "baixo") return estiloPoePosicao("dy", p.dy + n, "posicao:setas");
+  if(seta === "esq") return estiloPoePosicao("dx", p.dx - n, "posicao:setas");
+  return estiloPoePosicao("dx", p.dx + n, "posicao:setas");
+}
+/* os controlos da posicao a seguir ao valor (a barra que esta a ser arrastada nao se mexe por baixo do dedo) */
+function estiloAtualizaPosicao(){
+  var p = estiloValor("legenda", "posicao");
+  document.querySelectorAll("#dlgEstilo [data-epos]").forEach(function(el){
+    if(document.activeElement !== el) el.value = el.getAttribute("data-epos") === "dy" ? -p.dy : p.dx;
+  });
+  document.querySelectorAll("#dlgEstilo [data-eseta]").forEach(function(b){
+    var s = b.getAttribute("data-eseta");
+    b.disabled = s === "cima" ? p.dy <= LEG_POS.dy[0] : s === "baixo" ? p.dy >= LEG_POS.dy[1] : s === "esq" ? p.dx <= LEG_POS.dx[0] : p.dx >= LEG_POS.dx[1];
+  });
+  document.querySelectorAll("#dlgEstilo [data-ealinha]").forEach(function(b){
+    var on = b.getAttribute("data-ealinha") === p.alinhamento;
+    b.setAttribute("aria-checked", on ? "true" : "false"); b.classList.toggle("on", on);
+  });
+}
+/* O QUE A MESA DIZ DA POSICAO: se chega ao filme (RENDER_LE.legenda_posicao) e o que muda nos grupos. Nunca muda nada. */
+function estiloAvisosDaPosicao(){
+  var av = [], p = estiloValor("legenda", "posicao");
+  if(!estiloMudado("legenda", "posicao")) return av;
+  if(RENDER_LE.legenda_posicao === false)
+    av.push({forte: true, t: "A posição das legendas ainda não chega ao filme: fica guardada, mas o render de hoje põe-nas no sítio de sempre. Antes do render, diz ao Claude."});
+  else if(RENDER_LE.legenda_posicao !== true)
+    av.push({t: "Não sei dizer se o render já muda a posição das legendas: pergunta ao Claude antes do render."});
+  if(p.dy < 0)
+    av.push({t: "As fotos dos grupos ficam sempre acima da legenda: com ela " + (-p.dy) + " px mais acima, as colagens, as pilhas e as grelhas ficam mais pequenas."});
+  if(p.dx || p.alinhamento !== "centro")
+    av.push({t: "Uma legenda comprida não sai do ecrã: encosta à margem de 130 px e anda menos do que pedes."});
+  return av;
+}
+/* O QUE A MESA DIZ DA LETRA DO CONTADOR (3 de outubro): o que diz da letra das legendas (a regra da 084, fora do PC,
+   manuscrita, hastes finas, so maiusculas, este aparelho sem ela), se chega ao filme (RENDER_LE.contador_fonte), e a
+   leitura a 15 m no corpo de cada texto do contador e da fita (ESTILO_TEXTOS_DO_CONTADOR), pela conta das legendas: a
+   letra a um corpo le-se como o Arial Bold a corpo x 58 / corpo_minimo, e hoje cada texto e Arial Bold nesse corpo. */
+var ESTILO_TEXTOS_DO_CONTADOR = [
+  /* [quem, corpo a 1080]: os do render.CORPOS_DO_CONTADOR, os textos pequenos, que sao os que se perdem primeiro
+     (os anos grandes, a 108 e mais, leem-se de qualquer maneira); o render avisa dos mesmos na normalizar_estilo() */
+  ["o rótulo e a data de chegada do contador", 46], ["os meses da fita de 1995", 38],
+  ["as datas da fita de 1995", 40], ["o texto dos marcos da fita", 58]];
+function estiloAvisosDaLetraDoContador(){
+  var av = [], f = estiloLetra("contador"), bruto = est.estilo && est.estilo.contador ? est.estilo.contador.fonte : undefined;
+  if(typeof bruto === "string" && bruto.trim() && !estiloFonte(bruto.trim()))
+    av.push({forte: true, t: "A base tem a letra «" + bruto + "» no contador, que esta Mesa não conhece: aqui vês o Arial Bold, e o render também fica no Arial Bold."});
+  if(f.id === "arial_bold") return av;
+  if(RENDER_LE.contador_fonte === false)
+    av.push({forte: true, t: "A letra do contador ainda não chega ao filme: fica guardada, mas o render de hoje desenha o contador e a fita em Arial Bold. Antes do render, diz ao Claude."});
+  else if(RENDER_LE.contador_fonte !== true)
+    av.push({t: "Não sei dizer se o render já usa a letra do contador: pergunta ao Claude antes do render."});
+  av.push({t: "Saíste da regra da decisão 084 no contador: tudo o que é para ler é Arial Bold. Com outra letra, a Mesa compara cada texto do contador com o de hoje."});
+  if(estiloForaDoPc(f))
+    av.push({forte: true, t: f.nome + " ainda não está no PC do render: o contador sai em Arial Bold até ela lá estar."});
+  if(f.manuscrita)
+    av.push({forte: true, t: f.nome + " é manuscrita: os anos, os meses e as datas pequenas do contador não se leem a 15 metros."});
+  else if(estiloHastesFinas(f))
+    av.push({forte: true, t: f.nome + " tem hastes finas: os meses e as datas pequenas do contador (38 a 46 px) perdem o traço fino a 15 metros."});
+  if(f.so_maiusculas) av.push({t: f.nome + " só tem maiúsculas: o texto dos marcos e os nomes dos meses saem em maiúsculas."});
+  if(!estiloLetraExiste(f)) av.push({t: "Este aparelho não tem o " + f.nome + ": a amostra mostra uma letra parecida, e o filme sai com a verdadeira."});
+  if(estiloForaDoPc(f)) return av;
+  var min = f.corpo_minimo;
+  if(!min){ av.push({t: "O contador em " + f.nome + ": esta letra ainda não foi medida (por medir), não sei dizer se se lê a 15 metros."}); return av; }
+  var pior = [], abaixo = [];
+  ESTILO_TEXTOS_DO_CONTADOR.forEach(function(x){
+    var como = x[1] * ESTILO_ARIAL_MINIMO / min;
+    if(como < x[1] - 0.5) pior.push(x[0] + " (" + x[1] + ", como o Arial Bold a " + Math.round(como) + ")");
+    else if(x[1] < min) abaixo.push(x[0] + " (" + x[1] + ")");
+  });
+  if(pior.length)
+    av.push({forte: true, t: "O contador em " + f.nome + " pode não se ler a 15 metros: lê-se pior do que hoje, porque esta letra só separa as letras a partir de " +
+      min + " (o Arial Bold a partir de " + ESTILO_ARIAL_MINIMO + "): " + pior.join("; ") + ". Os tamanhos do contador não mudam."});
+  if(abaixo.length)
+    av.push({t: "Em " + f.nome + " ficam abaixo dos " + min + " a partir dos quais a letra separa as letras a 15 metros, mas leem-se como o Arial Bold no mesmo corpo, não pior do que hoje: " +
+      abaixo.join("; ") + "."});
+  return av;
 }
 
 /* ---------- o estilo: o anular e a gravacao ---------- */
@@ -13562,6 +14905,8 @@ function estiloAvisos(parte){
     if(cl < 4.5) av.push({forte: true, t: "Contraste fraco: a legenda fica a " + estiloNum(cl) + " para 1 numa foto clara, abaixo dos 4,5 que se leem a 15 metros. Mais faixa, ou outra cor."});
     if(ce < 4.5) av.push({forte: true, t: "Contraste fraco: a legenda fica a " + estiloNum(ce) + " para 1 numa foto escura, abaixo dos 4,5 que se leem a 15 metros. Uma cor mais clara."});
   }
+  /* A POSICAO DAS LEGENDAS (3 de outubro) */
+  if(parte === "legenda") estiloAvisosDaPosicao().forEach(function(a){ av.push(a); });
   if(parte === "cartao"){
     [["quente", "O letreiro começa na cor quente"], ["claro", "O letreiro acaba na cor clara"]].forEach(function(x){
       if(!estiloMudado("cartao", x[0])) return;
@@ -13570,6 +14915,8 @@ function estiloAvisos(parte){
     });
   }
   if(parte === "contador"){
+    /* A LETRA DO CONTADOR (3 de outubro), primeiro: o que pode estragar a leitura na sala */
+    estiloAvisosDaLetraDoContador().forEach(function(a){ av.push(a); });
     /* TODAS AS CORES QUE SE MUDAM AQUI, como o montar_da_mesa.avisos_do_estilo(): a linha, os tracos grandes da
        regua e os anos ao lado tambem (ate 2 de outubro, a tarde, a Mesa nao os via, e uma linha da cor do fundo
        desaparecia sem aviso). O texto contra 4,5 para 1, os tracos contra 3. A linha (2,6 para 1) e os anos ao lado
@@ -13781,6 +15128,7 @@ function estiloAtualiza(){
       'original: ' + esc(estiloTextoDoValor(pc[0], pc[1], om));
   });
   estiloPintaOriginal();
+  estiloAtualizaPosicao();
   var cv = document.querySelector("#dlgEstilo [data-econtinuoaviso]");
   if(cv){
     var aviso = estiloAvisoContinuo();
@@ -13844,6 +15192,7 @@ function estiloTextoDoValor(parte, chave, v){
   }
   if(parte === "intro" && chave === "fonte") return estiloNomeDaLetraDaIntro(estiloLetraDaIntro(v) || {nome: String(v)});
   if(chave === "fonte"){ var f = estiloFonte(v); return f ? f.nome : String(v); }
+  if(parte === "legenda" && chave === "posicao") return legPosicaoTexto(v);
   if(chave === "continuo") return v ? "uma só peça" : "duas peças";
   if(chave === "data_afastada") return v ? "mais afastada" : "junto aos meses";
   return typeof v === "number" ? v + " px" : String(v);
@@ -13862,9 +15211,9 @@ function estiloMudancas(p){
 /* O ORIGINAL DE CADA ABA, numa linha: o filme de hoje */
 function estiloResumoOriginal(p){
   var o = ESTILO_OMISSAO, arial = (estiloFonte(o.legenda.fonte) || ESTILO_ARIAL).nome;
-  if(p === "legenda") return arial + " a " + o.legenda.tamanho + ", branca, com a faixa escura a " + Math.round(o.legenda.fundo * 100) + " %";
+  if(p === "legenda") return arial + " a " + o.legenda.tamanho + ", branca, com a faixa escura a " + Math.round(o.legenda.fundo * 100) + " %, ao centro e no sítio de hoje";
   if(p === "cartao") return arial + ", champanhe quente com brilho; curtos a " + o.cartao.curto + ", frases a " + o.cartao.frase + ", nome a " + o.nome.tamanho;
-  if(p === "contador") return "o rosa avermelhado de hoje, o contador e a fita de 1995 como duas peças, e a data do nascimento junto aos meses";
+  if(p === "contador") return arial + ", o rosa avermelhado de hoje, o contador e a fita de 1995 como duas peças, e a data do nascimento junto aos meses";
   return "o vermelho de hoje, com o letreiro em Impact a " + o.intro.tamanho;
 }
 function estiloHtmlOriginal(p){ return '<div class="estOriginal" role="radiogroup" aria-label="Como fica ' + esc(ESTILO_NOME_DA_PARTE[p]) + '" data-eorigcaixa="' + p + '"></div>'; }
@@ -13909,7 +15258,7 @@ function estiloAvisoDataAfastada(){
 function estiloPaletaAtiva(parte, k){
   var p = ESTILO_PALETAS[parte][k];
   if(!p) return false;
-  var chaves = parte === "contador" ? Object.keys(ESTILO_OMISSAO.contador).filter(function(c){ return !estiloEscolhaDoContador(c); }) : Object.keys(p.v);
+  var chaves = parte === "contador" ? Object.keys(ESTILO_OMISSAO.contador).filter(estiloCorDoContador) : Object.keys(p.v);
   return chaves.every(function(c){ return estiloValor(parte, c) === (p.v[c] || ESTILO_OMISSAO[parte][c]); });
 }
 
@@ -13998,6 +15347,7 @@ function estiloHtmlControlos(p){
       '<div class="estLinha"><input type="range" id="est_legenda_fundo" data-ep="legenda" data-ec="fundo" min="0" max="100" step="1" value="' +
         Math.round(estiloValor("legenda", "fundo") * 100) + '"></div>' +
       '<span class="estAjuda">0 é sem faixa; 100 é preto. Hoje é 65 %.</span></div>' +
+      estiloHtmlPosicao() +
       estiloRodapeDaParte("legenda");
   if(p === "cartao")
     return estiloHtmlOriginal("cartao") +
@@ -14014,7 +15364,9 @@ function estiloHtmlControlos(p){
       estiloRodapeDaParte("cartao");
   if(p === "contador")
     return estiloHtmlOriginal("contador") +
-      '<p class="estNota">As cores do contador do início e da fita de 1995, e se as duas se leem como uma só peça. A letra fica no Arial Bold, como hoje.</p>' +
+      '<p class="estNota">A letra e as cores do contador do início e da fita de 1995, e se as duas se leem como uma só peça.</p>' +
+      estiloCampoLetra("contador", "Letra") +
+      '<p class="estAjuda estAjudaContador">As mesmas letras das legendas, para todos os textos do contador e da fita: o ano grande, os anos do lado, os meses, as datas e o texto dos marcos. Os tamanhos ficam os de hoje.</p>' +
       estiloHtmlContinuo() +
       '<h4 class="estSec">Propostas de cores</h4>' + estiloHtmlPaletas("contador") +
       '<h4 class="estSec">As linhas</h4>' +
@@ -14333,21 +15685,14 @@ function estiloDesenhaLegenda(){
       ctx.drawImage(fo.img, fo.sx, fo.sy, fo.sw, fo.sh, (1920 - w) / 2, (1080 - h) / 2, w, h);
     }
   }
-  var f = estiloLetra("legenda"), tam = estiloValor("legenda", "tamanho"), minimo = Math.floor(tam * 30 / 46 + 0.5);
-  estiloGaranteLetra(estiloCss(f, 40));
-  var linhas = estiloQuebra(texto, f, tam, 1660);
-  while(linhas.length > 4 && tam > minimo){ tam = Math.max(minimo, tam - 4); linhas = estiloQuebra(texto, f, tam, 1660); }
-  var alt = Math.floor(tam * 1.35), bloco = alt * linhas.length, topo = 1080 - 70 - bloco;
-  var alfa = Math.round(estiloValor("legenda", "fundo") * 255);
-  ctx.fillStyle = "rgba(0,0,0," + (alfa / 255).toFixed(3) + ")";
-  ctx.fillRect(0, topo - 26, 1920, (1080 - 34) - (topo - 26) + 1);
-  ctx.font = estiloCss(f, tam); ctx.fillStyle = estiloValor("legenda", "cor"); ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
-  var asc = estiloAscendente(ctx, tam);
-  linhas.forEach(function(ln, i){ ctx.fillText(ln, 960, topo + i * alt + asc); });
+  /* a legenda de todas, com a posicao do estilo (3 de outubro); o x1 e o lp de cada clip ficam no inspetor dele */
+  estiloGaranteLetra(estiloCss(estiloLetra("legenda"), 40));
+  var l = legDesenha(ctx, texto, null), tam = l.tam, linhas = l.linhas, pos = estiloValor("legenda", "posicao");
   var txt = document.getElementById("estTelaTxt1");
   if(txt) txt.textContent = (c ? "Foto " + (estiloFotoK % fotos.length + 1) + " de " + fotos.length + " com legenda nesta versão. " : "") +
     "Legenda a " + tam + (tam !== estiloValor("legenda", "tamanho") ? " (desceu para caber em 4 linhas)" : "") + ", " +
-    (linhas.length === 1 ? "1 linha." : linhas.length + " linhas.");
+    (linhas.length === 1 ? "1 linha" : linhas.length + " linhas") +
+    (estiloMudado("legenda", "posicao") ? ", " + legPosicaoTexto(pos) : "") + ".";
 }
 /* O LETREIRO COMO O _mascara_letreiro() DO RENDER: letra a letra com o espacamento, cada linha
    centrada, o bloco centrado no ecra; as cores do quente (em baixo) ao claro (em cima), e o brilho
@@ -14397,7 +15742,7 @@ function estiloDesenhaCartoes(){
 }
 function estiloCoresContador(){
   var r = {};
-  Object.keys(ESTILO_OMISSAO.contador).forEach(function(k){ if(!estiloEscolhaDoContador(k)) r[k] = estiloRgb(estiloValor("contador", k)); });
+  Object.keys(ESTILO_OMISSAO.contador).forEach(function(k){ if(estiloCorDoContador(k)) r[k] = estiloRgb(estiloValor("contador", k)); });
   return r;
 }
 /* uma amostra de perto: o meio do ecra (de 480 a 1440 e de 270 a 810) a dobrar, onde a data e os meses se leem no
@@ -14457,12 +15802,12 @@ function estiloDesenhaContador(t, emAno){
     var dist = Math.min(1, Math.abs(a2 - agora)), x2 = L / 2 + (a2 - agora) * passo;
     if(x2 < -passo || x2 > L + passo) continue;
     var cor = estiloMistura(k.ano_longe, k.ano, Math.pow(1 - dist, 1.6));
-    estiloTextoMeio(ctx, String(a2), "700 " + Math.floor(A * (dist < 0.5 ? 0.17 : 0.10)) + "px Arial, Helvetica, sans-serif",
+    estiloTextoMeio(ctx, String(a2), estiloCssContador(Math.floor(A * (dist < 0.5 ? 0.17 : 0.10))),
                     estiloRgbCss(cor), x2, y - Math.floor(A * 0.14));
   }
   if(info.rotulo && agora === info.de){
     ctx.strokeStyle = estiloRgbCss(k.marco); ctx.lineWidth = 6; estiloLinha(ctx, L / 2, y - 26, L / 2, y + 26);
-    estiloTextoMeio(ctx, info.rotulo, "700 46px Arial, Helvetica, sans-serif", estiloRgbCss(k.marco_texto), L / 2, y + Math.floor(A * 0.16));
+    estiloTextoMeio(ctx, info.rotulo, estiloCssContador(46), estiloRgbCss(k.marco_texto), L / 2, y + Math.floor(A * 0.16));
   }
 }
 /* A FITA DE 1995 DO FILME, como o linha_tempo.ler_meses() a le: a primeira fita com um nascimento
@@ -14502,13 +15847,13 @@ function estiloDesenhaFita(t, afastada){
   ctx.strokeStyle = estiloRgbCss(guia); ctx.lineWidth = 3; estiloLinha(ctx, L / 2, y - 230, L / 2, y + 150);
   /* o ano no alto, ja encolhido: do cinzento 246 ao 150, ou da cor do ano do estilo (_cor_do_ano_da_fita) */
   var corAno = estiloMudado("contador", "ano") ? k.ano.map(function(c){ return Math.round(c * 150 / 246); }) : [150, 150, 150];
-  estiloTextoMeio(ctx, String(fita.ano), "700 " + Math.floor(A * 0.13) + "px Arial, Helvetica, sans-serif", estiloRgbCss(corAno), L / 2, Math.floor(A * 0.16));
+  estiloTextoMeio(ctx, String(fita.ano), estiloCssContador(Math.floor(A * 0.13)), estiloRgbCss(corAno), L / 2, Math.floor(A * 0.16));
   ctx.lineWidth = 2;
   for(var m = 0; m < 12; m++){
     var x = desvio + fracao(1, m + 1) * largAno;
     if(x < -80 || x > L + 80) continue;
     ctx.strokeStyle = estiloRgbCss(k.linha); estiloLinha(ctx, x, y - 9, x, y + 9);
-    estiloTextoMeio(ctx, ESTILO_MESES[m], "700 38px Arial, Helvetica, sans-serif", estiloRgbCss(k.regua_texto), x, y + 34);
+    estiloTextoMeio(ctx, ESTILO_MESES[m], estiloCssContador(38), estiloRgbCss(k.regua_texto), x, y + 34);
   }
   fita.marcas.forEach(function(mc){
     var fr = fracao(mc.dia, mc.mes), x2 = desvio + fr * largAno;
@@ -14520,8 +15865,8 @@ function estiloDesenhaFita(t, afastada){
     if(mc.grande){ ctx.beginPath(); ctx.arc(x2, y - alto, 14, 0, 2 * Math.PI); ctx.fill(); }
   });
   var nasc = estiloRgbCss(k.nascimento);
-  if(atual.t) estiloTextoMeio(ctx, atual.t, "700 66px Arial, Helvetica, sans-serif", nasc, L / 2, y - 64 - 86);
-  estiloTextoMeio(ctx, atual.dia + " de " + ESTILO_MESES_LONGOS[atual.mes - 1], "700 58px Arial, Helvetica, sans-serif", nasc, L / 2,
+  if(atual.t) estiloTextoMeio(ctx, atual.t, estiloCssContador(66), nasc, L / 2, y - 64 - 86);
+  estiloTextoMeio(ctx, atual.dia + " de " + ESTILO_MESES_LONGOS[atual.mes - 1], estiloCssContador(58), nasc, L / 2,
                   y + 64 + 18 + (afastada ? ESTILO_DATA_AFASTA : 0));
 }
 /* A FITA QUE ABRE: a primeira fita de meses da versao do filme (a que nao continua outra, sem o "c"),
@@ -14582,7 +15927,7 @@ function estiloDesenhaPassagem(t, uma, e){
     for(var d = 1; d <= 3; d++){
       var a2 = fita.ano + d, x2 = L / 2 + (d - fita.ini) * largAno;
       if(a2 > cima || x2 > L + 300 || e >= 1) continue;
-      estiloTextoMeio(ctx, String(a2), "700 " + Math.floor(A * 0.10) + "px Arial, Helvetica, sans-serif",
+      estiloTextoMeio(ctx, String(a2), estiloCssContador(Math.floor(A * 0.10)),
                       estiloRgbCss(estiloMistura(ESTILO_FUNDO_CONTADOR, k.ano_longe, 1 - e)), x2, y - Math.floor(A * 0.14));
     }
   } else {
@@ -14594,14 +15939,14 @@ function estiloDesenhaPassagem(t, uma, e){
   var corAno = uma || estiloMudado("contador", "ano")
     ? k.ano.map(function(c){ return Math.round(c + (c * 150 / 246 - c) * e); })
     : [0, 1, 2].map(function(){ return Math.round(246 + (150 - 246) * e); });
-  estiloTextoMeio(ctx, String(fita.ano), "700 " + corpo + "px Arial, Helvetica, sans-serif", estiloRgbCss(corAno), L / 2, yAno);
+  estiloTextoMeio(ctx, String(fita.ano), estiloCssContador(corpo), estiloRgbCss(corAno), L / 2, yAno);
   if(e > 0.25){
     var kk = (e - 0.25) / 0.75;
     for(var m = 0; m < 12; m++){
       var x = desvio + fracao(1, m + 1) * largAno;
       if(x < -80 || x > L + 80) continue;
       if(!uma){ ctx.strokeStyle = estiloRgbCss(k.linha.map(function(c){ return Math.round(c * kk); })); ctx.lineWidth = 2; estiloLinha(ctx, x, y - 9, x, y + 9); }
-      estiloTextoMeio(ctx, ESTILO_MESES[m], "700 38px Arial, Helvetica, sans-serif",
+      estiloTextoMeio(ctx, ESTILO_MESES[m], estiloCssContador(38),
                       estiloRgbCss(k.regua_texto.map(function(c){ return Math.round(c * kk); })), x, y + 34 + (uma ? 12 : 0));
     }
   }
@@ -14891,7 +16236,7 @@ function estiloPoePaleta(parte, k){
   estiloCampoAberto = null;
   estiloGuardaDesfazer("escolher a proposta " + p.nome + " (" + ESTILO_NOME_DA_PARTE[parte] + ")");
   /* uma proposta de cores nao mexe nas escolhas do contador (uma so peca, a data afastada) */
-  var chaves = parte === "contador" ? Object.keys(ESTILO_OMISSAO.contador).filter(function(c){ return !estiloEscolhaDoContador(c); }) : Object.keys(p.v);
+  var chaves = parte === "contador" ? Object.keys(ESTILO_OMISSAO.contador).filter(estiloCorDoContador) : Object.keys(p.v);
   var tamanhoAntes = parte === "intro" ? estiloValor("intro", "tamanho") : null;
   chaves.forEach(function(c){ estiloPoe(parte, c, p.v[c] || ESTILO_OMISSAO[parte][c]); });
   estiloEsqueceMeu(parte);
@@ -14944,7 +16289,7 @@ function estiloVoltarAoMeu(p){
       var limpo = estiloLimpo(q, c, meu[q][c]);
       if(limpo === null || estiloIgualHoje(q, c, limpo)) return;
       novo[q] = novo[q] || {};
-      novo[q][c] = limpo;
+      novo[q][c] = q === "legenda" && c === "posicao" ? legPosicaoCompacta(limpo) : limpo;
     });
   });
   /* o estiloMeu fica: o Anular disto volta ao original, e dali ao teu outra vez */
@@ -15011,6 +16356,9 @@ document.getElementById("dlgEstilo").addEventListener("click", function(e){
   if((b = e.target.closest("[data-emeu]"))){ if(!b.disabled) estiloVoltarAoMeu(b.getAttribute("data-emeu")); return; }
   if((b = e.target.closest("[data-econtinuo]"))){ estiloPoeContinuo(b.getAttribute("data-econtinuo") === "1"); return; }
   if((b = e.target.closest("[data-edata]"))){ estiloPoeDataAfastada(b.getAttribute("data-edata") === "1"); return; }
+  /* a posicao das legendas (3 de outubro) */
+  if((b = e.target.closest("[data-eseta]"))){ if(!b.disabled) estiloSetaPosicao(b.getAttribute("data-eseta")); return; }
+  if((b = e.target.closest("[data-ealinha]"))){ estiloPoePosicao("alinhamento", b.getAttribute("data-ealinha"), "posicao:alinha:" + Date.now()); return; }
   if((b = e.target.closest("[data-evista]"))){
     estiloContadorVista = b.getAttribute("data-evista");
     document.querySelectorAll("#dlgEstilo [data-evista]").forEach(function(x){ x.classList.toggle("on", x === b); });
@@ -15041,6 +16389,12 @@ document.getElementById("dlgEstilo").addEventListener("click", function(e){
 document.getElementById("estControlos").addEventListener("input", function(e){
   var el = e.target.closest("[data-ep][data-ec]");
   if(el) estiloMuda(el);
+  /* as barras da posicao das legendas (3 de outubro): "Subir" e o -dy */
+  var pz = e.target.closest("[data-epos]");
+  if(pz){
+    var n = Math.round(+pz.value), campo = pz.getAttribute("data-epos");
+    estiloPoePosicao(campo, campo === "dy" ? -n : n, "posicao:barra:" + campo);
+  }
 });
 document.getElementById("estControlos").addEventListener("change", function(e){
   var el = e.target.closest("[data-ep][data-ec]");
@@ -15200,9 +16554,14 @@ document.getElementById("validarCorpo").addEventListener("click", function(e){
     var campo = bc.getAttribute("data-vcred"), k = bc.getAttribute("data-vcredk") || "";
     document.getElementById("dlgValidar").close();
     credAbrir();
-    var corpoC = document.getElementById("credCorpo");
-    if(corpoC) corpoC.setAttribute("data-aba", "textos");
-    document.querySelectorAll("#dlgCreditos [data-caba]").forEach(function(x){ x.classList.toggle("on", x.getAttribute("data-caba") === "textos"); });
+    /* um aviso da velocidade leva a aba «Ordem e velocidade» */
+    if(campo === "forma"){
+      credMostraAba("forma");
+      var vd = document.getElementById("credVelTitulo");
+      if(vd){ try{ vd.scrollIntoView({block: "start"}); }catch(err){} }
+      return;
+    }
+    credMostraAba("textos");
     var alvoC = null;
     document.querySelectorAll("#credTextos [data-ccampo]").forEach(function(el){
       if(!alvoC && el.getAttribute("data-ccampo") === campo && (el.getAttribute("data-ck") || "") === k) alvoC = el;

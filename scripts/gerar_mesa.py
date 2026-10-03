@@ -465,6 +465,148 @@ def le_os_cargos_dos_creditos(texto):
             "pessoas_max": int(limites.group(2)) if limites else None}
 
 
+def le_as_partes_dos_creditos(texto, p5=None):
+    """O ponto5_creditos.py ja faz a ordem das partes, os nomes corridos e a velocidade? (3 de outubro; pontos 5 e 5b do
+    saida/discussao/contrato_1003.md)
+
+    {creditos_partes, nomes_corridos, creditos_velocidade}, cada um True ou False.
+    PELO TEXTO, como os cargos: a chave do est.creditos lida com .get( ou [ ("partes", "nomes_corridos", "velocidade").
+    E PELAS CONTAS quando o modulo se deixa importar (`p5`), porque ler a chave nao chega: na madrugada de 3 de outubro o
+    render ja guardava a posicao das legendas e ainda nao a desenhava, e um True so por ler dizia ao Tiago que chegava ao
+    filme.
+    - `creditos_partes`: o textos_dos_creditos() devolve a lista e deixa os cargos vazios sem "cargos"; o
+      tempos_dos_creditos() com o titulo primeiro da as janelas de cada parte; e o desenho sabe correr por elas.
+    - `nomes_corridos`: o textos_dos_creditos() le o true, e o rolo_de_nomes(blocos, True) de um grupo de ensaio so tem
+      a altura das linhas dos nomes.
+    - `creditos_velocidade`: o textos_dos_creditos() le {fotos: 100}, e o tempos_dos_creditos() poe a coluna a 100 px/s.
+    Com False a Mesa diz «ainda não chega ao filme» na aba «Ordem e velocidade» dos Creditos.
+    """
+    import re
+
+    def chave(nome):
+        return bool(re.search(r"""(\.get\(\s*|\[\s*)["']%s["']""" % nome, texto or ""))
+    le = {"creditos_partes": chave("partes"), "nomes_corridos": chave("nomes_corridos"), "creditos_velocidade": chave("velocidade")}
+    if p5 is None:
+        return le
+    try:
+        t = p5.textos_dos_creditos({"creditos": {"partes": ["titulo", "rolo"]}}, [])
+        T = p5.tempos_dos_creditos(1000, 5000, len(t["cargos"]), t.get("cargos_primeiro", False), t["partes"], None)
+        le["creditos_partes"] = bool(le["creditos_partes"] and t["partes"] == ["titulo", "rolo"] and not t["cargos"]
+                                     and T.get("janelas") and T.get("primeiro") == "titulo"
+                                     and re.search(r"^\s*def creditos_por_partes\(", texto or "", re.M))
+    except Exception:  # noqa: BLE001 - um ponto5 de antes (sem a chave, ou com outra assinatura) nao as faz
+        le["creditos_partes"] = False
+    try:
+        t = p5.textos_dos_creditos({"creditos": {"nomes_corridos": True}}, [])
+        rolo = p5.rolo_de_nomes([("TITULO", "subtitulo", [["Pessoa Um", "Pessoa Dois"]])], True)
+        le["nomes_corridos"] = bool(le["nomes_corridos"] and t["nomes_corridos"] is True and rolo.height == 78 + 20)
+    except Exception:  # noqa: BLE001
+        le["nomes_corridos"] = False
+    try:
+        t = p5.textos_dos_creditos({"creditos": {"velocidade": {"fotos": 100}}}, [])
+        T = p5.tempos_dos_creditos(1000, 5000, 3, False, None, t["velocidade"])
+        le["creditos_velocidade"] = bool(le["creditos_velocidade"] and t["velocidade"] == {"fotos": 100.0}
+                                         and T["vel_fotos"] == 100.0 and T.get("fim_fotos") is not None)
+    except Exception:  # noqa: BLE001
+        le["creditos_velocidade"] = False
+    return le
+
+
+def le_as_legendas_de_3_de_outubro(render, montar):
+    """O render e o montar ja fazem os pontos 1 a 4 do contrato de 3 de outubro? (saida/discussao/contrato_1003.md)
+
+    {contador_fonte, legenda_posicao, numa_linha, posicao_clip, fotos_inteiras}, cada um True, False ou None (nao se
+    conseguiu ver). `render` e o modulo, ja importado; `montar` e o texto do montar_da_mesa.py.
+
+    PERGUNTA-SE AO DESENHO, e nao so a limpeza do estilo: na madrugada de 3 de outubro o render.normalizar_estilo() ja
+    guardava a posicao das legendas e o faixa_texto() ainda nao a desenhava. Um True so por guardar dizia ao Tiago que a
+    posicao chegava ao filme, e nao chegava.
+    - `legenda_posicao`: com est.estilo.legenda.posicao {dy: -100}, a faixa da legenda sobe 100 px.
+    - `contador_fonte`: o normalizar_estilo() guarda o est.estilo.contador.fonte (uma letra de data/fontes.json que
+      esta no PC e nao e o Arial Bold), e o contador de anos desenhado com ela sai diferente do de sempre.
+    - `numa_linha`, `posicao_clip`, `fotos_inteiras` (clip.x1, clip.lp e clip.li): o montar escreve-os na coluna
+      opcoes_clip (pelo texto dele, como o destaque: importa-lo mexe no sys.stdout), e o render, com as opcoes lidas
+      pelo ler_opcoes_clip() dele, poe a legenda numa linha, sobe-a, e poe a foto inteira na celula do lado a lado.
+    O estilo do render volta sempre ao de sempre no fim. Sao uns 0,5 s, uma vez por Mesa montada.
+    """
+    import json
+    import re
+    le = {"contador_fonte": None, "legenda_posicao": None, "numa_linha": None, "posicao_clip": None, "fotos_inteiras": None}
+    texto = "Clara\ne Tiago"
+
+    def topo(capa):
+        caixa = capa[1].getbbox() if capa else None
+        return caixa[1] if caixa else None
+
+    try:
+        try:
+            render.aplicar_estilo({}, [])
+            hoje = topo(render.faixa_texto(texto))
+            limpo = render.normalizar_estilo({"legenda": {"posicao": {"dy": -100}}}, [])
+            if not (limpo.get("legenda") or {}).get("posicao"):
+                le["legenda_posicao"] = False
+            else:
+                render.aplicar_estilo({"legenda": {"posicao": {"dy": -100}}}, [])
+                sobe = topo(render.faixa_texto(texto))
+                le["legenda_posicao"] = hoje is not None and sobe == hoje - 100
+        finally:
+            render.aplicar_estilo({}, [])
+    except Exception as erro:  # noqa: BLE001 - so serve para a Mesa avisar
+        print("  AVISO: nao consegui perguntar ao render pela posicao das legendas (%s)" % erro)
+    try:
+        import linha_tempo
+        letras = render.letras_da_mesa()
+        outra = next((k for k in sorted(letras) if k != render.LETRA_OMISSAO and letras[k].get("ficheiro")
+                      and os.path.exists(letras[k]["ficheiro"])), None)
+        if outra is None:
+            le["contador_fonte"] = None
+        else:
+            limpo = render.normalizar_estilo({"contador": {"fonte": outra}}, [])
+            if (limpo.get("contador") or {}).get("fonte") != outra:
+                le["contador_fonte"] = False
+            else:
+                try:
+                    render.aplicar_estilo({}, [])
+                    a = linha_tempo.anos(960, 540, 2026, 1995, [], 0.0, 9.0).tobytes()
+                    render.aplicar_estilo({"contador": {"fonte": outra}}, [])
+                    b = linha_tempo.anos(960, 540, 2026, 1995, [], 0.0, 9.0).tobytes()
+                    le["contador_fonte"] = a != b
+                finally:
+                    render.aplicar_estilo({}, [])
+    except Exception as erro:  # noqa: BLE001 - so serve para a Mesa avisar
+        print("  AVISO: nao consegui perguntar ao render pela letra do contador (%s)" % erro)
+    # AS OPCOES DO CLIP: o montar tem de as escrever (a coluna e a chave), e o render de as desenhar
+    escreve = bool(re.search(r"""COLUNA_OPCOES_CLIP|["']opcoes_clip["']""", montar or ""))
+    ler = getattr(render, "ler_opcoes_clip", None)
+    for chave, campo in (("x1", "numa_linha"), ("lp", "posicao_clip"), ("li", "fotos_inteiras")):
+        if not (escreve and re.search(r"""["']%s["']""" % chave, montar or "")) or not callable(ler):
+            le[campo] = False
+    try:
+        if callable(ler) and le["numa_linha"] is None:
+            try:
+                le["numa_linha"] = topo(render.faixa_texto(texto, clip_leg=ler(json.dumps({"x1": True})))) > topo(render.faixa_texto(texto))
+            except TypeError:
+                le["numa_linha"] = False
+        if callable(ler) and le["posicao_clip"] is None:
+            try:
+                le["posicao_clip"] = topo(render.faixa_texto(texto, clip_leg=ler(json.dumps({"lp": {"dx": 0, "dy": -100}})))) == \
+                    topo(render.faixa_texto(texto)) - 100
+            except TypeError:
+                le["posicao_clip"] = False
+        if callable(ler) and le["fotos_inteiras"] is None:
+            from PIL import Image
+            im = Image.new("RGB", (400, 300), (200, 30, 30))
+            try:
+                com = render.preparar_lado("2v", [im, im], [None, None], "", clip_leg=ler(json.dumps({"li": True})))
+                sem = render.preparar_lado("2v", [im, im], [None, None], "")
+                le["fotos_inteiras"] = com["celulas"][0]["sprite"].tobytes() != sem["celulas"][0]["sprite"].tobytes()
+            except TypeError:
+                le["fotos_inteiras"] = False
+    except Exception as erro:  # noqa: BLE001 - so serve para a Mesa avisar
+        print("  AVISO: nao consegui perguntar ao render pelas opcoes dos clips (%s)" % erro)
+    return le
+
+
 def o_que_o_render_le():
     """{creditos, continuo, destaque, creditos_musica, data_afastada}: True se o render ja os le, False se
     nao, None se nao se conseguiu ver.
@@ -483,10 +625,17 @@ def o_que_o_render_le():
     das de data/fontes_intro.json; 2 de outubro, a noite). Um render que nao a conhece deita-a fora com aviso.
     `cargos_primeiro`, `cargos_varios`, `cargos_max`, `pessoas_max`: os cargos dos creditos (2 de outubro, a noite),
     ver le_os_cargos_dos_creditos. Com False a Mesa diz «ainda não chega ao filme» no painel dos Creditos.
+    `contador_fonte`, `legenda_posicao`, `numa_linha`, `posicao_clip`, `fotos_inteiras`: os pontos 1 a 4 do contrato de 3
+    de outubro, ver le_as_legendas_de_3_de_outubro. Com False a Mesa diz «ainda não chega ao filme» no Estilo e no
+    inspetor do clip.
+    `creditos_partes`, `nomes_corridos`, `creditos_velocidade`: os pontos 5 e 5b do mesmo contrato (a ordem das partes
+    dos creditos com o «Sem cargos», os nomes corridos e a velocidade), ver le_as_partes_dos_creditos.
     """
     import re
     le = {"creditos": None, "continuo": None, "destaque": None, "creditos_musica": None, "data_afastada": None,
-          "intro_fonte": None, "cargos_primeiro": None, "cargos_varios": None, "cargos_max": None, "pessoas_max": None}
+          "intro_fonte": None, "cargos_primeiro": None, "cargos_varios": None, "cargos_max": None, "pessoas_max": None,
+          "contador_fonte": None, "legenda_posicao": None, "numa_linha": None, "posicao_clip": None, "fotos_inteiras": None,
+          "creditos_partes": None, "nomes_corridos": None, "creditos_velocidade": None}
     try:
         sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
         import render
@@ -518,10 +667,26 @@ def o_que_o_render_le():
     except Exception as erro:  # noqa: BLE001 - so serve para a Mesa avisar
         print("  AVISO: nao consegui perguntar ao render pela zona de destaque (%s)" % erro)
     try:
+        # A LETRA DO CONTADOR, A POSICAO DAS LEGENDAS, NUMA SO LINHA E AS FOTOS INTEIRAS (3 de outubro)
+        import render
+        montar = io.open(os.path.join(REPO, "scripts", "montar_da_mesa.py"), encoding="utf-8").read()
+        le.update(le_as_legendas_de_3_de_outubro(render, montar))
+    except Exception as erro:  # noqa: BLE001 - so serve para a Mesa avisar
+        print("  AVISO: nao consegui perguntar ao render pelas legendas de 3 de outubro (%s)" % erro)
+    try:
         texto = io.open(PONTO5, encoding="utf-8").read()
         le["creditos"] = bool(re.search(r"""(\.get\(\s*|\[\s*)["']creditos["']""", texto))
         le["creditos_musica"] = le_a_musica_dos_creditos(texto)
         le.update(le_os_cargos_dos_creditos(texto))
+        # A ORDEM DAS PARTES, OS NOMES CORRIDOS E A VELOCIDADE (3 de outubro): pelo texto e, se o ponto5 se deixar
+        # importar (precisa do ffmpeg, pelo comum.py), pelas contas dele
+        p5 = None
+        try:
+            import creditos_para_mesa
+            p5 = creditos_para_mesa._ponto5()
+        except (SystemExit, Exception) as erro:  # noqa: BLE001 - so serve para a Mesa avisar
+            print("  AVISO: nao consegui importar o ponto5 para lhe perguntar pelas partes dos creditos (%s); fica pelo texto" % erro)
+        le.update(le_as_partes_dos_creditos(texto, p5))
     except OSError as erro:
         print("  AVISO: nao li %s (%s)" % (PONTO5, erro))
     return le
@@ -756,7 +921,10 @@ def main():
                             ("a zona de destaque", "destaque"), ("a musica dos creditos", "creditos_musica"),
                             ("a data do nascimento afastada", "data_afastada"), ("a letra da intro", "intro_fonte"),
                             ("os cargos antes dos convidados", "cargos_primeiro"),
-                            ("mais cargos e mais pessoas nos creditos", "cargos_varios"))
+                            ("mais cargos e mais pessoas nos creditos", "cargos_varios"),
+                            ("a ordem das partes dos creditos", "creditos_partes"),
+                            ("os nomes corridos dos creditos", "nomes_corridos"),
+                            ("a velocidade dos creditos", "creditos_velocidade"))
              if le[k] is False]
     if falta:
         print("  render      ainda nao le %s: a Mesa avisa" % " nem ".join(falta))

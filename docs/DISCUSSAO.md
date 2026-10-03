@@ -996,6 +996,47 @@ final dos créditos. Contrato em `saida/discussao/contrato_1003.md`, com as pala
   maio de 2012 onde começaram a namorar."* O contador vai de 1995 a 20/05/2012, com «Clara e Tiago
   conhecem-se» em 2011 e um texto de início de namoro no fim. **Muda a decisão 011**, que tinha «não se
   conheceram em 2011» confirmado por ele a 10 de setembro. Disse-se-lhe isto explicitamente.
+- **As músicas são as que eles escolheram na Mesa (05:50).** Ele: *"Decidimos na Mesa de Montagem que
+  músicas queríamos incluir, e umas tirámos e outras incluímos. Isso não é bem uma decisão. Quero ter
+  a opcionalidade das músicas que quero."* Mandou o mapa por posição: Lang Lang no 1.º contador, Rei
+  Leão (6), Céline Dion (7), Ana Faria (20), Mr. Blue Sky (37), Baha Men (42), António Variações (49),
+  Lang Lang a continuar no contador 57, Tribalistas (58), Billy Joel (66), Vance Joy (72), Bachman
+  Turner (74), Filhos do Dragão (89), Edward Sharpe (101), Queen (119), Olivia Dean (133) e Lang Lang
+  a continuar no contador 143.
+  - A lista dele é a verdade: só tocam estas músicas.
+  - A parte da 001 sobre as canções com o nome da pessoa passa a ser escolha dele. Uma automática do
+    montar que ele não listou não toca.
+  - Os efeitos (foguetes, fita a rebobinar) mantêm-se e confirmam-se com ele.
+  - As marcas das posições listadas já estavam todas certas na rev 2374. Faltava o Lang Lang a
+    continuar nos contadores 57 e 143.
+- **O render das 10h (pedido dele às 05:15):** *"Precisávamos de uma versão muito aproximada do resultado
+  que metemos agora na Mesa e com as nossas instruções pronta de manhã pelas 9/10h."* E: *"depois para
+  a versão final fazemos os ajustes finais de limar arestas."*
+  - **Como se fez:**
+    - três frentes do render em paralelo: legendas e lado a lado, contadores, créditos;
+    - o mapa das músicas (um agente analisa, outro verifica);
+    - um ensaio do filme inteiro a um quarto do tamanho, sem erros;
+    - o estado composto em `scratchpad/render_10h/estado_para_o_render.json`: a leitura da rev 2374
+      mais as instruções que a Mesa publicada ainda não guarda, sem escrever na base;
+    - `montar_da_mesa.py demo_v3`, `render.py v3 --sem-copias --fatias 6` (07:27 a 08:04) e
+      `ponto5_creditos.py --colar --estado ... --filme ...` (até às 08:17).
+  - **O que saiu:** `C:\casamento-video-media\saida\v3_2026-10-03_0759.mp4` (1080p, 218 MB) e
+    `saida/discussao/ponto5/v3_2026-10-03_0759_com_creditos_telemovel.mp4` (13:03, 28,6 MB), enviado
+    às 08:18.
+  - **O que leva:**
+    - as 15 fotos trocadas;
+    - o Lang Lang nos contadores 57 (in 43,7) e 143 (in 52), com a retoma da 060 mantida;
+    - o clip 57 `1995>20/05/2012|2011=Clara e Tiago conhecem-se;20/05/2012=Começam a namorar`;
+    - o clip 143 `2023>04/10/2026` com `cp` 3;
+    - os créditos com `partes` título e rolo, e `nomes_corridos`;
+    - `li` nos clips 107 e 108;
+    - duas trocas curtas de 0,3 s: Rei Leão para Céline Dion, e Vance Joy para Bachman Turner.
+  - **O que não deu:** a legenda do clip 10 numa linha. Precisa de 1762 px e há 1660, com Playfair
+    a 59, por isso saiu em duas linhas.
+  - **Por decidir por ele:**
+    - a retoma do piano na fita antes da Clara (060), que não está na lista dele;
+    - o lado a lado inteiro nos clips 45, 69, 70, 71, 115 e 129, que cortam mais de 25% (cinco têm
+      foco escolhido por ele).
 - **Fica para depois, palavras dele:** «trocar a foto x por 5-3» (*"vamos vigiar, mas para já
   ignora"*). A `01-NOVAS/5-3.jpg` é igual à original (f0009), que já está no clip 24.
 - As fotos de 04:29 a 04:31 estavam nas Transferências e foram copiadas para a `01-NOVAS`, sem mexer

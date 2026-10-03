@@ -162,16 +162,46 @@ CONTINUO = False
 DATA_AFASTADA = False
 NASC_DATA_AFASTA = 40
 
+# A DATA DE CHEGADA E O TEXTO DELA (3 de outubro): a segunda linha fica a 1,35 corpos da primeira.
+CHEGADA_ENTRELINHA = 1.35
 
-def aplicar_cores(cores=None, continuo=False, data_afastada=False):
+# A LETRA DO CONTADOR, est.estilo.contador.fonte (contrato de 3 de outubro, ponto 1). O Tiago: "Inclui
+# a possibilidade de alterar o tipo de letra no Contador. Incluir as mesmas letras que temos como
+# opcao nas legendas." Vale para todos os textos do contador e da fita de 1995: o ano grande, os anos
+# do lado, os meses da regua, as datas, o texto dos marcos e o rotulo. Quem abre a letra e o render
+# (abrir_letra, com o peso das letras variaveis), e passa-a aqui pelo aplicar_cores(); sem ela, e o
+# FONTE de sempre aberto como sempre, ao byte. Uma letra que nao abre cai no FONTE.
+_ABRIR_LETRA = None
+_LETRAS_ABERTAS = {}
+
+
+def _letra(corpo):
+    """A letra do contador no corpo pedido: a do estilo, ou o Arial Bold de sempre."""
+    if _ABRIR_LETRA is None:
+        return ImageFont.truetype(FONTE, corpo)
+    f = _LETRAS_ABERTAS.get(corpo)
+    if f is None:
+        try:
+            f = _ABRIR_LETRA(corpo)
+        except Exception:
+            f = None
+        f = f if f is not None else ImageFont.truetype(FONTE, corpo)
+        _LETRAS_ABERTAS[corpo] = f
+    return f
+
+
+def aplicar_cores(cores=None, continuo=False, data_afastada=False, letra=None):
     """Poe as cores do estilo da Mesa, {nome do contrato: (r, g, b)}; sem nada, voltam as de sempre.
 
     Comeca sempre pelas de sempre: um processo que faz duas montagens seguidas (os testes, o
     montar e o render no mesmo Python) nao fica com as cores da primeira na segunda. O mesmo vale
     para o `continuo`, o contador numa so peca, e para a `data_afastada`: sem eles volta a fita de
-    sempre.
+    sempre. E para a `letra` (3 de outubro), uma funcao corpo -> ImageFont que o render passa com
+    o est.estilo.contador.fonte: sem ela volta o Arial Bold, ver _letra().
     """
-    global _ESTILIZADAS, CONTINUO, DATA_AFASTADA
+    global _ESTILIZADAS, CONTINUO, DATA_AFASTADA, _ABRIR_LETRA
+    _ABRIR_LETRA = letra if callable(letra) else None
+    _LETRAS_ABERTAS.clear()
     g = globals()
     g.update(_CORES_DE_SEMPRE)
     cores = {k: v for k, v in (cores or {}).items() if k in CORES_DO_ESTILO and v is not None}
@@ -516,8 +546,13 @@ def janela_de_movimento(ano_de, ano_para, marcos, duracao, fracao_parada=0.62):
     return inicio, max(inicio + 0.5, fim)
 
 
-def anos(L, A, ano_de, ano_para, marcos, t_rel, duracao):
+def anos(L, A, ano_de, ano_para, marcos, t_rel, duracao, chegada=None, fim_aceso=False):
     """A fita dos anos. A recuar no tempo, le-se como um REWIND.
+
+    `chegada` (3 de outubro) sao as linhas que acendem no ano de chegada, uma por baixo da outra:
+    a data inteira e o texto dela, ver ler_anos_ate_data(). `fim_aceso` deixa o rotulo da ultima
+    paragem aceso ate ao fim do clip, em vez de apagar para o corte: e o que a data de chegada e o
+    contador parado no fim (cp) pedem. Sem os dois, o desenho de sempre ao byte.
 
     ISTO ESTAVA AO CONTRARIO e o Tiago apanhou: "Nota sobre a timeline. E ao
     contrario, quando estamos a andar para tras e como se fizessemos um rewind".
@@ -553,6 +588,10 @@ def anos(L, A, ano_de, ano_para, marcos, t_rel, duracao):
         if min(ano_de, ano_para) <= ano <= max(ano_de, ano_para):
             paragens_anos.add(ano)
             por_ano[ano] = txt
+    linhas_do_ano = {}
+    if chegada:
+        linhas_do_ano[ano_para] = [t for t in chegada if t]
+        por_ano[ano_para] = linhas_do_ano[ano_para][0] if linhas_do_ano[ano_para] else None
     ordenados = sorted(paragens_anos, reverse=recuo)
     paragens = [posicao(x) for x in ordenados]
     pos, qual, dentro = posicao_com_paragens(p, paragens)
@@ -568,9 +607,9 @@ def anos(L, A, ano_de, ano_para, marcos, t_rel, duracao):
     y_linha = int(A * 0.60)
     d.line([(0, y_linha), (L, y_linha)], fill=LINHA, width=2)
 
-    f_grande = ImageFont.truetype(FONTE, int(A * CORPO_NUMERO))
-    f_medio = ImageFont.truetype(FONTE, int(A * 0.10))
-    f_marco = ImageFont.truetype(FONTE, CORPO_ROTULO)
+    f_grande = _letra(int(A * CORPO_NUMERO))
+    f_medio = _letra(int(A * 0.10))
+    f_marco = _letra(CORPO_ROTULO)
 
     # Rasto: copias esbatidas atras do sentido do movimento. A recuar, o
     # movimento aparente e para a direita, logo o rasto fica a direita.
@@ -623,12 +662,22 @@ def anos(L, A, ano_de, ano_para, marcos, t_rel, duracao):
         txt = por_ano.get(ano)
         aceso = 0.0
         if txt and qual is not None and ordenados[qual] == ano:
-            aceso = min(1.0, dentro / 0.18) * min(1.0, (1.0 - dentro) / 0.18)
+            if fim_aceso and qual == len(ordenados) - 1:
+                aceso = min(1.0, dentro / 0.18)
+            else:
+                aceso = min(1.0, dentro / 0.18) * min(1.0, (1.0 - dentro) / 0.18)
         if txt and perto > 0.02 and aceso > 0.02:
             alfa = perto ** 1.2 * aceso
             _risco_do_marco(tela, d, x0, y_linha, alfa)
-            _texto(d, txt, f_marco, x0, y_linha + int(A * Y_ROTULO),
-                   tuple(int(MARCO_TEXTO[i] * alfa) for i in range(3)), alfa=alfa)
+            cor_txt = tuple(int(MARCO_TEXTO[i] * alfa) for i in range(3))
+            if ano in linhas_do_ano:
+                # A DATA E O TEXTO DELA, uma linha por baixo da outra, no corpo e na cor do rotulo.
+                for n, linha in enumerate(linhas_do_ano[ano]):
+                    _texto(d, linha, f_marco, x0,
+                           y_linha + int(A * Y_ROTULO) + n * int(round(f_marco.size * CHEGADA_ENTRELINHA)),
+                           cor_txt, alfa=alfa)
+            else:
+                _texto(d, txt, f_marco, x0, y_linha + int(A * Y_ROTULO), cor_txt, alfa=alfa)
     return tela
 
 
@@ -677,7 +726,7 @@ def data_do_instante(de, para, marcos, t_rel, duracao):
     return baixo + datetime.timedelta(days=int(round(pos))), qual, dentro, pos
 
 
-def datas(L, A, de, para, marcos, t_rel, duracao):
+def datas(L, A, de, para, marcos, t_rel, duracao, fim_aceso=False):
     """A fita de duas datas, dia a dia. A mesma dos anos, com a lente aberta.
 
     O Tiago, a 17 de setembro: "O rebobinar inicial cria-me na mesa um que rebobina da
@@ -728,7 +777,7 @@ def datas(L, A, de, para, marcos, t_rel, duracao):
     # esta a 15 metros. Passam a ter o corpo da legenda e 8,3 para 1. O ano que ia em letra
     # miuda por baixo de janeiro saiu: a 30 px nao se lia de todo, e o ano ja esta escrito
     # por extenso na data grande, que e a que se le primeiro.
-    f_mes = ImageFont.truetype(FONTE, CORPO_ROTULO)
+    f_mes = _letra(CORPO_ROTULO)
     inicio_visivel = baixo + datetime.timedelta(days=int(math.floor(pos - meia)))
     mes = datetime.date(inicio_visivel.year, inicio_visivel.month, 1)
     maiores = []
@@ -749,7 +798,7 @@ def datas(L, A, de, para, marcos, t_rel, duracao):
     # A DATA GRANDE AO CENTRO, com o rasto do contador de anos por tras. A conta do
     # rasto e a de la, escrita em pixeis: um passo de ano por segundo da uma copia, e a
     # largura total nunca passa 42 por cento desse passo, senao lia-se a data duplicada.
-    f_data = ImageFont.truetype(FONTE, int(A * CORPO_NUMERO))
+    f_data = _letra(int(A * CORPO_NUMERO))
     rastos, largura_rasto = _rasto(px_s, unidade)
     sentido = 1 if recua else -1
     texto_data = texto_da_data(data_centro)
@@ -763,7 +812,7 @@ def datas(L, A, de, para, marcos, t_rel, duracao):
     # OS ROTULOS ACENDEM E APAGAM DENTRO DA SUA PARAGEM, como no contador de anos: o de
     # partida por baixo da data de partida no arranque, o de chegada por baixo da data
     # de chegada quando ela para. Ficam abaixo da regua para nao lhe cairem em cima.
-    f_marco = ImageFont.truetype(FONTE, CORPO_ROTULO)
+    f_marco = _letra(CORPO_ROTULO)
     for data_m in ordenados:
         txt = por_data.get(data_m)
         if not txt:
@@ -774,7 +823,9 @@ def datas(L, A, de, para, marcos, t_rel, duracao):
         perto = 1.0 - min(1.0, abs((data_m - baixo).days - pos) / 30.44)
         aceso = 0.0
         if qual is not None and ordenados[qual] == data_m:
-            aceso = min(1.0, dentro / 0.18) * min(1.0, (1.0 - dentro) / 0.18)
+            # fim_aceso (3 de outubro): o rotulo da chegada nao apaga, ver anos()
+            aceso = min(1.0, dentro / 0.18) * (1.0 if fim_aceso and qual == len(ordenados) - 1
+                                               else min(1.0, (1.0 - dentro) / 0.18))
         if perto > 0.02 and aceso > 0.02:
             alfa = perto ** 1.2 * aceso
             _risco_do_marco(tela, d, x0, y_linha, alfa)
@@ -882,23 +933,23 @@ def meses(L, A, ano, marcas, t_rel, duracao, troco=(0.0, 1.0), abre=True):
     d.line([(0, y_linha), (L, y_linha)], fill=LINHA, width=2)
     d.line([(L // 2, y_linha - 230), (L // 2, y_linha + 150)], fill=_cor_da_guia(), width=3)
 
-    f_ano = ImageFont.truetype(FONTE, int(A * 0.13))
+    f_ano = _letra(int(A * 0.13))
     # 38 E NAO OS 46 DA REGUA, e a razao e a folga por baixo: os meses sao centrados em
     # y_linha + 34 e a data do marco em y_linha + 64. Medido com a Pillow, a faixa dos meses
     # acaba 2 px dentro da faixa da data a 38 px, 3 px a 32 px em letra fina (o que estava
     # ca antes) e 5,5 px a 46. Ou seja 38 em negrito le-se melhor E encosta menos do que o
     # que la estava. A 42 ja encostava mais.
-    f_mes = ImageFont.truetype(FONTE, 38)
-    f_data = ImageFont.truetype(FONTE, 40)
-    f_data_nasc = ImageFont.truetype(FONTE, NASC_DATA_CORPO)
-    f_txt = ImageFont.truetype(FONTE, 58)
-    f_gr = ImageFont.truetype(FONTE, NASC_CORPO)
+    f_mes = _letra(38)
+    f_data = _letra(40)
+    f_data_nasc = _letra(NASC_DATA_CORPO)
+    f_txt = _letra(58)
+    f_gr = _letra(NASC_CORPO)
 
     # O ano comeca grande, no sitio onde estava na fita dos anos, e encolhe
     # para o alto enquanto os meses se abrem. E isso que costura as duas fitas.
     corpo_ano = int(A * (0.17 - 0.04 * entrada))
     y_ano = int(y_linha - A * 0.14 + (A * 0.16 - (y_linha - A * 0.14)) * entrada)
-    _texto(d, str(ano), ImageFont.truetype(FONTE, corpo_ano), L / 2.0, y_ano,
+    _texto(d, str(ano), _letra(corpo_ano), L / 2.0, y_ano,
            _cor_do_ano_da_fita(entrada))
 
     desvio = L / 2.0 - pos * largura_ano
@@ -1112,7 +1163,7 @@ def _regua_do_ano(d, L, A, y_linha, ano, desvio, largura, entrada):
     acende = max(0.0, min(1.0, (entrada - 0.25) / 0.75))
     if acende <= 0.0:
         return
-    f_mes = ImageFont.truetype(FONTE, CORPO_ROTULO)
+    f_mes = _letra(CORPO_ROTULO)
     for m in range(12):
         x = desvio + m * mes_px
         if x < -mes_px or x > L + mes_px:
@@ -1145,11 +1196,11 @@ def _meses_numa_peca(L, A, ano, marcas, t_rel, duracao, troco=(0.0, 1.0), abre=T
     # O ANO GRANDE, onde e como o contador o deixou, e o vizinho de cima a sair pela direita. O
     # vizinho so existe se no contador se veria sem tocar no grande: num troco que abre a meio do
     # ano (a fita da Clara, depois das fotos do Tiago) estaria em cima dele, e nao se desenha.
-    f_grande = ImageFont.truetype(FONTE, int(A * CORPO_NUMERO))
+    f_grande = _letra(int(A * CORPO_NUMERO))
     y_ano = y_linha - int(A * 0.14)
     _texto(d, str(ano), f_grande, L / 2.0, y_ano, ANO_PERTO)
     if abre:
-        f_medio = ImageFont.truetype(FONTE, int(A * 0.10))
+        f_medio = _letra(int(A * 0.10))
         larg_grande = d.textbbox((0, 0), str(ano), font=f_grande)
         larg_vizinho = d.textbbox((0, 0), str(ano + 1), font=f_medio)
         folga = passo * (1.0 - pos) - (larg_grande[2] - larg_grande[0]) / 2.0 \
@@ -1181,8 +1232,8 @@ def _meses_numa_peca(L, A, ano, marcas, t_rel, duracao, troco=(0.0, 1.0), abre=T
     if atual and aceso > 0.02:
         dia, mes, txt, grande, img = atual
         x = desvio + _fracao_do_ano(dia, mes) * largura
-        f_txt = ImageFont.truetype(FONTE, max(1, int(round((NASC_CORPO if grande else TEXTO_MARCA_CORPO) * e))))
-        f_data = ImageFont.truetype(FONTE, max(1, int(round((NASC_DATA_CORPO if grande else DATA_MARCA_CORPO) * e))))
+        f_txt = _letra(max(1, int(round((NASC_CORPO if grande else TEXTO_MARCA_CORPO) * e))))
+        f_data = _letra(max(1, int(round((NASC_DATA_CORPO if grande else DATA_MARCA_CORPO) * e))))
         topo = y_linha + int(A * PONTEIRO_BAIXO) + int(round(PECA_FOLGA_TEXTO * e))
         base = _texto_pelo_topo(d, txt, f_txt, x, topo,
                                 tuple(int(c * aceso) for c in (NASC_COR if grande else MARCO_TEXTO)), alfa=aceso)
@@ -1268,6 +1319,69 @@ def ler_datas(texto):
     return de, para, marcos
 
 
+def data_por_extenso(data):
+    """datetime.date -> "20 de maio de 2012": a data inteira como ele a escreve no contador do inicio."""
+    return "%d de %s de %d" % (data.day, MESES_POR_EXTENSO[data.month - 1], data.year)
+
+
+def _e_ano_ate_data(corpo):
+    """"1995>20/05/2012": o contador de anos que acaba numa data inteira (3 de outubro)."""
+    de, igual, para = (corpo or "").partition(">")
+    return bool(igual) and de.strip().isdigit() and "/" not in de and _e_data(para)
+
+
+def ler_anos_ate_data(texto):
+    """"1995>20/05/2012|rotulo;2011=texto;20/05/2012=texto" -> (de, para, marcos, chegada).
+
+    O CONTADOR DE ANOS QUE ACABA NUMA DATA INTEIRA, contrato de 3 de outubro (pontos 6 e 7). O
+    Tiago: "o que pretendemos e que ele se mova desde 2023 ate 2026 para a data de 4 de outubro de
+    2026". A fita anda por anos, como a de sempre, e para no ANO da data; ai acende, por baixo do
+    ano grande, a data inteira por extenso ("4 de outubro de 2026"), como o contador do inicio a
+    mostra no comeco. Um marco escrito NESSA DATA ("20/05/2012=Comecam a namorar") vai na linha
+    de baixo, e um marco de ano igual ao da chegada tambem. `chegada` e a lista dessas linhas.
+
+    Os marcos de ano (2011=texto) e o rotulo sem "=" (o da partida) sao os do contador de anos; um
+    marco numa data que nao e a da chegada fica no seu ano, como o preparar faz aos contadores por
+    datas de mais de tres anos. So a chegada pode ser data: "04/10/2026>1995" continua a nao se ler
+    (teste_contador_mal_escrito_nao_para_o_render, e a Mesa diz o mesmo).
+    """
+    corpo, _, resto = sem_segura(texto).partition("|")
+    de_txt, _, para_txt = corpo.partition(">")
+    de, data_fim = int(de_txt.strip()), _data(para_txt)
+    para = data_fim.year
+    marcos, chegada = [], [data_por_extenso(data_fim)]
+    for peca in resto.split(";"):
+        peca = peca.strip()
+        if not peca:
+            continue
+        chave, igual, rot = peca.partition("=")
+        rot = rot.strip()
+        if igual and _e_data(chave):
+            if rot:
+                d = _data(chave)
+                if d == data_fim:
+                    chegada.append(rot)
+                else:
+                    marcos.append((d.year, rot))
+        elif igual and chave.strip().isdigit():
+            if rot:
+                marcos.append((int(chave.strip()), rot))
+        else:
+            marcos.append((de, peca))
+    if de != para:
+        chegada += [t for a, t in marcos if a == para]
+        marcos = [(a, t) for a, t in marcos if a != para]
+    return de, para, marcos, chegada
+
+
+def chegada_do_contador(texto):
+    """As linhas que acendem na chegada de um contador de anos ate uma data, ou None nos outros."""
+    corpo = sem_segura(texto).partition("|")[0]
+    if not _e_ano_ate_data(corpo):
+        return None
+    return ler_anos_ate_data(texto)[3]
+
+
 def ler_contador(texto):
     """O tipo de contador e os seus parametros.
 
@@ -1279,8 +1393,17 @@ def ler_contador(texto):
     QUEM DECIDE E A BARRA, e nao o comprimento do que esta antes do ">". Um ano nunca
     leva barra e uma data leva sempre duas, e assim um "4/10/2026" escrito a mao sem o
     zero a frente e lido como data, que e o que ele quer dizer.
+
+    E O DE ANOS ATE UMA DATA (3 de outubro), "1995>20/05/2012": um ano antes do ">" e uma data
+    depois e um contador de ANOS, que para no ano da data; a data e o texto dela acendem na
+    chegada, ver ler_anos_ate_data() e chegada_do_contador(). Ate aqui nao se lia, e por isso nada
+    do que ja se lia muda. O "~segundos" do fim (o cp, parado no fim) tira-se antes de ler.
     """
+    texto = sem_segura(texto)
     corpo = (texto or "").partition("|")[0]
+    if _e_ano_ate_data(corpo):
+        de, para, marcos, _chegada = ler_anos_ate_data(texto)
+        return "anos", de, para, marcos
     if "/" in corpo:
         de, para, marcos = ler_datas(texto)
         return "datas", de, para, marcos
