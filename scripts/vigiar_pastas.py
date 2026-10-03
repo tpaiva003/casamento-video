@@ -12,9 +12,12 @@ O QUE E "NOVO":
            pasta e pelo nome, com as regras do inventario.py: as mesmas extensoes, e dentro
            de uma pasta "<nome>_files" so o que for fotografia a serio (600 px de lado).
            Uma foto que la esta mas mudou de tamanho tambem conta: foi trocada por outra.
+           Trocada por outra com o MESMO tamanho tambem, pela data, desde que a entrada
+           rapida ja a tenha lido uma vez (saida/_cache/entrada_rapida/medidas.json).
   musicas  o que esta na 02-NOVAS-MUSICAS (com subpastas) e nao esta no indice das copias
            de som da Mesa, saida/audio/indice.json, pelo caminho. Uma que la esta mas mudou
-           de tamanho ou de data tambem conta.
+           de tamanho ou de data tambem conta. Uma musica largada na 01-NOVAS conta na mesma:
+           a Mesa procura as musicas na pasta de trabalho inteira.
   O que a entrada rapida ja viu e nao conseguiu por na Mesa (um formato que nao se le, uma
   musica com o nome de outra) nao volta a ser dito: fica em
   saida/_cache/entrada_rapida/ja_vistos.json, que e ela que escreve.
@@ -22,7 +25,9 @@ O QUE E "NOVO":
 "JA PARADO": o tamanho e a data nao mudam ha --parado segundos (3 por omissao) e o ficheiro
 deixa-se abrir. Uma copia a meio nao conta, e um lote so se diz quando TODOS os ficheiros
 novos estao parados, para tres fotos largadas juntas darem uma linha e nao tres. Se algum
-continuar a mexer ao fim de --espera-max segundos (120), dizem-se os que ja pararam.
+continuar a mexer ao fim de --espera-max segundos (120), dizem-se os que ja pararam. Um
+ficheiro VAZIO (0 bytes) nao e uma copia a meio: ao fim de 10 segundos parado diz-se como
+"outro (vazio)" e deixa de prender os que vieram com ele.
 
 O QUE ESCREVE, uma linha por lote, e continua a vigiar:
 
@@ -39,7 +44,9 @@ COM --correr, a seguir a cada linha NOVO corre o scripts/entrada_rapida.py e esc
             28 ficheiros (31.3 MB); 2 avisos; 55 s; manifesto C:\\casamento-video\\saida\\entrada_rapida.json
     FALHOU: a entrada rapida saiu com o codigo 1 ao fim de 12 s: Parou no passo ...
 
-(tudo numa linha). Publicar continua a ser com a ferramenta Artifact, a partir do manifesto.
+(tudo numa linha). Depois de um FALHOU a vigia volta a tentar sozinha, aos 20, 40 e 60
+segundos, ate cinco vezes (outra atualizacao a correr e a razao mais comum), e diz DESISTO
+se nao conseguir. Publicar continua a ser com a ferramenta Artifact, a partir do manifesto.
 
 Uso:
     py -3.11 scripts/vigiar_pastas.py                 vigia ate o pararem (Ctrl+C)
@@ -69,6 +76,10 @@ MUSICAS = os.path.join(inventario.BASE, "02-NOVAS-MÚSICAS")
 INVENTARIO = inventario.OUT
 INDICE_SOM = os.path.join(REPO, "saida", "audio", "indice.json")
 JA_VISTOS = os.path.join(REPO, "saida", "_cache", "entrada_rapida", "ja_vistos.json")
+MEDIDAS = os.path.join(REPO, "saida", "_cache", "entrada_rapida", "medidas.json")
+POR_ACABAR = os.path.join(REPO, "saida", "_cache", "entrada_rapida", "por_acabar.json")
+ESPERA_VAZIO = 10.0       # segundos parado ate um ficheiro de 0 bytes deixar de contar como copia a meio
+TENTATIVAS = (20, 40, 60, 60, 60)   # segundos de espera antes de cada nova tentativa depois de um FALHOU
 
 # As extensoes que a Mesa toca: as do audio_para_mesa.EXT_SOM, que sao as do
 # montar_da_mesa.caminhos_de_musica(). A entrada rapida confirma que continuam iguais.
@@ -91,9 +102,30 @@ def assinatura(caminho):
     return [st.st_size, st.st_mtime_ns]
 
 
+_LIDOS = {}
+
+
+def _so_se_mudou(caminho, ler):
+    """O que `ler(caminho)` devolve, lido outra vez so quando o ficheiro muda de tamanho ou de data:
+    a vigia pergunta de dois em dois segundos, e o inventario e o indice do som sao grandes."""
+    try:
+        ass = tuple(assinatura(caminho))
+    except OSError:
+        ass = None
+    guardado = _LIDOS.get(caminho)
+    if guardado and guardado[0] == ass:
+        return guardado[1]
+    valor = ler(caminho)
+    _LIDOS[caminho] = (ass, valor)
+    return valor
+
+
 def ler_inventario(caminho=None):
     """{(pasta, ficheiro): bytes} do inventario. Vazio se ainda nao existir."""
-    caminho = caminho or INVENTARIO
+    return _so_se_mudou(caminho or INVENTARIO, _ler_inventario)
+
+
+def _ler_inventario(caminho):
     conhecidas = {}
     if os.path.exists(caminho):
         with open(caminho, encoding="utf-8-sig", newline="") as fh:
@@ -107,7 +139,10 @@ def ler_inventario(caminho=None):
 
 def ler_indice_som(caminho=None):
     """{caminho em minusculas: [tamanho, mtime]} dos originais que ja tem copia para a Mesa."""
-    caminho = caminho or INDICE_SOM
+    return _so_se_mudou(caminho or INDICE_SOM, _ler_indice_som)
+
+
+def _ler_indice_som(caminho):
     try:
         with io.open(caminho, encoding="utf-8") as fh:
             ind = json.load(fh)
@@ -118,12 +153,35 @@ def ler_indice_som(caminho=None):
 
 def ler_ja_vistos(caminho=None):
     """{caminho em minusculas: [tamanho, mtime, porque]} do que a entrada rapida viu e nao pos na Mesa."""
-    caminho = caminho or JA_VISTOS
+    return _so_se_mudou(caminho or JA_VISTOS, _ler_ja_vistos)
+
+
+def _ler_ja_vistos(caminho):
     try:
         with io.open(caminho, encoding="utf-8") as fh:
             return {k: list(v) for k, v in json.load(fh).items()}
     except (OSError, ValueError, AttributeError, TypeError):
         return {}
+
+
+def ler_medidas(caminho=None):
+    """{caminho em minusculas: [tamanho, mtime]} das fotos que a entrada rapida ja leu."""
+    return _so_se_mudou(caminho or MEDIDAS, _ler_medidas)
+
+
+def _ler_medidas(caminho):
+    try:
+        with io.open(caminho, encoding="utf-8") as fh:
+            return {k: list(v[0]) for k, v in (json.load(fh).get("medir") or {}).items()}
+    except (OSError, ValueError, AttributeError, TypeError, IndexError):
+        return {}
+
+
+def vazio(caminho):
+    try:
+        return os.path.getsize(caminho) == 0
+    except OSError:
+        return False
 
 
 _A_SERIO = {}
@@ -164,7 +222,19 @@ def novidades(fotos=None, musicas=None, inventario_csv=None, indice_som=None, co
     conhecidas = ler_inventario(inventario_csv)
     com_copia = ler_indice_som(indice_som)
     vistos = ler_ja_vistos()
+    lidas = ler_medidas()
     saida = {"fotos": [], "musicas": [], "outros": []}
+
+    def musica(item, caminho):
+        guardado = com_copia.get(chave(caminho))
+        try:
+            if guardado is None:
+                if not ja_visto(caminho):
+                    saida["musicas"].append(dict(item, porque="nova"))
+            elif list(guardado) != assinatura(caminho) and not ja_visto(caminho):
+                saida["musicas"].append(dict(item, porque="mudou"))
+        except OSError:
+            pass
 
     def ja_visto(caminho):
         v = vistos.get(chave(caminho))
@@ -191,11 +261,16 @@ def novidades(fotos=None, musicas=None, inventario_csv=None, indice_som=None, co
                     saida["fotos"].append(dict(item, porque="nova"))
                 else:
                     try:
-                        tamanho = os.path.getsize(caminho)
+                        ass = assinatura(caminho)
                     except OSError:
                         continue
-                    if registada >= 0 and tamanho != registada:
+                    lida = lidas.get(chave(caminho))
+                    if (registada >= 0 and ass[0] != registada) or (lida is not None and lida != ass):
                         saida["fotos"].append(dict(item, porque="mudou"))
+            elif baixo.endswith(EXT_MUSICA) and not dentro_de_files and "_files" not in rel:
+                # uma musica largada na pasta das fotos: a Mesa apanha-a (o montar varre a pasta
+                # de trabalho inteira), por isso e uma musica nova e nao "um formato que nao se le"
+                musica(item, caminho)
             elif com_outros and not dentro_de_files and "_files" not in rel:
                 if baixo.endswith(EXT_CALADAS) or nome.startswith((".", "~$")) or "." not in nome:
                     continue
@@ -212,17 +287,7 @@ def novidades(fotos=None, musicas=None, inventario_csv=None, indice_som=None, co
                     "pasta": etiqueta if not rel else "%s/%s" % (etiqueta, rel), "ficheiro": nome}
             baixo = nome.lower()
             if baixo.endswith(EXT_MUSICA):
-                guardado = com_copia.get(chave(caminho))
-                if guardado is None:
-                    if ja_visto(caminho):
-                        continue
-                    saida["musicas"].append(dict(item, porque="nova"))
-                else:
-                    try:
-                        if list(guardado) != assinatura(caminho) and not ja_visto(caminho):
-                            saida["musicas"].append(dict(item, porque="mudou"))
-                    except OSError:
-                        continue
+                musica(item, caminho)
             elif com_outros:
                 if baixo.endswith(EXT_CALADAS) or nome.startswith((".", "~$")) or "." not in nome:
                     continue
@@ -272,6 +337,7 @@ def linha_do_lote(fotos, musicas, outros=()):
         partes.append(plural(len(outros), "outro", "outros"))
     nomes = [x["nome"] for x in fotos] + [x["nome"] for x in musicas]
     nomes += ["%s (%s)" % (x["nome"], "video, fica por decidir" if x["porque"] == "video"
+                           else "vazio, 0 bytes" if x["porque"] == "vazio"
                            else "formato que nao se le") for x in outros]
     return "NOVO: %s: %s" % (", ".join(partes), " | ".join(nomes))
 
@@ -301,32 +367,69 @@ def correr_entrada():
         m = None
     if r.returncode != 0 or not m or m.get("erro"):
         ultima = [l for l in (r.stdout or "").splitlines() + (r.stderr or "").splitlines() if l.strip()][-1:]
+        # com outro codigo que nao o do manifesto (a tranca, um erro ao arrancar), o que conta e a ultima linha
+        porque = " ".join(ultima) if (r.returncode != 0 and not (r.stdout or "").strip()) else \
+            ((m or {}).get("erro") or " ".join(ultima))
         dizer("FALHOU: a entrada rapida saiu com o codigo %d ao fim de %.0f s: %s"
-              % (r.returncode, time.time() - inicio, (m or {}).get("erro") or " ".join(ultima)))
-        return
+              % (r.returncode, time.time() - inicio, porque))
+        return False
     dizer("PRONTO: build %s, %s fotos; entraram %s e %s; a publicar a pagina e %s (%.1f MB); %s; %.0f s; manifesto %s"
-          % (m.get("build"), m.get("fotos"), plural(len(m["entrou"]["fotos"]), "foto", "fotos"),
+          % (m.get("build"), m.get("fotos"),
+             plural(len(m["entrou"]["fotos"]), "foto", "fotos")
+             + ((" (e %s)" % plural(len(m["entrou"]["fotos_mudadas"]), "trocada", "trocadas"))
+                if m["entrou"].get("fotos_mudadas") else ""),
              plural(len(m["entrou"]["musicas"]), "musica", "musicas"),
              plural(len(m["publicar"]["ficheiros"]), "ficheiro", "ficheiros"), m["publicar"]["bytes"] / 1048576.0,
              plural(len(m["avisos"]), "aviso", "avisos"), time.time() - inicio,
              os.path.join(REPO, "saida", "entrada_rapida.json")))
+    return True
 
 
 def uma_vez(args):
-    n = novidades(args.fotos, args.musicas, args.inventario, args.indice_som)
+    n = novidades(args.fotos, args.musicas, args.inventario, args.indice_som, com_outros=True)
     todos = n["fotos"] + n["musicas"]
     quietos, a_mexer = parados(todos, args.parado if todos else 0)
+    if todos:
+        # confirma-se depois da espera: um inventario apanhado a meio de ser escrito dava fotos "novas"
+        n = novidades(args.fotos, args.musicas, args.inventario, args.indice_som, com_outros=True)
+        ainda = set(x["caminho"] for x in n["fotos"] + n["musicas"])
+        a_mexer = [x for x in a_mexer if x["caminho"] in ainda]
     fotos = [x for x in n["fotos"] if x in quietos]
     musicas = [x for x in n["musicas"] if x in quietos]
+    # um ficheiro de 0 bytes nao e uma copia a meio: diz-se a parte, e nao como "ainda a mexer"
+    vazios = [x for x in a_mexer if vazio(x["caminho"])]
+    a_mexer = [x for x in a_mexer if x not in vazios]
+    # os formatos que nem o inventario nem a Mesa leem (.jfif do Chrome, .heif) e que a entrada
+    # rapida ainda nao viu: passavam em silencio. Os videos nao: esses estao na Mesa, por decidir.
+    vistos = ler_ja_vistos()
+    nao_entram = []
+    for x in n["outros"]:
+        if x["porque"] != "nao se le":
+            continue
+        try:
+            if list((vistos.get(chave(x["caminho"])) or [])[:2]) == assinatura(x["caminho"]):
+                continue
+        except OSError:
+            continue
+        nao_entram.append(x)
     if args.json:
-        dizer(json_do_lote(fotos, musicas))
+        dizer(json_do_lote(fotos, musicas, [dict(x, porque="vazio") for x in vazios] + nao_entram))
     elif fotos or musicas:
         dizer(linha_do_lote(fotos, musicas))
     else:
         dizer("NADA DE NOVO")
-    if a_mexer and not args.json:
-        dizer("A COPIAR: %s ainda a mexer: %s" % (plural(len(a_mexer), "ficheiro", "ficheiros"),
-                                                  " | ".join(x["nome"] for x in a_mexer)))
+    if not args.json:
+        if a_mexer:
+            dizer("A COPIAR: %s ainda a mexer: %s" % (plural(len(a_mexer), "ficheiro", "ficheiros"),
+                                                      " | ".join(x["nome"] for x in a_mexer)))
+        if vazios:
+            dizer("VAZIO: %s com 0 bytes, nao entra: %s" % (plural(len(vazios), "ficheiro", "ficheiros"),
+                                                            " | ".join(x["nome"] for x in vazios)))
+        if nao_entram:
+            dizer("NAO ENTRA: %s com um formato que nao se le: %s"
+                  % (plural(len(nao_entram), "ficheiro", "ficheiros"), " | ".join(x["nome"] for x in nao_entram)))
+        if os.path.exists(POR_ACABAR):
+            dizer("POR ACABAR: a ultima entrada rapida nao chegou ao fim; corre py -3.11 scripts/entrada_rapida.py")
     return 0
 
 
@@ -334,6 +437,22 @@ def vigiar(args):
     ditos = {}            # caminho -> assinatura com que ja foi dito
     pendentes = {}        # caminho -> [assinatura, desde quando esta assim]
     primeiro_parado = None
+    repetir = None        # [quando, quantas ja foram]: a nova tentativa depois de um FALHOU (--correr)
+
+    def entrada():
+        """Corre a entrada rapida; se falhar, marca a nova tentativa. Antes disto a vigia dava o
+        lote como dito e calava-se: com a foto ja no inventario, nunca mais chegava a pagina."""
+        nonlocal repetir
+        if correr_entrada():
+            repetir = None
+        elif repetir is None:
+            repetir = [time.time() + TENTATIVAS[0], 0]
+        elif repetir[1] + 1 < len(TENTATIVAS):
+            repetir = [time.time() + TENTATIVAS[repetir[1] + 1], repetir[1] + 1]
+        else:
+            dizer("DESISTO: a entrada rapida falhou %d vezes seguidas. Corre py -3.11 scripts/entrada_rapida.py "
+                  "a mao e ve o erro." % (len(TENTATIVAS) + 1))
+            repetir = None
     inicio = novidades(args.fotos, args.musicas, args.inventario, args.indice_som, com_outros=True)
     # Os videos e os formatos que nao se leem que JA la estavam nao sao noticia: so os que chegarem.
     for x in inicio["outros"]:
@@ -345,7 +464,13 @@ def vigiar(args):
           % (args.fotos or FOTOS, args.musicas or MUSICAS, args.intervalo, args.intervalo,
              len(ler_inventario(args.inventario)), len(ler_indice_som(args.indice_som)),
              "" if os.path.isdir(args.musicas or MUSICAS) else " (a pasta das musicas nao existe)"))
+    if args.correr and os.path.exists(POR_ACABAR):
+        dizer("RETOMA: a ultima entrada rapida nao chegou ao fim, corre outra vez")
+        entrada()
     while True:
+        if repetir and time.time() >= repetir[0]:
+            dizer("OUTRA VEZ: nova tentativa da entrada rapida (%d de %d)" % (repetir[1] + 1, len(TENTATIVAS)))
+            entrada()
         try:
             n = novidades(args.fotos, args.musicas, args.inventario, args.indice_som, com_outros=True)
         except OSError as erro:                 # uma pasta a ser mexida a meio da leitura
@@ -374,6 +499,11 @@ def vigiar(args):
                     a_mexer += 1
                 elif abre(c):
                     por_dizer[tipo].append((x, ass))
+                elif ass[0] == 0 and agora - p[1] >= max(args.parado, ESPERA_VAZIO):
+                    # 0 bytes e parado ha 10 s: nao e uma copia a meio, e nao prende o lote dos outros
+                    por_dizer["outros"].append((dict(x, porque="vazio"), ass))
+                elif ass[0] == 0:
+                    a_mexer += 1
                 elif agora - p[1] < args.espera_max:
                     a_mexer += 1              # parado mas vazio ou trancado: ainda pode ser uma copia
                 # senao esta vazio ou trancado ha muito tempo, e nao prende o lote dos outros
@@ -391,7 +521,7 @@ def vigiar(args):
             outros = [x for x, _ in por_dizer["outros"]]
             dizer(json_do_lote(fotos, musicas, outros) if args.json else linha_do_lote(fotos, musicas, outros))
             if args.correr and (fotos or musicas):
-                correr_entrada()
+                entrada()
             for tipo in por_dizer:
                 for x, ass in por_dizer[tipo]:
                     ditos[x["caminho"]] = ass

@@ -354,6 +354,20 @@ def main():
                 caras_recusadas.append((ident, r["ficheiro"], etiqueta, fid))
                 recusas.append("%s:cara %.2f" % (etiqueta, fid))
                 continue
+            # O LIMITE DA ALTERACAO VALE PARA TODAS AS VERSOES, e nao so para a rede (3 de outubro).
+            # Uma foto trocada na pasta por outra com o mesmo nome e as mesmas dimensoes fica em
+            # upscaled\ com a versao lanczos da foto ANTIGA: o upscale.py salta o que ja existe com
+            # o tamanho certo. Com caras, a guarda de cima costuma recusa-la; sem caras, entrava
+            # (na caixa de areia entrou um lanczos com 28 por cento, que era outra fotografia, e a
+            # FINAIS, logo o filme, ficava com a imagem velha). O lanczos de uma foto muda-a 1,07
+            # por cento no pior caso do acervo: acima do limite a versao nao e desta foto, e fica o
+            # original. Vem DEPOIS da guarda das caras de proposito: assim nenhuma linha do indice
+            # de hoje muda (a f0310, que tem em upscaled\ a versao de uma imagem anterior, continua
+            # recusada pela cara, como estava). Refaz-se com: upscale.py --so-ids <id>.
+            if mudou > limite:
+                demasiado.append((r["id"], r["ficheiro"], mudou))
+                recusas.append("%s:alteracao %.1f" % (etiqueta, mudou))
+                continue
             escolha, origem = caminho, etiqueta
             break
 
@@ -429,7 +443,8 @@ def main():
         print()
     if demasiado:
         print("EXCLUIDAS POR ALTERAREM DEMASIADO (limite %.0f%%)" % limite)
-        print("Estas ficaram com o original. Ve os recortes antes de as aceitar.")
+        print("Estas ficaram com o original. Um lanczos acima do limite e de outra fotografia")
+        print("(a foto foi trocada depois de ampliada): refaz-se com upscale.py --so-ids <id>.")
         for ident, ficheiro, m in sorted(demasiado, key=lambda x: -x[2])[:15]:
             print("  %-7s %-42s alterou %.1f%%" % (ident, ficheiro[:42], m))
         print()

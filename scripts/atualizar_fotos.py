@@ -32,12 +32,17 @@ estejam abertas saberem que ha versao nova.
 Desde 3 de outubro ha tambem o scripts/entrada_rapida.py, que da o mesmo resultado sem refazer
 as contas das fotos que nao mudaram (cerca de um minuto em vez de seis) e escreve
 saida/entrada_rapida.json com o que entrou, os avisos e a lista exata do que ha para publicar.
-O --rapido deste script chama-o. Sem o --rapido, tudo aqui e como sempre foi.
+O --rapido deste script chama-o. Sem o --rapido, tudo aqui e como sempre foi, com duas coisas
+a mais, de 3 de outubro: pede a mesma tranca da entrada rapida (as duas ao mesmo tempo escreviam o
+mesmo inventario, a mesma FINAIS e a mesma pagina), e, se o consolidar recusar uma versao lanczos
+pela alteracao (a foto foi trocada na pasta por outra com o mesmo nome e o mesmo tamanho, e a
+versao que la esta e a da antiga), refaz so essa com o upscale.py --so-ids e consolida outra vez.
 
 Uso:  py -3.11 scripts/atualizar_fotos.py
       py -3.11 scripts/atualizar_fotos.py --sem-ia
       py -3.11 scripts/atualizar_fotos.py --rapido     o mesmo, pelo scripts/entrada_rapida.py
 """
+import csv
 import os
 import subprocess
 import sys
@@ -66,15 +71,48 @@ def passo(n, nome, *args):
     print("    feito em %.0f s" % (time.time() - inicio))
 
 
+def conteudos():
+    """{(pasta, ficheiro): (id, sha256)} do inventario como esta agora."""
+    caminho = os.path.join(os.path.dirname(AQUI), "data", "inventario.csv")
+    if not os.path.exists(caminho):
+        return {}
+    with open(caminho, encoding="utf-8-sig", newline="") as fh:
+        return {(r["pasta"], r["ficheiro"]): (r["id"], r["sha256"]) for r in csv.DictReader(fh)}
+
+
+def versoes_velhas():
+    """Os id das fotos cuja versao lanczos o consolidar acabou de recusar pela alteracao."""
+    caminho = os.path.join(os.path.dirname(AQUI), "data", "finais.csv")
+    if not os.path.exists(caminho):
+        return []
+    with open(caminho, encoding="utf-8-sig", newline="") as fh:
+        return [r["id"] for r in csv.DictReader(fh) if "lanczos:alteracao" in (r.get("recusadas") or "")]
+
+
 def main():
     if "--rapido" in sys.argv:
         resto = [a for a in sys.argv[1:] if a not in ("--rapido", "--sem-ia")]
         sys.exit(subprocess.call([PY, os.path.join(AQUI, "entrada_rapida.py")] + resto))
+    sys.path.insert(0, AQUI)
+    import entrada_rapida
+    entrada_rapida.trancar("atualizar_fotos.py")
+    antes = conteudos()
     passo(1, "inventario.py")
+    # uma foto trocada por outra com o mesmo nome (o sha256 mudou no mesmo caminho): a versao
+    # ampliada que la esta e a da foto antiga, e o passo 2 saltava-a por ter o tamanho certo
+    trocadas = [i for k, (i, h) in conteudos().items() if k in antes and antes[k][1] != h]
+    if trocadas:
+        passo(2, "upscale.py", "--so-ids", ",".join(trocadas))
     passo(2, "upscale.py")
     print()
     print("[3] upscale_ia.py: nao corre, a rede neuronal saiu do filme (decisao 090)")
     passo(4, "consolidar.py")
+    velhas = versoes_velhas()
+    if velhas:
+        print()
+        print("    %d com a versao ampliada de outra fotografia (a foto foi trocada): refazem-se" % len(velhas))
+        passo(2, "upscale.py", "--so-ids", ",".join(velhas))
+        passo(4, "consolidar.py")
     passo(5, "gerar_editor.py")
     passo(6, "gerar_montagens_editor.py")
     passo(7, "estado_fotos.py")

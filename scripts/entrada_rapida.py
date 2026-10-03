@@ -9,8 +9,8 @@ dos ficheiros a publicar.
 
 DA O MESMO QUE O atualizar_fotos.py, SO QUE MAIS DEPRESSA. Os passos sao os mesmos, pela
 mesma ordem, e quem decide continua a ser cada script: este chama o main() de cada um e so
-lhe guarda as contas que nao mudam. O atualizar_fotos.py gasta seis minutos porque refaz
-tudo de todas as fotos, mesmo quando so entraram tres:
+lhe guarda as contas que nao mudam. O atualizar_fotos.py gasta seis a oito minutos porque
+refaz tudo de todas as fotos, mesmo quando so entraram tres:
 
   inventario.py      le e faz o sha256 das 741 fotos           aqui: so as que mudaram de
                                                                tamanho ou de data
@@ -22,7 +22,28 @@ tudo de todas as fotos, mesmo quando so entraram tres:
 
 O upscale.py ja so fazia o que faltava, o estado_fotos.py e o gerar_montagens_editor.py sao
 de um segundo, e o gerar_mesa.py (com o audio_para_mesa.py la dentro, que faz as copias de
-som so das musicas novas) corre tal e qual, sem nenhuma mudanca.
+som so das musicas novas) corre tal e qual, sem nenhuma mudanca. E ele que fica com a maior
+parte do tempo: cerca de 25 segundos, 13 deles a medir os glifos das letras.
+
+MEDIDO A 3 DE OUTUBRO, numa copia inteira do repositorio e dos media (741 fotos), com o PC
+ocupado por outros trabalhos, e comparado ficheiro a ficheiro com o caminho completo
+(data/, proxies/, saida/, a FINAIS e a upscaled, cerca de 2000 ficheiros, sem nenhuma diferenca):
+
+                                          atualizar_fotos.py     entrada_rapida.py
+  sem nada de novo                        8 min 12 s             33 s (2 s desde a correcao das 14h)
+  3 fotos e 1 musica                      8 min 02 s             44 s
+  1 nova, 1 trocada, 1 tirada, 3 musicas  7 min 56 s             34 s
+  a primeira corrida, com a cache vazia                          3 min 28 s
+
+A PRIMEIRA CORRIDA enche a cache e por isso demora mais; mesmo assim as contas que faltam
+fazem-se em quatro fios (--fios) antes de cada passo, e fica em menos de metade do caminho
+completo. O --aquecer faz so essa parte, sem mudar nada, para a primeira corrida a serio ja
+ser das rapidas.
+
+UMA FOTO NOVA MUDA TODAS AS FOLHAS QUE VEM DEPOIS DELA. As previas vao pela ordem da pasta e
+do nome, 16 por folha, e uma foto que entra a meio empurra as seguintes: com 3 fotos novas na
+01-NOVAS refizeram-se 27 das 47 folhas, 23 MB para publicar. Isso e o caminho completo que o
+manda, e aqui tem de sair igual; as folhas que nao mudam ficam de fora da lista.
 
 O QUE SE GUARDA, E ONDE. Tudo em saida/_cache/entrada_rapida/, fora do Git e fora da pasta
 dos media. Cada conta guarda-se pelo caminho, pelo tamanho e pela data do ficheiro de onde
@@ -40,9 +61,27 @@ e desde o ultimo `--publicado`; na primeira corrida, sem esse registo, conta-se 
 estava em saida/ antes dela ja esta publicado. Se correr duas vezes antes de publicar, a
 lista junta as duas.
 
+O QUE A CORRECAO DE 3 DE OUTUBRO (14h) ACRESCENTOU, depois de um cetico a ter posto a prova:
+  - SEM NADA DE NOVO NAO CORRE NADA: escreve o manifesto com "nada_de_novo": true, o build fica
+    o que estava e nenhum ficheiro e reescrito (2 segundos). O --forcar corre os passos na mesma.
+  - UMA FOTO TROCADA por outra com o mesmo nome ficava com a versao ampliada da foto ANTIGA em
+    upscaled\ (e na FINAIS, logo no filme) quando as dimensoes eram as mesmas. Agora a versao
+    refaz-se (upscale.py --so-ids), aqui e no atualizar_fotos.py, e o consolidar.py recusa um
+    lanczos que mude a foto mais do que o limite.
+  - UMA CORRIDA QUE NAO ACABOU fica escrita em por_acabar.json: a seguinte acaba-a e diz bem
+    o que entrou. A vigia, com --correr, volta a tentar sozinha depois de um FALHOU.
+  - A TRANCA e do Windows (um byte trancado com o msvcrt): so uma corrida passa, mesmo
+    arrancadas no mesmo instante, e uma corrida morta nao prende a seguinte. O atualizar_fotos.py
+    pede a mesma. Os outros scripts que escrevem os mesmos ficheiros (o gerar_mesa.py de outra
+    sessao) veem-se na lista dos processos: espera-se por eles ate dois minutos, e se ainda la
+    estiverem a corrida segue e diz-o nos avisos.
+  - UMA COPIA IGUAL de uma foto registada ja nao lhe leva o id (inventario.py): fica com id seu
+    e sai nos avisos como duplicado.
+
 Uso:
     py -3.11 scripts/entrada_rapida.py              faz tudo e escreve o manifesto
-    py -3.11 scripts/entrada_rapida.py --aquecer    so enche a cache, sem mudar nada (uns 5 min)
+    py -3.11 scripts/entrada_rapida.py --forcar     corre os passos mesmo sem nada de novo nas pastas
+    py -3.11 scripts/entrada_rapida.py --aquecer    so enche a cache, sem mudar nada (uns 3 min)
     py -3.11 scripts/entrada_rapida.py --publicado  depois de publicar: o que esta em saida/ e o publicado
     py -3.11 scripts/entrada_rapida.py --tudo       a lista leva tudo, e nao so o que mudou
     py -3.11 scripts/entrada_rapida.py --sem-mesa   para antes do gerar_mesa.py (para testes)
@@ -77,6 +116,8 @@ MEDIDAS = os.path.join(CACHE, "medidas.json")
 PUBLICADO = os.path.join(CACHE, "publicado.json")
 JA_VISTOS = os.path.join(CACHE, "ja_vistos.json")
 TRANCA = os.path.join(CACHE, "a_correr.txt")
+FECHO = os.path.join(CACHE, "a_correr.tranca")
+POR_ACABAR = os.path.join(CACHE, "por_acabar.json")
 REGISTO = os.path.join(CACHE, "ultima_corrida.txt")
 MANIFESTO = os.path.join(SAIDA, "entrada_rapida.json")
 PAGINA = os.path.join(SAIDA, "mesa.html")
@@ -98,6 +139,13 @@ _TRANCA_DAS_CONTAS = threading.Lock()
 # ----------------------------------------------------------------------------- utilitarios
 def chave(caminho):
     return os.path.normcase(os.path.abspath(caminho))
+
+
+def receita_da_pillow():
+    """A versao da Pillow, que entra na chave de tudo o que ela calcula (miniaturas, celulas, alteracao):
+    uma versao nova pode reduzir uma foto de outra maneira, e a conta guardada deixava de ser a de agora."""
+    import PIL
+    return "Pillow %s" % PIL.__version__
 
 
 def assinatura(caminho):
@@ -179,7 +227,7 @@ def abrir_medidas():
     g = ler_json(MEDIDAS, {})
     if not isinstance(g, dict) or g.get("versao") != VERSAO_CACHE:
         g = {"versao": VERSAO_CACHE}
-    for k in ("medir", "a_serio", "mudanca", "cara", "folhas"):
+    for k in ("medir", "a_serio", "mudanca", "cara", "folhas", "refeitas"):
         g.setdefault(k, {})
     return g
 
@@ -281,8 +329,10 @@ def ligar_consolidar(consolidar, g, relato):
     def par(original, versao):
         return "%s|%s" % (chave(original), chave(versao))
 
+    pillow = receita_da_pillow()
+
     def mudanca(original, versao):
-        k, ass = par(original, versao), [assinatura(original), assinatura(versao)]
+        k, ass = par(original, versao), [assinatura(original), assinatura(versao), pillow]
         v = g["mudanca"].get(k)
         if v and v[0] == ass:
             return v[1]
@@ -330,10 +380,11 @@ def _guardada_em_png(pasta, a_serio, relato, qual):
     pelo caminho, tamanho e data do ficheiro."""
     from PIL import Image
     os.makedirs(pasta, exist_ok=True)
+    pillow = receita_da_pillow()
 
     def onde(caminho):
         ass = assinatura(caminho)
-        nome = hashlib.sha1(("%s|%d|%d" % (chave(caminho), ass[0], ass[1])).encode("utf-8")).hexdigest()[:24]
+        nome = hashlib.sha1(("%s|%d|%d|%s" % (chave(caminho), ass[0], ass[1], pillow)).encode("utf-8")).hexdigest()[:24]
         return os.path.join(pasta, nome + ".png")
 
     def falta(caminho):
@@ -372,10 +423,9 @@ def ligar_editor(gerar_editor, relato):
 
 def ligar_previas(gp, g, relato):
     """A celula de cada foto guardada, e as folhas que nao mudaram ficam como estao."""
-    import PIL
     fazer_a_serio = gp.fazer_folha
     gp.celula = _guardada_em_png(os.path.join(CACHE, "cel%d" % gp.CELULA), gp.celula, relato, "celulas")
-    receita = [gp.CELULA, gp.COLUNAS, gp.LINHAS, gp.QUALIDADE, list(gp.FUNDO), "Pillow %s" % PIL.__version__]
+    receita = [gp.CELULA, gp.COLUNAS, gp.LINHAS, gp.QUALIDADE, list(gp.FUNDO), receita_da_pillow()]
 
     def fazer_folha(lote, finais, n_folha, caminho):
         nome = os.path.basename(caminho)
@@ -515,6 +565,81 @@ class Parou(Exception):
     pass
 
 
+class NadaDeNovo(Exception):
+    pass
+
+
+def motivos_para_correr(inventario, g, novidades, inv_antes, retomada, args):
+    """Porque e que os passos tem de correr. Lista vazia = nao ha nada de novo.
+
+    Conta: o que a vigia ve (fotos e musicas novas ou de outro tamanho), uma foto do inventario que
+    saiu da pasta ou que mudou de data com o mesmo tamanho (trocada por outra do mesmo peso), uma
+    corrida anterior que nao acabou, e um ficheiro de saida que falte. Nao conta o que e de outros
+    scripts (a montagem, a pagina base): para isso ha o gerar_mesa.py, ou o --forcar.
+    """
+    motivos = []
+    if getattr(args, "forcar", False):
+        motivos.append("--forcar")
+    if retomada:
+        motivos.append("a corrida anterior nao acabou")
+    fotos = novidades["fotos"]
+    if fotos:
+        motivos.append("%s: %s" % (plural(len(fotos), "foto nova ou trocada", "fotos novas ou trocadas"),
+                                   ", ".join(x["nome"] for x in fotos[:4])))
+    if novidades["musicas"]:
+        motivos.append("%s: %s" % (plural(len(novidades["musicas"]), "musica nova", "musicas novas"),
+                                   ", ".join(x["nome"] for x in novidades["musicas"][:4])))
+    raizes = dict(inventario.PASTAS)
+    sairam, mudaram = [], []
+    for r in inv_antes:
+        etiqueta, _, resto = r["pasta"].partition("/")
+        if etiqueta not in raizes:
+            continue
+        caminho = os.path.join(raizes[etiqueta], resto.replace("/", os.sep), r["ficheiro"])
+        try:
+            ass = assinatura(caminho)
+        except OSError:
+            sairam.append(r["ficheiro"])
+            continue
+        v = g["medir"].get(chave(caminho))
+        if v and v[0] != ass:
+            mudaram.append(r["ficheiro"])
+    if sairam:
+        motivos.append("%s do inventario: %s" % (plural(len(sairam), "foto saiu", "fotos sairam"), ", ".join(sairam[:4])))
+    if mudaram:
+        motivos.append("%s: %s" % (plural(len(mudaram), "foto mudou de data ou de tamanho",
+                                          "fotos mudaram de data ou de tamanho"), ", ".join(mudaram[:4])))
+    for nome, caminho in (("data/inventario.csv", inventario.OUT),
+                          ("data/finais.csv", os.path.join(REPO, "data", "finais.csv")),
+                          ("data/editor_dados.js", os.path.join(REPO, "data", "editor_dados.js")),
+                          ("data/estado_fotos.json", os.path.join(REPO, "data", "estado_fotos.json")),
+                          ("saida/previas/indice.json", os.path.join(SAIDA, "previas", "indice.json")),
+                          ("saida/mesa.html", PAGINA)):
+        if not os.path.exists(caminho):
+            motivos.append("falta %s" % nome)
+    return motivos
+
+
+def versoes_velhas(inventario, g):
+    """As fotos cuja versao lanczos o consolidar recusou pela ALTERACAO (e de outra fotografia), e que
+    ainda nao foram refeitas a partir do original que la esta agora. Linhas do inventario."""
+    inv = {r["id"]: r for r in ler_csv(inventario.OUT)}
+    velhas = []
+    for f in ler_csv(os.path.join(REPO, "data", "finais.csv")):
+        if "lanczos:alteracao" not in (f.get("recusadas") or ""):
+            continue
+        r = inv.get(f["id"])
+        if not r:
+            continue
+        try:
+            if g["refeitas"].get(r["id"]) == assinatura(r["caminho"]):
+                continue
+        except OSError:
+            continue
+        velhas.append(r)
+    return velhas
+
+
 class Fita(io.StringIO):
     """Onde fica o que o main() de cada script escreve. Alguns scripts fazem
     sys.stdout.reconfigure() ao serem importados, e um StringIO nao o tem."""
@@ -534,7 +659,8 @@ def _mostrar(nome, inicio, texto, erro=None):
     segundos = time.time() - inicio
     _REGISTO.append("[%s] %.1f s\n%s\n" % (nome, segundos, texto or ""))
     PASSOS.append({"passo": nome, "segundos": round(segundos, 1), "fim": [l.strip() for l in linhas[-8:]],
-                   "avisos": [l.strip() for l in linhas if "AVISO" in l or "ERRO" in l or "FALHOU" in l]})
+                   "avisos": [l.strip() for l in linhas
+                              if "AVISO" in l or "ERRO" in l or "FALHOU" in l or " por fazer: " in l]})
     if erro:
         dizer("    ERRO: %s" % erro)
         PASSOS[-1]["erro"] = str(erro)
@@ -683,43 +809,110 @@ def avisos_das_fotos(novas, inv, finais, consolidar):
 
 
 # ---------------------------------------------------------------------------------- a tranca
-def _a_correr(pid):
-    """O processo com este numero ainda esta vivo? (Windows; noutro sistema diz que sim.)"""
-    try:
-        import ctypes
-        k = ctypes.windll.kernel32
-        h = k.OpenProcess(0x1000, False, int(pid))        # PROCESS_QUERY_LIMITED_INFORMATION
-        if not h:
-            return False
-        codigo = ctypes.c_ulong()
-        ok = k.GetExitCodeProcess(h, ctypes.byref(codigo))
-        k.CloseHandle(h)
-        return bool(ok) and codigo.value == 259           # STILL_ACTIVE
-    except Exception:                                     # noqa: BLE001
-        return True
+_FECHO = []                # o ficheiro trancado fica aberto ate o processo acabar
 
 
-def trancar():
-    """Uma entrada rapida de cada vez: duas a escrever o inventario e as folhas davam um estado misturado.
-    A tranca de uma corrida que morreu nao prende a seguinte: confirma-se se o processo ainda existe."""
+def trancar(quem="entrada rapida"):
+    """Uma atualizacao das fotos de cada vez: duas a escrever o inventario e as folhas davam um estado
+    misturado. Vale para a entrada rapida e para o atualizar_fotos.py, que pede a mesma tranca.
+
+    A TRANCA E DO WINDOWS, e nao um ficheiro que se ve se existe (3 de outubro): com "existe? entao
+    escrevo", duas corridas arrancadas no mesmo instante passavam as duas (14 em 20 ensaios). Aqui
+    tranca-se um byte do ficheiro com o msvcrt, que so um processo consegue, e o Windows solta-o
+    sozinho quando o processo acaba ou morre: uma corrida morta nunca prende a seguinte.
+    """
     os.makedirs(CACHE, exist_ok=True)
-    if os.path.exists(TRANCA):
+    try:
+        import msvcrt
+    except ImportError:                                    # fora do Windows nao ha tranca
+        return
+    fh = open(FECHO, "a+b")
+    try:
+        fh.seek(0)
+        msvcrt.locking(fh.fileno(), msvcrt.LK_NBLCK, 1)
+    except OSError:
+        fh.close()
         try:
-            texto = io.open(TRANCA, encoding="utf-8").read()
-            pid = int(re.match(r"pid (\d+)", texto).group(1))
-        except (OSError, AttributeError, ValueError):
-            texto, pid = "", None
-        if pid is not None and pid != os.getpid() and _a_correr(pid):
-            sys.exit("Ja ha uma entrada rapida a correr (%s). Espera que acabe." % texto.strip())
-    with io.open(TRANCA, "w", encoding="utf-8") as fh:
-        fh.write("pid %d, desde %s" % (os.getpid(), datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+            texto = io.open(TRANCA, encoding="utf-8").read().strip()
+        except OSError:
+            texto = ""
+        sys.exit("Ja ha uma entrada rapida a correr (%s). Espera que acabe." % (texto or "outra atualizacao das fotos"))
+    _FECHO.append(fh)
+    try:
+        with io.open(TRANCA, "w", encoding="utf-8") as txt:
+            txt.write("%s, pid %d, desde %s" % (quem, os.getpid(), datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+    except OSError:
+        pass
 
     def destrancar():
         try:
             os.remove(TRANCA)
         except OSError:
             pass
+        try:
+            fh.close()
+        except OSError:
+            pass
     atexit.register(destrancar)
+
+
+# Os scripts que escrevem o inventario, a FINAIS, as folhas ou a pagina. O atualizar_fotos.py pede a
+# tranca de cima; os outros, corridos a mao ou por outra sessao (o gerar_mesa.py), so se veem na
+# lista dos processos.
+MEXEM = ("atualizar_fotos.py", "gerar_mesa.py", "inventario.py", "upscale.py", "consolidar.py",
+         "gerar_editor.py", "gerar_montagens_editor.py", "estado_fotos.py", "gerar_previas.py")
+
+
+def outros_a_mexer():
+    """Os scripts de MEXEM que estao a correr NESTE repositorio noutro processo (nao este nem quem o
+    chamou). Uma lista de nomes; vazia se nao houver ou se nao se conseguir perguntar ao Windows."""
+    try:
+        r = subprocess.run(
+            ["powershell", "-NoProfile", "-Command",
+             "Get-CimInstance Win32_Process -Filter \"Name like 'py%'\" | "
+             "ForEach-Object { '{0}|{1}|{2}' -f $_.ProcessId,$_.ParentProcessId,$_.CommandLine }"],
+            capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=15)
+    except Exception:                                      # noqa: BLE001
+        return []
+    processos = {}
+    for linha in (r.stdout or "").splitlines():
+        partes = linha.strip().split("|", 2)
+        if len(partes) == 3 and partes[0].isdigit():
+            processos[int(partes[0])] = (int(partes[1]) if partes[1].isdigit() else 0, partes[2])
+    meus, p = set(), os.getpid()
+    while p in processos and p not in meus:                # este processo e os que o chamaram
+        meus.add(p)
+        p = processos[p][0]
+    for pid, (pai, _linha) in processos.items():           # o py.exe e o python.exe sao o mesmo comando
+        if pai in meus:
+            meus.add(pid)
+    aqui = os.path.normcase(AQUI)
+    vistos = set()
+    for pid, (pai, linha) in processos.items():
+        if pid in meus:
+            continue
+        baixo = linha.lower().replace("/", "\\")
+        for nome in MEXEM:
+            m = re.search(r'(?:^|[\s"])([^\s"]*)' + re.escape(nome), baixo)
+            if not m:
+                continue
+            # o caminho inteiro do script, ou "scripts\nome" corrido da raiz do repositorio (de fora
+            # nao se sabe de que pasta: conta, que esperar a toa custa menos do que misturar)
+            if os.path.join(aqui, nome) in baixo or m.group(1) in ("scripts\\", ".\\scripts\\", ""):
+                vistos.add(nome)
+    return sorted(vistos)
+
+
+def esperar_pelos_outros(segundos=120):
+    """Espera que os outros scripts que mexem nos mesmos ficheiros acabem. Devolve os que ainda la
+    estavam no fim da espera (e ai a corrida segue, com aviso)."""
+    limite = time.time() + segundos
+    outros = outros_a_mexer()
+    while outros and time.time() < limite:
+        dizer("  a espera de %s, que esta a correr noutra sessao..." % ", ".join(outros))
+        time.sleep(5)
+        outros = outros_a_mexer()
+    return outros
 
 
 # ------------------------------------------------------------------------------- os modos
@@ -812,6 +1005,7 @@ def correr(args):
     import vigiar_pastas
     inicio = time.time()
     trancar()
+    ainda_a_mexer = esperar_pelos_outros()
     g, relato = abrir_medidas(), novo_relato()
     ligar_inventario(inventario, g, relato)
     ligar_consolidar(consolidar, g, relato)
@@ -820,19 +1014,41 @@ def correr(args):
 
     # UMA COPIA A MEIO NAO SE LE. Quem chama isto pela vigia ja so vem com ficheiros parados, mas quem
     # o chama a mao pode apanhar o Explorador a meio: espera-se ate um minuto que tudo pare de crescer.
+    # Um ficheiro VAZIO nao e uma copia a meio: nao cresce, e nao se espera por ele (sai nos avisos).
     novidades = vigiar_pastas.novidades(com_outros=True)
     limite = time.time() + 60
     while True:
         _quietos, a_mexer = vigiar_pastas.parados(novidades["fotos"] + novidades["musicas"], 1.0)
+        a_mexer = [x for x in a_mexer if not vigiar_pastas.vazio(x["caminho"])]
         if not a_mexer or time.time() > limite:
             break
         dizer("  a espera de %s que ainda estao a ser copiados..." % plural(len(a_mexer), "ficheiro", "ficheiros"))
         time.sleep(2)
         novidades = vigiar_pastas.novidades(com_outros=True)
 
-    # O QUE HAVIA ANTES, para dizer no fim o que entrou
+    # O QUE HAVIA ANTES, para dizer no fim o que entrou. UMA CORRIDA QUE NAO ACABOU (um passo que
+    # falhou, um processo morto) ja deixou as fotos no inventario: a corrida seguinte via-as la e
+    # dizia "ENTROU: 0 fotos" precisamente quando elas chegavam a pagina. O "antes" fica escrito
+    # em por_acabar.json ao arrancar e so sai quando a corrida chega ao fim sem erro.
     inv_antes = {(r["pasta"], r["ficheiro"]): r for r in ler_csv(inventario.OUT)}
     musicas_novas = novidades["musicas"]
+    por_acabar = ler_json(POR_ACABAR, None)
+    retomada = isinstance(por_acabar, dict) and isinstance(por_acabar.get("inventario"), list)
+    if retomada:
+        inv_antes = {(r["pasta"], r["ficheiro"]): r for r in por_acabar["inventario"]}
+        ja = {chave(x["caminho"]) for x in musicas_novas}
+        musicas_novas = musicas_novas + [x for x in por_acabar.get("musicas") or []
+                                         if chave(x["caminho"]) not in ja and os.path.exists(x["caminho"])]
+
+    # SEM NADA DE NOVO NAO SE FAZ NADA. Os oito passos davam os mesmos ficheiros, mas com um build
+    # novo: quem publicasse pelo manifesto acendia a barra "Ha uma versao mais nova" sem razao.
+    motivos = motivos_para_correr(inventario, g, novidades, list(inv_antes.values()), retomada, args)
+    nada_de_novo = not motivos
+    if not nada_de_novo:
+        escrever_json(POR_ACABAR, {
+            "desde": (por_acabar or {}).get("desde") or datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "inventario": [{k: r.get(k, "") for k in ("id", "pasta", "ficheiro", "sha256")} for r in inv_antes.values()],
+            "musicas": [{k: x[k] for k in ("nome", "caminho", "pasta", "ficheiro", "porque")} for x in musicas_novas]})
     registo = ler_json(PUBLICADO, None)
     primeira_vez = not (isinstance(registo, dict) and isinstance(registo.get("ficheiros"), dict))
     if primeira_vez:
@@ -842,6 +1058,8 @@ def correr(args):
     base = registo["ficheiros"]
 
     dizer("Entrada rapida, %s" % datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    if retomada:
+        dizer("  a acabar a corrida de %s, que nao chegou ao fim" % por_acabar.get("desde"))
     dizer("  na 01-NOVAS: %s por registar%s; na pasta das musicas: %s"
           % (plural(sum(1 for x in novidades["fotos"] if x["porque"] == "nova"), "foto", "fotos"),
              (", " + plural(sum(1 for x in novidades["fotos"] if x["porque"] == "mudou"), "trocada", "trocadas"))
@@ -850,12 +1068,41 @@ def correr(args):
 
     erro = None
     fora = []
+    refeitas = []
     try:
+        if nada_de_novo:
+            raise NadaDeNovo()
+        dizer("  porque: %s" % "; ".join(motivos[:6]))
         passo("inventario.py", lambda: (adiantar_inventario(inventario, g, relato), inventario.main()))
         guardar_medidas(g)
+        # A VERSAO AMPLIADA DE UMA FOTO TROCADA. Uma foto trocada por outra com o mesmo nome e as
+        # mesmas dimensoes ficava em upscaled\ com a versao da foto ANTIGA (o upscale.py salta o
+        # que ja existe com o tamanho certo), e a FINAIS, logo o filme, com a imagem velha. O
+        # sinal e direto: o sha256 mudou no mesmo caminho. Refaz-se a versao so dessas, antes do
+        # passo de sempre. O atualizar_fotos.py faz a mesma conta, para os dois darem o mesmo.
+        trocadas = [r for r in ler_csv(inventario.OUT)
+                    if inv_antes.get((r["pasta"], r["ficheiro"]))
+                    and inv_antes[(r["pasta"], r["ficheiro"])]["sha256"] != r["sha256"]]
+        if trocadas:
+            ids = ",".join(r["id"] for r in trocadas)
+            passo("upscale.py --so-ids %s" % ids, upscale.main, ["--so-ids", ids])
+            for r in trocadas:
+                g["refeitas"][r["id"]] = assinatura(r["caminho"])
         passo("upscale.py", upscale.main)
         passo("consolidar.py", lambda: (adiantar_consolidar(consolidar), consolidar.main()))
         guardar_medidas(g)
+        # E A REDE POR BAIXO: se mesmo assim o consolidar recusar um lanczos pela ALTERACAO (a
+        # troca aconteceu numa corrida que nao deixou rasto), refaz-se a versao e consolida-se
+        # outra vez. Uma vez por original: se continuar recusada, nao e por estar velha.
+        velhas = versoes_velhas(inventario, g)
+        if velhas:
+            ids = ",".join(r["id"] for r in velhas)
+            passo("upscale.py --so-ids %s" % ids, upscale.main, ["--so-ids", ids])
+            for r in velhas:
+                g["refeitas"][r["id"]] = assinatura(r["caminho"])
+                refeitas.append(r)
+            passo("consolidar.py (outra vez)", lambda: (adiantar_consolidar(consolidar), consolidar.main()))
+            guardar_medidas(g)
         passo("gerar_editor.py", lambda: (adiantar_editor(gerar_editor), gerar_editor.main()))
         passo_a_parte("gerar_montagens_editor.py")
         passo("estado_fotos.py", estado_fotos.main)
@@ -864,6 +1111,9 @@ def correr(args):
         guardar_medidas(g)
         if not args.sem_mesa:
             passo_a_parte("gerar_mesa.py")
+    except NadaDeNovo:
+        dizer()
+        dizer("NADA DE NOVO: nenhum passo correu, e o build fica o que estava. (--forcar corre-os na mesma.)")
     except Parou as e:
         erro = str(e)
         dizer()
@@ -903,7 +1153,18 @@ def correr(args):
         return x
 
     avisos = []
+    if ainda_a_mexer:
+        avisos.append({"tipo": "passo", "texto": "Enquanto isto correu havia outra sessao a correr %s, que mexe nos "
+                       "mesmos ficheiros: confirma a pagina antes de publicar, ou corre outra vez com --forcar."
+                       % ", ".join(ainda_a_mexer)})
     avisos += avisos_das_fotos(novas + mudadas, inv, finais, consolidar)
+    for r in refeitas:
+        f = finais.get(r["id"]) or {}
+        avisos.append({"tipo": "refeita", "id": r["id"], "ficheiro": r["ficheiro"],
+                       "texto": "%s %s: a versao ampliada que havia era de outra fotografia (a foto foi trocada "
+                                "por outra com o mesmo nome). Foi refeita; ficou %s%s."
+                                % (r["id"], r["ficheiro"], f.get("origem", "?"),
+                                   (", recusada: " + f["recusadas"]) if f.get("recusadas") else "")})
     ja_vistos = {k: v for k, v in (ler_json(JA_VISTOS, {}) or {}).items() if os.path.exists(k)}
     for caminho, porque in relato["ilegiveis"]:
         dica = ""
@@ -985,6 +1246,15 @@ def correr(args):
                                 % (r["id"], r["ficheiro"], r["pasta"])})
     for passo_feito in PASSOS:
         for l in passo_feito["avisos"]:
+            if " por fazer: " in l:
+                # e do audio_para_mesa.py, que corre tal e qual: uma musica igual a outra com outro
+                # nome so fica com copia na corrida seguinte, e um ficheiro que o ffmpeg nao le nunca
+                avisos.append({"tipo": "som", "passo": passo_feito["passo"],
+                               "texto": "Ha copias de som por fazer (%s). Se for uma musica igual a outra com "
+                                        "outro nome, a copia faz-se na corrida seguinte: py -3.11 "
+                                        "scripts/entrada_rapida.py --forcar. Se for um ficheiro que nao e musica "
+                                        "ou esta vazio, tira-se da pasta." % l.split(" por fazer: ", 1)[1]})
+                continue
             avisos.append({"tipo": "passo", "passo": passo_feito["passo"], "texto": l})
 
     # ------------------------------------------------------------------ o que se publica
@@ -1006,6 +1276,8 @@ def correr(args):
         "feito": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "segundos": round(time.time() - inicio, 1),
         "erro": erro,
+        "nada_de_novo": nada_de_novo,
+        "porque": motivos,
         "build": estado.get("build"),
         "fotos": estado.get("total", len(inv)),
         "entrou": {"fotos": [da_foto(r) for r in novas], "fotos_mudadas": [da_foto(r) for r in mudadas],
@@ -1070,7 +1342,16 @@ def correr(args):
     dizer("Manifesto: %s  (%.0f s)" % (MANIFESTO, time.time() - inicio))
     if erro:
         return 1
-    dizer("Pronto neste computador. Falta publicar a Mesa, escrever montagem/publicacao e correr o --publicado.")
+    try:
+        os.remove(POR_ACABAR)                       # chegou ao fim: a proxima corrida parte do que ha agora
+    except OSError:
+        pass
+    if nada_de_novo and not ficheiros and not tirar and not pagina_mudou:
+        dizer("Nada para publicar: o que esta em saida/ e o que foi publicado.")
+    elif nada_de_novo:
+        dizer("Nada de novo nas pastas, mas o que esta acima ainda nao foi dado como publicado (--publicado).")
+    else:
+        dizer("Pronto neste computador. Falta publicar a Mesa, escrever montagem/publicacao e correr o --publicado.")
     return 0
 
 
@@ -1082,6 +1363,7 @@ def main():
     ap.add_argument("--aquecer", action="store_true", help="so enche a cache, sem mudar nada")
     ap.add_argument("--publicado", action="store_true", help="depois de publicar: o que esta em saida/ e o publicado")
     ap.add_argument("--tudo", action="store_true", help="a lista a publicar leva tudo, e nao so o que mudou")
+    ap.add_argument("--forcar", action="store_true", help="corre os passos mesmo sem nada de novo nas pastas")
     ap.add_argument("--sem-mesa", action="store_true", help="para antes do gerar_mesa.py (para testes)")
     ap.add_argument("--fios", type=int, default=FIOS,
                     help="quantas fotos se leem e quantas folhas se fazem ao mesmo tempo (%d)" % FIOS)

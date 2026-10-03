@@ -25,6 +25,12 @@ Uso:
     py -3.11 scripts/upscale.py --simular    so diz o que faria
     py -3.11 scripts/upscale.py --amostra 6  faz so as 6 piores, para veres
     py -3.11 scripts/upscale.py --refazer    reescreve o que ja existe
+    py -3.11 scripts/upscale.py --so-ids f0644,f0553
+                                             refaz so a versao destas fotos (3 de outubro): e
+                                             para a foto que foi trocada na pasta por outra com
+                                             o mesmo nome e o mesmo tamanho, cuja versao aqui
+                                             ainda e a da foto antiga. Sem esta opcao, tudo
+                                             como sempre.
 """
 import csv
 import os
@@ -157,8 +163,15 @@ def main():
     with open(INVENTARIO, encoding="utf-8-sig", newline="") as fh:
         linhas = list(csv.DictReader(fh))
 
+    so_ids = None
+    if "--so-ids" in sys.argv:
+        so_ids = {x.strip() for x in sys.argv[sys.argv.index("--so-ids") + 1].split(",") if x.strip()}
+        refazer = True
+
     trabalho = []
     for r in linhas:
+        if so_ids is not None and r["id"] not in so_ids:
+            continue
         dims = alvo(int(r["largura"]), int(r["altura"]))
         if dims:
             trabalho.append((r, dims))
@@ -213,7 +226,7 @@ def main():
         ok, erro = ampliar(ffmpeg, r["caminho"], saida, nl, na)
         if ok:
             feitas += 1
-            if (r, (nl, na, fator)) in piores:
+            if so_ids is None and (r, (nl, na, fator)) in piores:
                 comparacao(ffmpeg, r["caminho"], saida,
                            os.path.join(COMPARACOES, nome), nl, na)
         else:

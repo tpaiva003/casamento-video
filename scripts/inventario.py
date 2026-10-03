@@ -293,6 +293,7 @@ def main():
     # entradas do inventario.
     ja_registadas = set()
     id_por_caminho = {}
+    caminho_por_id = {}
     ids_por_hash = defaultdict(list)
     proximo_id = 1
     if os.path.exists(OUT):
@@ -301,6 +302,7 @@ def main():
                 ja_registadas.add(r["sha256"])
                 if r.get("id"):
                     id_por_caminho[(r["pasta"], r["ficheiro"])] = r["id"]
+                    caminho_por_id.setdefault(r["id"], (r["pasta"], r["ficheiro"]))
                     ids_por_hash[r["sha256"]].append(r["id"])
                     try:
                         proximo_id = max(proximo_id, int(r["id"].lstrip("f")) + 1)
@@ -423,11 +425,20 @@ def main():
     linhas.sort(key=lambda r: (r["pasta"], r["ficheiro"].lower()))
     usados = set()
     mudaram = []
+    # O ID SO ACOMPANHA O FICHEIRO SE O CAMINHO ANTIGO JA NAO EXISTIR (3 de outubro). A rede de
+    # seguranca dava o id pelo conteudo sem confirmar isso: uma COPIA igual de uma foto registada,
+    # com um nome ou uma pasta que ficasse antes na ordem (a pasta "03.10.2026" com copias de fotos
+    # da "Clara_Tiago"), levava o id da original, e a original ficava com ele tambem: duas linhas
+    # com o mesmo id no inventario, no indice e na Mesa. Uma copia e uma foto nova, com id seu, e
+    # o duplicado so se reporta.
+    presentes = {(r["pasta"], r["ficheiro"]) for r in linhas}
     for r in linhas:
         chave = (r["pasta"], r["ficheiro"])
         existente = id_por_caminho.get(chave)
         if not existente:
             candidato = id_por_hash_unico.get(r["sha256"])
+            if candidato and caminho_por_id.get(candidato) in presentes:
+                candidato = None
             if candidato and candidato not in usados:
                 existente = candidato
                 mudaram.append((candidato, r["pasta"] + "/" + r["ficheiro"]))
