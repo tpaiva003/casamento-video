@@ -1744,7 +1744,7 @@ def teste_mesa_montada_traz_as_letras():
 ESTADO_MONTADO = os.path.join(REPO, "data", "mesa_estado.json")
 DECLARACOES_PALCO = ["var PALCO_R = ", "var PALCO_NASCE = ", "var PALCO_NOME_BEBE = ", "var SOM_R = "]
 FUNCOES_PALCO = ["function palcoSuave(", "function palcoQuemNasce(", "function palcoBate(", "function palcoFilme(", "function palcoAtivos(",
-                 "function palcoParagens(", "function palcoChaveFaixa(", "function palcoSomPlano(",
+                 "function palcoParagens(", "function palcoChaveFaixa(", "function palcoSomPlano(", "function musicaContinua(",
                  "function chaveDoClipBase(", "function chavesDaVersao(", "function srDaVersao(", "function renderPorClip(",
                  "function nomeFaixa(", "function duracaoNoRender(", "function duracaoDoClip(",
                  "function duracaoDoVideoNoFilme(", "function trocoDoVideo(", "function videoNoCorpo(",
@@ -6812,7 +6812,11 @@ r.posicao = P.map(function(p){
 });
 r.limpa = P.map(function(p){ var l = p === null ? null : legPosicaoLimpa(p); return l ? legPosicaoCompacta(l) : {}; });
 delete est.estilo;
+/* a largura de uma linha e a do render, como o gerar_mesa a poe na pagina montada (RENDER_LE.numa_linha_largura): desde
+   3 de outubro a tarde e 1762, e sem ela a pagina de ensaio ficava nos 1660 e a margem de uma linha larga nao batia */
+RENDER_LE = {numa_linha_largura: %d};
 r.xs = LARG.map(function(l){ return DX.map(function(dx){ return ["centro", "esquerda", "direita"].map(function(a){ return [legDxEfetivo(l, dx, a), legXs(l, dx, a)]; }); }); });
+RENDER_LE = {};
 r.celulas = {}; r.corte = {};
 ["2v", "3v", "3s", "4q", "6g"].forEach(function(lay){
   r.celulas[lay] = ladoCelulas(lay);
@@ -6826,7 +6830,7 @@ r.linhas = {curtoHoje: legLinhas(curto, 46, false).linhas, curtoUma: legLinhas(c
             longoUma: legLinhas(longo, 46, true).linhas.length, longoCabe: legNumaLinha(longo, 46), curtoCabe: legNumaLinha(curto, 46), ha: legNumaLinha("", 46)};
 console.log(JSON.stringify(r));
 """ % (json.dumps(posicoes), json.dumps(lps), json.dumps(larguras), json.dumps(dxs),
-       json.dumps([[list(t) if t else None for t in grupo] for grupo in tamanhos]))
+       json.dumps([[list(t) if t else None for t in grupo] for grupo in tamanhos]), int(render.LEGENDA_LARGURA_NUMA_LINHA))
     s = _correr_estilo({}, js, problemas, mais=FUNCOES_LEG, declaracoes=DECLARACOES_LEG)
     contas = 0
     if s:
@@ -7313,6 +7317,7 @@ function layDe(){
               vn: L.vn, vf: L.vf, primeiro: L.primeiro, partes: L.partes,
               janelas: L.janelas ? L.janelas.map(function(j){ return [j.parte, j.ini, j.fim]; }) : null,
               tituloApaga: L.janelas ? L.tituloApaga : null, fimNomes: L.fimNomes, fimFotos: L.fimFotos,
+              filmeApaga: L.filmeApaga === undefined ? null : L.filmeApaga,
               parado: L.parado ? [L.parado.quem, L.parado.s] : null}};
 }
 """
@@ -7329,20 +7334,23 @@ def _tempos_diferentes(m, T):
         dif.append("janelas %r contra %r" % (m["janelas"], janelas))
     if janelas and m["tituloApaga"] != T["titulo_apaga"]:
         dif.append("o fade do titulo %r contra %r" % (m["tituloApaga"], T["titulo_apaga"]))
-    for k, kp in (("fimNomes", "fim_nomes"), ("fimFotos", "fim_fotos")):
+    # o filme_apaga so existe no T com o titulo primeiro (3 de outubro a tarde): o filme apaga-se primeiro e o titulo
+    # acende a seguir. Na Mesa e o filmeApaga do credLayout, null no resto
+    for k, kp in (("fimNomes", "fim_nomes"), ("fimFotos", "fim_fotos"), ("filmeApaga", "filme_apaga")):
         if m[k] != T.get(kp):
             dif.append("%s %r contra %r" % (k, m[k], T.get(kp)))
     parado = list(T["parado"]) if T.get("parado") else None
     if m["parado"] != parado:
         dif.append("parado %r contra %r" % (m["parado"], parado))
-    return dif, len(pares) + 5
+    return dif, len(pares) + 6
 
 
 def teste_creditos_1003_partes_nomes_e_velocidade_como_o_ponto5():
     """A ordem das partes, os nomes corridos e a velocidade da Mesa sao os do ponto5, ao bit (contrato de 3 de outubro).
 
     O DEFEITO QUE ISTO APANHA: a pre-visualizacao com outra ordem, outros cargos, outro rolo ou outra duracao do que o
-    filme. O titulo primeiro sem os 0,5 s a mais, os cargos a contar segundos com o «Sem cargos», os nomes corridos com
+    filme. O titulo primeiro sem os 0,7 s a mais (o FILME_APAGA do ponto5, 3 de outubro a tarde: o filme apaga-se primeiro
+    e o titulo acende a seguir; ate ai eram 0,5 s), os cargos a contar segundos com o «Sem cargos», os nomes corridos com
     os espacos dos grupos, a velocidade dele a mexer na do outro lado, ou um valor mal escrito (uma lista sem o rolo, um
     `true` que e um texto, 59 px/s) a valer: a musica com «fim» entrava noutro sitio do ficheiro, e o Tiago e a Clara
     decidiam a olhar para outro filme. Cada caso le-se dos dois lados: a lista, os cargos, os nomes corridos e a
@@ -7396,10 +7404,17 @@ console.log(JSON.stringify(r));
     if saida:
         por = dict(zip([c[0] for c in CASOS_DAS_PARTES], saida))
         hoje = por["como esta"]["t"]["dur"]
-        # o que o contrato diz, em numeros: o titulo primeiro sao 0,5 s a mais; sem cargos, nem um segundo deles
+        # o que o contrato diz, em numeros: o titulo primeiro sao FILME_APAGA (0,7 s) a mais, que o filme apaga-se primeiro e
+        # so depois o titulo acende (3 de outubro a tarde; ate ai eram 0,5 s); sem cargos, nem um segundo deles
         tr = por["titulo, rolo"]["t"]
-        if abs(tr["dur"] - (hoje - 3 * 4.2 + 0.5)) > 1e-9 or tr["tCargos"] is not None or tr["n"] != 0 or por["titulo, rolo"]["cargos"]:
+        if abs(tr["dur"] - (hoje - 3 * 4.2 + p5.FILME_APAGA)) > 1e-9 or tr["tCargos"] is not None or tr["n"] != 0 or por["titulo, rolo"]["cargos"]:
             problemas.append("o titulo antes e sem cargos: %.4f s contra os %.4f de hoje, %s cargos" % (tr["dur"], hoje, tr["n"]))
+        # o titulo so comeca a acender quando o filme acaba de se apagar, e so o titulo primeiro leva o filmeApaga
+        if tr["filmeApaga"] != p5.FILME_APAGA or tr["tTituloEntra"] != p5.FILME_APAGA or por["como esta"]["t"]["filmeApaga"] is not None \
+                or por["cargos, titulo, rolo"]["t"]["filmeApaga"] is not None:
+            problemas.append("o titulo primeiro: o filme apaga-se em %r e o titulo entra aos %r (FILME_APAGA %r); como esta %r, com os cargos antes %r" % (
+                tr["filmeApaga"], tr["tTituloEntra"], p5.FILME_APAGA, por["como esta"]["t"]["filmeApaga"],
+                por["cargos, titulo, rolo"]["t"]["filmeApaga"]))
         if por["titulo, rolo"]["guardados"] != 3 or por["sem cargos com a lista dele"]["guardados"] != 2:
             problemas.append("sem cargos, os textos que ficam guardados: %s e %s" % (por["titulo, rolo"]["guardados"],
                                                                                     por["sem cargos com a lista dele"]["guardados"]))
@@ -7429,9 +7444,11 @@ def teste_creditos_1003_desenho_como_o_ponto5():
     """Com as partes noutra ordem e a velocidade dele, a Mesa desenha cada peca no instante e no sitio do ponto5.
 
     O DEFEITO QUE ISTO APANHA, contra os fotogramas do proprio desenho_dos_creditos():
-    - o titulo primeiro a acender do preto (tem de nascer ja aceso da ultima imagem do filme: a sala aplaude no primeiro
-      preto), a apagar-se em 2,5 s a meio dos creditos em vez dos 0,6 s dos cargos, ou o rolo a aparecer de repente depois
-      dele em vez de entrar do preto;
+    - o titulo primeiro a nascer ja aceso por cima da ultima imagem do filme (desde 3 de outubro a tarde o filme apaga-se
+      primeiro, em FILME_APAGA, e so depois o titulo acende do preto: o ano do contador do fim e as letras do titulo viam-se
+      um por cima do outro), o «o fim do filme» do painel a desfazer-se em 1,5 s por cima do titulo em vez de se apagar
+      nos 0,7 s, o titulo a apagar-se em 2,5 s a meio dos creditos em vez dos 0,6 s dos cargos, ou o rolo a aparecer de
+      repente depois dele em vez de entrar do preto;
     - um cargo a aparecer com o «Sem cargos», ou o titulo sem "titulo" na lista;
     - com a velocidade dele, os nomes ou as fotos noutro sitio do ecra do que no filme (o rolo e a coluna de ensaio tem
       uma risca branca de 500 em 500 px, e mede-se onde ela cai em cada fotograma), ou o lado que acaba primeiro a
@@ -7505,6 +7522,15 @@ casos.forEach(function(c){
       nNomes: nomes.length, nFotos: fotosR.length, y0c: nomes.length ? nomes[0].y - qy[nomes[0].t] : null, yf: yf,
       letras: ops.filter(function(x){ return x.fill && x.fill.grad && !x.sombra; }).length});
   });
+  /* O «O FIM DO FILME» DO PAINEL (sem ser no palco), por cima dos creditos: a opacidade com que se pinta em cada instante,
+     ou null quando ja nao se pinta. E o filmeApaga do credLayout, que o palco usa para a opacidade da tela dos creditos */
+  linhasDoCaso.filmeApaga = Lay.filmeApaga === undefined ? null : Lay.filmeApaga;
+  linhasDoCaso.fimDoFilme = [0, 0.2, 0.35, 0.5, 0.69, 0.71, 0.75, 1.0, 1.49, 1.51, 2.5].map(function(t){
+    var tela = telaFalsa(), a = null;
+    tela.ctx.fillRect = function(x, y, w, h){ if(tela.ctx.fillStyle === "#2a2226" && w === M.L && h === M.A) a = tela.ctx.globalAlpha; };
+    credDesenhaEm(tela, t, false, false);
+    return [t, a];
+  });
   r.push(linhasDoCaso);
 });
 console.log(JSON.stringify(r));
@@ -7531,7 +7557,7 @@ console.log(JSON.stringify(r));
             if col[y] > 0 and col[y - 1] == 0:
                 return y % 500
         return None
-    conferidos = {"pecas": 0, "nomes": 0, "fotos": 0, "vazios": 0}
+    conferidos = {"pecas": 0, "nomes": 0, "fotos": 0, "vazios": 0, "preto": 0, "fim": 0}
     for (nome, cr), m in zip(casos, s or []):
         t = textos[nome]
         T = p5.tempos_dos_creditos(m["Hr"], m["Hc"], len(t["cargos"]), t["cargos_primeiro"], t["partes"], t["velocidade"])
@@ -7593,20 +7619,52 @@ console.log(JSON.stringify(r));
             piores.append("os nomes nao andam com o rolo do ponto5: a distancia a risca muda (%s)" % sorted(consts)[:4])
         if piores:
             problemas.append("%s: %s" % (nome, "; ".join(piores[:4])))
-        # a primeira parte nasce do fim do filme ja acesa
-        if t["partes"][0] in ("titulo", "cargos") and m["tempos"][0]["alfa"] < 0.999:
+        # os cargos primeiro nascem do fim do filme ja acesos
+        if t["partes"][0] == "cargos" and m["tempos"][0]["alfa"] < 0.999:
             problemas.append("%s: a primeira parte nao nasce acesa do fim do filme: %.3f no zero" % (nome, m["tempos"][0]["alfa"]))
+        # O TITULO PRIMEIRO NAO (3 de outubro a tarde): o filme apaga-se primeiro (FILME_APAGA) e ate la o desenho e preto,
+        # nos dois; so depois o titulo acende, e ao fim de TITULO_ACENDE esta inteiro
+        if t["partes"][0] == "titulo":
+            antes = [mm["alfa"] for x, mm in zip(m["I"], m["tempos"]) if x < p5.FILME_APAGA - 1e-9]
+            do_p5 = max(brilho(x) for x in (0.0, 0.2, 0.5, p5.FILME_APAGA - 0.04))
+            inteiro = [mm["alfa"] for x, mm in zip(m["I"], m["tempos"]) if abs(x - 2.5) < 1e-9]
+            conferidos["preto"] += len(antes)
+            if len(antes) < 3 or max(antes) > 1e-9 or do_p5 > 0:
+                problemas.append("%s: o titulo primeiro nao espera o filme apagar-se: antes dos %.1f s a Mesa da %s e o ponto5 %d de brilho"
+                                 % (nome, p5.FILME_APAGA, ["%.3f" % a for a in antes[:4]], do_p5))
+            if not inteiro or inteiro[0] < 0.999:
+                problemas.append("%s: o titulo primeiro nao esta inteiro aos 2,5 s: %s" % (nome, inteiro[:1]))
+        # O FIM DO FILME POR CIMA (o painel): a mistura do com_o_fim_do_filme(), em filme_apaga com o titulo primeiro e em
+        # t_entrada no resto; depois disso ja nao se pinta
+        desfaz = T.get("filme_apaga") or T["t_entrada"]
+        if m["filmeApaga"] != T.get("filme_apaga"):
+            problemas.append("%s: o filmeApaga da Mesa e %r e o filme_apaga do ponto5 %r" % (nome, m["filmeApaga"], T.get("filme_apaga")))
+        for x, a in m["fimDoFilme"]:
+            certo = (1.0 - suave(x / desfaz)) if x < desfaz else None
+            conferidos["fim"] += 1
+            if (a is None) != (certo is None) or (a is not None and abs(a - certo) > 1e-9):
+                problemas.append("%s: aos %.2f s o fim do filme por cima a %r, e pelo ponto5 %r (desfaz-se em %.1f s)" % (nome, x, a, certo, desfaz))
+                break
         if "cargos" not in t["partes"] and any(mm["tipo"] == "cargos" for mm in m["tempos"]):
             problemas.append("%s: sem cargos, a Mesa desenhou um cargo" % nome)
         if "titulo" not in t["partes"] and any(mm["tipo"] == "titulo" for mm in m["tempos"]):
             problemas.append("%s: sem titulo, a Mesa desenhou o titulo" % nome)
-    if s and not (conferidos["nomes"] > 20 and conferidos["fotos"] > 10 and conferidos["vazios"] > 5):
+    if s and not (conferidos["nomes"] > 20 and conferidos["fotos"] > 10 and conferidos["vazios"] > 5 and conferidos["preto"] > 8
+                  and conferidos["fim"] > 40):
         problemas.append("o teste ja nao prova as posicoes: %s" % conferidos)
+    # O PALCO nao corre no node (mexe no document): confirma-se na pagina que a tela dos creditos sobe no filmeApaga do
+    # credLayout com o titulo primeiro, e nos 1,5 s de sempre no resto (o com_o_fim_do_filme do ponto5)
+    pagina = io.open(EDITOR, encoding="utf-8").read()
+    if not re.search(r"var credDesfaz = \(CRED && credContas\(\)\.filmeApaga\) \|\| PALCO_R\.credEntra;\s*"
+                     r"tc\.style\.opacity = String\(tt < credDesfaz \? palcoSuave\(tt / credDesfaz\) : 1\);", pagina):
+        problemas.append("o palco ja nao sobe a tela dos creditos no filmeApaga com o titulo primeiro (palcoDesenhaInstante)")
     verifica("Mesa: o desenho das partes e da velocidade como o ponto5", s is not None and not problemas,
              "; ".join(problemas)[:600] if problemas else
-             "%d casos, %d instantes com a peca e a opacidade dos fotogramas (o titulo aceso desde o zero e a apagar em 0,6 s a "
-             "meio, o rolo a entrar do preto), os nomes em %d e as fotos em %d no sitio da risca, e %d com o lado que acabou vazio"
-             % (len(casos), conferidos["pecas"], conferidos["nomes"], conferidos["fotos"], conferidos["vazios"]))
+             "%d casos, %d instantes com a peca e a opacidade dos fotogramas (o titulo primeiro preto em %d instantes ate o filme se "
+             "apagar, a acender a seguir e a apagar em 0,6 s a meio, o rolo a entrar do preto), o fim do filme por cima em %d, os "
+             "nomes em %d e as fotos em %d no sitio da risca, e %d com o lado que acabou vazio"
+             % (len(casos), conferidos["pecas"], conferidos["preto"], conferidos["fim"], conferidos["nomes"], conferidos["fotos"],
+                conferidos["vazios"]))
 
 
 DECLARACOES_FORMA = ["var CRED_PARTES_HOJE = ", "var CRED_PARTE_NOME = ", "var credVelModo = ", "var credVelGesto = ",
@@ -7758,9 +7816,11 @@ console.log(JSON.stringify(r));
                 or abs(sc["dur"] - (passos["o principio"]["dur"] - 4 * 4.2)) > 1e-9:
             problemas.append("o «Sem cargos»: %s, %d cargos no filme, %s guardados, %r" % (sc["creditos"].get("partes"), len(sc["cargos"]),
                                                                                       sc["guardados"], sc["msg"][:80]))
+        # o titulo primeiro sao FILME_APAGA (0,7 s) a mais do que o rolo primeiro: o filme apaga-se e so depois o titulo
+        # acende (3 de outubro a tarde; ate ai eram 0,5 s, com o titulo a nascer ja aceso do fim do filme)
         tp = passos["o titulo primeiro"]
         if tp["creditos"].get("partes") != ["titulo", "rolo"] or "cargos_primeiro" in tp["creditos"] or \
-                abs(tp["dur"] - sc["dur"] - 0.5) > 1e-9:
+                abs(tp["dur"] - sc["dur"] - p5.FILME_APAGA) > 1e-9:
             problemas.append("o titulo primeiro: %s, %.4f s" % (tp["creditos"], tp["dur"] - sc["dur"]))
         if passos["nomes corridos"]["creditos"].get("nomes_corridos") is not True or "nomes_corridos" in passos["por grupos"]["creditos"]:
             problemas.append("os nomes corridos: %s" % passos["nomes corridos"]["creditos"])

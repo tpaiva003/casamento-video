@@ -18063,7 +18063,8 @@ def teste_legenda_numa_linha():
     cabe, precisa, ha = render.legenda_numa_linha(comprido)
     avisos = render.avisos_das_legendas([{"tipo": "foto", "ordem": "7", "texto_ecra": comprido,
                                           "opcoes_clip": '{"x1": true}'}])
-    if cabe or ha != 1660 or not any(("clip 7 nao cabe numa linha: precisa de %d px e ha 1660 px" % precisa) in a
+    # 1762 desde 3 de outubro a tarde, a decisao dele: "Uma linha, com as letras a 82 px das bordas"
+    if cabe or ha != 1762 or not any(("clip 7 nao cabe numa linha: precisa de %d px e ha 1762 px" % precisa) in a
                                       for a in avisos):
         problemas.append("o aviso do que nao cabe: %s" % avisos)
     if render.avisos_das_legendas([{"tipo": "foto", "ordem": "7", "texto_ecra": dialogo,
@@ -18088,7 +18089,7 @@ def teste_legenda_numa_linha():
         problemas.append("f0012 fora do inventario")
     verifica("legenda numa linha (x1): no mesmo corpo, ou parte e avisa", not problemas,
              "; ".join(problemas[:3]) if problemas else
-             "o dialogo numa linha a 46, o comprido parte como hoje e diz %d px de 1660" % precisa)
+             "o dialogo numa linha a 46, o comprido parte como hoje e diz %d px de 1762" % precisa)
 
 
 def teste_posicao_da_legenda():
@@ -19195,8 +19196,9 @@ def teste_creditos_partes_e_nomes_corridos():
     O DEFEITO QUE ISTO APANHA:
     - sem as chaves novas, ou com as ordens de antes escritas, os creditos a mudar um bit (as assinaturas de antes);
     - um cargo que fica (um segundo, um fotograma ou um aviso) quando ele os tirou;
-    - o titulo primeiro com um preto entre o filme e ele, ou com outra animacao que a de hoje, ou a apagar-se nos
-      2,5 s do fim em vez dos 0,6 s dos cargos;
+    - o titulo primeiro com outra animacao que a de hoje, ou a apagar-se nos 2,5 s do fim em vez dos 0,6 s dos
+      cargos (desde 3 de outubro a tarde acende do preto, depois de o filme se apagar: a passagem do filme para ele
+      e do teste_creditos_titulo_primeiro_depois_de_o_filme_se_apagar);
     - o rolo depois do titulo a aparecer de repente, ou diferente do de sempre, ou o fim sem o preto;
     - os nomes corridos com titulos, subtitulos ou espacos dos grupos, ou com outros nomes ou outra ordem;
     - uma lista mal escrita a mudar o filme calada; o montar a avisar do que ja nao vai ao ecra.
@@ -19274,9 +19276,11 @@ def teste_creditos_partes_e_nomes_corridos():
     for partes in (["titulo", "rolo"], ["titulo", "cargos", "rolo"], ["rolo", "titulo"], ["cargos", "titulo", "rolo"]):
         T[tuple(partes)] = p5.tempos_dos_creditos(corrido.height, coluna.height, n, False, partes)
     tr = T[("titulo", "rolo")]["t_rolo"]
-    contas = {("titulo", "rolo"): [("titulo", 0.0, 7.5), ("rolo", 7.5, 7.5 + 1.5 + tr + 1.0)],
-              ("titulo", "cargos", "rolo"): [("titulo", 0.0, 7.5), ("cargos", 7.5, 7.5 + n * 4.2),
-                                             ("rolo", 7.5 + n * 4.2, 7.5 + n * 4.2 + 1.5 + tr + 1.0)],
+    # o titulo primeiro: o filme apaga-se em FILME_APAGA (0,7 s) e so depois ele acende, os 7,0 s de sempre
+    ft = p5.FILME_APAGA + 7.0
+    contas = {("titulo", "rolo"): [("titulo", 0.0, ft), ("rolo", ft, ft + 1.5 + tr + 1.0)],
+              ("titulo", "cargos", "rolo"): [("titulo", 0.0, ft), ("cargos", ft, ft + n * 4.2),
+                                             ("rolo", ft + n * 4.2, ft + n * 4.2 + 1.5 + tr + 1.0)],
               ("rolo", "titulo"): [("rolo", 0.0, 1.5 + tr + 1.0), ("titulo", 1.5 + tr + 1.0, 1.5 + tr + 1.0 + 7.0)],
               ("cargos", "titulo", "rolo"): [("cargos", 0.0, 0.9 + n * 4.2), ("titulo", 0.9 + n * 4.2, 0.9 + n * 4.2 + 7.0),
                                              ("rolo", 0.9 + n * 4.2 + 7.0, 0.9 + n * 4.2 + 7.0 + 1.5 + tr + 1.0)]}
@@ -19290,7 +19294,8 @@ def teste_creditos_partes_e_nomes_corridos():
     if Tt["n_cargos"] or Tt["t_cargos"] is not None or Tt["titulo_apaga"] != 0.6 \
             or T[("rolo", "titulo")]["titulo_apaga"] != 2.5:
         problemas.append("sem cargos ainda conta cargos, ou o titulo apaga-se com o fade errado")
-    # 5. O DESENHO DAS 10h: o titulo nasce do filme ja aceso, apaga-se em 0,6 s, o rolo entra do preto e acaba no preto
+    # 5. O DESENHO DAS 10h, com o acerto da tarde: o titulo acende do preto depois de o filme se apagar, com a
+    # animacao de hoje, apaga-se em 0,6 s, e o rolo entra do preto e acaba no preto
     tc = p5.textos_dos_creditos({"creditos": {"partes": ["titulo", "rolo"], "nomes_corridos": True}})
     th = p5.textos_dos_creditos({"creditos": {"nomes_corridos": True}})
     Th = p5.tempos_dos_creditos(corrido.height, coluna.height, 3)
@@ -19302,14 +19307,15 @@ def teste_creditos_partes_e_nomes_corridos():
 
     def parecido(a, b):
         return max(ImageStat.Stat(ImageChops.difference(a, b)).mean) < 0.5
-    cheio = luz(cc(3.0))
-    if luz(cc(0.0)) < 0.95 * luz(cc(0.4)) or cc(0.0).tobytes() != cc(0.45).tobytes():
-        problemas.append("o titulo primeiro nao esta aceso desde o zero (o filme desfaz-se nele)")
+    t0 = Tt["t_titulo_entra"]                  # onde o titulo comeca a acender: quando o filme acaba de se apagar
+    cheio = luz(cc(t0 + 2.5))
+    if abs(t0 - p5.FILME_APAGA) > 1e-9 or luz(cc(0.0)) > 0 or luz(cc(t0 - 0.04)) > 0:
+        problemas.append("o titulo primeiro nao comeca no preto, quando o filme acaba de se apagar")
     # o mesmo u por dois caminhos de contas difere em 1e-13, e por isso compara-se a menos de meio nivel
-    if not all(parecido(cc(0.5 + u), ch(Th["t_titulo_entra"] + u)) for u in (1.2, 2.5, 4.0)):
+    if not all(parecido(cc(t0 + u), ch(Th["t_titulo_entra"] + u)) for u in (0.3, 0.6, 1.2, 2.5, 4.0)):
         problemas.append("o titulo primeiro nao e a animacao de hoje no mesmo instante dele")
-    meio = luz(cc(7.5 - 0.3)) / cheio
-    if not 0.35 < meio < 0.65 or luz(cc(7.5 - 0.62)) < 0.97 * luz(cc(6.0)) or luz(cc(7.5)) > 0:
+    meio = luz(cc(ft - 0.3)) / cheio
+    if not 0.35 < meio < 0.65 or luz(cc(ft - 0.62)) < 0.97 * luz(cc(t0 + 5.5)) or luz(cc(ft)) > 0:
         problemas.append("o titulo nao se apaga para o preto em 0,6 s (%.2f a meio)" % meio)
     r0 = Tt["t_rolo_entra"]
     entra = luz(cc(r0 + 0.75)) / max(1.0, luz(ch(0.75)))
@@ -19339,7 +19345,7 @@ def teste_creditos_partes_e_nomes_corridos():
             problemas.append("o montar nao avisou %r: %s" % (pedaco, falado))
     verifica("creditos: as partes, sem cargos e os nomes corridos", not problemas,
              "; ".join(problemas[:3]) if problemas else
-             "as de antes ao byte; titulo > rolo em %.1f s contra %.1f, o titulo nasce do filme e apaga-se em 0,6 s, "
+             "as de antes ao byte; titulo > rolo em %.1f s contra %.1f, o titulo acende do preto e apaga-se em 0,6 s, "
              "o rolo corrido %d px contra %d" % (Tt["dur"], Th["dur"], corrido.height, rolo.height))
 
 
@@ -19400,6 +19406,96 @@ def teste_creditos_velocidade():
              "; ".join(problemas[:3]) if problemas else
              "sem ela ao bit; a 100 px/s as fotos dao %.1f s de creditos; com as fotos a 300 e os nomes a 30 a coluna fica "
              "parada %.1f s" % (Tf["dur"], Tb["parado"][1]))
+
+
+def teste_creditos_titulo_primeiro_depois_de_o_filme_se_apagar():
+    """Com o titulo primeiro, a ultima imagem do filme apaga-se para o preto e so depois o titulo acende.
+
+    O PEDIDO (3 de outubro a tarde): no render das 10h, com partes = titulo, rolo, o titulo nascia por cima da
+    ultima imagem do filme, e durante cerca de 1 s o «2026» grande do contador do fim e as letras do titulo
+    ficavam um por cima do outro. O Tiago: "o contador apaga-se primeiro, depois acende o titulo".
+
+    O DEFEITO QUE ISTO APANHA: um fotograma da passagem com o filme e o titulo os dois a vista; o filme a nao
+    chegar ao preto, ou a levar mais do que os 0,6 a 0,8 s combinados; o titulo a acender com outra animacao que
+    a de sempre; a duracao (e com ela a musica com "fim") a nao acompanhar; e a mudanca a tocar no rolo primeiro
+    ou nos cargos primeiro, que continuam a nascer do filme ja acesos, com a mistura de sempre ao byte.
+    """
+    import render
+    import musica_creditos as mc
+    from PIL import Image, ImageChops, ImageStat
+    p5 = _ponto5()
+    problemas = []
+    render.aplicar_estilo(None)
+    rolo = p5.rolo_de_nomes(p5.por_grupo(CONVIDADOS_DE_ENSAIO)[0], True)
+    coluna = _coluna_de_ensaio()
+    # AS CONTAS: so o titulo primeiro leva o filme_apaga, e o titulo comeca a acender quando ele acaba
+    Tt = p5.tempos_dos_creditos(rolo.height, coluna.height, 0, False, ["titulo", "rolo"])
+    fa = p5.FILME_APAGA
+    if not 0.6 <= fa <= 0.8 or Tt.get("filme_apaga") != fa or abs(Tt["t_titulo_entra"] - fa) > 1e-9 \
+            or abs(Tt["dur"] - (fa + 7.0 + 1.5 + Tt["t_rolo"] + 1.0)) > 1e-9:
+        problemas.append("as contas do titulo primeiro: %s" % {k: Tt.get(k) for k in ("filme_apaga", "t_titulo_entra",
+                                                                                    "dur")})
+    outras = {"hoje": p5.tempos_dos_creditos(rolo.height, coluna.height, 3),
+              "cargos primeiro": p5.tempos_dos_creditos(rolo.height, coluna.height, 3, True),
+              "rolo, titulo": p5.tempos_dos_creditos(rolo.height, coluna.height, 0, False, ["rolo", "titulo"]),
+              "cargos, titulo, rolo": p5.tempos_dos_creditos(rolo.height, coluna.height, 3, False,
+                                                             ["cargos", "titulo", "rolo"])}
+    if any("filme_apaga" in T for T in outras.values()):
+        problemas.append("o filme_apaga apareceu numa ordem que nao comeca pelo titulo")
+    # A PASSAGEM, fotograma a fotograma: o "filme" e um bloco claro num canto, onde o titulo nunca chega
+    canto = (0, 0, 300, 200)
+    filme = Image.new("RGB", (p5.L, p5.A), (0, 0, 0))
+    filme.paste((230, 230, 230), canto)
+    textos = p5.textos_dos_creditos({"creditos": {"partes": ["titulo", "rolo"], "nomes_corridos": True}})
+    cred = p5.desenho_dos_creditos(rolo, coluna, textos, {}, Tt)
+
+    def luz(im):
+        return sum(ImageStat.Stat(im).sum)
+
+    def fora_do_canto(im):
+        im = im.copy()
+        im.paste((0, 0, 0), canto)
+        return luz(im)
+    cheio_filme, juntos, do_filme = luz(filme), [], []
+    for q in range(int(round((fa + 0.5) * p5.FPS))):       # ate o titulo ir a meio de acender
+        tt = q / float(p5.FPS)
+        quadro = p5.com_o_fim_do_filme(filme, cred(tt), tt, Tt)
+        ve_filme, ve_titulo = luz(quadro.crop(canto)), fora_do_canto(quadro)
+        do_filme.append(ve_filme / cheio_filme)
+        if ve_filme > 0 and ve_titulo > 0:
+            juntos.append(round(tt, 2))
+    if juntos:
+        problemas.append("o filme e o titulo veem-se ao mesmo tempo aos %s s" % juntos[:5])
+    ultimo_do_filme = max(q for q, v in enumerate(do_filme) if v > 0) / float(p5.FPS)
+    if p5.com_o_fim_do_filme(filme, cred(0.0), 0.0, Tt).tobytes() != filme.tobytes() \
+            or not 0.4 < do_filme[int(round(fa / 2.0 * p5.FPS))] < 0.6 or ultimo_do_filme >= fa:
+        problemas.append("o filme nao se apaga para o preto em %.1f s (ainda se ve aos %.2f s)" % (fa, ultimo_do_filme))
+    # depois o titulo acende do preto, com a animacao de sempre: a do titulo no fim, no mesmo instante dele
+    ch = p5.desenho_dos_creditos(rolo, coluna, p5.textos_dos_creditos({"creditos": {"nomes_corridos": True}}), {},
+                                 outras["hoje"])
+    for u in (0.2, 0.5, 1.0, 2.5):
+        quadro = p5.com_o_fim_do_filme(filme, cred(fa + u), fa + u, Tt)
+        igual = max(ImageStat.Stat(ImageChops.difference(quadro, ch(outras["hoje"]["t_titulo_entra"] + u))).mean) < 0.5
+        if not igual or luz(quadro) <= 0:
+            problemas.append("aos %.1f s de acender, o titulo primeiro nao e o titulo de sempre" % u)
+    # A MUSICA COM "fim" ACOMPANHA A DURACAO: entra para acabar com os creditos
+    e = mc.entrada("fim", 240.0, Tt["dur"])
+    if abs(e["in_s"] + Tt["dur"] - 240.0) > 0.011 or e["falta"]:
+        problemas.append("a musica com fim nao acaba com os creditos: %s" % e)
+    # O ROLO PRIMEIRO E OS CARGOS PRIMEIRO: a mistura de sempre com o filme, em 1,5 s, ao byte
+    for nome in ("hoje", "cargos primeiro"):
+        T = outras[nome]
+        c = ch if nome == "hoje" else p5.desenho_dos_creditos(rolo, coluna, p5.textos_dos_creditos({}), {}, T)
+        for tt in (0.0, 0.4, 1.2, 1.5, 2.0):
+            im = c(tt)
+            sempre = Image.blend(filme, im, p5.suave(tt / 1.5)) if tt < 1.5 else im
+            if p5.com_o_fim_do_filme(filme, im, tt, T).tobytes() != sempre.tobytes():
+                problemas.append("%s: a mistura com o fim do filme mudou aos %.1f s" % (nome, tt))
+    verifica("creditos: o titulo primeiro so acende depois de o filme se apagar", not problemas,
+             "; ".join(problemas[:3]) if problemas else
+             "o filme apaga-se em %.1f s (ultimo fotograma com ele aos %.2f s), nenhum de %d fotogramas com os dois, o "
+             "titulo acende como sempre; titulo > rolo em %.1f s; o rolo e os cargos primeiro ao byte"
+             % (fa, ultimo_do_filme, len(do_filme), Tt["dur"]))
 
 
 def _monta_congelado(mexe=None, com_texto=False):
@@ -19939,9 +20035,11 @@ def teste_avisos_medem_na_letra_do_contador_e_a_margem_de_uma_linha():
     textos do contador e da fita sempre em Arial Bold, mesmo com est.estilo.contador.fonte: um sinal
     que a letra escolhida nao tem saia numa caixa vazia sem aviso, e um que so o Arial nao tem avisava
     sem razao. Agora mede na letra que o linha_tempo abre para desenhar. (2) A largura em que uma
-    legenda com x1 tem de caber e render.LEGENDA_LARGURA_NUMA_LINHA, 1660 como hoje: o que decide, o
-    que avisa e a margem do bloco leem todos esse numero, e mudando so ele (1762, a decisao que ele
-    ainda nao tomou) a legenda do clip 10 cabe numa linha, ao centro, sem sair do ecra.
+    legenda com x1 tem de caber e render.LEGENDA_LARGURA_NUMA_LINHA: o que decide, o que avisa e a
+    margem do bloco leem todos esse numero. E 1762 desde 3 de outubro a tarde, a decisao dele ("Uma
+    linha, com as letras a 82 px das bordas"): a legenda do clip 10 cabe numa linha, ao centro, sem
+    sair do ecra; sem o x1 a mesma frase parte-se nos 1660 de sempre; e com so esse numero de volta
+    aos 1660 ela deixa de caber, parte-se e avisa, como ate ai.
     """
     import contextlib
     import io
@@ -19971,21 +20069,27 @@ def teste_avisos_medem_na_letra_do_contador_e_a_margem_de_uma_linha():
             render.aplicar_estilo({})
         if render.avisos_dos_textos(clips) != sem:
             problemas.append("sem a letra do contador os avisos nao voltaram aos de sempre")
-        # a largura de uma linha: 1660 como hoje, e um numero so
-        if largura_antes != 1660 or render.LEGENDA_LARGURA_UTIL != 1660:
-            problemas.append("a largura de uma linha deixou de ser 1660 sem ele decidir: %s" % largura_antes)
+        # a largura de uma linha: 1762, o que ele decidiu a 3 de outubro, e um numero so; a util e a de sempre
+        if largura_antes != 1762 or render.LEGENDA_LARGURA_UTIL != 1660:
+            problemas.append("a largura de uma linha deixou de ser 1762 (e a util 1660) sem ele decidir: %s e %s"
+                             % (largura_antes, render.LEGENDA_LARGURA_UTIL))
         with contextlib.redirect_stdout(io.StringIO()):
             render.aplicar_estilo({"legenda": {"fonte": "playfair_display", "tamanho": 59}})
         frase = "Com a mãe, o irmão e as tias (que, pela idade, podiam ser primas)."
         clip = [{"tipo": "foto", "ordem": "10", "texto_ecra": frase, "opcoes_clip": '{"x1": true}'}]
         cabe, precisa, ha = render.legenda_numa_linha(frase)
         if "playfair_display" in letras and render.abrir_letra("playfair_display", 59, avisar=False) is not None:
-            if cabe or not 1660 < precisa <= 1800 or len(render.avisos_das_legendas(clip)) != 1:
-                problemas.append("a 1660 a frase do clip 10 devia nao caber e avisar: precisa de %d" % precisa)
-            render.LEGENDA_LARGURA_NUMA_LINHA = precisa
             um = {"x1": True, "lp": (0, 0), "li": False}
-            if len(render.linhas_legenda(frase, uma_linha=True)[1]) != 1 or render.avisos_das_legendas(clip):
-                problemas.append("com a largura a %d a frase nao ficou numa linha, ou ainda avisa" % precisa)
+            if not cabe or ha != 1762 or not 1660 < precisa <= 1762 or render.avisos_das_legendas(clip) \
+                    or render.linhas_legenda(frase, uma_linha=True)[:2] != (59, [frase]):
+                problemas.append("a 1762 a frase do clip 10 devia caber numa linha a 59, sem aviso: precisa de %d"
+                                 % precisa)
+            # so o x1 usa a largura nova: sem ele a mesma frase parte-se nos 1660 de sempre, e uma linha
+            # que cabe nos 1660 fica com a margem de sempre
+            partida = render.linhas_legenda(frase)[1]
+            if len(partida) != 2 or render.margem_do_bloco([1500.0]) != render.LEGENDA_MARGEM_LADO:
+                problemas.append("sem o x1 a frase do clip 10 saiu em %d linhas, ou a margem de sempre mudou"
+                                 % len(partida))
             for alinhamento in ("centro", "esquerda", "direita"):
                 with contextlib.redirect_stdout(io.StringIO()):
                     render.aplicar_estilo({"legenda": {"fonte": "playfair_display", "tamanho": 59,
@@ -19996,18 +20100,25 @@ def teste_avisos_medem_na_letra_do_contador_e_a_margem_de_uma_linha():
                 if abs(letras_x[0] - margem) > 6 or abs((1920 - letras_x[2]) - margem) > 6:
                     problemas.append("a linha larga alinhada a %s vai de %d a %d, e devia ficar ao centro com %d px "
                                      "de cada lado" % (alinhamento, letras_x[0], letras_x[2], margem))
+            # UM NUMERO SO: com ele de volta aos 1660 a frase nao cabe, parte-se como sem o x1 e avisa, e a
+            # margem do bloco e a de sempre, tambem alinhada a esquerda
+            render.LEGENDA_LARGURA_NUMA_LINHA = render.LEGENDA_LARGURA_UTIL
+            with contextlib.redirect_stdout(io.StringIO()):
+                render.aplicar_estilo({"legenda": {"fonte": "playfair_display", "tamanho": 59}})
+            if render.legenda_numa_linha(frase)[0] or len(render.avisos_das_legendas(clip)) != 1 \
+                    or render.linhas_legenda(frase, uma_linha=True)[1] != partida \
+                    or render.margem_do_bloco([precisa]) != render.LEGENDA_MARGEM_LADO:
+                problemas.append("com o numero de volta aos 1660 a frase do clip 10 devia nao caber, partir e avisar")
             render.LEGENDA_LARGURA_NUMA_LINHA = largura_antes
-            # e de volta aos 1660 a margem e a de sempre, tambem alinhada a esquerda
-            if render.margem_do_bloco([precisa]) != render.LEGENDA_MARGEM_LADO:
-                problemas.append("a 1660 a margem do bloco deixou de ser a de sempre")
     finally:
         render.LEGENDA_LARGURA_NUMA_LINHA = largura_antes
         with contextlib.redirect_stdout(io.StringIO()):
             render.aplicar_estilo({})
     verifica("avisos na letra do contador, e a largura de uma linha num numero so", not problemas,
              "; ".join(problemas[:3]) if problemas else
-             "%d letras mudam os avisos do contador e nenhuma os da legenda; a 1660 o clip 10 precisa de %d px e "
-             "nao cabe, e so com o numero mudado fica numa linha ao centro" % (len(outras), precisa))
+             "%d letras mudam os avisos do contador e nenhuma os da legenda; a 1762 o clip 10 precisa de %d px e "
+             "fica numa linha ao centro, sem o x1 parte-se nos 1660, e com o numero de volta aos 1660 nao cabe"
+             % (len(outras), precisa))
 
 
 def teste_avisos_do_parado_fora_do_contador_e_da_peca_que_acaba_acesa():
@@ -20368,6 +20479,7 @@ def main():
     print("os creditos, 3 de outubro")
     teste_creditos_partes_e_nomes_corridos()
     teste_creditos_velocidade()
+    teste_creditos_titulo_primeiro_depois_de_o_filme_se_apagar()
     print("os acertos de 3 de outubro: os sons automaticos e a marca a continuar")
     teste_som_auto_liga_e_desliga()
     teste_marca_a_continuar()

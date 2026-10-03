@@ -63,8 +63,9 @@ AS PARTES, OS NOMES CORRIDOS E A VELOCIDADE (3 de outubro, contrato saida/discus
 dos cargos, "so queremos os nomes dos convidados corridos" e "permite ajustar a velocidade dos nomes e/ou
 das fotos"):
 - est.creditos.partes: a lista, pela ordem, de "titulo", "cargos" e "rolo" (partes_da_escolha). Sem "cargos"
-  nao ha cargo nenhum: nem fotograma, nem segundo, nem aviso. A primeira parte nasce do fim do filme sem
-  preto, as outras do preto, e a ultima acaba no preto (tempos_dos_creditos diz as contas);
+  nao ha cargo nenhum: nem fotograma, nem segundo, nem aviso. O rolo ou os cargos primeiro nascem do fim do
+  filme sem preto; o titulo primeiro so acende depois de o filme se apagar (FILME_APAGA, 3 de outubro a
+  tarde); as outras partes acendem do preto, e a ultima acaba no preto (tempos_dos_creditos diz as contas);
 - est.creditos.nomes_corridos = true: o rolo so com as linhas dos nomes, sem titulos, subtitulos nem espaco
   entre grupos, pela mesma ordem (rolo_de_nomes);
 - est.creditos.velocidade = {fotos, nomes} em px/s (velocidade_da_escolha, avisos_da_velocidade).
@@ -130,6 +131,15 @@ PARTES_VALIDAS = ("titulo", "cargos", "rolo")
 PARTES_HOJE = ["rolo", "cargos", "titulo"]
 PARTES_CARGOS_PRIMEIRO = ["cargos", "rolo", "titulo"]
 TITULO_ACENDE, TITULO_APAGA_FIM = 1.0, 2.5
+# O TITULO PRIMEIRO SO ACENDE DEPOIS DE O FILME SE APAGAR (3 de outubro a tarde). Ate ai o titulo primeiro nascia da
+# ultima imagem do filme ja aceso, e durante cerca de 1 s o «2026» grande do contador do fim e as letras do titulo
+# ficavam um por cima do outro (aos 10:15,6 do render das 10h). O Tiago: "o contador apaga-se primeiro, depois acende
+# o titulo". Quando a primeira parte e o titulo, a ultima imagem do filme apaga-se para o preto em FILME_APAGA e so
+# entao o titulo acende do preto, com a animacao de sempre (TITULO_ACENDE): os dois nunca se veem ao mesmo tempo. O
+# preto entre os dois sao dois fotogramas (0,08 s; medido no fim do render das 10h), nao um intervalo: o titulo comeca
+# a acender logo que o filme acaba de se apagar. Com o rolo ou os cargos primeiro nada muda (tempos_dos_creditos e
+# com_o_fim_do_filme).
+FILME_APAGA = 0.7
 # A VELOCIDADE DOS CREDITOS (contrato de 3 de outubro, 5b): est.creditos.velocidade = {fotos, nomes} em px/s, cada um
 # opcional. Fora destes limites fica como esta, com aviso. Avisa-se quando uma foto fica menos de FOTO_INTEIRA_MIN s
 # inteira no ecra, e quando uma linha de nomes passa depressa de mais para a regua de leitura das legendas (XF_CPS
@@ -1237,11 +1247,15 @@ def tempos_dos_creditos(alto_rolo, alto_coluna, n_cargos, cargos_primeiro=False,
     AS PARTES NOUTRA ORDEM (`partes`, contrato de 3 de outubro, ponto 5). Sem `partes` vale o
     cargos_primeiro; as duas ordens de antes (PARTES_HOJE e PARTES_CARGOS_PRIMEIRO) fazem as contas acima,
     ao bit. Outra lista faz-as parte a parte, pela ordem, e o T traz "janelas" [(parte, ini, fim)]:
-    - A PRIMEIRA PARTE NASCE DA ULTIMA IMAGEM DO FILME, SEM PRETO, como os cargos primeiro da 109: o main()
-      desfaz o fim do filme nela em t_entrada (1,5 s), e ela ja esta acesa. O rolo comeca no zero, como
-      hoje; o primeiro cargo t_entrada - CARGO_ENTRA (0,9 s) antes de ficar inteiro, como na 109; o titulo
-      t_entrada - TITULO_ACENDE (0,5 s) antes, para ficar inteiro o mesmo tempo que hoje (o filme desfaz-se
-      nele no lugar do segundo em que hoje acende do preto). Com o titulo primeiro, mais 0,5 s.
+    - O ROLO OU OS CARGOS PRIMEIRO NASCEM DA ULTIMA IMAGEM DO FILME, SEM PRETO, como os cargos primeiro da
+      109: o main() desfaz o fim do filme neles em t_entrada (1,5 s), e ja estao acesos. O rolo comeca no
+      zero, como hoje; o primeiro cargo t_entrada - CARGO_ENTRA (0,9 s) antes de ficar inteiro, como na 109.
+    - O TITULO PRIMEIRO SO ACENDE DEPOIS DE O FILME SE APAGAR (3 de outubro a tarde, o Tiago: "o contador
+      apaga-se primeiro, depois acende o titulo"): a ultima imagem do filme apaga-se para o preto em
+      FILME_APAGA (0,7 s, o T["filme_apaga"], que so existe neste caso) e o titulo acende do preto a seguir,
+      em TITULO_ACENDE, como quando nao e o primeiro: t_titulo_entra = FILME_APAGA. Fica inteiro o mesmo
+      tempo que hoje, e os creditos FILME_APAGA mais compridos (ate ai eram 0,5 s: o filme desfazia-se no
+      titulo ja aceso, e o ano do contador do fim e as letras do titulo viam-se um por cima do outro).
     - AS OUTRAS ACENDEM DO PRETO: o rolo com a entrada de sempre (t_entrada, ja a andar), cada cargo em
       CARGO_ENTRA, o titulo em TITULO_ACENDE, como hoje.
     - UMA PARTE QUE NAO E A ULTIMA APAGA-SE PARA O PRETO antes da seguinte: os cargos e o rolo como sempre
@@ -1249,7 +1263,7 @@ def tempos_dos_creditos(alto_rolo, alto_coluna, n_cargos, cargos_primeiro=False,
     - A ULTIMA ACABA COM O FADE A PRETO DO FIM: o titulo com os TITULO_APAGA_FIM de hoje (T["titulo_apaga"]),
       o rolo com o seu apagar e o t_fim_rolo, os cargos com o do ultimo cargo.
     Cada parte dura o de hoje: o titulo t_titulo (7,0 s), os cargos n_cargos x t_cargo, o rolo t_entrada +
-    t_rolo + t_fim_rolo; e a primeira o que nasce antes (0, 0,9 ou 0,5 s). Sem "cargos" (ou sem cargos) nao
+    t_rolo + t_fim_rolo; e a primeira o que nasce antes (0, 0,9 ou 0,7 s). Sem "cargos" (ou sem cargos) nao
     ha segundo nenhum deles, e t_cargos e None; sem "titulo", t_titulo_entra e None.
 
     A VELOCIDADE (`velocidade`, {fotos, nomes} em px/s, contrato de 3 de outubro, 5b). Sem ela, a regra de
@@ -1295,11 +1309,14 @@ def tempos_dos_creditos(alto_rolo, alto_coluna, n_cargos, cargos_primeiro=False,
                 t_cargos = (t + t_entrada - CARGO_ENTRA) if k == 0 else t
                 t = t_cargos + n_cargos * t_cargo
             else:
-                t_titulo_entra = (t + t_entrada - TITULO_ACENDE) if k == 0 else t
+                # o titulo primeiro acende do preto depois de o filme se apagar; a meio, logo que a de antes acaba
+                t_titulo_entra = (t + FILME_APAGA) if k == 0 else t
                 t = t_titulo_entra + t_titulo
             janelas.append((p, ini, t))
         extra.update({"janelas": janelas,
                       "titulo_apaga": TITULO_APAGA_FIM if partes[-1] == "titulo" else CARGO_ENTRA})
+        if partes[0] == "titulo":
+            extra["filme_apaga"] = FILME_APAGA        # so com o titulo primeiro: ver com_o_fim_do_filme()
         T = {"t_rolo": t_rolo, "vel_nomes": vel_nomes, "vel_fotos": vel_fotos, "t_cargo": t_cargo,
              "t_titulo": t_titulo, "t_entrada": t_entrada, "t_fim_rolo": t_fim_rolo, "t_cargos": t_cargos,
              "dur": t, "primeiro": partes[0], "n_cargos": n_cargos if "cargos" in partes else 0,
@@ -1395,19 +1412,19 @@ def desenho_dos_creditos(rolo, coluna, textos, estilo, T):
                                          anchor="mm")
         return Image.eval(tela, lambda v, a=alfa: int(v * a))
 
-    def titulo_em(u, ja_aceso=False, apaga=2.5):
+    def titulo_em(u, apaga=2.5):
         """O titulo final e a data no instante u deles, a acender em 1 s e a apagar nos ultimos 2,5 s.
 
-        Com as partes noutra ordem (3 de outubro): `ja_aceso`, o titulo primeiro, nasce do fim do filme ja
-        aceso (o encadeado e o do main()); `apaga` e o fade do fim, ou o dos cargos se nao for a ultima."""
+        Com as partes noutra ordem (3 de outubro): `apaga` e o fade do fim, ou o dos cargos se nao for a
+        ultima. O TITULO ACENDE SEMPRE DO PRETO: quando e a primeira parte, depois de o filme se apagar
+        (FILME_APAGA, 3 de outubro a tarde); antes do u = 0 e preto, e ja nao nasce aceso do fim do filme."""
         fundo = render.pousar_letreiro(titulo_let, u)
         camada = preto.copy()
         camada.paste(data_let, ((L - data_let.width) // 2, A // 2 + 110 - data_let.height // 2))
         fundo = ImageChops.screen(fundo, camada)
         alfa = suave(u / 1.0) * (1.0 - suave((u - (t_titulo - 2.5)) / 2.5))
-        if ja_aceso or apaga != 2.5:
-            entra = 1.0 if (ja_aceso and u < TITULO_ACENDE) else suave(u / TITULO_ACENDE)
-            alfa = entra * (1.0 - suave((u - (t_titulo - apaga)) / apaga))
+        if apaga != 2.5:
+            alfa = suave(u / TITULO_ACENDE) * (1.0 - suave((u - (t_titulo - apaga)) / apaga))
         return Image.eval(fundo, lambda v, a=alfa: int(v * a))
 
     def creditos_por_partes(t):
@@ -1425,7 +1442,9 @@ def desenho_dos_creditos(rolo, coluna, textos, estilo, T):
             tc = t - T["t_cargos"]
             j = min(int(tc // t_cargo) if tc > 0 else 0, len(cargos) - 1)
             return cargo_em(j, tc - j * t_cargo, ja_aceso=(k == 0 and j == 0))
-        return titulo_em(t - T["t_titulo_entra"], ja_aceso=(k == 0), apaga=T["titulo_apaga"])
+        # o titulo primeiro tambem acende do preto: antes do t_titulo_entra (FILME_APAGA) o desenho e preto, e o
+        # main() apaga o fim do filme nesse tempo (com_o_fim_do_filme)
+        return titulo_em(t - T["t_titulo_entra"], apaga=T["titulo_apaga"])
 
     def creditos(t):
         if T.get("janelas"):
@@ -1455,6 +1474,23 @@ def desenho_dos_creditos(rolo, coluna, textos, estilo, T):
             return cargo_em(k, tc - k * t_cargo)
         return titulo_em(tc - len(cargos) * t_cargo)
     return creditos
+
+
+def com_o_fim_do_filme(ultimo, im, tt, T):
+    """O fotograma `im` dos creditos, do instante tt deles, com a ultima imagem do filme (`ultimo`) ainda por cima.
+
+    O ROLO OU OS CARGOS PRIMEIRO: o fim do filme desfaz-se neles, ja acesos, em t_entrada (1,5 s), sem preto. E a
+    mistura de sempre, ao byte.
+
+    O TITULO PRIMEIRO (T["filme_apaga"], 3 de outubro a tarde; o Tiago: "o contador apaga-se primeiro, depois acende
+    o titulo"): o filme apaga-se para o preto em FILME_APAGA e o titulo so acende depois. Ate la o desenho dos
+    creditos e preto (o titulo_em antes do u = 0), e por isso a mesma mistura e so o filme a apagar-se: o ano do
+    contador do fim e as letras do titulo nunca estao no ecra ao mesmo tempo.
+    """
+    desfaz = T.get("filme_apaga") or T["t_entrada"]
+    if tt < desfaz:
+        return Image.blend(ultimo, im, suave(tt / desfaz))
+    return im
 
 
 def main():
@@ -1505,7 +1541,7 @@ def main():
     T = tempos_dos_creditos(rolo.height, coluna.height, len(textos["cargos"]), textos["cargos_primeiro"],
                             textos["partes"], textos["velocidade"])
     t_rolo, vel_nomes, vel_fotos, dur = T["t_rolo"], T["vel_nomes"], T["vel_fotos"], T["dur"]
-    t_cargo, t_entrada, t_cargos = T["t_cargo"], T["t_entrada"], T["t_cargos"]
+    t_cargo, t_cargos = T["t_cargo"], T["t_cargos"]
     print("rolo de nomes %d px a %.0f px/s; coluna de fotos %d px a %.0f px/s; rolo %.1f s; creditos %.1f s"
           % (rolo.height, vel_nomes, coluna.height, vel_fotos, t_rolo, dur))
     # AS PARTES, OS NOMES CORRIDOS E A VELOCIDADE (3 de outubro): diz-se o que nao e o de sempre
@@ -1630,9 +1666,8 @@ def main():
             im = ultimo
         else:
             tt = t - antes
-            im = creditos(tt)
-            if tt < t_entrada:
-                im = Image.blend(ultimo, im, suave(tt / t_entrada))
+            # a ultima imagem do filme desfaz-se na primeira parte; com o titulo primeiro, apaga-se antes dele
+            im = com_o_fim_do_filme(ultimo, creditos(tt), tt, T)
         enc.stdin.write(im.convert("RGB").tobytes())
     enc.stdin.close()
     enc.wait()

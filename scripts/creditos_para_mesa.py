@@ -66,18 +66,21 @@ MEDIDAS = {
     # mascara_das_bordas(): as pontas de cima e de baixo desvanecem em 170 px
     "bordas": 170,
     # AS PARTES, OS NOMES CORRIDOS E A VELOCIDADE (contrato de 3 de outubro, pontos 5 e 5b). As constantes do ponto5
-    # (TITULO_ACENDE, TITULO_APAGA_FIM, VEL_FOTOS_LIMITES, VEL_NOMES_LIMITES, FOTO_INTEIRA_MIN, LER_CPS, PARTES_HOJE e
-    # PARTES_CARGOS_PRIMEIRO), com estes valores enquanto ele nao as tiver: o titulo que nasce do fim do filme ja aceso
-    # comeca titulo_acende antes do fim da entrada e, sem ser a ultima parte, apaga-se com o fade dos cargos; a coluna
-    # das fotos escolhe-se de 60 a 300 px/s e os nomes de 30 a 200; avisa-se quando uma foto fica menos de 2 s inteira
-    # no ecra e quando uma linha de nomes pede mais do que as 12 letras por segundo das legendas
-    "titulo_acende": 1.0, "titulo_apaga_fim": 2.5,
+    # (TITULO_ACENDE, TITULO_APAGA_FIM, FILME_APAGA, VEL_FOTOS_LIMITES, VEL_NOMES_LIMITES, FOTO_INTEIRA_MIN, LER_CPS,
+    # PARTES_HOJE e PARTES_CARGOS_PRIMEIRO), com estes valores enquanto ele nao as tiver: o titulo acende sempre do preto
+    # em titulo_acende e, sem ser a ultima parte, apaga-se com o fade dos cargos; quando e a primeira parte, o filme
+    # apaga-se primeiro para o preto em filme_apaga e so depois o titulo acende (3 de outubro a tarde: ate ai nascia ja
+    # aceso por cima da ultima imagem do filme); a coluna das fotos escolhe-se de 60 a 300 px/s e os nomes de 30 a 200;
+    # avisa-se quando uma foto fica menos de 2 s inteira no ecra e quando uma linha de nomes pede mais do que as 12
+    # letras por segundo das legendas
+    "titulo_acende": 1.0, "titulo_apaga_fim": 2.5, "filme_apaga": 0.7,
     "vel_fotos_limites": [60.0, 300.0], "vel_nomes_limites": [30.0, 200.0],
     "foto_inteira_min": 2.0, "ler_cps": 12.0,
     "partes_hoje": ["rolo", "cargos", "titulo"], "partes_cargos_primeiro": ["cargos", "rolo", "titulo"],
 }
 # as medidas de cima que o ponto5 tem em constantes: (chave do MEDIDAS, nome no ponto5, como se le)
 CONSTANTES_DAS_PARTES = (("titulo_acende", "TITULO_ACENDE", float), ("titulo_apaga_fim", "TITULO_APAGA_FIM", float),
+                         ("filme_apaga", "FILME_APAGA", float),
                          ("vel_fotos_limites", "VEL_FOTOS_LIMITES", lambda v: [float(x) for x in v]),
                          ("vel_nomes_limites", "VEL_NOMES_LIMITES", lambda v: [float(x) for x in v]),
                          ("foto_inteira_min", "FOTO_INTEIRA_MIN", float), ("ler_cps", "LER_CPS", float),

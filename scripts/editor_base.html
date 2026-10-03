@@ -10165,7 +10165,10 @@ function palcoDesenhaInstante(T){
   if(F.cred && T >= F.cred.ini){
     var tt = T - F.cred.ini;
     credDesenhaEm(tc, tt, palcoQuerPrevias(), true);
-    tc.style.opacity = String(tt < PALCO_R.credEntra ? palcoSuave(tt / PALCO_R.credEntra) : 1);
+    /* a ultima imagem do filme desfaz-se nos creditos em credEntra (1,5 s); com o titulo primeiro apaga-se para o preto
+       em filmeApaga (0,7 s), que ate la o desenho dos creditos e preto, e so depois o titulo acende (com_o_fim_do_filme) */
+    var credDesfaz = (CRED && credContas().filmeApaga) || PALCO_R.credEntra;
+    tc.style.opacity = String(tt < credDesfaz ? palcoSuave(tt / credDesfaz) : 1);
   } else if(tc.style.opacity !== "0") tc.style.opacity = "0";
 }
 
@@ -10307,7 +10310,9 @@ function palcoSomPlano(F){
       var i = idx[fx.clip], c = i == null ? null : v.clips[i];
       /* a marca saiu, ou e de outra musica: esta faixa ja nao existe, e uma marca nova entra no passo 3 */
       if(!c || !c.m || somResolve(c.m.f) !== fx.f) return;
-      var pedido = Math.max(0, +c.m["in"] || 0), esperado = somR2(pedido + somSilencioNoInicio(fx.f, pedido));
+      /* "continua": o segundo de entrada e o que a montagem calculou (onde a musica parou), nao um numero dele */
+      var contM = musicaContinua(c), pedido = contM ? fx["in"] : Math.max(0, +c.m["in"] || 0),
+          esperado = contM ? fx["in"] : somR2(pedido + somSilencioNoInicio(fx.f, pedido));
       if(Math.abs(esperado - fx["in"]) > 0.02){ e["in"] = esperado; e.mudou = true; }
       e.marca = i; e.pedido = pedido;
     }
@@ -10337,8 +10342,14 @@ function palcoSomPlano(F){
     if(!s) return;
     var f = somResolve(m);
     if(!f){ notas.push("A música marcada no clip " + (i + 1) + " («" + m + "») não tem cópia na Mesa: continua a que vinha, como no montar."); return; }
-    var pedido = Math.max(0, +c.m["in"] || 0);
-    marcas.push({f: f, ini: Math.max(V, s.ini), "in": somR2(pedido + somSilencioNoInicio(f, pedido)), pedido: pedido, marca: i, clip: chaves[i]});
+    var pedido = Math.max(0, +c.m["in"] || 0), entraEm = somR2(pedido + somSilencioNoInicio(f, pedido));
+    if(musicaContinua(c)){
+      /* "continua" numa marca nova: onde a mesma musica parou da ultima vez que tocou antes deste clip */
+      var antesC = lista.filter(function(e){ return e.f === f && e.ini < s.ini; }).sort(somPorIni).pop();
+      pedido = antesC ? somR2(antesC["in"] + Math.max(0, antesC.dura || 0)) : 0;
+      entraEm = antesC ? pedido : somR2(somSilencioNoInicio(f, 0));
+    }
+    marcas.push({f: f, ini: Math.max(V, s.ini), "in": entraEm, pedido: pedido, marca: i, clip: chaves[i]});
   });
   marcas.sort(somPorIni).forEach(function(m){
     /* O ECO (087): a automatica da mesma musica ja a tocar ha menos de 3 s, e a marca pede-a do principio */
@@ -10890,7 +10901,9 @@ function palcoAproximado(F){
   /* medido a 2 de outubro contra fotogramas do render.py, nos mesmos instantes: a zona, o contorno e o nome no mesmo
      pixel, o escurecer igual, e o nome a acender com o mesmo brilho; muda a letra, que e a do browser */
   if(F.segs.some(function(s){ return s.c && s.c.zd; })) l.push("A zona de destaque é a do filme: acende no mesmo instante, escurece o mesmo e põe o contorno e o nome no mesmo sítio que o render. Só a letra do nome é a do browser.");
-  l.push(F.cred ? "No fim, os créditos como o painel Créditos os desenha, a nascer da última imagem." : "No fim, a imagem escurece nos últimos 2,5 s e o som nos últimos 4 s.");
+  l.push(F.cred ? (CRED && credContas().filmeApaga ? "No fim, os créditos como o painel Créditos os desenha: a última imagem apaga-se primeiro, e só depois o título acende."
+                                                     : "No fim, os créditos como o painel Créditos os desenha, a nascer da última imagem.")
+                : "No fim, a imagem escurece nos últimos 2,5 s e o som nos últimos 4 s.");
   if(AUDIO){
     l.push("O som: uma cópia leve de cada música (AAC mono a " + ((AUDIO_INFO && AUDIO_INFO.kbps) || 32) + " kbit/s), cortada, subida, descida e cruzada aqui " +
            "com as regras do render, e cada troço ao nível do filme, medido na cópia (o render acerta-o ao loudnorm, com 1 dB de folga). " +
@@ -11383,7 +11396,7 @@ function credLayout(){
      aceso, sem preto (a conta dele comeca 0,6 s antes do fim da entrada, tCargos = 0,9); o rolo entra do preto depois
      do ultimo cargo (tRoloEntra), e o titulo no fim (tTituloEntra). Ficam 0,9 s mais compridos do que «Como está» com
      os mesmos cargos. As somas vao pela ordem das do ponto5, para dar o mesmo bit; «Como está» e a conta de sempre. */
-  var tCargos = null, tRoloEntra = null, tTituloEntra = null, dur, janelas = null, tituloApaga = M.final_sai;
+  var tCargos = null, tRoloEntra = null, tTituloEntra = null, dur, janelas = null, tituloApaga = M.final_sai, filmeApaga = null;
   if(primeiro){
     tCargos = M.t_entrada - M.cargo_entra;
     tRoloEntra = tCargos + nCargos * M.t_cargo;
@@ -11396,28 +11409,33 @@ function credLayout(){
     dur = M.t_entrada + tRolo + M.fim_do_rolo + nCargos * M.t_cargo + M.t_titulo;
   } else {
     /* AS PARTES NOUTRA ORDEM (o tempos_dos_creditos do ponto5 de 3 de outubro), parte a parte, pela ordem das somas dele:
-       - a PRIMEIRA nasce da ultima imagem do filme, sem preto: o rolo no zero, como hoje; o primeiro cargo
-         t_entrada - cargo_entra (0,9 s) antes de ficar inteiro, como na 109; o titulo t_entrada - titulo_acende (0,5 s)
-         antes, ja aceso, para ficar inteiro o mesmo tempo de hoje (com o titulo primeiro, mais 0,5 s de creditos);
+       - o ROLO OU OS CARGOS PRIMEIRO nascem da ultima imagem do filme, sem preto: o rolo no zero, como hoje; o primeiro
+         cargo t_entrada - cargo_entra (0,9 s) antes de ficar inteiro, como na 109;
+       - o TITULO PRIMEIRO so acende depois de o filme se apagar (o FILME_APAGA do ponto5, 3 de outubro a tarde; o Tiago:
+         "o contador apaga-se primeiro, depois acende o titulo"): a ultima imagem do filme apaga-se para o preto em
+         filme_apaga (0,7 s) e o titulo acende do preto a seguir, com a animacao de sempre. Fica inteiro o mesmo tempo de
+         hoje, e os creditos 0,7 s mais compridos (ate ai eram 0,5 s: o titulo nascia ja aceso por cima do fim do filme).
+         O filmeApaga so existe neste caso; o desenho e o palco desfazem o fim do filme nesse tempo e nao em t_entrada;
        - as outras acendem do preto, e uma que nao e a ultima apaga-se para o preto antes da seguinte: o titulo com o
          fade dos cargos (cargo_entra) em vez dos 2,5 s do fim (tituloApaga);
        - cada parte dura o de hoje: o titulo t_titulo, os cargos N x t_cargo, o rolo t_entrada + tRolo + fim_do_rolo.
        Sem cargos o tCargos e null, e sem titulo o tTituloEntra. `janelas` diz de onde a onde vai cada parte. */
-    var tP = 0, acende = M.titulo_acende || M.final_entra;
+    var tP = 0, apagaFilme = M.filme_apaga || 0.7;
     janelas = [];
     partes.forEach(function(p, k){
       var ini = tP;
       if(p === "rolo"){ tRoloEntra = tP; tP = tP + M.t_entrada + tRolo + M.fim_do_rolo; }
       else if(p === "cargos"){ tCargos = k === 0 ? tP + M.t_entrada - M.cargo_entra : tP; tP = tCargos + nCargos * M.t_cargo; }
-      else { tTituloEntra = k === 0 ? tP + M.t_entrada - acende : tP; tP = tTituloEntra + M.t_titulo; }
+      else { tTituloEntra = k === 0 ? tP + apagaFilme : tP; tP = tTituloEntra + M.t_titulo; }
       janelas.push({parte: p, ini: ini, fim: tP});
     });
     dur = tP;
     tituloApaga = partes[partes.length - 1] === "titulo" ? (M.titulo_apaga_fim || M.final_sai) : M.cargo_entra;
+    if(partes[0] === "titulo") filmeApaga = apagaFilme;
   }
   return {pecas: pecas, Hr: Hr, col: col, Hc: Hc, fotos: fotos, tRolo: tRolo, nCargos: nCargos, cargos: cargos,
           cargosFora: cargosFora, primeiro: partes[0], tCargos: tCargos, tRoloEntra: tRoloEntra,
-          tTituloEntra: tTituloEntra, vn: velN, vf: velF, dur: dur,
+          tTituloEntra: tTituloEntra, vn: velN, vf: velF, dur: dur, filmeApaga: filmeApaga,
           partes: partes, partesEscolhidas: partesEscolhidas, janelas: janelas, tituloApaga: tituloApaga,
           cargosGuardados: cargosGuardados, corridos: corridos, vel: vel, fimNomes: fimNomes, fimFotos: fimFotos, parado: parado};
 }
@@ -11620,7 +11638,10 @@ function credDesenhaEm(tela, t, grande, noPalco){
   ctx.globalAlpha = 1;
   ctx.fillStyle = "#000"; ctx.fillRect(0, 0, W, tela.height);
   ctx.setTransform(s, 0, 0, s, 0, 0);
-  var entrada = (t < M.t_entrada && !noPalco) ? credSuave(t / M.t_entrada) : 1, atual = -1;
+  /* O FIM DO FILME DESFAZ-SE NOS CREDITOS em t_entrada (1,5 s) com o rolo ou os cargos primeiro, e em filmeApaga (0,7 s)
+     com o titulo primeiro, que so acende depois (o com_o_fim_do_filme do ponto5, 3 de outubro a tarde) */
+  var desfaz = Lay.filmeApaga || M.t_entrada;
+  var entrada = (t < desfaz && !noPalco) ? credSuave(t / desfaz) : 1, atual = -1;
   /* O ROLO no instante tr dele (0 = o primeiro titulo a meio): os nomes e a coluna a subir, as pontas a desvanecer, e o
      fim a ir para preto; `alfa` e o da entrada (do fim do filme, ou do preto com os cargos primeiro) */
   function rolo(tr, alfa){
@@ -11674,9 +11695,10 @@ function credDesenhaEm(tela, t, grande, noPalco){
     ctx.globalAlpha = 1;
   }
   /* O TITULO E A DATA no instante u2 deles, o titulo a aproximar-se devagar como o pousar_letreiro do render. Com as
-     partes noutra ordem (3 de outubro, o titulo_em do ponto5): `jaAceso`, o titulo primeiro, nasce do fim do filme ja
-     aceso; `apaga` e o fade do fim (2,5 s), ou o dos cargos (0,6 s) quando o titulo nao e a ultima parte. Sem eles, o
-     de sempre. */
+     partes noutra ordem (3 de outubro, o titulo_em do ponto5): `apaga` e o fade do fim (2,5 s), ou o dos cargos (0,6 s)
+     quando o titulo nao e a ultima parte; sem ele, o de sempre. O TITULO ACENDE SEMPRE DO PRETO (3 de outubro a tarde):
+     quando e a primeira parte, depois de o filme se apagar, e antes do u2 = 0 e preto. O `jaAceso` ficou sem ninguem
+     que o peca: o titulo primeiro nascia ja aceso do fim do filme, e o ano do contador via-se por baixo das letras. */
   function titulo(u2, jaAceso, apaga){
     var z = 1 + M.letreiro_empurra * Math.max(0, u2), acende = M.titulo_acende || M.final_entra;
     if(apaga == null) apaga = M.final_sai;
@@ -11691,8 +11713,10 @@ function credDesenhaEm(tela, t, grande, noPalco){
   }
   if(Lay.janelas){
     /* AS PARTES NOUTRA ORDEM (contrato de 3 de outubro, o creditos_por_partes(t) do ponto5): a parte em cuja janela o t
-       cai, ou a ultima. A primeira nasce do fim do filme ja acesa (no palco, a opacidade do quadro; aqui, o «o fim do
-       filme» por cima): o rolo como hoje, o primeiro cargo e o titulo ja acesos. As outras entram do preto. */
+       cai, ou a ultima. O rolo ou os cargos primeiro nascem do fim do filme ja acesos (no palco, a opacidade do quadro;
+       aqui, o «o fim do filme» por cima): o rolo como hoje, o primeiro cargo ja aceso. O titulo primeiro nao: antes do
+       tTituloEntra (o filmeApaga) o desenho e preto, o fim do filme apaga-se nesse preto, e so depois o titulo acende.
+       As outras entram do preto. */
     var jn = Lay.janelas, kj = jn.length - 1;
     for(var qj = 0; qj < jn.length; qj++) if(t < jn[qj].fim){ kj = qj; break; }
     if(jn[kj].parte === "rolo"){
@@ -11701,7 +11725,7 @@ function credDesenhaEm(tela, t, grande, noPalco){
     } else if(jn[kj].parte === "cargos"){
       var tcJ = t - Lay.tCargos, jc = Math.min(tcJ > 0 ? Math.floor(tcJ / M.t_cargo) : 0, Lay.nCargos - 1);
       cargo(jc, tcJ - jc * M.t_cargo, kj === 0 && jc === 0);
-    } else titulo(t - Lay.tTituloEntra, kj === 0, Lay.tituloApaga);
+    } else titulo(t - Lay.tTituloEntra, false, Lay.tituloApaga);
   } else if(Lay.primeiro === "cargos"){
     /* OS CARGOS PRIMEIRO (decisao 109, o creditos(t) do ponto5): os cargos um de cada vez, o primeiro ja aceso desde o
        zero (o fim do filme desfaz-se nele: no palco, a opacidade do quadro; aqui, o «o fim do filme» por cima); depois o
@@ -11724,8 +11748,9 @@ function credDesenhaEm(tela, t, grande, noPalco){
       else titulo(tc - Lay.nCargos * M.t_cargo);
     }
   }
-  if(t < M.t_entrada && !noPalco){
-    /* nos primeiros 1,5 s o fim do filme desfaz-se nos creditos, sem preto pelo meio */
+  if(t < desfaz && !noPalco){
+    /* nos primeiros 1,5 s o fim do filme desfaz-se nos creditos, sem preto pelo meio; com o titulo primeiro apaga-se
+       para o preto em 0,7 s (filmeApaga), e o titulo so acende depois */
     ctx.globalAlpha = 1 - entrada;
     ctx.fillStyle = "#2a2226"; ctx.fillRect(0, 0, L, A);
     credTextoMeio(ctx, "o fim do filme", 64, [201, 186, 194], L / 2, A / 2);
@@ -12428,7 +12453,7 @@ function credPoePartes(lista, rotulo, frase){
 function credFraseDaOrdem(lista){
   if(credListasIguais(lista, CRED_PARTES_HOJE)) return "Os créditos voltam à ordem de sempre: os convidados e as fotos, depois os cargos e o título.";
   return "A ordem passa a ser: " + credPartesEmPalavras(lista) + "." +
-    (lista[0] === "titulo" ? " O título nasce do fim do filme, já aceso." : lista[0] === "cargos" ? " O primeiro cargo nasce do fim do filme." : "");
+    (lista[0] === "titulo" ? " O filme apaga-se primeiro, e só depois o título acende." : lista[0] === "cargos" ? " O primeiro cargo nasce do fim do filme." : "");
 }
 /* UMA PARTE UM LUGAR PARA CIMA (-1) OU PARA BAIXO (+1) */
 function credMoveParte(parte, para){
@@ -12628,8 +12653,9 @@ function credFormaDiz(){
                         mmssDec(Lay.dur) + "</b>.");
   else {
     var t = "Os créditos ficam com <b>" + mmssDec(Lay.dur) + "</b> (na ordem de sempre, " + mmssDec(L0.dur) + ").";
-    if(P[0] === "titulo") t += " O título nasce da última imagem do filme, já aceso, fica o tempo de hoje e apaga-se para o preto antes de " +
-                               (P[1] === "rolo" ? "os convidados e as fotos entrarem" : "os cargos entrarem") + ": são 0,5 s a mais.";
+    /* o titulo primeiro (3 de outubro a tarde, o FILME_APAGA do ponto5): o filme apaga-se primeiro e o titulo acende a seguir */
+    if(P[0] === "titulo") t += " A última imagem do filme apaga-se primeiro para o preto, e só depois o título acende. O título fica o tempo de hoje e apaga-se para o preto antes de " +
+                               (P[1] === "rolo" ? "os convidados e as fotos entrarem" : "os cargos entrarem") + ": são " + fmtS(Lay.filmeApaga || M.filme_apaga || 0.7) + " s a mais.";
     else if(P[0] === "cargos") t += " O primeiro cargo nasce da última imagem do filme, sem preto: são 0,9 s a mais.";
     t += " No fim, " + CRED_PARTE_NOME[P[P.length - 1]] + " acabam com o fade a preto.";
     r.ordem += p(t);
@@ -12700,7 +12726,8 @@ function credHtmlDaOrdem(){
     var sub = parte === "rolo" ? "os nomes e as fotos a subir, " + mmssDec(M.t_entrada + Lay.tRolo + M.fim_do_rolo)
             : parte === "cargos" ? Lay.nCargos + (Lay.nCargos === 1 ? " cargo, " : " cargos, um de cada vez, ") + fmtS(Lay.nCargos * M.t_cargo) + " s"
             : "«" + esc(credTitulo()) + "», " + fmtS(M.t_titulo) + " s";
-    sub += k === 0 ? "; nasce do fim do filme" : k === n - 1 ? "; acaba com o fade a preto" : "";
+    /* o titulo primeiro nao nasce do fim do filme: o filme apaga-se primeiro e ele acende a seguir (3 de outubro a tarde) */
+    sub += k === 0 ? (parte === "titulo" ? "; acende depois de o filme se apagar" : "; nasce do fim do filme") : k === n - 1 ? "; acaba com o fade a preto" : "";
     h += '<li class="credParte" data-parte="' + parte + '"><span class="credParteN">' + (k + 1) + '</span>' +
       '<span class="credParteNome"><b>' + nome + '</b><small>' + sub + '</small></span>' +
       '<span class="credCargoBts">' +

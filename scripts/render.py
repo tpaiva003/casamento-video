@@ -689,18 +689,21 @@ SEM_LEGENDAS = False
 LEGENDA_MARGEM_LADO = 130            # a margem de cada lado, a da largura util de hoje (L - 260)
 # A LARGURA EM QUE UMA LEGENDA COM x1 TEM DE CABER PARA FICAR NUMA LINHA, px a 1080. E O UNICO NUMERO DA
 # REGRA: decide-se aqui e em mais lado nenhum (o linhas_legenda(), o legenda_numa_linha(), os avisos do
-# render e do montar, o .srt e a margem do bloco, margem_do_bloco(), leem-no todos daqui). A Mesa tem a
-# sua copia na conta do "Numa so linha" e tem de mudar com ele.
-#   1660  COMO ESTA: a largura util de hoje, 130 px de margem de cada lado (o contrato: "a mesma margem
-#         lateral das legendas de hoje"). A legenda do clip 10, em Playfair a 59, precisa de 1762 px e
-#         nao cabe: sai em duas linhas, com aviso.
+# render e do montar, o .srt e a margem do bloco, margem_do_bloco(), leem-no todos daqui). A Mesa le-o
+# daqui quando e montada (gerar_mesa.o_que_o_render_le(), numa_linha_largura): muda na montagem seguinte.
+#   1660  a largura util das legendas, 130 px de margem de cada lado (o contrato: "a mesma margem lateral
+#         das legendas de hoje"). Foi o valor ate 3 de outubro a tarde. A legenda do clip 10, em Playfair a
+#         59, precisa de 1762 px e nao cabia: saia em duas linhas, com aviso.
 #   1728  a zona segura dos creditos (90% da largura, 96 px de cada lado). O clip 10 continua a nao caber.
-#   1762  79 px de margem de cada lado: e o menor valor em que o clip 10 cabe numa linha a 59. Fica 17 px
-#         fora da zona segura de cada lado: um projetor que corte mais de 4% das bordas come as pontas.
-# NAO SE MUDA SEM ELE DECIDIR (3 de outubro): o pedido foi "numa so linha, sem alterar o tamanho da letra",
-# e a margem e a guarda do overscan do projetor. As legendas sem x1 partem-se sempre nos L - 260 de hoje.
-LEGENDA_LARGURA_UTIL = L - 2 * LEGENDA_MARGEM_LADO      # 1660 a 1080: a largura util de hoje
-LEGENDA_LARGURA_NUMA_LINHA = LEGENDA_LARGURA_UTIL
+#   1762  O QUE ELE DECIDIU A 3 DE OUTUBRO: "Uma linha, com as letras a 82 px das bordas". 79 px de margem
+#         de cada lado: e o menor valor em que o clip 10 cabe numa linha a 59. Fica 17 px fora da zona
+#         segura de cada lado: um projetor que corte mais de 4% das bordas come as pontas.
+# NAO SE MUDA SEM ELE DECIDIR: o pedido foi "numa so linha, sem alterar o tamanho da letra", e a margem e a
+# guarda do overscan do projetor. SO AS LEGENDAS COM x1 USAM ESTA LARGURA: as outras partem-se sempre nos
+# L - 260 de sempre (LEGENDA_LARGURA_UTIL) e saem iguais ao byte, e uma linha com x1 que caiba nos 1660
+# fica onde estava (margem_do_bloco()).
+LEGENDA_LARGURA_UTIL = L - 2 * LEGENDA_MARGEM_LADO      # 1660 a 1080: a largura util das legendas
+LEGENDA_LARGURA_NUMA_LINHA = 1762
 POSICAO_DX = (-600, 600)             # px a 1080, positivo para a direita
 POSICAO_DY = (-500, 0)               # px a 1080, negativo para cima
 POSICAO_ALINHAMENTOS = ("centro", "esquerda", "direita")
@@ -767,9 +770,10 @@ def posicao_da_legenda(clip_leg=None):
 def margem_do_bloco(larguras):
     """A margem de cada lado do bloco das linhas da legenda: a de sempre, LEGENDA_MARGEM_LADO.
 
-    So e menor numa legenda numa linha (x1) mais larga do que a largura util de hoje, que so existe se
-    o LEGENDA_LARGURA_NUMA_LINHA subir acima dela: ai o bloco fica ao centro, com a margem que lhe sobra,
-    em vez de encostar a esquerda e sair pela direita. Com o 1660 de hoje e sempre a de sempre.
+    So e menor numa legenda numa linha (x1) mais larga do que a largura util (1660), que so existe com
+    o LEGENDA_LARGURA_NUMA_LINHA acima dela (1762 desde 3 de outubro): ai o bloco fica ao centro, com a
+    margem que lhe sobra, em vez de encostar a esquerda e sair pela direita. Uma linha que caiba nos 1660
+    fica com a de sempre.
     """
     if LEGENDA_LARGURA_NUMA_LINHA <= LEGENDA_LARGURA_UTIL:
         return LEGENDA_MARGEM_LADO          # como esta: nenhuma conta nova, em nenhuma resolucao
@@ -811,8 +815,8 @@ def dx_efetivo(larguras, dx, alinhamento):
 def legenda_numa_linha(texto, tamanho=None):
     """(cabe, px que a linha precisa, px que ha) da legenda escrita numa so linha, no corpo de hoje.
 
-    A largura e a de sempre, L - 260 (a margem lateral das legendas de hoje). E a conta que o clip.x1
-    usa, e o aviso do montar e o do render dizem estes dois numeros.
+    A largura e a LEGENDA_LARGURA_NUMA_LINHA (1762 desde 3 de outubro, 79 px de margem de cada lado). E
+    a conta que o clip.x1 usa, e o aviso do montar e o do render dizem estes dois numeros.
     """
     tamanho = legenda_tamanho() if tamanho is None else tamanho
     linha = " ".join(texto_emojis.com_equivalentes(texto or "").split())
@@ -832,8 +836,8 @@ def linhas_legenda(texto, tamanho=None, desenho=None, uma_linha=False):
     o LEGENDA_TAMANHO; a letra e a da legenda do estilo, ver letra().
 
     `uma_linha` e o clip.x1 (3 de outubro): o texto todo numa linha, as mudancas de linha
-    escritas incluidas, no mesmo corpo, se couber na largura util (legenda_numa_linha()). Se
-    nao couber parte-se como sempre, e quem avisa e o carregar_montagem() e o montar.
+    escritas incluidas, no mesmo corpo, se couber na LEGENDA_LARGURA_NUMA_LINHA (legenda_numa_linha()).
+    Se nao couber parte-se como sempre, e quem avisa e o carregar_montagem() e o montar.
     """
     tamanho = legenda_tamanho() if tamanho is None else tamanho
     d = desenho or ImageDraw.Draw(Image.new("L", (1, 1)))

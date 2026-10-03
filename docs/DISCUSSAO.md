@@ -1059,6 +1059,27 @@ final dos créditos. Contrato em `saida/discussao/contrato_1003.md`, com as pala
 - **«Sê prático e eficiente na execução dos meus pedidos. Aplica um critério 80/20»** (11:40). Fica
   como regra de trabalho. O vigia das pastas ficou logo a correr com o caminho de hoje (6 a 8 minutos
   por lote), e a versão rápida entra quando estiver pronta.
+- **As arestas limadas (12:45).** Propus nove pontos a partir da revisão do filme das 10h, e ele: *"Sim,
+  aplica o que propões."*
+  - **Na base (versão 2375 para 2376):**
+    - clip 57 com 12 s, `cp` 3 e o piano em `in: "continua"`;
+    - clip 143 com o piano em `"continua"`;
+    - clip 90 com a foto direita: `IMG_20260922_191615 - rodada.jpg`, f0742, recortada e rodada a
+      partir da f0714, com o `zd` recalculado;
+    - `li` nos clips 115 e 129;
+    - cinco gralhas: «Adivinham», «... Quem será?», «... 1 ano depois», «12.º ano», «Boca Juniors».
+  - **No código:**
+    - `render.LEGENDA_LARGURA_NUMA_LINHA` passa a 1762, e a legenda do clip 10 fica numa linha, a
+      82 px das bordas;
+    - `ponto5_creditos.FILME_APAGA` é 0,7 s: com o título primeiro, o filme apaga-se e só depois o
+      título acende (muda a regra de 28 de setembro só nesse caso; ficam 2 fotogramas de preto).
+  - **Ficam como estão, por escolha dele:** os 28 textos rápidos (082), o piano na fita antes da Clara
+    (060) e o fim dos créditos.
+  - **O render:** `v3_2026-10-03_1344.mp4` (13:10 a 13:48) e
+    `saida/discussao/ponto5/v3_2026-10-03_1344_com_creditos_telemovel.mp4` (13:09, 28,6 MB), enviado às
+    14:02. O `ponto3_3_frases.py --so-dizer` deu «certa» nas duas trocas medidas.
+  - **A Mesa versão 57** foi publicada às 13:09 com a foto nova. A pré-visualização dos créditos ainda
+    faz a entrada antiga do título, e um agente está a acertá-la.
 - **Fica para depois, palavras dele:** «trocar a foto x por 5-3» (*"vamos vigiar, mas para já
   ignora"*). A `01-NOVAS/5-3.jpg` é igual à original (f0009), que já está no clip 24.
 - As fotos de 04:29 a 04:31 estavam nas Transferências e foram copiadas para a `01-NOVAS`, sem mexer
