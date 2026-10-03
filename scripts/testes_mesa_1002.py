@@ -8910,6 +8910,144 @@ def teste_fecho_1003_marca_continua_fica():
              "o «continua» do montar reconhecido em %d casos, mostrado no campo e guardado ate ele escrever um segundo" % len(casos))
 
 
+def teste_saltar_parado_aterra_no_clip_inteiro():
+    """Parado, saltar para um clip aterra com ele inteiro no quadro; a tocar, no principio; e as contas nao mudam.
+
+    O DEFEITO (3 de outubro, a noite, o Tiago: "esta a misturar fotos e legendas"): o saltar() aterrava no instante
+    exato em que o clip comeca, onde o encadeado dele ainda vai a zero. Parado, o quadro mostrava o clip anterior
+    inteiro, com a legenda dele, e a barra de baixo ja dizia o clip novo.
+    """
+    if not shutil.which("node"):
+        salta("Mesa: parado, o salto aterra no clip inteiro", "sem node neste PC")
+        return
+    problemas = []
+    html = io.open(EDITOR, encoding="utf-8").read()
+    blocos = "\n".join(_bloco(html, f, problemas) for f in ("function palcoIrParaClip(", "function saltar(", "function palcoAtivos(",
+                                                             "function palcoPausa("))
+    if 'else palcoIrParaClip(F.segs[+v]);' not in html:
+        problemas.append("o «Ir para…» deixou de aterrar pelo palcoIrParaClip()")
+    programa = blocos + r"""
+/* um filme como o palcoFilme() o conta: dois videos de abertura, o primeiro do corpo sem encadeado, fotos com 0,7 s,
+   o nome do bebe (i -1) e a foto que sobe dele em 1 s, um clip com 1,6 s de encadeado, rajadas de corte seco, um clip
+   mais curto do que o proprio encadeado, e os creditos */
+function filme(){
+  var segs = [], t = 0;
+  [[20.4, "video"], [12.0, "video"]].forEach(function(v, k){ segs.push({i: k, t: "video", ini: t, dur: v[0], entra: 0, abertura: true}); t += v[0]; });
+  var cursor = t, i = 2;
+  function poe(tipo, dur, entra, idx){ var s = {i: idx === undefined ? i++ : idx, t: tipo, ini: cursor - entra, dur: dur, entra: entra}; segs.push(s); cursor = s.ini + dur; }
+  poe("marcos", 9, 0); poe("nome", 2.6, 0.6, -1); poe("foto", 5, 1.0); poe("foto", 4, 0.7); poe("foto", 4, 0.7); poe("cartao", 3.6, 1.6);
+  poe("foto", 0.5625, 0); poe("foto", 0.5625, 0); poe("foto", 0.5625, 0); poe("foto", 4, 0.7); poe("foto", 0.5, 0.7); poe("contador", 12, 0.7);
+  poe("foto", 1.2, 0.7); poe("foto", 6, 0.7);
+  /* o encadeado com que cada um sai e o do seguinte, e no ultimo o fade a preto (palcoFilme) */
+  segs.forEach(function(s, k){ s.sai = s.abertura ? 0 : (segs[k + 1] ? segs[k + 1].entra : 2.5); });
+  var F = {segs: segs, fim: cursor, cred: {ini: cursor - 2.5, dur: 60}};
+  F.total = F.cred.ini + F.cred.dur;
+  return F;
+}
+var idas = [], ancoras = [], play = {pausa: true, T: 0, filme: filme()};
+function palcoIrPara(T){ play.T = Math.max(0, Math.min(play.filme.total, T)); idas.push(play.T); }
+/* o que o palcoPausa() pede a pagina: o botao, o som e a ancora do relogio */
+var document = {getElementById: function(){ return {}; }};
+function somDesbloqueia(){}
+function palcoSlots(){ return []; }
+function palcoAncora(T){ play.T = T; ancoras.push(T); }
+/* o saltar() de antes desta mudanca, para comparar os clips por onde se passa */
+function antigo(T, quanto){
+  var F = play.filme, inicios = F.segs.filter(function(s){ return s.i >= 0; }).map(function(s){ return s.ini; });
+  inicios.push(F.cred.ini); inicios.sort(function(a, b){ return a - b; });
+  var alvo = null, k;
+  if(quanto > 0){ for(k = 0; k < inicios.length; k++) if(inicios[k] > T + 0.05){ alvo = inicios[k]; break; } }
+  else { for(k = inicios.length - 1; k >= 0; k--) if(inicios[k] < T - 1.0){ alvo = inicios[k]; break; } if(alvo === null) alvo = 0; }
+  return alvo;
+}
+function onde(){
+  var F = play.filme, s = F.segs.filter(function(x){ return x.i >= 0 && play.aterrou && x.ini === play.aterrou.ini; })[0] || null;
+  var ativos = palcoAtivos(F, play.T), topo = ativos[ativos.length - 1];
+  return {T: play.T, i: s ? s.i : null, ini: play.aterrou ? play.aterrou.ini : play.T, topo: topo ? topo.i : null,
+          opac: s && s.entra > 0 ? (play.T - s.ini) / s.entra : 1, dentro: s ? play.T >= s.ini && play.T < s.ini + s.dur : null};
+}
+var sai = {frente: [], tras: [], antFrente: [], antTras: []}, k, ref;
+/* parado, para a frente ate aos creditos */
+play.T = 0; play.aterrou = null; ref = 0;
+for(k = 0; k < 40; k++){
+  var a = antigo(ref, 1); saltar(1); var o = onde();
+  sai.frente.push(o); sai.antFrente.push(a);
+  if(a === null) break;
+  ref = a;
+  if(o.i === null) break;
+}
+/* parado, para tras a partir do ultimo clip */
+var ult = play.filme.segs.filter(function(s){ return s.i >= 0; }).pop();
+palcoIrParaClip(ult); ref = ult.ini;
+for(k = 0; k < 40; k++){
+  var a2 = antigo(ref, -1); saltar(-1); var o2 = onde();
+  sai.tras.push(o2); sai.antTras.push(a2);
+  ref = a2;
+  if(play.T <= 0.0001) break;
+}
+/* a tocar, o salto aterra no principio do clip, como antes */
+play.pausa = false; play.T = 44; play.aterrou = null; saltar(1); sai.tocar = {T: play.T, esperado: antigo(44, 1)};
+/* parado em cima de um salto, o Continuar toca desde o principio do clip; depois de arrastar a barra, de onde se esta */
+var s5 = play.filme.segs[5];
+play.pausa = true; palcoIrParaClip(s5); var aterrado = play.T; palcoPausa(false);
+sai.continuar = {aterrado: aterrado, ini: s5.ini, entra: s5.entra, T: play.T};
+play.pausa = true; palcoIrParaClip(s5); play.T = s5.ini + 2.5; palcoPausa(false); sai.continuarArrastou = {T: play.T, esperado: s5.ini + 2.5};
+/* parado mas depois de arrastar a barra: conta o instante onde se esta, e nao o do ultimo salto */
+play.pausa = true; palcoIrParaClip(play.filme.segs[5]); play.T = 50.123; saltar(1); sai.arrastou = {ini: play.aterrou ? play.aterrou.ini : play.T, esperado: antigo(50.123, 1)};
+sai.segs = play.filme.segs.map(function(s){ return {i: s.i, ini: s.ini, dur: s.dur, entra: s.entra, sai: s.sai}; });
+sai.cred = play.filme.cred.ini;
+console.log(JSON.stringify(sai));
+"""
+    s = None if problemas else _node_programa(programa, problemas)
+    if s is not None:
+        segs = {x["i"]: x for x in s["segs"] if x["i"] >= 0}
+        # para a frente: os mesmos clips do saltar() antigo, pela mesma ordem, cada um inteiro no quadro
+        for o, a in zip(s["frente"], s["antFrente"]):
+            if a is None:
+                continue
+            if abs(o["ini"] - a) > 1e-6:
+                problemas.append("para a frente vai-se ao clip que comeca aos %.2f e antes ia-se ao dos %.2f" % (o["ini"], a))
+            elif o["i"] is not None:
+                g = segs[o["i"]]
+                # ate onde se pode ir: 2 ms antes de o clip seguinte comecar a entrar por cima
+                livre = g["dur"] - g["sai"] - 0.002
+                if not o["dentro"]:
+                    problemas.append("no clip %d aterra-se aos %.2f, fora dele" % (o["i"], o["T"]))
+                elif g["entra"] > 0 and livre >= g["entra"]:
+                    # ha espaco para estar inteiro: o encadeado acabou e a barra diz este clip
+                    if o["topo"] != o["i"] or o["opac"] < 0.999:
+                        problemas.append("no clip %d aterra-se aos %.2f com o encadeado a %.2f e o clip %s por cima" % (o["i"], o["T"], o["opac"], o["topo"]))
+                elif g["entra"] > 0 and livre > 0:
+                    # o seguinte entra antes de este acabar de entrar: fica-se 2 ms antes dele, e a barra ainda diz este
+                    if abs(o["T"] - (g["ini"] + livre)) > 1e-6 or o["topo"] != o["i"]:
+                        problemas.append("no clip %d aterra-se aos %.3f e a barra diz o clip %s (devia ser 2 ms antes do seguinte)" % (o["i"], o["T"], o["topo"]))
+                elif abs(o["T"] - g["ini"]) > 1e-6:
+                    problemas.append("no clip %d, que o seguinte apanha logo de principio, aterra-se aos %.2f e nao no principio" % (o["i"], o["T"]))
+        visitados = [o["i"] for o in s["frente"] if o["i"] is not None]
+        if sorted(visitados) != sorted(segs)[1:]:
+            problemas.append("para a frente nao se passa por todos os clips uma vez: %s" % visitados)
+        if not s["frente"] or s["frente"][-1]["i"] is not None or abs(s["frente"][-1]["T"] - s["cred"]) > 1e-6:
+            problemas.append("o ultimo salto para a frente nao chega aos creditos")
+        # para tras: os mesmos clips do antigo, e chega ao principio sem ficar preso
+        for o, a in zip(s["tras"], s["antTras"]):
+            if abs(o["ini"] - a) > 1e-6:
+                problemas.append("para tras vai-se ao clip dos %.2f e antes ia-se ao dos %.2f" % (o["ini"], a))
+        if not s["tras"] or s["tras"][-1]["T"] > 0.0001:
+            problemas.append("para tras nao se chega ao principio (fica-se aos %.2f)" % (s["tras"][-1]["T"] if s["tras"] else -1))
+        if abs(s["tocar"]["T"] - s["tocar"]["esperado"]) > 1e-6:
+            problemas.append("a tocar, o salto aterra aos %.2f e nao no principio do clip (%.2f)" % (s["tocar"]["T"], s["tocar"]["esperado"]))
+        c = s["continuar"]
+        if abs(c["aterrado"] - (c["ini"] + c["entra"])) > 1e-6 or abs(c["T"] - c["ini"]) > 1e-6:
+            problemas.append("parado num salto (aos %.2f), o Continuar toca dos %.2f e nao do principio do clip (%.2f)" % (c["aterrado"], c["T"], c["ini"]))
+        if abs(s["continuarArrastou"]["T"] - s["continuarArrastou"]["esperado"]) > 1e-6:
+            problemas.append("depois de arrastar a barra, o Continuar volta ao principio do clip do ultimo salto")
+        if abs(s["arrastou"]["ini"] - s["arrastou"]["esperado"]) > 1e-6:
+            problemas.append("depois de arrastar a barra, o salto conta pelo salto anterior e nao pelo instante onde se esta")
+    verifica("Mesa: parado, o salto aterra no clip inteiro", s is not None and not problemas, "; ".join(problemas)[:500] if problemas else
+             "%d saltos para a frente e %d para tras pelos clips de antes, cada um inteiro no quadro; a tocar aterra no principio"
+             % (len(s["frente"]), len(s["tras"])))
+
+
 def teste_fecho_1003_sons_automaticos_a_escolha():
     """Os interruptores dos sons automaticos gravam o que o montar le: so o false, por versao, pelo anular.
 

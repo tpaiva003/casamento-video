@@ -1098,6 +1098,9 @@ final dos créditos. Contrato em `saida/discussao/contrato_1003.md`, com as pala
     na versão 60.
   - **Por lhe perguntar, se voltar a ver:** parado e a saltar de clip, o quadro fica um instante no
     clip anterior e a barra já diz o seguinte. Corrige-se em pouco tempo, se ele quiser.
+  - **23:30, ele:** *"Antes de saltar o clip confirma se as fotos estão todas na mesa."* Conferi: 771 fotos
+    registadas e publicadas, nenhuma em falta na montagem (decisão 115). Entrou a foto das 23:31
+    (f0771). Depois corrigi o salto de clip do Pré-visualizar: parado, aterra com o clip inteiro.
 - **Fica para depois, palavras dele:** «trocar a foto x por 5-3» (*"vamos vigiar, mas para já
   ignora"*). A `01-NOVAS/5-3.jpg` é igual à original (f0009), que já está no clip 24.
 - As fotos de 04:29 a 04:31 estavam nas Transferências e foram copiadas para a `01-NOVAS`, sem mexer

@@ -4533,6 +4533,29 @@ que está acima. Sem commits.
 
 **Quem:** o Tiago viu; o Claude mediu, corrigiu e publicou; quatro agentes reviram.
 
+### 2026-10-03 | 115 | Parado, o salto de clip do Pré-visualizar aterra com o clip inteiro no quadro
+
+**O que ele disse (23:30):** à pergunta da 114, se queria o salto de clip corrigido, *"Antes de saltar o clip confirma se as fotos estão todas na mesa"*. Conferiu-se primeiro e corrigiu-se depois.
+
+**As fotos, conferidas:** 771 no inventário, todas em disco, todas na página publicada com miniatura e prévia, nenhuma por registar na `00-ORIGINAL-MAE` nem na `01-NOVAS`; a montagem dele (revisão 2695, 157 clips) usa 185 fotos e nenhuma falta; as 16 imagens de hoje das Transferências já estão registadas. Fica de fora, por desenho, a pasta `04-Tratamento_Imagem_fora_video` (69 imagens), que o inventário não lê.
+
+**O defeito:** no palco, o salto (botões, setas e «Ir para…») aterrava no instante exato em que o clip começa. Aí o encadeado de entrada ainda vai a zero: o quadro mostrava o clip anterior inteiro, com a legenda dele, e a barra de baixo já dizia o clip novo. A tocar dura o encadeado e passa; parado ficava assim.
+
+**Decisão:** parado, o salto aterra onde o encadeado de entrada acaba (`palcoIrParaClip`), sem passar do instante em que o clip seguinte começa a entrar por cima; num clip mais curto do que os encadeados à volta fica-se no princípio, como antes. A tocar não muda nada: aterra no princípio, para a passagem se ver como no filme. O `saltar()` continua a fazer as contas pelo princípio do clip (`play.aterrou`), com as tolerâncias de sempre. Os créditos e o princípio do filme vão pelo caminho de antes.
+
+**O Continuar em cima de um salto toca desde o princípio do clip** (`palcoPausa`), como antes: a partir do sítio onde se aterrou perdia-se a passagem e a entrada da música, e 16 músicas do filme começam no princípio exato de um clip.
+
+**Razão:** quem salta de clip em clip com o filme parado quer ver esse clip. É só o Pré-visualizar: o filme, o montar e a base não mudam, e a Mesa continua sem corrigir nada sozinha (083).
+
+**Provado:** `teste_saltar_parado_aterra_no_clip_inteiro` (para a frente e para trás pelos clips de antes, com o nome do bebé, um encadeado de 1,6 s, rajadas, clips mais curtos do que os encadeados, o Continuar e a barra arrastada). No browser, com a montagem dele carregada localmente, os saltos nas viagens com o clip a 100% e a barra a dizer o mesmo clip. Um revisor correu as funções verdadeiras da página com o filme dele: dos 158 clips, os 148 que antes misturavam ficam inteiros, os 10 de corte seco ficam iguais, nenhum fica pior, e em 600 sequências de 200 toques ao acaso não há salto preso nem sentido trocado.
+
+**Fica como está, visto pelos revisores:**
+- **Num grupo, aterra-se no princípio da animação.** Na pilha das 18 viagens é a mesa ainda vazia: as fotos entram uma a uma até aos 23 s. Parar com as fotos todas na mesa é uma escolha dele, por perguntar.
+- O salto para os créditos continua com a barra à frente do quadro durante 0,7 s.
+- Com um encadeado acima de 1 s, que hoje não há no filme, o Atrás pode voltar ao mesmo clip.
+
+**Quem:** o Tiago pediu; o Claude corrigiu; dois agentes reviram.
+
 ## Em aberto
 
 Não assumir nenhuma destas sem decisão explícita do Tiago.

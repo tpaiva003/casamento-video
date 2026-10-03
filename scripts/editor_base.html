@@ -10838,6 +10838,9 @@ function palcoPausa(p){
   /* o Continuar e um toque: e a altura de soltar o som, se o browser o tiver parado */
   if(!p) somDesbloqueia();
   if(!p && play.filme && play.T >= play.filme.total - 0.05) play.T = 0;
+  /* CONTINUAR EM CIMA DE UM SALTO toca desde o principio do clip, como sempre tocou: parado aterra-se depois do
+     encadeado (palcoIrParaClip), e a partir dai perdia-se a passagem e a entrada da musica que comeca no clip */
+  if(!p && play.aterrou && Math.abs(play.T - play.aterrou.T) < 0.002) play.T = play.aterrou.ini;
   palcoAncora(play.T);
   palcoSlots().forEach(function(sl){ if(sl.modo === "video" && p && !sl.vid.paused) try{ sl.vid.pause(); }catch(e){} });
   play.sujo = true;
@@ -10981,6 +10984,7 @@ function abrePalco(){
   palcoSomLiga();
   somDesbloqueia();
   play.filme = palcoFilme(v);
+  play.aterrou = null;
   som.assinatura = ""; som.atual = false;
   palcoSomUsaPlano(play.filme, false);
   palcoPintaLista(); palcoPintaAprox();
@@ -11000,17 +11004,39 @@ function fechaPalco(){
   document.getElementById("palcoAprox").hidden = true;
 }
 /* o clip anterior ou o seguinte (os da Mesa e os creditos); para tras, primeiro o principio do clip */
+/* PARADO, SALTAR PARA UM CLIP ATERRA COM ELE JA INTEIRO NO QUADRO (3 de outubro, a noite; o Tiago: "esta a misturar
+   fotos e legendas"). No instante exato em que um clip comeca, o encadeado dele ainda vai a zero: o quadro mostra o
+   clip anterior inteiro, com a legenda dele, e a barra de baixo ja diz o novo. A tocar isso dura o encadeado e
+   passa; parado ficava assim, a foto de um clip com o nome de outro. Parado, aterra-se onde o encadeado de entrada
+   acaba; a tocar, no principio do clip, para a passagem se ver como no filme. Nunca se chega ao instante em que o
+   clip seguinte comeca a entrar por cima (s.dur - s.sai) nem ao dos creditos, fica-se 2 ms antes, para a barra
+   continuar a dizer este clip; num clip que o seguinte apanha logo de principio fica-se no principio, como antes.
+   O play.aterrou guarda onde se aterrou e o principio do clip: o saltar() continua a fazer as contas pelo
+   principio, e o Continuar toca desde o principio (palcoPausa), para nao se perder a entrada da musica do clip. */
+function palcoIrParaClip(s){
+  var T = s.ini, F = play.filme;
+  if(play.pausa && s.entra > 0){
+    T = Math.min(s.ini + s.entra, s.ini + s.dur - (+s.sai || 0) - 0.002);
+    if(F && F.cred) T = Math.min(T, F.cred.ini - 0.002);
+    T = Math.max(s.ini, T);
+  }
+  play.aterrou = {T: T, ini: s.ini};
+  palcoIrPara(T);
+}
 function saltar(quanto){
   var F = play.filme;
   if(!F) return;
-  var T = play.T, inicios = F.segs.filter(function(s){ return s.i >= 0; }).map(function(s){ return s.ini; });
-  if(F.cred) inicios.push(F.cred.ini);
-  inicios.sort(function(a, b){ return a - b; });
-  var alvo = null;
-  if(quanto > 0){ for(var k = 0; k < inicios.length; k++) if(inicios[k] > T + 0.05){ alvo = inicios[k]; break; } }
-  else { for(k = inicios.length - 1; k >= 0; k--) if(inicios[k] < T - 1.0){ alvo = inicios[k]; break; } if(alvo === null) alvo = 0; }
+  /* parado em cima de um clip onde se aterrou, as contas fazem-se pelo principio dele, como sempre se fizeram */
+  var at = play.aterrou, T = play.pausa && at && Math.abs(play.T - at.T) < 0.002 ? at.ini : play.T;
+  var alvos = F.segs.filter(function(s){ return s.i >= 0; }).map(function(s){ return {ini: s.ini, s: s}; });
+  if(F.cred) alvos.push({ini: F.cred.ini, s: null});
+  alvos.sort(function(a, b){ return a.ini - b.ini; });
+  var alvo = null, k;
+  if(quanto > 0){ for(k = 0; k < alvos.length; k++) if(alvos[k].ini > T + 0.05){ alvo = alvos[k]; break; } }
+  else { for(k = alvos.length - 1; k >= 0; k--) if(alvos[k].ini < T - 1.0){ alvo = alvos[k]; break; } if(alvo === null) alvo = {ini: 0, s: null}; }
   if(alvo === null) return;
-  palcoIrPara(alvo);
+  if(alvo.s) palcoIrParaClip(alvo.s);
+  else { play.aterrou = null; palcoIrPara(alvo.ini); }
 }
 function palcoPasso(agora){
   if(!play.ligado) return;
@@ -11023,6 +11049,7 @@ function palcoPasso(agora){
       var F2 = palcoFilme(v);
       if(F2.assinatura !== F.assinatura){
         play.filme = F = F2;
+        play.aterrou = null;
         palcoSomUsaPlano(F, false);
         palcoPintaLista(); palcoPintaAprox();
         palcoAncora(Math.min(play.T, F.total));
@@ -17554,7 +17581,8 @@ document.getElementById("btAproxPalco").addEventListener("click", function(){
 document.getElementById("selClipPalco").addEventListener("change", function(){
   var F = play.filme, v = this.value;
   if(!F || v === "") return;
-  palcoIrPara(v === "cred" ? F.cred.ini : F.segs[+v].ini);
+  if(v === "cred"){ play.aterrou = null; palcoIrPara(F.cred.ini); }
+  else palcoIrParaClip(F.segs[+v]);
   this.value = "";
   /* O FOCO VOLTA AO PALCO: com ele no «Ir para…», a seta escolhia a opcao a seguir a ele, o clip 1, e o filme
      voltava ao principio; e o Espaco nao pausava (revisor de 2 de outubro) */
