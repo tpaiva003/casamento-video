@@ -24,6 +24,9 @@ import sys
 
 sys.stdout.reconfigure(encoding="utf-8")
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import gerar_previas  # noqa: E402 - aqui em cima e nao no main(): mexe no sys.stdout ao ser importado
+
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BASE = os.path.join(REPO, "scripts", "editor_base.html")
 DADOS = os.path.join(REPO, "data", "editor_dados.js")
@@ -887,18 +890,25 @@ def main():
 
     # O INDICE DAS PREVIAS GRANDES diz em que folha e em que celula esta cada
     # foto. As folhas vao como ficheiros ao lado da pagina, em previas/.
+    # OS NOMES SAO OS DO ENDERECO, que levam o conteudo (gerar_previas.indice_publicado): com o nome do
+    # disco, o browser mostrava a folha antiga que tinha guardada com o indice novo, e as fotos saiam
+    # trocadas com as legendas (3 de outubro).
+    import json
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
     previas = "null"
-    caminho_previas = os.path.join(REPO, "saida", "previas", "indice.json")
-    if os.path.exists(caminho_previas):
-        previas = io.open(caminho_previas, encoding="utf-8").read().strip() or "null"
+    indice_previas = gerar_previas.indice_publicado(os.path.join(REPO, "saida", "previas"))
+    if indice_previas is not None:
+        previas = json.dumps(indice_previas, separators=(",", ":"))
+        sem_conteudo = [n for n in indice_previas.get("folhas") or [] if not re.match(r"^folha_\d+_[0-9a-f]{10}\.jpg$", n)]
+        if sem_conteudo:
+            print("  AVISO: %d folhas de previas faltam em saida/previas (%s): corre scripts/gerar_previas.py"
+                  % (len(sem_conteudo), ", ".join(sem_conteudo[:4])))
     else:
         print("  AVISO: falta saida/previas/indice.json, corre scripts/gerar_previas.py")
 
     # A BANDA SONORA COMO O RENDER A TOCA, e as duracoes que o script mudou. Sai dos
     # mesmos data/montagens/v3.csv e v3.som.csv que o render usa, para a Mesa mostrar
     # tambem o que os scripts poem sozinhos (ver som_para_mesa.py).
-    import json
-    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
     import som_para_mesa
     som = som_para_mesa.som_para_mesa()
     if som is None:

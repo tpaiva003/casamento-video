@@ -1080,6 +1080,24 @@ final dos créditos. Contrato em `saida/discussao/contrato_1003.md`, com as pala
     14:02. O `ponto3_3_frases.py --so-dizer` deu «certa» nas duas trocas medidas.
   - **A Mesa versão 57** foi publicada às 13:09 com a foto nova. A pré-visualização dos créditos ainda
     faz a entrada antiga do título, e um agente está a acertá-la.
+- **A noite de 3 de outubro (decisão 114).**
+  - **20:14, Mesa versão 59:** a vigia apanhou 12 fotos do WhatsApp das 20:07. Estão em disco duas
+    vezes (na raiz da `01-NOVAS` e na subpasta `03.10.2026`), com o mesmo conteúdo: ficaram as 24
+    registadas, f0743 a f0766, e só se reporta.
+  - **20:35, ele:** *"ótimo estou a trabalhar, apenas para te informar acho que o pré-visualizar não
+    está a funcionar, pois por vezes está a misturar fotos e legendas. Reparei agora a acontecer nas
+    viagens."*
+  - **O que era:** a folha 28 das prévias que estava no endereço era antiga e tinha as 16 células
+    trocadas (Veneza, Dubrovnik, Ilha Terceira e Iguaçu estão lá). As folhas 29 a 48 tinham subido
+    por cima com o mesmo nome às 20:12. Primeiro disse-lhe que era o browser, e depois de medir
+    corrigi: era a folha do endereço.
+  - **20:45, Mesa versão 60:** as 48 folhas com o conteúdo no nome. A montagem dele ficou intacta.
+  - **Ele, a meio:** *"adicionalmente acrescentei uma música, mas não a consegui ouvir quando a incluí
+    na mesa de montagem num separador."* É a do cartão do clip 102. A cópia de som ainda não estava
+    publicada, porque a vigia esteve parada meia hora enquanto eu tratava do pré-visualizar; entrou
+    na versão 60.
+  - **Por lhe perguntar, se voltar a ver:** parado e a saltar de clip, o quadro fica um instante no
+    clip anterior e a barra já diz o seguinte. Corrige-se em pouco tempo, se ele quiser.
 - **Fica para depois, palavras dele:** «trocar a foto x por 5-3» (*"vamos vigiar, mas para já
   ignora"*). A `01-NOVAS/5-3.jpg` é igual à original (f0009), que já está no clip 24.
 - As fotos de 04:29 a 04:31 estavam nas Transferências e foram copiadas para a `01-NOVAS`, sem mexer

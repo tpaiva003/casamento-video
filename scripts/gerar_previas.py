@@ -20,6 +20,7 @@ celula de cada foto. O gerar_mesa.py poe esse indice dentro da Mesa.
 Uso:  py -3.11 scripts/gerar_previas.py
 """
 import csv
+import hashlib
 import io
 import json
 import os
@@ -27,7 +28,8 @@ import sys
 
 from PIL import Image, ImageOps
 
-sys.stdout.reconfigure(encoding="utf-8")
+if hasattr(sys.stdout, "reconfigure"):          # desviado para um StringIO (os testes da Mesa) nao o tem
+    sys.stdout.reconfigure(encoding="utf-8")
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 INDICE = os.path.join(REPO, "data", "finais.csv")
@@ -85,6 +87,45 @@ def fazer_folha(lote, finais, n_folha, caminho):
             print("  ERRO %s %s: %s" % (r["id"], r["ficheiro"], e))
     folha.save(caminho, "JPEG", quality=QUALIDADE, optimize=True, progressive=True)
     return posicoes, erros
+
+
+# O NOME COM QUE UMA FOLHA SE PUBLICA LEVA O CONTEUDO (3 de outubro, a noite). No disco as folhas
+# chamam-se folha_NN.jpg e refazem-se por cima. No endereco da Mesa isso enganava o browser: uma foto
+# nova empurra as seguintes para outra celula, a folha_33.jpg passa a ter outras fotos com o mesmo
+# nome, e o browser, que ja tinha a antiga guardada, mostrava-a com o indice novo. O Tiago viu-o nas
+# viagens: "esta a misturar fotos e legendas". Publicada como folha_33_<dez letras do sha256>.jpg, uma
+# folha que muda de conteudo muda de nome, e nenhuma copia guardada pode servir no lugar dela. O disco
+# fica como estava: so muda o nome no endereco (entrada_rapida.publicavel) e o indice que vai dentro da
+# pagina (gerar_mesa.py, por indice_publicado).
+def sha256_do_ficheiro(caminho):
+    h = hashlib.sha256()
+    with open(caminho, "rb") as fh:
+        for bloco in iter(lambda: fh.read(1 << 20), b""):
+            h.update(bloco)
+    return h.hexdigest()
+
+
+def nome_publicado(nome, sha256_hex):
+    """folha_33.jpg e o sha256 do ficheiro -> folha_33_1a2b3c4d5e.jpg"""
+    base, ext = os.path.splitext(nome)
+    return "%s_%s%s" % (base, sha256_hex[:10], ext)
+
+
+def indice_publicado(pasta=None):
+    """O indice.json com os nomes das folhas como se publicam. None se nao ha indice. Uma folha que
+    falte no disco fica com o nome do disco: a pagina pede-a, nao a encontra e mostra a miniatura."""
+    pasta = pasta or DESTINO
+    caminho = os.path.join(pasta, "indice.json")
+    if not os.path.exists(caminho):
+        return None
+    with io.open(caminho, encoding="utf-8") as fh:
+        indice = json.load(fh)
+    publicadas = []
+    for n in indice.get("folhas") or []:
+        p = os.path.join(pasta, n)
+        publicadas.append(nome_publicado(n, sha256_do_ficheiro(p)) if os.path.exists(p) else n)
+    indice["folhas"] = publicadas
+    return indice
 
 
 def fazer_folhas(tarefas):

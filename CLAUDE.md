@@ -43,8 +43,20 @@ Regista, melhora, escolhe a versão, refaz as miniaturas, tira o retrato do esta
 e monta `saida/mesa.html`. Depois, com a ferramenta Artifact, publica-se a Mesa e
 escreve-se `montagem/publicacao` com `{build, quando, fotos}`, copiando o `build`
 do `data/estado_fotos.json`: é isso que faz aparecer a barra "Há uma versão mais
-nova" nas Mesas que estejam abertas. Nunca publicar a Mesa sem refazer o retrato,
-senão o botão mostra um estado antigo.
+nova". Nunca publicar a Mesa sem refazer o retrato, senão o botão mostra um estado
+antigo. **A barra só aparece quando a Mesa abre ou quando ele carrega em Procurar**: a
+vigia de 15 s de uma Mesa já aberta só lê o estado, nunca o `montagem/publicacao`. Depois
+de cada publicação diz-se-lhe sempre, com todas as letras, para recarregar a Mesa.
+
+**Fotos e músicas largadas nas pastas entram sozinhas (3 de outubro, decisão 113).** O
+`scripts/vigiar_pastas.py --uma-vez` diz se há novidade na `01-NOVAS` ou na
+`02-NOVAS-MÚSICAS`; o `scripts/entrada_rapida.py` faz o mesmo que o `atualizar_fotos.py`
+em meio minuto e escreve `saida/entrada_rapida.json`, o manifesto com o que entrou, os
+avisos, o build e a **lista exata do que se publica** (`publicar.lotes[].files`, com
+`root` = `publicar.root`). Publica-se por essa lista, lê-se `montagem/estado2`, escreve-se
+`montagem/publicacao` e corre-se `py -3.11 scripts/entrada_rapida.py --publicado`. Numa
+sessão comprida, uma tarefa do cron de 4 em 4 minutos corre a vigia; ela só passa quando
+o Claude está parado, por isso um trabalho longo atrasa a entrada das fotos e das músicas.
 
 **Escrever na Mesa pede sempre a versão.** Um documento que já existe na base da Mesa
 (`montagem/estado`, `montagem/publicacao`) só aceita escrita com `if_version`, a versão
@@ -92,9 +104,26 @@ mostram-se ao Tiago antes do render.
 **As prévias grandes vão em folhas, nunca uma por foto.** O link da Mesa aceita no
 máximo 256 ficheiros ao todo, contando a página, e 255 entradas por publicação. Com
 641 fotos, um ficheiro por foto foi recusado. O `gerar_previas.py` faz folhas de 4 por
-4 (`previas/folha_NN.jpg`) e o índice vai dentro da página. Publicam-se com `files` e
-`root: saida`; as folhas com o mesmo nome substituem-se, e se houver menos folhas do
-que antes as que sobram tiram-se com `null`.
+4 e o índice vai dentro da página.
+
+**As folhas publicam-se com o conteúdo no nome, sempre pela lista do manifesto (decisão
+114).** No disco chamam-se `saida/previas/folha_NN.jpg`; no endereço da Mesa chamam-se
+`previas/folha_NN_<dez letras do sha256>.jpg`, e é esse o nome que o `gerar_mesa.py` põe
+no índice da página (`gerar_previas.indice_publicado`). Uma foto nova empurra as fotos
+seguintes para outra célula, e uma folha publicada por cima com o mesmo nome, ou que
+ficou por publicar, mostrava no Pré-visualizar fotos trocadas com as legendas: a 3 de
+outubro a folha 28 do endereço tinha as 16 células erradas. Com o conteúdo no nome, uma
+folha que falte dá a miniatura (certa, menos nítida) e nunca uma foto errada.
+- **Nunca publicar `previas/folha_NN.jpg` pelo nome do disco.** A lista é a de
+  `saida/entrada_rapida.json` (`publicar.lotes[].files`: cada folha com `from` = o
+  ficheiro do disco, e os `null` das que deixaram de servir).
+- Depois de um `atualizar_fotos.py` ou de um `gerar_previas.py` corridos à mão, corre-se
+  `py -3.11 scripts/entrada_rapida.py` para ter a lista, e no fim o `--publicado`.
+- Antes de publicar lista-se o endereço (`Artifact`, `action: list`, `scope: files`): os
+  `null` são só os dos ficheiros que lá estão, e qualquer `previas/folha_*` do endereço
+  que a página nova não peça tira-se também.
+- O `--publicado` regista o que está em disco, não o que subiu: corre-se logo a seguir à
+  publicação, e confere-se a listagem do endereço com a lista.
 
 A pasta `01-NOVAS` é onde o Tiago larga fotos que não estavam no vídeo
 original. Não estão organizadas nem renomeadas, e pode haver subpastas. Uma

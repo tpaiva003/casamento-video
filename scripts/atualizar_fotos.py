@@ -22,12 +22,16 @@ nunca: desenhava olhos e bocas nas caras pequenas das fotos de grupo, e o consol
 escolhe a versao dela. O --sem-ia continua a ser aceite e nao faz nada.
 
 Depois disto faltam dois passos que so o Claude faz, com a ferramenta Artifact:
-publicar saida/mesa.html no link da Mesa, com as folhas saida/previas/folha_NN.jpg
-como ficheiros ao lado (o link aceita no maximo 256 ficheiros ao todo; as folhas com
-o mesmo nome substituem-se, e se passar a haver menos folhas as que sobram tiram-se
-com null), e escrever o documento
-montagem/publicacao com o build do data/estado_fotos.json, para as Mesas que
-estejam abertas saberem que ha versao nova.
+publicar saida/mesa.html no link da Mesa, com as folhas das previas como ficheiros ao
+lado (o link aceita no maximo 256 ficheiros ao todo), e escrever o documento
+montagem/publicacao com o build do data/estado_fotos.json, para as Mesas saberem
+que ha versao nova.
+
+AS FOLHAS NUNCA SE PUBLICAM PELO NOME DO DISCO (3 de outubro, decisao 114). No endereco
+chamam-se previas/folha_NN_<dez letras do sha256>.jpg, que e o nome que o gerar_mesa.py
+poe no indice da pagina. A lista certa, com o `from` de cada folha e os null das que
+sairam, e a do saida/entrada_rapida.json: depois deste script corre-se
+py -3.11 scripts/entrada_rapida.py para a ter, publica-se por ela, e no fim o --publicado.
 
 Desde 3 de outubro ha tambem o scripts/entrada_rapida.py, que da o mesmo resultado sem refazer
 as contas das fotos que nao mudaram (cerca de um minuto em vez de seis) e escreve

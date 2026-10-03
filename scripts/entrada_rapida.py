@@ -713,10 +713,16 @@ def publicavel():
     folhas = (ler_json(os.path.join(previas, "indice.json"), {}) or {}).get("folhas")
     if folhas is None and os.path.isdir(previas):
         folhas = sorted(n for n in os.listdir(previas) if re.match(r"^folha_\d+\.jpg$", n))
+    # AS FOLHAS PUBLICAM-SE COM O CONTEUDO NO NOME (gerar_previas.nome_publicado), e o "de" diz de que
+    # ficheiro do disco saem: e o nome que o gerar_mesa.py poe no indice da pagina. Uma folha que muda
+    # passa a ser um ficheiro novo no endereco, e a antiga sai com null (lista_a_publicar).
+    import gerar_previas
     for n in folhas or []:
         p = os.path.join(previas, n)
         if os.path.exists(p):
-            saida["previas/" + n] = {"bytes": os.path.getsize(p), "sha256": sha256_de(p)}
+            sha = sha256_de(p)
+            saida["previas/" + gerar_previas.nome_publicado(n, sha)] = {"bytes": os.path.getsize(p), "sha256": sha,
+                                                                      "de": "previas/" + n}
     for pasta in ("audio", "video"):
         d = os.path.join(SAIDA, pasta)
         if not os.path.isdir(d):
@@ -739,12 +745,15 @@ def nulls_do_som():
 def lista_a_publicar(base, agora, tudo=False):
     """(ficheiros, tirar): o que mudou face ao que estava publicado, sem a pagina."""
     ficheiros = []
-    for u in sorted(agora):
+    # AS FOLHAS A FRENTE: a pagina pede-as pelo nome do conteudo, e tem de as encontrar na mesma publicacao em
+    # que ela muda. Pela ordem do nome iam atras das copias de som, e com dois lotes ficavam no segundo.
+    for u in sorted(agora, key=lambda x: (not x.startswith("previas/"), x)):
         if u == "mesa.html":
             continue
         antes = base.get(u)
         if tudo or antes is None or antes != agora[u]:
-            ficheiros.append({"publicado": u, "de": os.path.join(SAIDA, u.replace("/", os.sep)),
+            origem = agora[u].get("de") or u          # o ficheiro do disco, que nas folhas tem outro nome
+            ficheiros.append({"publicado": u, "origem": origem, "de": os.path.join(SAIDA, origem.replace("/", os.sep)),
                               "bytes": agora[u]["bytes"],
                               "porque": "tudo" if tudo and antes == agora[u] else ("novo" if antes is None else "mudou")})
     tirar = sorted(set(u for u in base if u not in agora and u != "mesa.html") | set(nulls_do_som()))
@@ -764,7 +773,7 @@ def em_lotes(ficheiros, bytes_da_pagina):
     lotes.append(atual)
     saida = []
     for k, lote in enumerate(lotes):
-        files = {x["publicado"]: {"from": x["publicado"],
+        files = {x["publicado"]: {"from": x.get("origem") or x["publicado"],
                                   "contentType": TIPOS.get(os.path.splitext(x["publicado"])[1].lower(),
                                                            "application/octet-stream")} for x in lote}
         saida.append({"lote": k + 1, "com_pagina": k == 0, "n": len(lote),

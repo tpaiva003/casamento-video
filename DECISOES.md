@@ -4487,6 +4487,52 @@ que está acima. Sem commits.
 
 **Quem:** o Tiago e a Clara pediram; os agentes construíram, reviram e corrigiram. Sem commits.
 
+### 2026-10-03 | 113 | A tarde de 3 de outubro: as arestas limadas, o render das 13:44 e a entrada rápida de fotos e músicas
+
+**O que ele pediu:** *"Sê prático e eficiente na execução dos meus pedidos. Aplica um critério 80/20"* (11:40); *"há duas funcionalidades que precisamos, que é a possibilidade de colocar fotos na pasta e elas entrarem logo na Mesa de Montagem e igual para as músicas. Estas funcionalidades têm de estar prontas até às 16h"*; e, aos nove pontos que propus a partir da revisão do filme das 10h, *"Sim, aplica o que propões"* (12:45). As palavras e a lista inteira estão em `docs/DISCUSSAO.md`.
+
+**Decisão:**
+- **80/20 é regra de trabalho.** Entrega-se primeiro o simples que resolve, com menos camadas de revisão e respostas curtas. Também está na memória do Claude.
+- **A legenda numa linha tem 1762 px** (`render.LEGENDA_LARGURA_NUMA_LINHA`, era 1660). A do clip 10 fica numa linha, a 82 px das bordas. Foi ele que aprovou; o número continua a ser um só.
+- **Com o título antes do rolo, o filme apaga-se primeiro** (`ponto5_creditos.FILME_APAGA` = 0,7 s) e só depois o título acende. Muda a regra de 28 de setembro só nesse caso.
+- **Na base (versão 2375 para 2376):** o contador do meio com 12 s, parado 3 s e o piano em `in: "continua"`; o contador do fim com o piano em `"continua"`; a foto do clip 90 direita (`IMG_20260922_191615 - rodada.jpg`, f0742, cópia nova, o original fica); `li` nos clips 115 e 129; cinco gralhas.
+- **Ficam como estão, por escolha dele:** os textos rápidos (082), o piano na fita antes da Clara (060) e o fim dos créditos.
+- **O render:** `v3_2026-10-03_1344.mp4` e a cópia do telemóvel com créditos, enviada às 14:02. Ainda não é a versão final.
+- **A entrada rápida.** `scripts/vigiar_pastas.py` diz se há ficheiros novos na `01-NOVAS` ou na `02-NOVAS-MÚSICAS`; `scripts/entrada_rapida.py` dá o mesmo que o `atualizar_fotos.py` em cerca de meio minuto (guarda as contas que não mudam) e escreve `saida/entrada_rapida.json`, com o que entrou, os avisos e a lista exata do que se publica. Uma tarefa do cron da sessão corre a vigia de 4 em 4 minutos.
+
+**Razão:** é a véspera do casamento e eles estão a montar. Cada foto ou música que largam na pasta tem de aparecer na Mesa sem esperarem por mim, e cada pedido tem de chegar depressa.
+
+**O que se sabe que falha:** a tarefa do cron só passa quando o Claude está parado. Na noite de 3 de outubro uma música esperou meia hora enquanto se tratava da decisão 114. Duplicados pelo conteúdo só se reportam (regra 4).
+
+**Quem:** o Tiago pediu e aprovou; os agentes construíram e um cético pôs a entrada rápida à prova. Commits 37830ac e a4edc35.
+
+### 2026-10-03 | 114 | As folhas de prévias publicam-se com o conteúdo no nome
+
+**O que ele disse (20:35):** *"acho que o pré-visualizar não está a funcionar, pois por vezes está a misturar fotos e legendas. Reparei agora a acontecer nas viagens."*
+
+**O que se mediu:**
+- Em disco, cada célula de cada folha batia com a foto que o índice diz: 766 de 766. O gerador estava certo.
+- No endereço da Mesa, a `previas/folha_28.jpg` publicada **não** batia: as 16 células tinham outra foto. É a folha de Veneza, Dubrovnik, Ilha Terceira e Iguaçu. As folhas 27 e 28 tinham mudado em disco às 13:05 e não subiram; a entrada rápida deu-as como publicadas.
+- Às 20:12 entraram 12 fotos do WhatsApp (em disco duas vezes, 24 registos), que empurraram as fotos das folhas 29 a 48 para outras células. Essas folhas subiram por cima, com o mesmo nome.
+- Dentro do quadro do palco, a foto e a legenda saem sempre do mesmo clip (`palcoFoto`): só a folha de prévias podia pôr uma foto errada. As miniaturas vão dentro da página e não sofrem disto.
+
+**Decisão:** uma folha publica-se como `previas/folha_NN_<dez letras do sha256>.jpg`. No disco continua `folha_NN.jpg`. O `gerar_previas.indice_publicado()` dá o índice com os nomes do endereço, que o `gerar_mesa.py` põe na página; o `entrada_rapida.publicavel()` usa o nome do endereço e diz em `de` o ficheiro do disco; a lista de publicar leva `from` e tira os nomes antigos com `null`. As folhas vão à frente na lista, para irem no lote da página.
+
+**Razão:** com o mesmo nome para conteúdos diferentes, uma folha por publicar, publicada a meio ou guardada no browser dava **uma foto errada com a legenda certa**, sem erro nenhum. Com o conteúdo no nome, a página só aceita a folha que corresponde ao índice dela; se faltar, mostra a miniatura, que é a foto certa menos nítida.
+
+**Feito:** Mesa versão 60 às 20:45, com as 48 folhas de novo e os 48 nomes antigos tirados (130 ficheiros no endereço); `montagem/publicacao` com o build `20261003-204153`; a montagem dele intacta (revisão 2480). O filme nunca foi afetado: o render lê a FINAIS.
+
+**Provado:** quatro revisores só a ler (workflow `previas-trocadas-verificacao`). Os nomes da página, do manifesto e do endereço são o sha256 dos ficheiros do disco; `testes.py --rapido` com 281 a passar e as duas falhas conhecidas; o `teste_previas_publicadas_pelo_conteudo` novo. O import do `gerar_previas` dentro do `gerar_mesa.main()` partia 8 testes da Mesa montada (o `StringIO` não tem `reconfigure`): passou para o topo do ficheiro.
+
+**O que os revisores encontraram e fica por decidir ou para depois:**
+- **Parado e a saltar de clip, a barra de baixo do palco já diz o clip seguinte e o quadro ainda mostra o anterior** (o clip entra com opacidade 0 no instante exato em que começa). A tocar dura 0,7 s; parado fica assim. Pode ser parte do que ele viu. A correção é pequena (parado, aterrar depois do encadeado) e só se faz se ele disser.
+- **Uma Mesa aberta não sabe que há versão nova** sem recarregar: `procurarVersao()` só corre ao abrir e no botão. O CLAUDE.md dizia o contrário e foi corrigido.
+- O `--publicado` regista o que está em disco e não o que subiu, e uma folha órfã no endereço não sai sozinha se faltar um `--publicado` entre duas publicações. Por isso se lista o endereço antes e depois de publicar.
+- Com o palco aberto e a montagem a mudar noutro aparelho, o palco pode ficar no estado antigo; fechar e abrir resolve.
+- Três fotos com menos de 720 px (clips 10, 66 e 151) aparecem mais pequenas no palco quando a prévia chega. No filme estão bem.
+
+**Quem:** o Tiago viu; o Claude mediu, corrigiu e publicou; quatro agentes reviram.
+
 ## Em aberto
 
 Não assumir nenhuma destas sem decisão explícita do Tiago.

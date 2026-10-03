@@ -700,6 +700,91 @@ def teste_previas_cobrem_todas_as_fotos():
              ("sem previa: %d" % len(faltam)) if faltam else "%d fotos em %d folhas" % (len(ind["pos"]), len(ind["folhas"])))
 
 
+def teste_previas_publicadas_pelo_conteudo():
+    """Cada folha de previas publica-se com o conteudo no nome, e a lista de publicar diz de onde sai.
+
+    O DEFEITO (3 de outubro, a noite): 12 fotos novas empurraram as fotos de 20 folhas para outras
+    celulas, e as folhas publicaram-se por cima com o mesmo nome (previas/folha_33.jpg). O browser do
+    Tiago ja tinha as antigas guardadas e mostrou-as com o indice novo: no Pre-visualizar das viagens
+    as fotos sairam trocadas com as legendas. Com o sha256 no nome, uma folha que muda e outro ficheiro.
+    """
+    import json
+    import re
+    import tempfile
+    import gerar_previas as gp
+    import entrada_rapida as er
+
+    # 1. o nome muda com o conteudo, e so com ele
+    a = gp.nome_publicado("folha_33.jpg", "1a2b3c4d5e6f" + "0" * 52)
+    b = gp.nome_publicado("folha_33.jpg", "ffffffffffff" + "0" * 52)
+    verifica("a folha publicada leva o conteudo no nome", a == "folha_33_1a2b3c4d5e.jpg" and a != b, "%s, %s" % (a, b))
+
+    # 2. o indice que vai para a pagina: os nomes do endereco, as posicoes as mesmas, e o do disco intacto
+    with tempfile.TemporaryDirectory() as pasta:
+        for nome, conteudo in (("folha_01.jpg", b"uma"), ("folha_02.jpg", b"outra")):
+            with open(os.path.join(pasta, nome), "wb") as fh:
+                fh.write(conteudo)
+        disco = {"celula": 720, "colunas": 4, "linhas": 4, "folhas": ["folha_01.jpg", "folha_02.jpg", "folha_03.jpg"],
+                 "pos": {"f0001": [0, 0, 0], "f0002": [1, 3, 2]}}
+        with open(os.path.join(pasta, "indice.json"), "w", encoding="utf-8") as fh:
+            json.dump(disco, fh)
+        pub = gp.indice_publicado(pasta)
+        esperadas = [gp.nome_publicado(n, gp.sha256_do_ficheiro(os.path.join(pasta, n))) for n in disco["folhas"][:2]]
+        verifica("o indice da pagina tem os nomes do endereco",
+                 pub["folhas"][:2] == esperadas and pub["folhas"][2] == "folha_03.jpg" and pub["pos"] == disco["pos"]
+                 and json.load(open(os.path.join(pasta, "indice.json"), encoding="utf-8")) == disco,
+                 "%s" % pub["folhas"])
+        # a folha muda de conteudo: muda de nome
+        with open(os.path.join(pasta, "folha_01.jpg"), "wb") as fh:
+            fh.write(b"uma, com outra foto")
+        verifica("uma folha refeita com outras fotos muda de nome", gp.indice_publicado(pasta)["folhas"][0] != esperadas[0])
+        verifica("sem indice, nao ha indice publicado", gp.indice_publicado(os.path.join(pasta, "nao_ha")) is None)
+
+    # 3. a lista de publicar: a folha nova vem do ficheiro do disco, a antiga sai com null, o resto fica
+    base = {"mesa.html": {"bytes": 1, "sha256": "p"},
+            "previas/folha_01.jpg": {"bytes": 3, "sha256": "x"},                       # o nome antigo, sem conteudo
+            "previas/folha_02_bbbbbbbbbb.jpg": {"bytes": 5, "sha256": "b" * 64, "de": "previas/folha_02.jpg"},
+            "audio/a1.mp4": {"bytes": 7, "sha256": "nome"}}
+    agora = {"mesa.html": {"bytes": 2, "sha256": "q"},
+             "previas/folha_01_aaaaaaaaaa.jpg": {"bytes": 3, "sha256": "a" * 64, "de": "previas/folha_01.jpg"},
+             "previas/folha_02_bbbbbbbbbb.jpg": {"bytes": 5, "sha256": "b" * 64, "de": "previas/folha_02.jpg"},
+             "audio/a1.mp4": {"bytes": 7, "sha256": "nome"}}
+    nulls = er.nulls_do_som
+    er.nulls_do_som = lambda: []
+    try:
+        ficheiros, tirar = er.lista_a_publicar(base, agora)
+    finally:
+        er.nulls_do_som = nulls
+    lotes = er.em_lotes(ficheiros, 2)
+    verifica("a lista de publicar leva a folha nova, vinda do ficheiro do disco, e tira a antiga",
+             [x["publicado"] for x in ficheiros] == ["previas/folha_01_aaaaaaaaaa.jpg"]
+             and ficheiros[0]["origem"] == "previas/folha_01.jpg"
+             and ficheiros[0]["de"] == os.path.join(er.SAIDA, "previas", "folha_01.jpg")
+             and tirar == ["previas/folha_01.jpg"]
+             and lotes[0]["files"] == {"previas/folha_01_aaaaaaaaaa.jpg": {"from": "previas/folha_01.jpg", "contentType": "image/jpeg"}},
+             "%s | tirar %s | %s" % ([x["publicado"] for x in ficheiros], tirar, lotes[0]["files"]))
+
+    # 4. a pagina montada e as folhas em disco, quando existem: cada nome da pagina e o do conteudo de agora
+    pagina = os.path.join(REPO, "saida", "mesa.html")
+    pasta = os.path.join(REPO, "saida", "previas")
+    if not (os.path.exists(pagina) and os.path.exists(os.path.join(pasta, "indice.json"))):
+        salta("a pagina pede cada folha pelo nome do conteudo que esta em disco", "sem saida/mesa.html ou sem as previas neste PC")
+        return
+    m = re.search(r"window\.PREVIAS\s*=\s*(\{.*?\});", open(pagina, encoding="utf-8").read(), re.S)
+    na_pagina = json.loads(m.group(1)) if m else None
+    disco = json.load(open(os.path.join(pasta, "indice.json"), encoding="utf-8"))
+    if not na_pagina or na_pagina.get("pos") != disco.get("pos"):
+        salta("a pagina pede cada folha pelo nome do conteudo que esta em disco",
+              "a saida/mesa.html e de antes da ultima corrida das previas: corre scripts/gerar_mesa.py")
+        return
+    maus = [n for n, d in zip(na_pagina["folhas"], disco["folhas"])
+            if n != gp.nome_publicado(d, gp.sha256_do_ficheiro(os.path.join(pasta, d)))]
+    verifica("a pagina pede cada folha pelo nome do conteudo que esta em disco",
+             not maus and len(na_pagina["folhas"]) == len(disco["folhas"])
+             and all(re.match(r"^folha_\d+_[0-9a-f]{10}\.jpg$", n) for n in na_pagina["folhas"]),
+             "nomes que nao batem: %s" % maus[:4] if maus else "%d folhas" % len(disco["folhas"]))
+
+
 def teste_foguetes_antes_das_fotos():
     """As fotografias do bebe so entram depois de os foguetes acabarem.
 
@@ -20352,6 +20437,7 @@ def main():
     teste_textos_opcoes_chegam_ao_render()
     teste_estado_das_fotos()
     teste_previas_cobrem_todas_as_fotos()
+    teste_previas_publicadas_pelo_conteudo()
     teste_foguetes_antes_das_fotos()
     teste_intro_sem_repetir(rapido)
     teste_intro_reparte_clara_e_tiago()
