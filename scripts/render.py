@@ -29,6 +29,12 @@ Uso:
     py -3.11 scripts/render.py v3 --fatias auto    os nucleos menos um, ate 8
     py -3.11 scripts/render.py v3 --guardar-quadros   deixa a cache dos videos do corpo
     py -3.11 scripts/render.py v3 --quadros-grandes   aceita mais de 30 s de video no corpo
+    py -3.11 scripts/render.py v3 --sem-legendas      o filme sem a legenda de baixo, para o DaVinci
+    py -3.11 scripts/render.py v3 --sem-copias        so o ficheiro final, sem a _leve nem a _telemovel
+    py -3.11 scripts/render.py v3 --saida <pasta>     o filme e os ficheiros de trabalho noutra pasta
+
+O pacote do DaVinci inteiro (o filme sem legendas, os creditos, o .srt e o guia) e um comando so:
+    py -3.11 scripts/davinci_pacote.py v3
 """
 import csv
 import datetime
@@ -45,8 +51,15 @@ from PIL import Image, ImageDraw, ImageFilter, ImageFont, ImageOps
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import linha_tempo
+# Os emojis a cores e os sinais equivalentes em todos os textos do filme (2 de outubro): a maneira unica
+# de medir e de desenhar texto, a mesma no render, na fita e nos creditos. Sem emojis nem sinais
+# equivalentes cada funcao dele e a chamada de sempre, ao byte.
+import texto_emojis
 
-sys.stdout.reconfigure(encoding="utf-8")
+# So se ha consola ou ficheiro (revisao de 2 de outubro): o montar_da_mesa.py importa o render dentro
+# do main(), e quem monta com o stdout num StringIO (os testes calados) rebentava aqui.
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MONTAGENS = os.path.join(REPO, "data", "montagens")
@@ -89,6 +102,10 @@ VIDEOS = {
 }
 
 
+PASTA_INTRO_MARVEL = r"C:\casamento-video-media\gerados\intro_marvel"
+PASTA_SOM_IGUALADO = r"C:\casamento-video-media\gerados\som_igualado"
+
+
 def caminho_de_video(nome):
     """Encontra o ficheiro do video pelo nome, custe o que custar.
 
@@ -97,6 +114,15 @@ def caminho_de_video(nome):
     """
     if nome in VIDEOS and os.path.exists(VIDEOS[nome][0]):
         return VIDEOS[nome]
+    # AS INTROS DE OUTRAS CORES, desde 2 de outubro: o montar_da_mesa.py pede-as ao
+    # intro_flipbook.py e ao igualar_abertura.py, com nome novo por paleta, e por isso nao
+    # podem estar na tabela. Procuram-se primeiro nas duas pastas de onde saem, antes da busca
+    # pela media toda, que apanhava o primeiro ficheiro com o nome em qualquer sitio.
+    if (nome or "").lower().startswith("intro_clara_tiago"):
+        for pasta in (PASTA_SOM_IGUALADO, PASTA_INTRO_MARVEL):
+            caminho = os.path.join(pasta, nome)
+            if os.path.exists(caminho):
+                return caminho, 0.0
     raiz = r"C:\casamento-video-media"
     for base, _, fs in os.walk(raiz):
         if "00-Backup" in base:
@@ -509,10 +535,12 @@ def compor(tela, sprite, cx, cy, escala, alfa=1.0):
 
 
 def quebrar(texto, fonte, largura, desenho):
+    """As palavras em linhas que cabem na `largura`. A medida e a do texto_emojis.caixa(): com um emoji,
+    o emoji conta com a largura que tem a cores; sem nenhum, e o textbbox() de sempre."""
     linhas, atual = [], ""
     for palavra in texto.split():
         teste = (atual + " " + palavra).strip()
-        if desenho.textbbox((0, 0), teste, font=fonte)[2] <= largura:
+        if texto_emojis.caixa(teste, fonte, desenho=desenho)[2] <= largura:
             atual = teste
         else:
             if atual:
@@ -531,8 +559,10 @@ def quebrar_paragrafos(texto, fonte, largura, desenho):
     saia partida a meio e as falas coladas umas as outras. Agora cada paragrafo
     quebra-se sozinho e as linhas somam-se.
     """
+    # OS EQUIVALENTES TROCAM-SE AQUI (2 de outubro): as linhas que saem sao as que se desenham, e e
+    # delas que o .srt do DaVinci se escreve. Um texto sem nenhum fica o mesmo.
     linhas = []
-    for paragrafo in (texto or "").splitlines():
+    for paragrafo in texto_emojis.com_equivalentes(texto or "").splitlines():
         paragrafo = " ".join(paragrafo.split())
         if paragrafo:
             linhas += quebrar(paragrafo, fonte, largura, desenho)
@@ -546,40 +576,180 @@ LEGENDA_TAMANHO = 46    # a letra da legenda de baixo, a 1080
 LEGENDA_MIN = 30        # ate onde desce para caber em 4 linhas, com LEGENDA_TAMANHO
 LEGENDA_LINHAS = 4
 LEGENDA_ALFA = 165
+LEGENDA_COR = (255, 255, 255)
+# O FILME PARA O DAVINCI, SEM A LEGENDA DE BAIXO (2 de outubro). O Tiago: "se comecar a apertar,
+# mudo para o davinci de forma mais facil". O teste do projetor e no proprio dia do casamento, e
+# mudar o tamanho da legenda pela Mesa e um render novo de quase uma hora. Com --sem-legendas o
+# render desenha tudo como sempre (as fotos pousam no mesmo sitio, acima de onde a faixa ia, e os
+# cartoes, o nome do bebe, o texto dentro das fotos, a fita e o destaque ficam na imagem) e so nao
+# cola a faixa de baixo: a dos clips de foto e de video, a legenda de cada grupo e a que muda com
+# cada foto na opcao "na legenda de baixo". Essas vao para um .srt (scripts/legendas_srt.py), que
+# o DaVinci le e deixa mudar de tamanho de uma vez. Falso, que e a omissao, nenhum pixel muda.
+SEM_LEGENDAS = False
+
+# ------------------------------------------- a posicao das legendas e a legenda numa so linha
+# O Tiago, a 3 de outubro (contrato_1003, pontos 2 e 3): "Na foto na posicao 10, meter a legenda
+# numa so linha, sem alterar o tamanho da letra" e "permite-me ajustar o posicionamento das
+# legendas, cima, baixo, direita, esquerda".
+#   est.estilo.legenda.posicao = {dx, dy, alinhamento}   para todas as legendas de baixo
+#   clip.lp = {dx, dy}                                     soma-se a de todas, so neste clip
+#   clip.x1 = true                                         este clip nao parte a legenda em linhas
+# O clip leva as suas na coluna opcoes_clip do CSV (JSON so com o que difere, e a coluna so entra
+# quando algum clip a tem, como a do destaque). SEM NADA DISTO, NENHUM PIXEL MUDA: a faixa e o texto
+# desenham-se pelas contas de sempre.
+#
+# A FAIXA ESCURA ACOMPANHA O TEXTO NA ALTURA e continua de borda a borda. O dy so sobe: a legenda
+# nunca desce abaixo de onde esta hoje, por causa do overscan do projetor (LEGENDA_FUNDO). O dx anda
+# com o texto, mas o bloco das linhas nunca sai da largura util de hoje, L - 260: encosta a margem
+# em vez de sair do ecra, que com o dx de todas as legendas e uma frase comprida acontecia. O
+# alinhamento poe as linhas ao centro (como hoje), encostadas a margem da esquerda ou a da direita.
+LEGENDA_MARGEM_LADO = 130            # a margem de cada lado, a da largura util de hoje (L - 260)
+POSICAO_DX = (-600, 600)             # px a 1080, positivo para a direita
+POSICAO_DY = (-500, 0)               # px a 1080, negativo para cima
+POSICAO_ALINHAMENTOS = ("centro", "esquerda", "direita")
+# O do clip soma-se ao de todas, e por isso pode ir ate ao dobro para desfazer o de todas; o total e
+# que fica nos limites de cima.
+LP_DX = (-1200, 1200)
+LP_DY = (-500, 500)
+COLUNA_OPCOES_CLIP = "opcoes_clip"
 
 
-def linhas_legenda(texto, tamanho=LEGENDA_TAMANHO, desenho=None):
+def _inteiro_com_sinal(v):
+    """Um numero de pixeis como inteiro: -40, -40.0 e "-40" valem; o booleano e o que tem decimais nao."""
+    if isinstance(v, bool):
+        return None
+    if isinstance(v, str):
+        v = v.strip()
+        return int(v) if re.fullmatch(r"[-+]?\d+", v) else None
+    if isinstance(v, float):
+        return int(v) if v.is_integer() else None
+    return v if isinstance(v, int) else None
+
+
+def ler_opcoes_clip(celula):
+    """A coluna opcoes_clip -> {"x1": bool, "lp": (dx, dy), "li": bool}, ou None se nao traz nada.
+
+    Ausente, vazia ou mal escrita valem todas o mesmo: nada, e o clip sai como sempre. Quem valida e
+    avisa e o montar_da_mesa.py, que e onde ha uma lista para o Tiago ler; aqui um valor que nao
+    presta (fora dos limites, que nao e numero) vale zero, como a omissao.
+    """
+    if isinstance(celula, dict):
+        bruto = celula
+    else:
+        try:
+            bruto = json.loads(celula) if (celula or "").strip() else {}
+        except (ValueError, TypeError, AttributeError):
+            return None
+    if not isinstance(bruto, dict):
+        return None
+    lp = bruto.get("lp") if isinstance(bruto.get("lp"), dict) else {}
+    dx, dy = _inteiro_com_sinal(lp.get("dx", 0)), _inteiro_com_sinal(lp.get("dy", 0))
+    dx = dx if dx is not None and LP_DX[0] <= dx <= LP_DX[1] else 0
+    dy = dy if dy is not None and LP_DY[0] <= dy <= LP_DY[1] else 0
+    o = {"x1": bruto.get("x1") is True, "lp": (dx, dy), "li": bruto.get("li") is True}
+    if not o["x1"] and not o["li"] and o["lp"] == (0, 0):
+        return None
+    return o
+
+
+def posicao_da_legenda(clip_leg=None):
+    """(dx, dy, alinhamento) da legenda de baixo: a de todas (o estilo) mais a do clip, nos limites.
+
+    Sem posicao no estilo e sem lp no clip e (0, 0, "centro"), a legenda de sempre.
+    """
+    pos = _ESTILO.get("legenda", {}).get("posicao") or {}
+    dx, dy = pos.get("dx", 0), pos.get("dy", 0)
+    if clip_leg:
+        dx, dy = dx + clip_leg["lp"][0], dy + clip_leg["lp"][1]
+    dx = min(POSICAO_DX[1], max(POSICAO_DX[0], dx))
+    dy = min(POSICAO_DY[1], max(POSICAO_DY[0], dy))
+    return dx, dy, pos.get("alinhamento", "centro")
+
+
+def x_das_linhas(larguras, dx, alinhamento):
+    """O x de cada linha da legenda, com o bloco das linhas sempre dentro da largura util.
+
+    Ao centro e sem dx e o (L - w) / 2 de sempre, ao bit. Encostada a esquerda as linhas comecam na
+    margem, a direita acabam nela, e o dx anda com o bloco ate ele tocar numa das margens.
+    """
+    m = LEGENDA_MARGEM_LADO
+    dx = dx_efetivo(larguras, dx, alinhamento)
+    if alinhamento == "esquerda":
+        return [m + dx for _w in larguras]
+    if alinhamento == "direita":
+        return [L - m - w + dx for w in larguras]
+    if dx == 0:
+        return [(L - w) / 2 for w in larguras]
+    return [(L - w) / 2 + dx for w in larguras]
+
+
+def dx_efetivo(larguras, dx, alinhamento):
+    """O dx que o bloco das linhas anda de facto: o pedido, ate o bloco tocar numa margem."""
+    folga = max(0, (L - 2 * LEGENDA_MARGEM_LADO) - (max(larguras) if larguras else 0))
+    if alinhamento == "esquerda":
+        return min(folga, max(0, dx))
+    if alinhamento == "direita":
+        return max(-folga, min(0, dx))
+    return min(folga / 2.0, max(-folga / 2.0, dx))
+
+
+def legenda_numa_linha(texto, tamanho=None):
+    """(cabe, px que a linha precisa, px que ha) da legenda escrita numa so linha, no corpo de hoje.
+
+    A largura e a de sempre, L - 260 (a margem lateral das legendas de hoje). E a conta que o clip.x1
+    usa, e o aviso do montar e o do render dizem estes dois numeros.
+    """
+    tamanho = legenda_tamanho() if tamanho is None else tamanho
+    linha = " ".join(texto_emojis.com_equivalentes(texto or "").split())
+    precisa = texto_emojis.caixa(linha, letra("legenda", tamanho),
+                                 desenho=ImageDraw.Draw(Image.new("L", (1, 1))))[2] if linha else 0
+    return precisa <= L - 2 * LEGENDA_MARGEM_LADO, int(math.ceil(precisa)), L - 2 * LEGENDA_MARGEM_LADO
+
+
+def linhas_legenda(texto, tamanho=None, desenho=None, uma_linha=False):
     """Como o texto da legenda de baixo se parte: (tamanho, linhas, fonte).
 
     Desce de 4 em 4 ate caber em LEGENDA_LINHAS linhas, e nunca abaixo do minimo, que e
     proporcional ao tamanho pedido: LEGENDA_MIN para LEGENDA_TAMANHO. Com 46 a sequencia e
     a de sempre, 46, 42, 38, 34, 30. O tamanho vem da Mesa na opcao "na legenda de baixo";
-    a legenda do grupo fica com o de sempre.
+    a legenda do grupo fica com o de sempre. Sem tamanho e o do estilo da Mesa, e sem estilo
+    o LEGENDA_TAMANHO; a letra e a da legenda do estilo, ver letra().
+
+    `uma_linha` e o clip.x1 (3 de outubro): o texto todo numa linha, as mudancas de linha
+    escritas incluidas, no mesmo corpo, se couber na largura util (legenda_numa_linha()). Se
+    nao couber parte-se como sempre, e quem avisa e o carregar_montagem() e o montar.
     """
+    tamanho = legenda_tamanho() if tamanho is None else tamanho
     d = desenho or ImageDraw.Draw(Image.new("L", (1, 1)))
     minimo = int(math.floor(tamanho * LEGENDA_MIN / float(LEGENDA_TAMANHO) + 0.5))
-    fonte = ImageFont.truetype(FONTE_TEXTO, tamanho)
+    fonte = letra("legenda", tamanho)
+    if uma_linha:
+        linha = " ".join(texto_emojis.com_equivalentes(texto or "").split())
+        if linha and texto_emojis.caixa(linha, fonte, desenho=d)[2] <= L - 2 * LEGENDA_MARGEM_LADO:
+            return tamanho, [linha], fonte
     linhas = quebrar_paragrafos(texto, fonte, L - 260, d)
     while len(linhas) > LEGENDA_LINHAS and tamanho > minimo:
         tamanho = max(minimo, tamanho - 4)
-        fonte = ImageFont.truetype(FONTE_TEXTO, tamanho)
+        fonte = letra("legenda", tamanho)
         linhas = quebrar_paragrafos(texto, fonte, L - 260, d)
     return tamanho, linhas, fonte
 
 
-def bloco_legenda(texto, tamanho=LEGENDA_TAMANHO):
+def bloco_legenda(texto, tamanho=None, uma_linha=False):
     """Altura, em pixeis, do bloco das linhas que faixa_texto() escreve para este texto."""
-    tamanho, linhas, _fonte = linhas_legenda(texto, tamanho)
+    tamanho, linhas, _fonte = linhas_legenda(texto, tamanho, uma_linha=uma_linha)
     return int(tamanho * 1.35) * len(linhas)
 
 
-def faixa_texto(texto, tamanho=LEGENDA_TAMANHO, bloco_max=None):
+def faixa_texto(texto, tamanho=None, bloco_max=None, clip_leg=None):
     """Desenha a legenda uma vez. Devolve (cor, mascara) para colagem rapida.
 
     `bloco_max` e a altura do bloco das linhas do texto mais alto que o clip vai mostrar,
     na opcao "na legenda de baixo": a faixa fica com essa altura em todo o clip, para as
     fotos nao mudarem de sitio quando o texto troca, e um texto mais baixo centra-se nela.
     Sem `bloco_max`, e com o tamanho de sempre, e a legenda de sempre, pixel a pixel.
+    `clip_leg` sao as opcoes do clip, de ler_opcoes_clip(): a legenda numa linha e o lp. A
+    posicao de todas vem do estilo, ver posicao_da_legenda().
     """
     if not texto:
         return None
@@ -589,17 +759,23 @@ def faixa_texto(texto, tamanho=LEGENDA_TAMANHO, bloco_max=None):
     # televisor com overscan os ultimos pixeis do ecra nao aparecem, e e por isso que esta
     # faixa nunca desce ate A: quem escrever outra faixa encostada ao fundo usa a mesma
     # linha, ver lado_faixas().
-    tamanho, linhas, fonte = linhas_legenda(texto, tamanho, d)
+    tamanho, linhas, fonte = linhas_legenda(texto, tamanho, d,
+                                            uma_linha=bool(clip_leg and clip_leg["x1"]))
     altura_linha = int(tamanho * 1.35)
     bloco = altura_linha * len(linhas)
     banda = bloco if bloco_max is None else max(bloco, bloco_max)
     topo = A - LEGENDA_TEXTO - banda + (banda - bloco) // 2
-    d.rectangle([0, A - LEGENDA_TEXTO - banda - LEGENDA_ALMOFADA, L, A - LEGENDA_FUNDO],
-                fill=(0, 0, 0, LEGENDA_ALFA))
+    # A POSICAO (3 de outubro): a faixa e o texto sobem dy juntos, e o texto anda dx. Sem posicao
+    # dy e 0 e os x sao os (L - w) / 2 de sempre.
+    dx, dy, alinhamento = posicao_da_legenda(clip_leg)
+    d.rectangle([0, A - LEGENDA_TEXTO - banda - LEGENDA_ALMOFADA + dy, L, A - LEGENDA_FUNDO + dy],
+                fill=(0, 0, 0, fundo_da_legenda(LEGENDA_ALFA)))
+    cor = legenda_cor() + (255,)
+    # um emoji vai a cores, na letra de emojis, e os equivalentes trocam-se (texto_emojis); sem
+    # eles e o textbbox() e o text() de sempre
+    xs = x_das_linhas([texto_emojis.caixa(linha, fonte, desenho=d)[2] for linha in linhas], dx, alinhamento)
     for i, linha in enumerate(linhas):
-        w = d.textbbox((0, 0), linha, font=fonte)[2]
-        d.text(((L - w) / 2, topo + i * altura_linha), linha, font=fonte,
-               fill=(255, 255, 255, 255))
+        texto_emojis.escrever(d, (xs[i], topo + dy + i * altura_linha), linha, fonte, cor)
     return capa.convert("RGB"), capa.split()[3]
 
 
@@ -687,24 +863,29 @@ def avisar_legenda_curta(k, texto, dura):
           "metros nao da para ler: %s" % (k + 1, dura, texto))
 
 
-def legenda_por_foto(textos, tamanho=LEGENDA_TAMANHO):
+def legenda_por_foto(textos, tamanho=None, clip_leg=None):
     """As faixas da opcao "na legenda de baixo", desenhadas uma vez por clip.
 
     `textos` e o que a legenda mostra em cada foto, ja com o texto do grupo no lugar dos
     vazios. Devolve {"textos", "faixas": {texto: (cor, mascara)}, "topo", "fundo"}, ou None
     se nao houver texto nenhum. Todas as faixas tem a altura do bloco mais alto, para as
-    fotos pousarem acima dela e nao mudarem de sitio quando o texto troca.
+    fotos pousarem acima dela e nao mudarem de sitio quando o texto troca. `clip_leg` sao as
+    opcoes do clip (a legenda numa linha e o lp), que valem para cada texto.
     """
     distintos = [t for t in dict.fromkeys(textos) if t]
     if not distintos:
         return None
-    banda = max(bloco_legenda(t, tamanho) for t in distintos)
+    tamanho = legenda_tamanho() if tamanho is None else tamanho
+    uma = bool(clip_leg and clip_leg["x1"])
+    banda = max(bloco_legenda(t, tamanho, uma_linha=uma) for t in distintos)
+    _dx, dy, _alinhamento = posicao_da_legenda(clip_leg)
     # O retangulo de faixa_texto() inclui a fila A - LEGENDA_FUNDO, por isso `fundo`, a
     # primeira fila abaixo da banda, e essa mais um: sem o mais um, a ultima fila da
-    # faixa ficava fora da mistura da troca e piscava.
+    # faixa ficava fora da mistura da troca e piscava. Com a posicao (3 de outubro) as duas
+    # sobem o dy da faixa.
     return {"textos": list(textos), "tamanho": tamanho,
-            "faixas": {t: faixa_texto(t, tamanho, banda) for t in distintos},
-            "topo": A - LEGENDA_TEXTO - banda - LEGENDA_ALMOFADA, "fundo": A - LEGENDA_FUNDO + 1,
+            "faixas": {t: faixa_texto(t, tamanho, banda, clip_leg) for t in distintos},
+            "topo": A - LEGENDA_TEXTO - banda - LEGENDA_ALMOFADA + dy, "fundo": A - LEGENDA_FUNDO + 1 + dy,
             "_bandas": {}}
 
 
@@ -776,7 +957,9 @@ def legenda_no_instante(pronto, t_rel, duracao, inicios):
 
 
 def colar_legenda(tela, pronto, t_rel, duracao, inicios):
-    """Cola a legenda de baixo no fotograma, a de sempre ou a da opcao legenda."""
+    """Cola a legenda de baixo no fotograma, a de sempre ou a da opcao legenda. Nada, com SEM_LEGENDAS."""
+    if SEM_LEGENDAS:
+        return
     faixa = legenda_no_instante(pronto, t_rel, duracao, inicios)
     if faixa is not None:
         cor, mascara, onde = faixa
@@ -796,9 +979,8 @@ def cartao(texto):
     altura_linha = int(tamanho * 1.4)
     topo = (A - altura_linha * len(linhas)) / 2
     for i, linha in enumerate(linhas):
-        w = d.textbbox((0, 0), linha, font=fonte)[2]
-        d.text(((L - w) / 2, topo + i * altura_linha), linha, font=fonte,
-               fill=(238, 238, 244))
+        w = texto_emojis.caixa(linha, fonte, desenho=d)[2]
+        texto_emojis.escrever(d, ((L - w) / 2, topo + i * altura_linha), linha, fonte, (238, 238, 244))
     return base
 
 
@@ -825,6 +1007,7 @@ def cartao(texto):
 LETREIRO_SS = 2
 LETREIRO_CURTO_PALAVRAS = 3
 LETREIRO_CURTO_TAMANHO, LETREIRO_ESPACO = 100, 0.30
+LETREIRO_FRASE_TAMANHO, LETREIRO_FRASE_MIN = 78, 44   # a frase: o corpo do cartao de sempre, e ate onde desce
 NOME_TAMANHO, NOME_ESPACO = 120, 0.30
 LETREIRO_ENTRA = 0.6            # segundos que as letras de um cartao levam a acender do preto
 NOME_ENTRA = 0.9                # e as do nome do bebe
@@ -834,28 +1017,78 @@ LETREIRO_BRANCO = (255, 247, 234)
 LETREIRO_BRILHO = (255, 150, 70)
 
 
-def _mascara_letreiro(linhas, tamanho, espaco, entrelinha=1.45):
-    """As letras em branco sobre preto, LETREIRO_SS vezes maiores, uma a uma para o espacamento."""
-    f = ImageFont.truetype(FONTE_TEXTO, tamanho * LETREIRO_SS)
+def largura_das_letras(ln, f, passo):
+    """A largura de uma linha do letreiro, letra a letra com `passo` entre elas.
+
+    Um emoji (com o tom, a tecla ou o que o ZWJ junta) conta como uma letra, com a largura que tem na
+    letra de emojis (texto_emojis.largura_das_unidades). Sem emojis nem equivalentes e a conta de
+    sempre, a mesma soma pela mesma ordem.
+    """
+    return texto_emojis.largura_das_unidades(ln, f, passo)
+
+
+def _pecas_do_letreiro(linhas, tamanho, espaco, entrelinha=1.45):
+    """(mascara, emojis): as letras em branco sobre preto, LETREIRO_SS vezes maiores, uma a uma para o
+    espacamento, e os emojis a cores numa camada a parte (RGBA, a cor ja multiplicada pelo alfa), ou
+    None quando nao ha nenhum.
+
+    A letra e a do cartao do estilo da Mesa (2 de outubro), a mesma no nome do bebe; sem estilo,
+    o FONTE_TEXTO de sempre. UM EMOJI NAO LEVA O DEGRADE: fica com as cores dele, na mesma linha de
+    base, no corpo que bate com as maiusculas, e acende e aproxima-se com as letras porque vai no
+    mesmo letreiro (letreiro()). Uma linha sem emojis nem equivalentes desenha-se como sempre. Um
+    simbolo de uma so cor (texto_emojis.so_uma_cor) nao e um emoji a cores: vai na mascara, com as letras.
+    """
+    f = letra("cartao", tamanho * LETREIRO_SS)
     passo = espaco * tamanho * LETREIRO_SS
-    larguras = [sum(f.getlength(c) for c in ln) + passo * (len(ln) - 1) for ln in linhas]
+    larguras = [largura_das_letras(ln, f, passo) for ln in linhas]
     folga = 160 * LETREIRO_SS
     W = int(max(larguras)) + 2 * folga
     H = int(tamanho * LETREIRO_SS * entrelinha * len(linhas)) + 2 * folga
     m = Image.new("L", (W, H), 0)
     d = ImageDraw.Draw(m)
+    cores = None
     y = folga
     for ln, w in zip(linhas, larguras):
         x = (W - w) / 2
-        for c in ln:
-            d.text((x, y), c, font=f, fill=255)
-            x += f.getlength(c) + passo
+        if texto_emojis.simples(ln, f):
+            for c in ln:
+                d.text((x, y), c, font=f, fill=255)
+                x += f.getlength(c) + passo
+        else:
+            fe = texto_emojis.emojis_para(f)
+            base = y + texto_emojis.desce(f, "a")
+            for u, a_cores in texto_emojis.unidades(ln, f):
+                if a_cores and texto_emojis.so_uma_cor(u):
+                    # UM SIMBOLO DE UMA SO COR (o visto, as setas, as letras de uma bandeira) vai na
+                    # mascara, como as letras, e leva o champanhe (098); na camada das cores saia branco
+                    # (corretor, 2 de outubro a noite)
+                    d.text((x, base), u, font=fe, fill=255, anchor="ls")
+                    x += fe.getlength(u) + passo
+                elif a_cores:
+                    if cores is None:
+                        cores = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+                    ImageDraw.Draw(cores).text((x, base), u, font=fe, fill=(255, 255, 255, 255), anchor="ls",
+                                               embedded_color=True)
+                    x += fe.getlength(u) + passo
+                else:
+                    d.text((x, y), u, font=f, fill=255)
+                    x += f.getlength(u) + passo
         y += tamanho * LETREIRO_SS * entrelinha
-    return m
+    return m, cores
 
 
-def _colorir_letreiro(m, semente):
-    """Champanhe quente a subir para branco quente, com manchas lentas, e o brilho a volta."""
+def _mascara_letreiro(linhas, tamanho, espaco, entrelinha=1.45):
+    """As letras em branco sobre preto, LETREIRO_SS vezes maiores, uma a uma para o espacamento."""
+    return _pecas_do_letreiro(linhas, tamanho, espaco, entrelinha)[0]
+
+
+def _colorir_letreiro(m, semente, brilho_de=None):
+    """Champanhe quente a subir para branco quente, com manchas lentas, e o brilho a volta.
+
+    As tres cores vem do cartao do estilo da Mesa (quente, claro, brilho), e sem estilo sao as
+    LETREIRO_* de sempre. `brilho_de` e a mascara de onde sai o brilho quando nao e a das letras: com
+    emojis, as letras e os emojis juntos, para o brilho quente os envolver como as letras.
+    """
     import numpy as np
     W, H = m.size
     rng = np.random.default_rng(semente)
@@ -863,28 +1096,42 @@ def _colorir_letreiro(m, semente):
     baixa = np.asarray(Image.fromarray(baixa).resize((W, H), Image.BICUBIC), np.float32) / 255.0
     grad = np.linspace(1.0, 0.0, H, dtype=np.float32)[:, None]
     v = np.clip(0.5 * baixa + 0.5 * grad, 0, 1)
-    quente, branco = np.array(LETREIRO_QUENTE, np.float32), np.array(LETREIRO_BRANCO, np.float32)
+    quente = np.array(cor_do_estilo("cartao", "quente", LETREIRO_QUENTE), np.float32)
+    branco = np.array(cor_do_estilo("cartao", "claro", LETREIRO_BRANCO), np.float32)
     mk = np.asarray(m, np.float32)[..., None] / 255.0
     cor = (quente + (branco - quente) * v[..., None]) * mk
-    q = m.resize((W // 4, H // 4), Image.BILINEAR)
+    q = (m if brilho_de is None else brilho_de).resize((W // 4, H // 4), Image.BILINEAR)
     s1, s2 = 18 * LETREIRO_SS / 4, 60 * LETREIRO_SS / 4
     g1 = np.asarray(q.filter(ImageFilter.GaussianBlur(s1)).resize((W, H), Image.BILINEAR), np.float32)[..., None] / 255.0
     g2 = np.asarray(q.filter(ImageFilter.GaussianBlur(s2)).resize((W, H), Image.BILINEAR), np.float32)[..., None] / 255.0
-    brilho = np.array(LETREIRO_BRILHO, np.float32) * (0.55 * g1 + 0.30 * g2)
+    brilho = np.array(cor_do_estilo("cartao", "brilho", LETREIRO_BRILHO), np.float32) * (0.55 * g1 + 0.30 * g2)
     cor = 255 - (255 - cor) * (1 - brilho / 255.0)
     return Image.fromarray(np.clip(cor, 0, 255).astype(np.uint8), "RGB")
 
 
 def letreiro(linhas, tamanho, espaco, semente=7, entrelinha=1.45):
-    return _colorir_letreiro(_mascara_letreiro(linhas, tamanho, espaco, entrelinha), semente)
+    m, cores = _pecas_do_letreiro(linhas, tamanho, espaco, entrelinha)
+    if cores is None:
+        return _colorir_letreiro(m, semente)
+    from PIL import ImageChops
+    return _por_os_emojis(_colorir_letreiro(m, semente, ImageChops.lighter(m, cores.getchannel("A"))), cores)
 
 
-def _linhas_curtas(texto):
-    f = ImageFont.truetype(FONTE_TEXTO, LETREIRO_CURTO_TAMANHO)
-    passo = LETREIRO_ESPACO * LETREIRO_CURTO_TAMANHO
+def _por_os_emojis(let, cores):
+    """O letreiro com os emojis por cima, com as cores deles: `cores` vem com a cor multiplicada pelo alfa."""
+    import numpy as np
+    a = np.asarray(cores.getchannel("A"), np.float32)[..., None] / 255.0
+    rgb = np.asarray(cores.convert("RGB"), np.float32)
+    out = np.asarray(let, np.float32) * (1.0 - a) + rgb
+    return Image.fromarray(np.clip(out + 0.5, 0, 255).astype(np.uint8), "RGB")
+
+
+def _linhas_curtas(texto, tamanho=LETREIRO_CURTO_TAMANHO):
+    f = letra("cartao", tamanho)
+    passo = LETREIRO_ESPACO * tamanho
 
     def largura(ln):
-        return sum(f.getlength(c) for c in ln) + passo * (len(ln) - 1)
+        return largura_das_letras(ln, f, passo)
     linhas, atual = [], ""
     for p in texto.upper().split():
         tenta = (atual + " " + p).strip()
@@ -897,17 +1144,29 @@ def _linhas_curtas(texto):
 
 
 def letreiro_do_cartao(texto):
-    """O letreiro de um cartao com texto: curto (ate 3 palavras) espacado, frase como a de sempre."""
+    """O letreiro de um cartao com texto: curto (ate 3 palavras) espacado, frase como a de sempre.
+
+    Os dois corpos vem do cartao do estilo da Mesa (curto e frase, 2 de outubro). A frase desce
+    de 6 em 6 ate caber em 4 linhas e nunca abaixo de um minimo proporcional ao corpo pedido:
+    LETREIRO_FRASE_MIN para LETREIRO_FRASE_TAMANHO, que com 78 e o 44 de sempre.
+
+    OS EQUIVALENTES TROCAM-SE ANTES DE TUDO (2 de outubro), a semente das manchas incluida: um cartao
+    com o hifen U+2011 sai igual ao pixel ao do mesmo texto com o hifen de sempre. Sem nenhum, o texto
+    e o mesmo e a semente tambem. Um emoji vai a cores, ver _pecas_do_letreiro().
+    """
+    texto = texto_emojis.com_equivalentes(texto)
     semente = 7 + sum(ord(c) for c in texto) % 97
     if len(texto.split()) <= LETREIRO_CURTO_PALAVRAS:
-        return letreiro(_linhas_curtas(texto), LETREIRO_CURTO_TAMANHO, LETREIRO_ESPACO, semente)
+        curto = corpo_do_estilo("cartao", "curto", LETREIRO_CURTO_TAMANHO)
+        return letreiro(_linhas_curtas(texto, curto), curto, LETREIRO_ESPACO, semente)
     d = ImageDraw.Draw(Image.new("RGB", (8, 8)))
-    tamanho = 78
-    fonte = ImageFont.truetype(FONTE_TEXTO, tamanho)
+    tamanho = corpo_do_estilo("cartao", "frase", LETREIRO_FRASE_TAMANHO)
+    minimo = int(math.floor(tamanho * LETREIRO_FRASE_MIN / float(LETREIRO_FRASE_TAMANHO) + 0.5))
+    fonte = letra("cartao", tamanho)
     linhas = quebrar_paragrafos(texto, fonte, L - 360, d)
-    while len(linhas) > 4 and tamanho > 44:
+    while len(linhas) > 4 and tamanho > minimo:
         tamanho -= 6
-        fonte = ImageFont.truetype(FONTE_TEXTO, tamanho)
+        fonte = letra("cartao", tamanho)
         linhas = quebrar_paragrafos(texto, fonte, L - 360, d)
     return letreiro(linhas, tamanho, 0.0, semente, entrelinha=1.4)
 
@@ -1032,9 +1291,661 @@ OPCOES_TEXTO = {"modo": "foto", "tamanho": TEXTO_FOTO_TAMANHO, "tapadas": "some"
 OPCOES_TEXTO_VALORES = {"modo": ("foto", "legenda"), "tapadas": ("some", "fica")}
 
 
+# ---------------------------------------------------------- o estilo da Mesa, 2 de outubro
+# O Tiago, a 2 de outubro, para o dia com a Clara: a Mesa passa a deixar mudar o tipo e o tamanho
+# da letra, as cores dos cartoes, do contador e da fita de 1995, e as da intro ("A Clara pediu-me
+# para alterarmos o vermelho que esta na intro da Marvel, pois diz que parece demasiado Marvel").
+# A Mesa guarda isso no topo do estado, em est.estilo; o montar_da_mesa.py escreve
+# data/montagens/<nome>.estilo.json so com o que difere da omissao, e o render le-o no
+# carregar_montagem(), por onde passam o pai e cada fatia: o estilo chega a todas sem ninguem o
+# passar a mao, e todas desenham o mesmo filme.
+#
+#   legenda   a faixa de baixo e o texto dentro das fotos dos grupos: fonte, tamanho (o corpo a
+#             1080, que nos grupos e o de omissao quando o clip nao traz o seu tt), cor e fundo
+#             (a opacidade da faixa, de 0 a 1); e a posicao da faixa de baixo, {dx, dy,
+#             alinhamento} (3 de outubro), ver posicao_da_legenda()
+#   cartao    o letreiro dos cartoes: fonte, curto (ate 3 palavras), frase, e as cores quente,
+#             claro e brilho; o nome do bebe e o mesmo letreiro, com a mesma letra e cores
+#   nome      o tamanho do nome do bebe
+#   contador  as cores do contador e da fita de 1995, ver linha_tempo.CORES_DO_ESTILO, o
+#             continuo (true = a fita de 1995 numa so peca com o contador, ver
+#             linha_tempo._meses_numa_peca(); ausente = como esta) e a data_afastada (true = a
+#             data do nascimento mais longe do "SET" tambem na fita de duas pecas, ver
+#             linha_tempo.DATA_AFASTADA; ausente = como esta)
+#   intro    as cores (fundo, papel, tinta, letra), o tamanho e a letra (fonte) do letreiro da
+#             intro. Quem a faz e o intro_flipbook.py, e quem a troca na fanfarra e o
+#             montar_da_mesa.py (intro_da_paleta()): o render so le o nome do ficheiro no CSV,
+#             como sempre
+#
+# SEM ESTILO, NENHUM PIXEL MUDA. As omissoes sao as constantes de sempre, lidas delas e nao
+# copiadas (estilo_omissao()), e a letra de omissao abre pelo FONTE_TEXTO, como sempre abriu,
+# sem passar pelo data/fontes.json.
+#
+# A LETRA DA INTRO, desde 2 de outubro a noite. A decisao 084 fechou o letreiro em Impact porque o
+# efeito da intro e a fotografia aparecer por dentro das letras, e isso precisa de area: o Arial
+# Bold mostrava menos 58% da foto. O Tiago pediu para a poder mudar, e abriu-se nos termos dela: so
+# as letras de data/fontes_intro.json com oferecida true, as que mostram pelo menos dois tercos da
+# foto que o Impact mostra e separam as letras a 15 m no minimo da Mesa (132). A omissao continua a
+# ser o Impact, "como esta", e sem a chave (ou com "impact") nada muda, nem o nome do ficheiro. O
+# tamanho nunca abaixo de 132 e quer dizer sempre a altura do Impact a esse corpo. E o contador fica
+# em Arial Bold: o contrato so lhe da cores.
+FONTES_DA_INTRO = os.path.join(REPO, "data", "fontes_intro.json")
+INTRO_FONTE = "impact"
+# A caixa em que cada letra da intro foi medida: o nome em Impact a 288. Uma letra vai ao corpo
+# round(corpo do Impact x corpo_que_cabe / 288), sempre na caixa do Impact ao mesmo corpo.
+INTRO_CORPO_DA_CAIXA = 288
+FONTES_DA_MESA = os.path.join(REPO, "data", "fontes.json")
+LETRA_OMISSAO = "arial_bold"
+INTRO_FUNDO, INTRO_PAPEL, INTRO_TINTA = (150, 22, 28), (247, 233, 210), (46, 14, 16)   # os do intro_flipbook
+# A COR DAS LETRAS DO LETREIRO SOLIDO, acrescentada ao contrato a 2 de outubro: as paletas que a
+# Clara vai ver chamam-se pelas duas cores ("vinho e champanhe", "preto e dourado"), e a segunda e
+# a das letras. Sem ela as quatro tinham as letras brancas da Marvel. A omissao e o branco de
+# sempre do intro_flipbook.LETRA.
+INTRO_LETRA = (252, 250, 250)
+# O corpo do letreiro: nunca abaixo de 132 (decisao 084) e nunca acima de 309, o maior que deixa
+# o nome dentro de 93% da largura (intro_flipbook.TAMANHO_MAX, medido a 2 de outubro). O contrato
+# dizia ate 400, e o Impact a 400 da 2308 px num quadro de 1920: o nome cortado nas duas pontas.
+INTRO_TAMANHO, INTRO_TAMANHO_MIN, INTRO_TAMANHO_MAX = 288, 132, 309
+# Os corpos que se aceitam, a 1080. Fora disto fica a omissao, com aviso, como no tt dos grupos. O
+# da legenda e o do TEXTO_FOTO_TAMANHOS, porque o mesmo numero serve a faixa e o texto das fotos.
+ESTILO_CORPOS = {("legenda", "tamanho"): TEXTO_FOTO_TAMANHOS, ("cartao", "curto"): (60, 160),
+                 ("cartao", "frase"): (44, 120), ("nome", "tamanho"): (60, 200),
+                 ("intro", "tamanho"): (INTRO_TAMANHO_MIN, INTRO_TAMANHO_MAX)}
+# As escolhas do contador que nao sao cores, true ou "como esta" (2 de outubro): a fita de 1995
+# numa so peca, e a data do nascimento afastada do "SET" na fita de duas pecas.
+ESCOLHAS_DO_CONTADOR = ("continuo", "data_afastada")
+_ESTILO = {}            # o estilo da montagem que se esta a fazer, so com o que difere
+_LETRAS = {}              # (id da letra, corpo) -> ImageFont
+_ENTRADAS = None          # as letras de data/fontes.json, lidas uma vez por estilo
+_LETRAS_AVISADAS = set()
+
+
+def cor_rgb(valor):
+    """"#E2B88C" (ou "#ebc", ou sem o cardinal) -> (226, 184, 140); None se nao for uma cor."""
+    if not isinstance(valor, str):
+        return None
+    m = re.fullmatch(r"\s*#?([0-9a-fA-F]{6}|[0-9a-fA-F]{3})\s*", valor)
+    if not m:
+        return None
+    h = m.group(1)
+    if len(h) == 3:
+        h = "".join(c * 2 for c in h)
+    return tuple(int(h[i:i + 2], 16) for i in (0, 2, 4))
+
+
+def cor_hex(rgb):
+    return "#%02X%02X%02X" % tuple(int(v) for v in rgb[:3])
+
+
+def estilo_omissao():
+    """O estilo de hoje, {parte: {chave: valor}}, tirado das constantes do codigo.
+
+    E a tabela do contrato de 2 de outubro lida do codigo e nao copiada: se o contrato e o
+    codigo discordarem, vale o codigo. O fundo da legenda e a fracao com tres casas do
+    LEGENDA_ALFA, 0,647 para 165.
+    """
+    return {
+        "legenda": {"fonte": LETRA_OMISSAO, "tamanho": LEGENDA_TAMANHO, "cor": cor_hex(LEGENDA_COR),
+                    "fundo": round(LEGENDA_ALFA / 255.0, 3)},
+        "cartao": {"fonte": LETRA_OMISSAO, "curto": LETREIRO_CURTO_TAMANHO,
+                   "frase": LETREIRO_FRASE_TAMANHO, "quente": cor_hex(LETREIRO_QUENTE),
+                   "claro": cor_hex(LETREIRO_BRANCO), "brilho": cor_hex(LETREIRO_BRILHO)},
+        "nome": {"tamanho": NOME_TAMANHO},
+        "contador": {chave: cor_hex(linha_tempo._CORES_DE_SEMPRE[const])
+                     for chave, const in linha_tempo.CORES_DO_ESTILO.items()},
+        "intro": {"fundo": cor_hex(INTRO_FUNDO), "papel": cor_hex(INTRO_PAPEL),
+                  "tinta": cor_hex(INTRO_TINTA), "letra": cor_hex(INTRO_LETRA),
+                  "tamanho": INTRO_TAMANHO, "fonte": INTRO_FONTE},
+    }
+
+
+def letras_da_mesa():
+    """{id: entrada} das letras de data/fontes.json; {} se o ficheiro nao estiver ou nao se ler."""
+    try:
+        with open(FONTES_DA_MESA, encoding="utf-8") as fh:
+            dados = json.load(fh)
+    except (OSError, ValueError):
+        return {}
+    return {e["id"]: e for e in (dados.get("fontes") or [])
+            if isinstance(e, dict) and isinstance(e.get("id"), str)}
+
+
+def letras_da_intro(caminho=None):
+    """{id: entrada} das letras OFERECIDAS para o letreiro da intro, de data/fontes_intro.json.
+
+    So as que tem oferecida true: as outras estao no ficheiro para se ver porque ficaram de fora,
+    e nenhuma delas pode chegar ao filme, nem escrita a mao no estado. {} se o ficheiro nao estiver
+    ou nao se ler, e entao so ha o Impact.
+    """
+    try:
+        with open(caminho or FONTES_DA_INTRO, encoding="utf-8") as fh:
+            dados = json.load(fh)
+    except (OSError, ValueError):
+        return {}
+    return {e["id"]: e for e in (dados.get("letras") or [])
+            if isinstance(e, dict) and e.get("oferecida") is True and isinstance(e.get("id"), str)}
+
+
+def abrir_letra_da_intro(entrada, corpo):
+    """A letra de uma entrada de data/fontes_intro.json no corpo pedido. Levanta OSError se nao abre.
+
+    O FICHEIRO, O INDICE E OS EIXOS, como foi medida. A Bahnschrift Condensed e uma letra variavel
+    aberta no peso 700 e na largura 75: o abrir_letra() so poe o peso, e ela saia na largura 100,
+    que e outra letra. Os eixos vao todos, pela ordem do fvar, que e a ordem em que a medida os
+    guardou; um ficheiro com outros eixos (uma versao nova da letra) nao abre, em vez de abrir
+    noutra forma sem ninguem dar por isso.
+    """
+    try:
+        f = ImageFont.truetype(entrada["ficheiro"], corpo, index=int(entrada.get("indice") or 0))
+        eixos = entrada.get("eixos")
+        if eixos:
+            do_ficheiro = f.get_variation_axes()
+            if len(do_ficheiro) != len(eixos):
+                raise OSError("tem %d eixos e a medida %d" % (len(do_ficheiro), len(eixos)))
+            for eixo, v in zip(do_ficheiro, eixos):
+                if not eixo["minimum"] <= float(v) <= eixo["maximum"]:
+                    raise OSError("o eixo %s vai de %s a %s e a medida pede %s"
+                                  % (eixo.get("name"), eixo["minimum"], eixo["maximum"], v))
+            f.set_variation_by_axes([float(v) for v in eixos])
+        return f
+    except OSError:
+        raise
+    except (ValueError, KeyError, TypeError, AttributeError) as erro:
+        raise OSError(str(erro))
+
+
+def letra_da_intro(fonte, avisos=None, letras=None):
+    """A entrada da letra pedida para o letreiro da intro, ou None, que e o Impact de sempre.
+
+    Sem letra, ou com "impact", e None sem aviso. Um id que nao se conhece, que nao e oferecido
+    ou cujo ficheiro nao abre da None COM AVISO, e entao o Impact vale para tudo: o desenho, o
+    resumo e o nome do ficheiro. Nunca uma letra a meio: ou a pedida inteira, ou o Impact.
+    """
+    avisos = [] if avisos is None else avisos
+    if fonte is None or (isinstance(fonte, str) and fonte.strip() in ("", INTRO_FONTE)):
+        return None
+    letras = letras_da_intro() if letras is None else letras
+    e = letras.get(fonte.strip()) if isinstance(fonte, str) else None
+    if e is None:
+        avisos.append("estilo.intro.fonte %r nao e uma das letras oferecidas para a intro "
+                      "(data/fontes_intro.json): fica o Impact" % (fonte,))
+        return None
+    try:
+        abrir_letra_da_intro(e, 40)
+    except OSError as erro:
+        avisos.append("estilo.intro.fonte %r nao abre (%s): fica o Impact" % (fonte, erro))
+        return None
+    return e
+
+
+def corpo_da_letra_da_intro(entrada, corpo_impact):
+    """O corpo da letra da intro que poe o nome na caixa do nome em Impact a corpo_impact.
+
+    A medida guardou o corpo_que_cabe a 288; a outro corpo do Impact, a letra vai a proporcao,
+    arredondada pelo round() do Python (as metades para o par). A Mesa, se fizer a mesma conta,
+    tem de arredondar igual.
+    """
+    return max(1, int(round(corpo_impact * float(entrada["corpo_que_cabe"]) / INTRO_CORPO_DA_CAIXA)))
+
+
+def _corpo_inteiro(v):
+    """Um corpo como inteiro: 56, 56.0 e "56" valem; o booleano e o que tem decimais nao."""
+    if isinstance(v, bool):
+        return None
+    if isinstance(v, str):
+        v = v.strip()
+        return int(v) if v.isdigit() else None
+    if isinstance(v, float):
+        return int(v) if v.is_integer() else None
+    return v if isinstance(v, int) else None
+
+
+def _valor_do_estilo(parte, chave, v, letras, avisos):
+    """Um valor do estilo limpo ("#RRGGBB", inteiro, id, fracao), ou None com aviso se nao presta."""
+    omissao = estilo_omissao()[parte][chave]
+    if chave == "fonte":
+        if isinstance(v, str) and v.strip() in letras:
+            return v.strip()
+        avisos.append("estilo.%s.fonte %r nao esta em data/fontes.json, fica o Arial Bold" % (parte, v))
+        return None
+    if (parte, chave) in ESTILO_CORPOS:
+        n = _corpo_inteiro(v)
+        baixo, alto = ESTILO_CORPOS[(parte, chave)]
+        if n is None or not baixo <= n <= alto:
+            avisos.append("estilo.%s.%s %r tem de ser inteiro entre %d e %d, fica %d"
+                          % (parte, chave, v, baixo, alto, omissao))
+            return None
+        return n
+    if (parte, chave) == ("legenda", "fundo"):
+        if isinstance(v, bool) or not isinstance(v, (int, float)) or not 0.0 <= v <= 1.0:
+            avisos.append("estilo.legenda.fundo %r tem de ser um numero de 0 a 1, fica %s" % (v, omissao))
+            return None
+        return round(float(v), 3)
+    rgb = cor_rgb(v)
+    if rgb is None:
+        avisos.append("estilo.%s.%s %r nao e uma cor #RRGGBB, fica %s" % (parte, chave, v, omissao))
+        return None
+    return cor_hex(rgb)
+
+
+def _posicao_do_estilo(v, avisos):
+    """O est.estilo.legenda.posicao limpo, so com o que difere de {dx: 0, dy: 0, "centro"}; {} sem nada.
+
+    Um dx ou dy que nao e inteiro, ou fora de POSICAO_DX e POSICAO_DY, fica 0 com aviso, como um
+    corpo fora dos limites; um alinhamento que nao existe fica "centro", com aviso.
+    """
+    if v in (None, "") or v == {}:
+        return {}
+    if not isinstance(v, dict):
+        avisos.append("estilo.legenda.posicao nao e um objeto {dx, dy, alinhamento}, fica como esta: %r" % (v,))
+        return {}
+    limpo = {}
+    for chave, (baixo, alto) in (("dx", POSICAO_DX), ("dy", POSICAO_DY)):
+        bruto = v.get(chave)
+        if bruto in (None, ""):
+            continue
+        n = _inteiro_com_sinal(bruto)
+        if n is None or not baixo <= n <= alto:
+            avisos.append("estilo.legenda.posicao.%s %r tem de ser inteiro entre %d e %d, fica 0"
+                          % (chave, bruto, baixo, alto))
+            continue
+        if n:
+            limpo[chave] = n
+    alinhamento = v.get("alinhamento")
+    if alinhamento not in (None, ""):
+        if alinhamento in POSICAO_ALINHAMENTOS:
+            if alinhamento != POSICAO_ALINHAMENTOS[0]:
+                limpo["alinhamento"] = alinhamento
+        else:
+            avisos.append("estilo.legenda.posicao.alinhamento %r nao existe (%s), fica centro"
+                          % (alinhamento, ", ".join(POSICAO_ALINHAMENTOS)))
+    for chave in v:
+        if chave not in ("dx", "dy", "alinhamento"):
+            avisos.append("estilo.legenda.posicao com a chave %r, que nao existe, ignorada" % (chave,))
+    return limpo
+
+
+def normalizar_estilo(bruto, avisos=None):
+    """O est.estilo da Mesa, ou o estilo.json, -> so o que difere da omissao, ja limpo.
+
+    Cores em "#RRGGBB" maiusculas, corpos inteiros, a letra pelo id de data/fontes.json e o
+    fundo da legenda em fracao com tres casas. O que nao presta fica na omissao COM AVISO, como
+    nas opcoes dos textos: uma cor mal escrita que caisse em silencio era o filme a sair com
+    outra cor sem ninguem saber porque. Um valor igual ao de omissao nao se guarda (o fundo
+    compara-se no alfa que vai ao ecra, 165), e e isso que faz um estilo vazio e um estilo todo
+    na omissao darem o filme de sempre. O montar_da_mesa.py e o render passam os dois por aqui:
+    um estilo.json escrito a mao tem a mesma guarda que o da Mesa.
+    """
+    avisos = [] if avisos is None else avisos
+    if bruto in (None, "") or bruto == {}:
+        return {}
+    if not isinstance(bruto, dict):
+        avisos.append("o estilo nao e um objeto, fica o de sempre: %r" % (bruto,))
+        return {}
+    omissao = estilo_omissao()
+    letras = None
+    saida = {}
+    for parte, valores in bruto.items():
+        if parte not in omissao:
+            avisos.append("estilo com a parte %r, que nao existe, ignorada" % (parte,))
+            continue
+        if valores in (None, ""):
+            continue
+        if not isinstance(valores, dict):
+            avisos.append("estilo.%s nao e um objeto, fica o de sempre" % parte)
+            continue
+        for chave, v in valores.items():
+            if parte == "contador" and chave in ESCOLHAS_DO_CONTADOR:
+                # O CONTADOR NUMA SO PECA (contrato 1b, 2 de outubro): true desenha a fita de 1995
+                # como o contador, ver linha_tempo._meses_numa_peca(). E A DATA AFASTADA, do mesmo
+                # dia: true poe a data do nascimento mais longe do "SET" na fita de duas pecas, ver
+                # linha_tempo.DATA_AFASTADA. False e ausente sao "como esta", e por isso so o true
+                # se guarda. Ficam fora do estilo_omissao(), que e so de cores, como a Mesa o compara
+                # (testes_mesa_1002, teste_estilo_da_mesa_igual_ao_render).
+                if v is True:
+                    saida.setdefault(parte, {})[chave] = True
+                elif v is not False and v not in (None, ""):
+                    avisos.append("estilo.contador.%s %r tem de ser true ou false, fica como esta" % (chave, v))
+                continue
+            if (parte, chave) == ("legenda", "posicao"):
+                # A POSICAO DAS LEGENDAS (contrato de 3 de outubro, ponto 3), fora do estilo_omissao()
+                # como as escolhas do contador: so o que difere de {0, 0, "centro"} se guarda.
+                limpo = _posicao_do_estilo(v, avisos)
+                if limpo:
+                    saida.setdefault(parte, {})[chave] = limpo
+                continue
+            if chave not in omissao[parte]:
+                avisos.append("estilo.%s com a chave %r, que nao existe, ignorada" % (parte, chave))
+                continue
+            if v is None or v == "":
+                continue
+            if (parte, chave) == ("intro", "fonte"):
+                # A LETRA DA INTRO (2 de outubro, a noite) nao e uma das de data/fontes.json: e uma das
+                # oferecidas em data/fontes_intro.json. O Impact e a omissao e nao se guarda; o que nao
+                # vale fica no Impact, com aviso (letra_da_intro).
+                e = letra_da_intro(v, avisos)
+                if e is not None and e["id"] != INTRO_FONTE:
+                    saida.setdefault(parte, {})[chave] = e["id"]
+                continue
+            if chave == "fonte" and letras is None:
+                letras = letras_da_mesa()
+                letras.setdefault(LETRA_OMISSAO, {})
+            limpo = _valor_do_estilo(parte, chave, v, letras, avisos)
+            if limpo is None:
+                continue
+            if (parte, chave) == ("legenda", "fundo"):
+                igual = alfa_do_fundo(limpo) == LEGENDA_ALFA
+            else:
+                igual = limpo == omissao[parte][chave]
+            if not igual:
+                saida.setdefault(parte, {})[chave] = limpo
+    return saida
+
+
+def ler_estilo(nome, pasta=None):
+    """O estilo.json da montagem `nome`, tal como esta no ficheiro; {} se nao houver."""
+    caminho = os.path.join(pasta or MONTAGENS, nome + ".estilo.json")
+    if not os.path.exists(caminho):
+        return {}
+    try:
+        with open(caminho, encoding="utf-8") as fh:
+            return json.load(fh)
+    except (OSError, ValueError) as erro:
+        print("  AVISO: o estilo %s nao se le (%s), fica o de sempre" % (caminho, erro))
+        return {}
+
+
+def aplicar_estilo(estilo=None, avisos=None):
+    """Poe um estilo a valer neste processo e devolve-o limpo; sem nada, volta o de sempre.
+
+    Limpa-o outra vez com normalizar_estilo(), esquece as letras abertas com o estilo de antes
+    e poe as cores do contador no linha_tempo. Os avisos vao para a lista `avisos`; sem lista,
+    imprimem-se.
+    """
+    global _ESTILO, _ENTRADAS
+    proprios = [] if avisos is None else avisos
+    _ESTILO = normalizar_estilo(estilo, proprios)
+    _ENTRADAS = None
+    _LETRAS.clear()
+    _FONTES.clear()
+    _LETRAS_AVISADAS.clear()
+    contador = _ESTILO.get("contador", {})
+    linha_tempo.aplicar_cores({k: cor_rgb(v) for k, v in contador.items() if k not in ESCOLHAS_DO_CONTADOR},
+                              continuo=contador.get("continuo") is True,
+                              data_afastada=contador.get("data_afastada") is True)
+    if avisos is None:
+        for a in proprios:
+            print("  AVISO: %s" % a)
+    return _ESTILO
+
+
+def estilo_ativo():
+    """O estilo que esta a valer, so com o que difere da omissao."""
+    return json.loads(json.dumps(_ESTILO))
+
+
+def corpo_do_estilo(parte, chave, omissao):
+    return _ESTILO.get(parte, {}).get(chave, omissao)
+
+
+def cor_do_estilo(parte, chave, omissao):
+    v = _ESTILO.get(parte, {}).get(chave)
+    return omissao if v is None else cor_rgb(v)
+
+
+def legenda_tamanho():
+    """O corpo da legenda: o do estilo, ou o LEGENDA_TAMANHO."""
+    return corpo_do_estilo("legenda", "tamanho", LEGENDA_TAMANHO)
+
+
+def texto_foto_tamanho():
+    """O corpo do texto das fotos de um grupo sem tt: o da legenda do estilo, ou o TEXTO_FOTO_TAMANHO."""
+    return corpo_do_estilo("legenda", "tamanho", TEXTO_FOTO_TAMANHO)
+
+
+def legenda_cor():
+    return cor_do_estilo("legenda", "cor", LEGENDA_COR)
+
+
+def alfa_do_fundo(f):
+    """O fundo da legenda do estilo (0 a 1) no alfa que vai ao ecra, de 0 a 255.
+
+    ARREDONDA COMO A MESA, metade para cima (o Math.round do editor_base.html), e nao como o round
+    do Python, que manda as metades para o par. A barra da Mesa oferece fundos com meio exato: 0,3
+    da 76,5 e 0,7 da 178,5, e o filme saia um nivel abaixo do que a Mesa desenhava e dizia "como o
+    render" (revisao de 2 de outubro). No 0,647 de sempre os dois dao 165.
+    """
+    return int(math.floor(float(f) * 255 + 0.5))
+
+
+def fundo_da_legenda(omissao):
+    """O alfa da faixa escura (a de baixo e a das fotos): o do estilo, ou o de sempre."""
+    f = _ESTILO.get("legenda", {}).get("fundo")
+    return omissao if f is None else alfa_do_fundo(f)
+
+
+def _avisar_letra(ident, porque):
+    if ident not in _LETRAS_AVISADAS:
+        _LETRAS_AVISADAS.add(ident)
+        print("  AVISO: a letra %s nao abre (%s): fica o Arial Bold" % (ident, porque))
+
+
+def abrir_letra(ident, corpo, entradas=None, avisar=True):
+    """A letra `ident` de data/fontes.json no corpo pedido, ou None se nao abre.
+
+    NAS LETRAS VARIAVEIS O PESO PE-SE PELO NOME DO EIXO, e os outros eixos ficam na omissao do
+    ficheiro, que e o que a Mesa mostra com a letra pedida a Google so pelo peso. Sem isto o
+    ficheiro abre no seu peso de omissao, e esse nao e o pedido: o Montserrat e o League Spartan
+    abrem no Thin (100), e o Fraunces no Black (900). Medido a 2 de outubro, o eixo a 700 da a
+    mesma tinta que a instancia "Bold" do proprio ficheiro, ver teste_letra_variavel_no_peso_pedido.
+    """
+    global _ENTRADAS
+    if entradas is None:
+        if _ENTRADAS is None:
+            _ENTRADAS = letras_da_mesa()
+        entradas = _ENTRADAS
+    e = entradas.get(ident)
+    try:
+        if not e or not e.get("ficheiro"):
+            raise OSError("nao esta em data/fontes.json")
+        f = ImageFont.truetype(e["ficheiro"], corpo)
+        peso = e.get("eixo_peso")
+        if peso:
+            valores, achou = [], False
+            for eixo in f.get_variation_axes():
+                nome = eixo.get("name")
+                nome = nome.decode("utf-8", "replace") if isinstance(nome, bytes) else str(nome)
+                if nome.strip().lower() in ("weight", "wght"):
+                    valores.append(max(eixo["minimum"], min(eixo["maximum"], peso)))
+                    achou = True
+                else:
+                    valores.append(eixo["default"])
+            if not achou:
+                raise OSError("nao tem eixo de peso")
+            f.set_variation_by_axes(valores)
+        return f
+    except (OSError, ValueError, KeyError, TypeError, AttributeError) as erro:
+        if avisar:
+            _avisar_letra(ident, erro)
+        return None
+
+
+def letra(parte, corpo):
+    """A letra da `parte` do estilo ("legenda" ou "cartao") no corpo pedido, como ImageFont.
+
+    Sem estilo e o FONTE_TEXTO, aberto como sempre foi. Uma letra que nao abre cai no Arial
+    Bold com um aviso, uma vez por processo, e o render continua: a regra do imagem_da_marca(),
+    uma letra em falta nao para um render de quinze minutos a meio.
+    """
+    ident = _ESTILO.get(parte, {}).get("fonte")
+    chave = (ident, corpo)
+    if chave not in _LETRAS:
+        f = abrir_letra(ident, corpo) if ident else None
+        _LETRAS[chave] = f if f is not None else ImageFont.truetype(FONTE_TEXTO, corpo)
+    return _LETRAS[chave]
+
+
+# OS CARACTERES QUE A LETRA NAO TEM (corretor, 2 de outubro). A Pillow desenha um caracter que a
+# letra nao tem com o glifo de falta (.notdef), que no Arial Bold e uma caixa vazia, e nao se
+# queixa. O browser da Mesa mostra o mesmo texto com outra letra, e por isso o filme saia diferente
+# do que a Mesa mostra, sem aviso: na leitura 63 o cargo 3 dos creditos, "Audio-Visual Operations
+# Maestro", traz o hifen nao separavel (U+2011), e saia "Audio" + caixa + "Visual". O Arial Bold
+# tambem nao tem o hifen U+2010, os emojis nem os invisiveis U+2060 e U+FEFF.
+# Um caracter falta quando sai igual, ao pixel, ao de um nao-caracter (U+FFFF), que nenhuma letra
+# pode ter. A Mesa tem a sua regra (forasDaLetra, no Validar), para os textos dos clips.
+#
+# DESDE A TARDE DE 2 DE OUTUBRO OS EMOJIS SAEM A CORES (texto_emojis), e os equivalentes valem em todos
+# os textos do filme. Estas quatro ficam aqui com os nomes de sempre, e sao as de la.
+NAO_CARACTER = texto_emojis.NAO_CARACTER
+# OS QUE TEM UM IGUAL A VISTA. O hifen nao separavel e o hifen U+2010 desenham-se como o hifen de
+# sempre, que e o que se ve na Mesa; os invisiveis tiram-se. Nao muda o texto dele: e o mesmo
+# sinal, desenhado com o glifo que a letra tem.
+EQUIVALENTES = texto_emojis.EQUIVALENTES
+
+
+def caracteres_sem_letra(texto, fonte):
+    """Os caracteres de `texto` que o filme nao desenha: nem a `fonte` (um ImageFont) nem a letra de
+    emojis os tem. Pela ordem e sem repetir; no filme saem como uma caixa vazia.
+
+    DESDE A TARDE DE 2 DE OUTUBRO conta so isso. Um emoji que a letra de emojis tem sai a cores, os
+    EQUIVALENTES saem como o seu igual, e os seletores, o ZWJ e as etiquetas nao se desenham: nenhum
+    deles e caixa vazia. Os espacos nao contam (um espaco e vazio em qualquer letra, como pode ser o
+    glifo de falta). As sequencias que esta Pillow nao junta dizem-se a parte, texto_emojis.sequencias().
+    """
+    return texto_emojis.sem_letra(texto, fonte)
+
+
+def com_equivalentes(texto):
+    """O texto com os EQUIVALENTES trocados: o mesmo texto quando nao tem nenhum."""
+    return texto_emojis.com_equivalentes(texto)
+
+
+def nome_do_caracter(c):
+    """'U+2011 (NON-BREAKING HYPHEN)': para os avisos, que um caracter invisivel nao se le."""
+    return texto_emojis.nome_do_caracter(c)
+
+
+def avisos_dos_caracteres(onde, texto, fonte):
+    """[aviso] de um texto do filme: os caracteres que saem numa caixa vazia (caracteres_sem_letra) e
+    os emojis de varios caracteres que esta Pillow nao junta (sem o raqm). Nao muda nada."""
+    return texto_emojis.avisos_do_texto(onde, texto, fonte)
+
+
+def avisos_dos_textos(clips):
+    """[aviso] dos textos dos clips que o filme nao desenha como estao escritos. Nao muda nada.
+
+    Os caracteres que nem a letra nem a de emojis tem (caixa vazia), os emojis de varios caracteres
+    que esta Pillow nao junta (texto_emojis.sequencias) e os emojis escuros, que quase nao se veem no
+    preto (texto_emojis.emojis_escuros, corretor de 2 de outubro). `clips` sao linhas do CSV da montagem, ou as
+    do montar_da_mesa.py, com tipo, ordem, texto_ecra, textos_fotos e destaque. Cada texto mede-se na
+    letra onde vai: os cartoes e os nomes na do cartao, a fita e os contadores no Arial Bold da
+    linha_tempo, o resto na da legenda. Cada aviso diz o clip ("clip N"), que o montar renumera.
+    """
+    avisos = []
+    fontes = {}
+    for c in clips:
+        tipo = c.get("tipo") or ""
+        textos = []
+        t = c.get("texto_ecra") or ""
+        if t.strip():
+            textos.append(("o texto do clip %s" % c.get("ordem"), t))
+        for k, x in enumerate(ler_textos_fotos(c.get("textos_fotos") or "") or []):
+            if x:
+                textos.append(("o texto da foto %d do clip %s" % (k + 1, c.get("ordem")), x))
+        zd = c.get("destaque") or ""
+        if isinstance(zd, str) and zd.strip():
+            try:
+                zd = json.loads(zd)
+            except ValueError:
+                zd = None
+        if isinstance(zd, dict) and isinstance(zd.get("texto"), str) and zd["texto"].strip():
+            textos.append(("o nome do destaque do clip %s" % c.get("ordem"), zd["texto"]))
+        if not textos:
+            continue
+        qual = "cartao" if tipo in ("cartao", "nome") else "fita" if tipo in ("contador", "marcos") else "legenda"
+        if qual not in fontes:
+            fontes[qual] = (letra("cartao", LETREIRO_CURTO_TAMANHO) if qual == "cartao" else
+                            ImageFont.truetype(linha_tempo.FONTE, linha_tempo.CORPO_ROTULO) if qual == "fita" else
+                            letra("legenda", legenda_tamanho()))
+        for onde, x in textos:
+            avisos.extend(texto_emojis.avisos_do_texto(onde, x, fontes[qual]))
+    return avisos
+
+
+# Os clips que tem a legenda de baixo. Os cartoes, o nome do bebe, o contador e a fita escrevem o texto
+# de outra maneira, e a posicao e a legenda numa linha nao lhes tocam.
+TIPOS_COM_LEGENDA = ("foto", "video", "lado", "colagem", "pilha")
+
+
+def legendas_do_clip(c):
+    """[(texto, tamanho)] do que um clip mostra na legenda de baixo, com o tamanho de cada (None = o do estilo).
+
+    A legenda do clip; e, na opcao "na legenda de baixo" dos grupos, o texto de cada foto (o do grupo
+    nos vazios), no tamanho do grupo. No mergulho so a legenda do clip, como no preparar().
+    """
+    if (c.get("tipo") or "") not in TIPOS_COM_LEGENDA:
+        return []
+    texto = (c.get("texto_ecra") or "").strip()
+    textos = ler_textos_fotos(c.get("textos_fotos") or "") or []
+    mergulho = c.get("tipo") == "colagem" and (c.get("tratamento") or "").strip() == MERGULHO_ESTILO
+    if c.get("tipo") in ("lado", "colagem", "pilha") and textos and any(textos) and not mergulho:
+        opcoes = ler_textos_opcoes(c.get("textos_opcoes") or "")
+        if opcoes["modo"] == "legenda":
+            return [(t, opcoes["tamanho"]) for t in dict.fromkeys(x or texto for x in textos) if t]
+    return [(texto, None)] if texto else []
+
+
+def avisos_das_legendas(clips):
+    """[aviso] da legenda numa linha que nao cabe e da posicao que nao chega onde foi pedida. Nao muda nada.
+
+    Contrato de 3 de outubro, pontos 2 e 3:
+      - com clip.x1, uma legenda que nao cabe numa linha na largura util parte-se como hoje, e diz-se
+        quanto precisa e quanto ha (legenda_numa_linha());
+      - a posicao de todas mais a do clip fora de POSICAO_DX e POSICAO_DY fica no limite;
+      - o bloco das linhas nunca sai da largura util, e um dx que o levava para la encosta a margem.
+    `clips` sao linhas do CSV, com tipo, ordem, texto_ecra, textos_fotos, textos_opcoes e opcoes_clip.
+    Cada aviso diz o clip ("clip N"), que o montar renumera para o numero da Mesa.
+    """
+    avisos = []
+    pos = _ESTILO.get("legenda", {}).get("posicao") or {}
+    for c in clips:
+        mostrados = legendas_do_clip(c)
+        if not mostrados:
+            continue
+        o = ler_opcoes_clip(c.get(COLUNA_OPCOES_CLIP))
+        uma = bool(o and o["x1"])
+        quem = "a legenda do clip %s" % c.get("ordem")
+        if uma:
+            for t, tam in mostrados:
+                cabe, precisa, ha = legenda_numa_linha(t, tam)
+                if not cabe:
+                    avisos.append("%s nao cabe numa linha: precisa de %d px e ha %d px; parte-se como hoje (%s)"
+                                  % (quem, precisa, ha, t))
+        if o and o["lp"] != (0, 0):
+            pedido = (pos.get("dx", 0) + o["lp"][0], pos.get("dy", 0) + o["lp"][1])
+            fica = posicao_da_legenda(o)[:2]
+            if pedido != fica:
+                avisos.append("%s pede a posicao dx %d, dy %d (a de todas mais a do clip), fora de %d a %d e de "
+                              "%d a %d: fica dx %d, dy %d"
+                              % (quem, pedido[0], pedido[1], POSICAO_DX[0], POSICAO_DX[1], POSICAO_DY[0],
+                                 POSICAO_DY[1], fica[0], fica[1]))
+        dx, _dy, alinhamento = posicao_da_legenda(o)
+        if dx == 0:
+            continue
+        for t, tam in mostrados:
+            _tam, linhas, fonte = linhas_legenda(t, tam, uma_linha=uma)
+            d = ImageDraw.Draw(Image.new("L", (1, 1)))
+            anda = dx_efetivo([texto_emojis.caixa(x, fonte, desenho=d)[2] for x in linhas], dx, alinhamento)
+            if abs(anda - dx) >= 1:
+                avisos.append("%s encosta a margem: anda %d px dos %d pedidos, para nao sair da largura util (%s)"
+                              % (quem, int(round(anda)), dx, t))
+                break
+    return avisos
+
+
 def _fonte(tamanho):
     if tamanho not in _FONTES:
-        _FONTES[tamanho] = ImageFont.truetype(FONTE_TEXTO, tamanho)
+        _FONTES[tamanho] = letra("legenda", tamanho)
     return _FONTES[tamanho]
 
 
@@ -1051,6 +1962,9 @@ def ler_textos_opcoes(valor):
     em silencio na omissao era um texto a sair de outra maneira sem ninguem saber porque.
     """
     opcoes = dict(OPCOES_TEXTO)
+    # O TAMANHO DE OMISSAO E O DA LEGENDA DO ESTILO DA MESA (2 de outubro): um grupo sem tt
+    # escreve com a letra da legenda. Sem estilo e o TEXTO_FOTO_TAMANHO de sempre.
+    opcoes["tamanho"] = texto_foto_tamanho()
     if valor is None or valor == "":
         return opcoes
     lido = valor
@@ -1077,7 +1991,7 @@ def ler_textos_opcoes(valor):
                 opcoes["tamanho"] = int(v)
             else:
                 print("  AVISO: textos_opcoes com tamanho %r, tem de ser inteiro entre %d e %d, fica %d"
-                      % (v, TEXTO_FOTO_TAMANHOS[0], TEXTO_FOTO_TAMANHOS[1], TEXTO_FOTO_TAMANHO))
+                      % (v, TEXTO_FOTO_TAMANHOS[0], TEXTO_FOTO_TAMANHOS[1], opcoes["tamanho"]))
         else:
             print("  AVISO: textos_opcoes com a chave %r desconhecida, ignorada" % (chave,))
     return opcoes
@@ -1131,7 +2045,7 @@ def linhas_texto_foto(texto, largura_px, tamanho=None):
     avisar. Uma palavra sozinha mais larga do que a foto tambem e cortada: nada se escreve
     fora da fotografia.
     """
-    tamanho = TEXTO_FOTO_TAMANHO if tamanho is None else tamanho
+    tamanho = texto_foto_tamanho() if tamanho is None else tamanho
     grande, pequeno = no_ecra(tamanho), no_ecra(minimo_texto_foto(tamanho))
     texto = (texto or "").strip()
     if not texto:
@@ -1151,7 +2065,7 @@ def linhas_texto_foto(texto, largura_px, tamanho=None):
         fonte = _fonte(tamanho)
         linhas = quebrar_paragrafos(texto, fonte, cabe, d)
         if (len(linhas) <= TEXTO_FOTO_LINHAS
-                and all(d.textbbox((0, 0), l, font=fonte)[2] <= cabe for l in linhas)):
+                and all(texto_emojis.caixa(l, fonte, desenho=d)[2] <= cabe for l in linhas)):
             return tamanho, linhas, False
         if tamanho <= pequeno:
             break
@@ -1160,9 +2074,9 @@ def linhas_texto_foto(texto, largura_px, tamanho=None):
         linhas = linhas[:TEXTO_FOTO_LINHAS - 1] + [" ".join(linhas[TEXTO_FOTO_LINHAS - 1:])]
     cortado = False
     for i, linha in enumerate(linhas):
-        if d.textbbox((0, 0), linha, font=fonte)[2] <= cabe:
+        if texto_emojis.caixa(linha, fonte, desenho=d)[2] <= cabe:
             continue
-        while linha and d.textbbox((0, 0), linha.rstrip() + RETICENCIAS, font=fonte)[2] > cabe:
+        while linha and texto_emojis.caixa(linha.rstrip() + RETICENCIAS, fonte, desenho=d)[2] > cabe:
             linha = linha[:-1]
         linhas[i] = linha.rstrip() + RETICENCIAS
         cortado = True
@@ -1194,11 +2108,13 @@ def capa_texto_foto(texto, largura, largura_ecra=None, pisa=0.0, tamanho=None):
     alt_linha = int(round(tamanho * s * TEXTO_FOTO_ENTRELINHA))
     almofada = int(round(tamanho * s * TEXTO_FOTO_ALMOFADA))
     capa = Image.new("RGBA", (largura, len(linhas) * alt_linha + 2 * almofada),
-                     (0, 0, 0, TEXTO_FOTO_ALFA))
+                     (0, 0, 0, fundo_da_legenda(TEXTO_FOTO_ALFA)))
     d = ImageDraw.Draw(capa)
+    cor = legenda_cor() + (255,)
     for i, linha in enumerate(linhas):
-        d.text((largura / 2.0, almofada + (i + 0.5) * alt_linha), linha, font=fonte,
-               fill=(255, 255, 255, 255), anchor="mm")
+        # um emoji a cores, na letra de emojis, ao centro com o resto (texto_emojis)
+        texto_emojis.escrever(d, (largura / 2.0, almofada + (i + 0.5) * alt_linha), linha, fonte, cor,
+                              anchor="mm")
     return capa, cortado
 
 
@@ -1890,7 +2806,19 @@ def colagem_particoes(n):
             yield linhas
 
 
-def colagem_disposicao(aspetos, focos=None, livre_ate=None):
+# ATE ONDE AS FOTOS DE UM GRUPO DESCEM, com legenda: nunca acima de metade do ecra, mesmo com uma
+# legenda alta (quatro linhas a 90). COM A LEGENDA SUBIDA (3 de outubro) a metade sobe com ela, porque
+# as fotos continuam acima da legenda onde quer que ela esteja, mas nunca acima de um quarto do ecra:
+# abaixo disso nao ha onde as pousar. O `piso` e o que o preparar_monte() conta; sem ele e a metade.
+PISO_MINIMO_DA_LEGENDA = 0.25
+
+
+def piso_da_legenda(piso=None):
+    """A linha do ecra acima da qual a legenda nunca empurra as fotos de um grupo: 0,5 A, ou o `piso`."""
+    return 0.5 * A if piso is None else max(PISO_MINIMO_DA_LEGENDA * A, piso)
+
+
+def colagem_disposicao(aspetos, focos=None, livre_ate=None, piso=None):
     """Onde pousa cada foto da colagem: [cx, cy, largura, altura, angulo].
 
     Largura e altura sao da foto sem moldura, pousada, antes de respirar. `livre_ate`
@@ -1929,7 +2857,7 @@ def colagem_disposicao(aspetos, focos=None, livre_ate=None):
     """
     n = len(aspetos)
     mx, my = 0.035 * L, 0.05 * A
-    baixo = A - my if livre_ate is None else max(0.5 * A, min(A - my, livre_ate))
+    baixo = A - my if livre_ate is None else max(piso_da_legenda(piso), min(A - my, livre_ate))
     g = 0.018 * L
     larg_util, alt_util = L - 2 * mx, baixo - my
     focos = focos or []
@@ -2179,7 +3107,7 @@ def espalhada_preferida(fotos, focos=None):
                    for zona in colagem_guardado(fotos, focos, i))
 
 
-def colagem_espalhada(aspetos, focos=None, livre_ate=None):
+def colagem_espalhada(aspetos, focos=None, livre_ate=None, piso=None):
     """Onde pousa cada foto da colagem espalhada: [cx, cy, largura, altura, angulo].
 
     SEM FILAS NEM GRELHA. Cada foto tem um centro seu e um tamanho seu, a primeira a
@@ -2245,7 +3173,7 @@ def colagem_espalhada(aspetos, focos=None, livre_ate=None):
     """
     n = len(aspetos)
     mx, my = 0.035 * L, 0.05 * A
-    baixo = A - my if livre_ate is None else max(0.5 * A, min(A - my, livre_ate))
+    baixo = A - my if livre_ate is None else max(piso_da_legenda(piso), min(A - my, livre_ate))
     focos = focos or []
     centros, tamanhos = espalhada_medidas(n)
     aberturas = ESPALHADA_ABERTURAS if n <= len(ESPALHADA_TAMANHOS) else ESPALHADA_ABERTURAS_MUITAS
@@ -2291,7 +3219,7 @@ def colagem_espalhada(aspetos, focos=None, livre_ate=None):
     if not opcoes:
         # Nenhum afastamento assentou em dez voltas. Nunca aconteceu nas formas medidas; se
         # acontecer, a das filas tem as mesmas garantias e e melhor do que nada.
-        return colagem_disposicao(aspetos, focos, livre_ate)
+        return colagem_disposicao(aspetos, focos, livre_ate, piso)
     topo = max(o[0] for o in opcoes)
     quase = [o for o in opcoes if o[0] >= ESPALHADA_QUASE * topo]
     return min(quase, key=lambda o: (fotos_soltas(o[4]), o[1], o[2], -o[3]))[4]
@@ -2362,7 +3290,7 @@ def fracao_a_vista(fotos, i, passos=24):
     return livres / float(passos * passos)
 
 
-def pilha_leque(aspetos, livre_ate=None):
+def pilha_leque(aspetos, livre_ate=None, piso=None):
     """Onde pousa cada foto da pilha em leque: [cx, cy, largura, altura, angulo].
 
     As caixas e os angulos sao os do monte. Os lugares vao da esquerda para a direita,
@@ -2421,7 +3349,7 @@ def pilha_leque(aspetos, livre_ate=None):
                    for i in range(n - 1))
 
     b = MONTE_BORDA * A
-    baixo = A - b if livre_ate is None else max(0.5 * A, min(A - b, livre_ate))
+    baixo = A - b if livre_ate is None else max(piso_da_legenda(piso), min(A - b, livre_ate))
     melhor = None
     for sobe in PILHA_LEQUE_SOBES:
         # Com a tira maior do que a largura ninguem tapa ninguem, e isso chega sempre.
@@ -2442,7 +3370,7 @@ def pilha_leque(aspetos, livre_ate=None):
     return melhor[1]
 
 
-def pilha_disposicao(aspetos, livre_ate=None):
+def pilha_disposicao(aspetos, livre_ate=None, piso=None):
     """Onde pousa cada foto da pilha: [cx, cy, largura, altura, angulo].
 
     Os desvios e os angulos sao os do ensaio. A diferenca e a caixa: o ensaio dava
@@ -2458,7 +3386,7 @@ def pilha_disposicao(aspetos, livre_ate=None):
         cy = A / 2.0 + math.cos(i * 2.1) * 46.0 * A / 1080.0
         fotos.append([cx, cy, a * h, h, PILHA_ANGULOS[i % len(PILHA_ANGULOS)]])
     b = MONTE_BORDA * A
-    baixo = A - b if livre_ate is None else max(0.5 * A, min(A - b, livre_ate))
+    baixo = A - b if livre_ate is None else max(piso_da_legenda(piso), min(A - b, livre_ate))
     return encaixar_grupo(fotos, b, b, L - b, baixo, 1.0)
 
 
@@ -2505,7 +3433,7 @@ def zona_das_letras(lugar, texto, foco, pisa, sobe, tamanho=None, em_cima=False)
     largura = largura_do_texto(w, pisa)
     tam, linhas, _cortado = linhas_texto_foto(texto, largura, tamanho)
     d = ImageDraw.Draw(Image.new("L", (1, 1)))
-    letras = max([d.textbbox((0, 0), l, font=_fonte(tam))[2] for l in linhas] or [1])
+    letras = max([texto_emojis.caixa(l, _fonte(tam), desenho=d)[2] for l in linhas] or [1])
     almofada = int(round(tam * TEXTO_FOTO_ALMOFADA))
     _capa, topo, alto, _c = colocar_faixa(texto, w, h, w, foco, pisa, sobe, tamanho, em_cima)
     return zona_da_faixa(lugar, topo + almofada, max(1, alto - 2 * almofada), min(letras, largura))
@@ -2747,7 +3675,7 @@ def aviso_de_memoria(clips, fatias):
 
 
 def preparar_monte(tipo, imagens, focos, texto, cross_entra=0.0, cross_sai=None, estilo=None,
-                   textos=None, opcoes=None, duracao=None):
+                   textos=None, opcoes=None, duracao=None, clip_leg=None):
     """Colagem ou pilha, a partir das imagens, abertas ou por abrir (FotoPorAbrir).
 
     `cross_entra` e o encadeado com o clip de antes e `cross_sai` o do seguinte; sem
@@ -2757,7 +3685,8 @@ def preparar_monte(tipo, imagens, focos, texto, cross_entra=0.0, cross_sai=None,
     cada um vai numa faixa dentro da sua foto, com o tamanho contado na foto pousada, ou,
     com a opcao legenda, na faixa de baixo do ecra, ver legenda_por_foto(). `opcoes` sao as
     de ler_textos_opcoes() e `duracao` a do clip, so para os avisos da opcao legenda.
-    Nao mexe em onde as fotos pousam.
+    Nao mexe em onde as fotos pousam. `clip_leg` sao as opcoes do clip, de ler_opcoes_clip():
+    a legenda numa linha e o lp; com a legenda subida as fotos continuam acima dela.
     """
     opcoes = ler_textos_opcoes(opcoes)
     textos = textos_do_grupo(textos, len(imagens))
@@ -2770,17 +3699,20 @@ def preparar_monte(tipo, imagens, focos, texto, cross_entra=0.0, cross_sai=None,
         # de baixo, com a altura do texto mais alto, troca de texto com cada foto. Uma foto
         # sem texto mostra o do grupo, se houver.
         grupo = (texto or "").strip()
-        legenda = legenda_por_foto([t or grupo for t in textos], tamanho)
+        legenda = legenda_por_foto([t or grupo for t in textos], tamanho, clip_leg)
         if legenda is not None and duracao:
             tempos = tempos_legenda_grupo(tipo, len(imagens), duracao, cross_entra,
                                           cross_entra if cross_sai is None else cross_sai)
             for k, t, dura in legendas_curtas(legenda["textos"], tempos):
                 avisar_legenda_curta(k, t, dura)
         textos = None
-    capa = None if legenda is not None else faixa_texto(texto)
+    capa = None if legenda is not None else faixa_texto(texto, clip_leg=clip_leg)
     # A LEGENDA DESENHA-SE POR CIMA, como nos outros tipos, mas as fotos pousam acima
     # dela. Nos fotogramas de controlo a faixa tapava a fila de baixo da colagem, e a
-    # 15 metros uma cara meio escondida por uma faixa preta nao se le.
+    # 15 metros uma cara meio escondida por uma faixa preta nao se le. Com a legenda subida
+    # (3 de outubro) o piso sobe com ela, ver piso_da_legenda(); sem posicao fica a metade.
+    _dx, dy_legenda, _alinhamento = posicao_da_legenda(clip_leg)
+    piso = None if dy_legenda == 0 else 0.5 * A + dy_legenda
     livre_ate = None
     if legenda is not None:
         livre_ate = legenda["topo"] - MONTE_LEGENDA_FOLGA * A
@@ -2797,16 +3729,16 @@ def preparar_monte(tipo, imagens, focos, texto, cross_entra=0.0, cross_sai=None,
     some = tipo == "pilha" and textos is not None and opcoes["tapadas"] == "some"
     if tipo == "colagem":
         if estilo == "espalhada":
-            lugares = colagem_espalhada(aspetos, focos, livre_ate)
+            lugares = colagem_espalhada(aspetos, focos, livre_ate, piso)
         else:
-            lugares = colagem_disposicao(aspetos, focos, livre_ate)
+            lugares = colagem_disposicao(aspetos, focos, livre_ate, piso)
         cresce = 1.0 + COLAGEM_RESPIRA      # no fim, a respirar, fica a 1:1
         fundo = None                        # a primeira foto desfocada, feita no ciclo com ela aberta
     else:
         if estilo == "leque":
-            lugares = pilha_leque(aspetos, livre_ate)
+            lugares = pilha_leque(aspetos, livre_ate, piso)
         else:
-            lugares = pilha_disposicao(aspetos, livre_ate)
+            lugares = pilha_disposicao(aspetos, livre_ate, piso)
         cresce = 1.0                        # a pilha so recua, nunca cresce
         fundo = Image.new("RGB", (L, A), (10, 10, 12))
     fotos = []
@@ -3199,7 +4131,9 @@ def mergulho_altura(capa):
     if capa is None:
         return float(A)
     caixa = capa[1].getbbox()
-    return float(caixa[1] - MONTE_LEGENDA_FOLGA * A) if caixa else float(A)
+    # Nunca abaixo de um quarto do ecra, como o piso dos outros grupos (3 de outubro): so uma legenda
+    # subida com a posicao la chega; a mais alta de hoje, quatro linhas a 90, deixa 476 px.
+    return float(max(PISO_MINIMO_DA_LEGENDA * A, caixa[1] - MONTE_LEGENDA_FOLGA * A)) if caixa else float(A)
 
 
 def mergulho_cobre(celula):
@@ -3284,13 +4218,13 @@ def duracao_minima_mergulho(n, entra=0.0, sai=0.0, cobre=None):
             + max(sai, 0.0))
 
 
-def mergulho_do_texto(n, texto):
+def mergulho_do_texto(n, texto, clip_leg=None):
     """(altura da grelha, cobre da ultima) de um mergulho de n fotos com esta legenda, sem abrir fotos.
 
     Para quem precisa dos tempos antes do render, o montar_da_mesa.py: com legenda a grelha e mais
-    baixa, a celula muda e o mergulho dura outro tanto.
+    baixa, a celula muda e o mergulho dura outro tanto. `clip_leg` sao as opcoes do clip.
     """
-    alt = mergulho_altura(faixa_texto(texto))
+    alt = mergulho_altura(faixa_texto(texto, clip_leg=clip_leg))
     return alt, mergulho_cobre(mergulho_grelha(n, L, alt)[-1])
 
 
@@ -3371,12 +4305,12 @@ def mergulho_camara(pronto, t):
     return mergulho_vista_no_troco(troco, t), troco["celula"]
 
 
-def preparar_mergulho(imagens, focos, texto, entra=0.0, sai=0.0, duracao=4.0):
-    """A colagem em grelha com mergulho na ultima foto. Ver MERGULHO_ESTILO."""
+def preparar_mergulho(imagens, focos, texto, entra=0.0, sai=0.0, duracao=4.0, clip_leg=None):
+    """A colagem em grelha com mergulho na ultima foto. Ver MERGULHO_ESTILO. `clip_leg`: ler_opcoes_clip()."""
     n = len(imagens)
     focos = list(focos) + [None] * (n - len(focos))
     d = MERGULHO_DOBRO
-    capa = faixa_texto(texto)
+    capa = faixa_texto(texto, clip_leg=clip_leg)
     altura = mergulho_altura(capa)
     celulas = mergulho_grelha(n, L, altura)
     mergulhos = [n - 1]       # as celulas onde se mergulha: hoje so a ultima
@@ -3450,13 +4384,13 @@ def desenhar_mergulho(pronto, t_rel, duracao):
             # A foto do mergulho por cima da sua celula, no sitio exato, a partir do sprite do fim.
             x, y, w, h = pronto["celulas"][k]
             compor(tela, alvo, (x + w / 2.0 - x0) * s, (y + h / 2.0 - y0) * s, s / mergulho_cobre((x, y, w, h)))
-    if pronto["capa"] is not None:
+    if pronto["capa"] is not None and not SEM_LEGENDAS:
         cor, mascara = pronto["capa"]
         tela.paste(cor, (0, 0), mascara)
     return tela
 
 
-def preparar_lado(lay, imagens, focos, texto, textos=None, opcoes=None, duracao=None):
+def preparar_lado(lay, imagens, focos, texto, textos=None, opcoes=None, duracao=None, clip_leg=None):
     """O lado a lado, a partir das imagens ja abertas, uma por celula de lado_celulas(lay).
 
     `focos` e um por foto, como na coluna fonte_imagem, e `texto` a legenda do grupo.
@@ -3464,9 +4398,11 @@ def preparar_lado(lay, imagens, focos, texto, textos=None, opcoes=None, duracao=
     celula, ver lado_faixas(), ou, com a opcao legenda, na faixa de baixo do ecra a trocar
     com cada celula, ver legenda_por_foto(). `opcoes` sao as de ler_textos_opcoes() e
     `duracao` a do clip, so para os avisos. Sem textos as celulas sao as de antes, pixel
-    a pixel.
+    a pixel. `clip_leg` sao as opcoes do clip, de ler_opcoes_clip(): a legenda numa linha,
+    o lp e as fotos inteiras (li), ver lado_inteira().
     """
     opcoes = ler_textos_opcoes(opcoes)
+    inteiras = bool(clip_leg and clip_leg["li"])
     celulas = []
     for k, ((x, y, w, h), vem) in enumerate(lado_celulas(lay)):
         im = imagens[k]
@@ -3489,6 +4425,17 @@ def preparar_lado(lay, imagens, focos, texto, textos=None, opcoes=None, duracao=
             foto = (moldura, moldura, moldura + dentro.width, moldura + dentro.height)
             if foco:
                 foco_na_celula = [(moldura + foco[0] * dentro.width, moldura + foco[1] * dentro.height)]
+        elif inteiras:
+            # AS FOTOS INTEIRAS (clip.li, 3 de outubro): a foto encaixada na celula, sem cortar, com o
+            # fundo da celula desfocado a partir dela. Respira como as outras, e cabe inteira ate no
+            # fim do zoom lento; a faixa do texto fica dentro dela no primeiro fotograma.
+            img, (pw, ph) = lado_inteira(im, w, h)
+            e0 = 1.0 / (1.0 + LADO_ZOOM)
+            foto = (int(math.ceil((w - pw * e0) / 2.0)), int(math.ceil((h - ph * e0) / 2.0)),
+                    int(math.floor((w + pw * e0) / 2.0)), int(math.floor((h + ph * e0) / 2.0)))
+            if foco:
+                foco_na_celula = [(w / 2.0 + (foco[0] - 0.5) * pw * e, h / 2.0 + (foco[1] - 0.5) * ph * e)
+                                  for e in (e0, 1.0)]
         else:
             sw = int(math.ceil(w * (1 + LADO_ZOOM)))
             sh = int(math.ceil(h * (1 + LADO_ZOOM)))
@@ -3507,16 +4454,60 @@ def preparar_lado(lay, imagens, focos, texto, textos=None, opcoes=None, duracao=
     legenda = None
     if textos and opcoes["modo"] == "legenda":
         grupo = (texto or "").strip()
-        legenda = legenda_por_foto([t or grupo for t in textos], opcoes["tamanho"])
+        legenda = legenda_por_foto([t or grupo for t in textos], opcoes["tamanho"], clip_leg)
         if legenda is not None and duracao:
             tempos = tempos_legenda_grupo("lado", len(celulas), duracao)
             for k, t, dura in legendas_curtas(legenda["textos"], tempos):
                 avisar_legenda_curta(k, t, dura)
         textos = None
-    capa = None if legenda is not None else faixa_texto(texto)
+    capa = None if legenda is not None else faixa_texto(texto, clip_leg=clip_leg)
     if textos:
         lado_faixas(celulas, textos, capa, lay, opcoes["tamanho"])
     return {"tipo": "lado", "celulas": celulas, "capa": capa, "legenda": legenda, "opcoes": opcoes}
+
+
+# O LADO A LADO SEM CORTAR PESSOAS (contrato de 3 de outubro, ponto 4). O Tiago: "quando meto lado a
+# lado esta a focar em excesso, acabando por cortar pessoas". Hoje cada foto enche a sua celula e o
+# que sobra corta-se: uma foto deitada numa celula de 2v (956 x 1080) perde mais de metade da largura.
+# Com clip.li cada foto entra inteira, encaixada, e o resto da celula e a propria foto desfocada e
+# escurecida, como o tratamento "fundo" de uma foto sozinha (desfoque 46 e 55%). Sem li, nada muda.
+LADO_CORTE_AVISO = 0.25          # a Mesa e o montar avisam quando o enchimento corta mais do que isto
+
+
+def lado_inteira(im, w, h):
+    """O sprite de uma celula com a foto inteira: (imagem do tamanho do sprite, (pw, ph) da foto nele).
+
+    O sprite e o de sempre, (w, h) mais LADO_ZOOM, e o zoom lento leva-o de caber na celula a 1:1. A
+    foto vai encaixada em (w, h) no meio dele: no fim do zoom enche a celula num dos lados sem perder
+    nada, e no principio fica 2% para dentro. Por tras, a foto a cobrir o sprite, desfocada.
+    """
+    sw, sh = int(math.ceil(w * (1 + LADO_ZOOM))), int(math.ceil(h * (1 + LADO_ZOOM)))
+    fundo = cobrir(im, sw, sh).filter(ImageFilter.GaussianBlur(46))
+    fundo = Image.blend(Image.new("RGB", (sw, sh), (0, 0, 0)), fundo, 0.55)
+    dentro = encaixar(im, w, h)
+    fundo.paste(dentro, ((sw - dentro.width) // 2, (sh - dentro.height) // 2))
+    return fundo, dentro.size
+
+
+def lado_corte(lay, tamanhos):
+    """A fracao de cada foto que o enchimento de hoje deixa de fora, [0..1], pela ordem das celulas.
+
+    `tamanhos` sao (largura, altura) de cada foto ja rodada pelo EXIF. A conta e a do cobrir(): a foto
+    cresce ate cobrir a celula e o que passa corta-se, 1 - min(r, 1/r), com r a razao entre a forma da
+    foto e a da celula. Nao conta o zoom lento (mais 4% no fim) nem o ponto de foco, que so escolhe o
+    que se corta. O cartao do meio do 3s vai inteiro e da 0. A Mesa faz a mesma conta.
+    """
+    cortes = []
+    for k, ((_x, _y, w, h), _vem) in enumerate(lado_celulas(lay)):
+        if k >= len(tamanhos) or not tamanhos[k] or not tamanhos[k][0] or not tamanhos[k][1]:
+            cortes.append(None)
+            continue
+        if lay == "3s" and k == 2:
+            cortes.append(0.0)
+            continue
+        r = (tamanhos[k][0] / float(tamanhos[k][1])) / (w / float(h))
+        cortes.append(1.0 - min(r, 1.0 / r))
+    return cortes
 
 
 def limite_da_faixa_no_lado(texto, largura, tamanho=None):
@@ -3998,6 +4989,369 @@ def compor_visivel(tela, sprite, cx, cy, escala):
         tela.paste(recorte, (ix + px0, iy + py0))
 
 
+# ------------------------------------------------------------ a zona de destaque
+# O PEDIDO, 2 de outubro: "Permite-me dentro de uma foto marcar uma zona para ter mais detalhe,
+# por exemplo eu tenho umas fotos de equipa que se eu nao assinalar quem eu sou as pessoas podem
+# nao perceber." E as 02:23, no contrato da Mesa: "nem sempre e possivel com zoom, pois a
+# qualidade da foto pode nao ser otima e precisamos de outra forma de realcar".
+#
+# POR ISSO O DESTAQUE NAO APROXIMA. Depois de a foto entrar e assentar, o que esta fora da zona
+# escurece devagar e um contorno fino na cor quente do letreiro desenha-se a volta dela; com
+# `texto`, um nome curto por baixo, na letra e na faixa da legenda. Fica ate a foto sair. Nenhum
+# pixel e esticado nem inventado (decisao 090): dentro da zona a foto fica exatamente a que era,
+# e fora dela so muda o brilho. A Mesa grava clip.zd = {x, y, w, h} em fracoes da foto, mais
+# forma, texto e escurecer, e o montar escreve-o na coluna destaque, so com o que difere da
+# omissao. Sem a coluna nada disto corre, e o filme sai igual ao byte.
+#
+# A ZONA E DA FOTO, NAO DO ECRA. Conta-se a cada fotograma a partir do retangulo onde a foto
+# acabou de ser composta, e por isso acompanha o zoom lento, o afastada, o aproxima e o corte da
+# rajada sem contas proprias. O escurecer e o de todo o ecra fora da zona, fundo desfocado
+# incluido, como a Mesa o mostra (palcoDestaque). E desenha-se com a cobertura exata de cada
+# pixel (destaque_distancia()), porque com o zoom lento a zona anda menos de um pixel por
+# fotograma, e uma borda a pixeis inteiros saltava de pixel em pixel: e a borda que pisca do
+# CLAUDE.md, outra vez. O nome vai pelo compor(), com a margem do com_margem(), pela mesma razao.
+DESTAQUE_ESPERA = 1.0       # segundos do clip antes de comecar a escurecer, no minimo
+DESTAQUE_ASSENTA = 0.3      # e depois de o encadeado de entrada acabar, para a foto assentar
+DESTAQUE_SOBE = 0.6         # segundos a escurecer, e o contorno e o nome a acender com ele
+DESTAQUE_PLENO_MIN = 1.0    # segundos aceso antes do encadeado de saida; sem eles, entra com a foto
+DESTAQUE_ESCURECER = 0.45   # a omissao do contrato: fora da zona fica a 55% do brilho
+DESTAQUE_FORMAS = ("retangulo", "elipse")
+DESTAQUE_LINHA = 4.0        # espessura do contorno a 1080, todo por fora da zona
+DESTAQUE_RAIO = 6.0         # raio dos cantos da zona a 1080; por fora do contorno fica 10
+DESTAQUE_TEXTO_FOLGA = 14   # entre a zona e a faixa do nome, a 1080, o da Mesa
+DESTAQUE_TEXTO_BORDA = 16   # a faixa do nome nunca chega mais perto do que isto da borda do ecra
+DESTAQUE_LADO_MIN = 0.01    # um lado abaixo disto, em fracao da foto, e um clique e nao uma zona
+DESTAQUE_FORA_AVISO = 0.10  # acima disto da zona fora do ecra, o preparar avisa
+
+
+def ler_destaque(valor):
+    """A coluna destaque -> ({x, y, w, h, forma, texto, escurecer}, aviso), ou (None, aviso).
+
+    O montar ja validou e so escreve o que difere da omissao. Aqui volta-se a ver pela regra do
+    imagem_da_marca(): um CSV mexido a mao nao para um render de quinze minutos a meio. Uma coluna
+    que nao se le fica sem destaque e o aviso diz porque; uma forma, um escurecer ou um texto que
+    nao servem ficam na omissao, tambem com aviso. A zona e cortada a foto: a Mesa so a deixa
+    desenhar dentro dela, e o que sobra para fora e arredondamento de quem arrasta.
+    """
+    if not (valor or "").strip():
+        return None, ""
+    try:
+        d = json.loads(valor)
+        bruto = [d[k] for k in ("x", "y", "w", "h")]
+        if any(isinstance(v, bool) for v in bruto):
+            raise TypeError("booleano")
+        x, y, w, h = (float(v) for v in bruto)
+    except (ValueError, TypeError, KeyError, AttributeError):
+        return None, "a coluna destaque %r nao se le, fica sem destaque" % valor[:60]
+    if not all(math.isfinite(v) for v in (x, y, w, h)):
+        return None, "a coluna destaque %r nao se le, fica sem destaque" % valor[:60]
+    x0, y0 = max(0.0, x), max(0.0, y)
+    x1, y1 = min(1.0, x + w), min(1.0, y + h)
+    if x1 - x0 < DESTAQUE_LADO_MIN or y1 - y0 < DESTAQUE_LADO_MIN:
+        return None, "a zona de destaque %r nao tem tamanho dentro da foto, fica sem destaque" % valor[:60]
+    avisos = []
+    forma = d.get("forma")
+    if forma in (None, ""):
+        forma = DESTAQUE_FORMAS[0]
+    elif forma not in DESTAQUE_FORMAS:
+        avisos.append("forma %r, fica %s" % (forma, DESTAQUE_FORMAS[0]))
+        forma = DESTAQUE_FORMAS[0]
+    esc = d.get("escurecer")
+    if esc is None:
+        esc = DESTAQUE_ESCURECER
+    else:
+        try:
+            if isinstance(esc, bool):
+                raise TypeError("booleano")
+            esc = float(esc)
+            if not 0.0 <= esc <= 1.0:
+                raise ValueError("fora de 0 a 1")
+        except (ValueError, TypeError):
+            avisos.append("escurecer %r, fica %s" % (d.get("escurecer"), DESTAQUE_ESCURECER))
+            esc = DESTAQUE_ESCURECER
+    texto = d.get("texto")
+    texto = texto.strip() if isinstance(texto, str) else ""
+    return ({"x": x0, "y": y0, "w": x1 - x0, "h": y1 - y0, "forma": forma, "texto": texto,
+             "escurecer": esc}, "; ".join(avisos))
+
+
+def destaque_janela(duracao, entra=0.0, sai=0.0):
+    """(comeco, aceso) do destaque em segundos do clip, ou None quando ele entra com a foto.
+
+    A FOTO ENTRA PRIMEIRO E SO DEPOIS SE APONTA. Escurecer enquanto ela ainda aparece era mostrar
+    duas coisas ao mesmo tempo, e a 15 metros nao se le nenhuma. Comeca DESTAQUE_ASSENTA depois de
+    o encadeado de entrada acabar e nunca antes de DESTAQUE_ESPERA, e leva DESTAQUE_SOBE a acender.
+
+    NUM CLIP CURTO, mais cedo, ate ao fim do encadeado de entrada, para ficar DESTAQUE_PLENO_MIN
+    aceso antes de a seguinte comecar a entrar. Se nem assim cabe (a rajada, um clip de dois
+    segundos), entra aceso com a foto, como a legenda: um destaque que acendesse durante o
+    encadeado de saida nunca se via inteiro. E a regra do aproxima_janela() num clip curto.
+    """
+    a = max(0.0, float(entra or 0.0))
+    b = float(duracao) - max(0.0, float(sai or 0.0))
+    comeco = min(max(DESTAQUE_ESPERA, a + DESTAQUE_ASSENTA), b - DESTAQUE_SOBE - DESTAQUE_PLENO_MIN)
+    if comeco < a - 1e-9:
+        return None
+    return comeco, comeco + DESTAQUE_SOBE
+
+
+def destaque_alfa(janela, t_rel):
+    """Quanto do destaque esta aceso no instante t_rel, de 0 a 1: sai do repouso e chega em repouso."""
+    if janela is None:
+        return 1.0
+    comeco, aceso = janela
+    return _suave((t_rel - comeco) / (aceso - comeco))
+
+
+def destaque_tempo_aceso(duracao, entra=0.0, sai=0.0):
+    """Segundos com o destaque inteiro e a foto sozinha no ecra: o que o montar compara com o minimo."""
+    b = float(duracao) - max(0.0, float(sai or 0.0))
+    janela = destaque_janela(duracao, entra, sai)
+    inicio = max(0.0, float(entra or 0.0)) if janela is None else janela[1]
+    return max(0.0, b - inicio)
+
+
+def destaque_caixa(zd, x0, y0, larg, alt):
+    """(x0, y0, x1, y1) da zona no ecra, com a foto composta em (x0, y0) com larg x alt."""
+    return (x0 + zd["x"] * larg, y0 + zd["y"] * alt,
+            x0 + (zd["x"] + zd["w"]) * larg, y0 + (zd["y"] + zd["h"]) * alt)
+
+
+def destaque_distancia(xs, ys, caixa, forma, raio):
+    """A distancia com sinal de cada centro de pixel a borda da zona: negativa dentro, em pixeis.
+
+    E DELA QUE SAI A COBERTURA, clip(0,5 - d): numa borda direita e exatamente a parte do pixel que
+    a zona cobre, e por isso a borda anda ao sub-pixel com o zoom lento em vez de saltar. O
+    contorno e a mesma conta com a borda empurrada DESTAQUE_LINHA para fora. No retangulo os cantos
+    sao arredondados com `raio`; na elipse a distancia e a aproximacao de primeira ordem, a que
+    erra menos de um decimo de pixel a menos de dez pixeis da borda, onde a cobertura se decide.
+    """
+    import numpy as np
+    zx0, zy0, zx1, zy1 = caixa
+    cx, cy = (zx0 + zx1) / 2.0, (zy0 + zy1) / 2.0
+    hx, hy = max(1e-6, (zx1 - zx0) / 2.0), max(1e-6, (zy1 - zy0) / 2.0)
+    px, py = np.abs(xs - cx), np.abs(ys - cy)
+    if forma == "elipse":
+        k0 = np.sqrt((px / hx) ** 2 + (py / hy) ** 2)
+        k1 = np.sqrt((px / (hx * hx)) ** 2 + (py / (hy * hy)) ** 2)
+        return np.where(k1 > 1e-12, k0 * (k0 - 1.0) / np.maximum(k1, 1e-12), -min(hx, hy))
+    r = min(raio, hx, hy)
+    qx, qy = px - (hx - r), py - (hy - r)
+    return (np.hypot(np.maximum(qx, 0.0), np.maximum(qy, 0.0))
+            + np.minimum(np.maximum(qx, qy), 0.0) - r)
+
+
+def preparar_destaque(zd, entra, sai, duracao, legenda="", nome="", clip_leg=None):
+    """O que o destaque precisa de saber, contado uma vez por clip: a janela, a cor e o nome feito."""
+    d = dict(zd, janela=destaque_janela(duracao, entra, sai),
+             cor=cor_do_estilo("cartao", "quente", LETREIRO_QUENTE),
+             linha=DESTAQUE_LINHA * A / 1080.0, raio=DESTAQUE_RAIO * A / 1080.0,
+             folga=DESTAQUE_TEXTO_FOLGA * A / 1080.0, nome=None)
+    # O TETO DO NOME: com legenda em baixo, a faixa do nome nunca desce ate ela. A Mesa poe o nome
+    # ate 1,6 corpos do fundo do ecra, e a faixa da legenda comeca bem acima disso.
+    tam = legenda_tamanho()
+    d["teto"] = A - tam * 1.6
+    if (legenda or "").strip():
+        # COM A LEGENDA NOUTRO SITIO (3 de outubro) o teto sobe com ela, e uma legenda numa linha so
+        # (x1) tem o bloco de uma linha. Sem nada disso e a conta de sempre.
+        uma = bool(clip_leg and clip_leg["x1"])
+        _dx, dy, _alinhamento = posicao_da_legenda(clip_leg)
+        d["teto"] = min(d["teto"], A - LEGENDA_TEXTO - bloco_legenda(legenda, uma_linha=uma) - LEGENDA_ALMOFADA
+                        - d["folga"] - tam * 1.45 + dy)
+    if zd.get("texto"):
+        # A FAIXA E A DA MESA: o texto centrado, 18 px de cada lado, 1,45 corpos de altura, a letra
+        # a 0,22 corpos do cimo; o alfa da faixa e o da legenda do estilo, e a cor tambem.
+        # A largura e a do avanco da letra, a mesma que o measureText() da Mesa.
+        fonte = letra("legenda", tam)
+        # com um emoji, o emoji a cores conta com a largura dele, e os equivalentes trocam-se (texto_emojis)
+        largura = int(math.ceil(texto_emojis.largura(zd["texto"], fonte))) + 36
+        altura = int(math.ceil(tam * 1.45))
+        # AS PERNAS DAS LETRAS NAO SE CORTAM (revisao de 2 de outubro). A faixa tem 1,45 corpos, como
+        # na Mesa, e o desenho era feito dentro dela: numa letra de descendentes compridos (Playfair,
+        # Great Vibes, Pinyon) o "g" de "Tiago" perdia a ponta, ate 39 px a 46. A Mesa pinta a faixa
+        # e escreve por cima sem cortar, e aqui tambem: a tela cresce o que a tinta passa da faixa,
+        # para cima e para baixo, e a faixa fica onde estava. A parte de fora e transparente na cor
+        # da letra, para a borda da tinta sair na cor dela e nao escurecida. Sem tinta de fora (o
+        # Arial Bold tem 7 px de folga) a tela e a faixa, ao byte como antes.
+        cor = legenda_cor()
+        topo = tam * 0.22
+        _x0, t0, _x1, t1 = texto_emojis.caixa(zd["texto"], fonte, anchor="ma")
+        cima = max(0, int(math.ceil(-(topo + t0))))
+        baixo = max(0, int(math.ceil(topo + t1)) - altura)
+        faixa = Image.new("RGBA", (largura, cima + altura + baixo), cor + (0,))
+        faixa.paste((0, 0, 0, fundo_da_legenda(LEGENDA_ALFA)), (0, cima, largura, cima + altura))
+        texto_emojis.escrever(ImageDraw.Draw(faixa), (largura / 2.0, cima + topo), zd["texto"], fonte,
+                              cor + (255,), anchor="ma")
+        d["nome"] = com_margem(faixa.convert("RGBa"), "preto")
+        d["nome_faixa"] = (altura, cima, baixo)
+        if largura > L - 2 * DESTAQUE_TEXTO_BORDA:
+            print("  destaque%s: o nome %r tem %d px e o ecra %d; sai cortado dos lados"
+                  % (nome, zd["texto"], largura, L))
+    return d
+
+
+def onde_vai_o_nome(d, caixa):
+    """(cx, cy) da faixa do nome no ecra: por baixo da zona, ou por cima se em baixo nao couber.
+
+    POR BAIXO, A 14 PX, como a Mesa. Mas a Mesa encosta-o ao fundo do ecra quando a zona esta em
+    baixo, e ai a faixa pisava a propria zona, que e o que se quer mostrar: aqui vai para cima da
+    zona, se couber; so se nem em cima couber e que fica encostado ao teto, como na Mesa. Nos
+    lados nunca passa a DESTAQUE_TEXTO_BORDA da borda do ecra.
+    """
+    largura = d["nome"].width - 2 * MARGEM
+    # A conta e da faixa, e nao da tela: a tela pode ter por cima e por baixo a tinta que passa
+    # dela (preparar_destaque), e o que volta e o centro da tela com a faixa no sitio de sempre.
+    altura, cima, baixo = d.get("nome_faixa") or (d["nome"].height - 2 * MARGEM, 0, 0)
+    ty = caixa[3] + d["linha"] + d["folga"]
+    if ty > d["teto"]:
+        acima = caixa[1] - d["linha"] - d["folga"] - altura
+        ty = acima if acima >= LEGENDA_FUNDO else d["teto"]
+    cx = (caixa[0] + caixa[2]) / 2.0
+    borda = DESTAQUE_TEXTO_BORDA + largura / 2.0
+    if L - borda >= borda:
+        cx = min(L - borda, max(borda, cx))
+    return cx, ty - cima + (cima + altura + baixo) / 2.0
+
+
+def destacar(tela, d, x0, y0, larg, alt, t_rel):
+    """O fotograma `tela` com o destaque `d` no instante t_rel, a foto composta em (x0, y0, larg, alt).
+
+    Devolve a mesma tela antes de o destaque comecar, ao byte: e assim que a foto entra e assenta
+    igual a de sempre. Fora da zona, cada pixel multiplicado pelo mesmo fator (uma tabela, a mesma
+    dentro e fora da caixa onde a zona se conta); dentro, o pixel da foto, ao byte; na borda, a
+    mistura dos dois pela cobertura; e por cima o contorno na cor quente, que acende com o resto.
+    """
+    alfa = destaque_alfa(d["janela"], t_rel)
+    if alfa <= 0.0:
+        return tela
+    k = d["escurecer"] * alfa
+    tabela = [int(v * (1.0 - k) + 0.5) for v in range(256)]
+    escura = tela.point(tabela * len(tela.getbands()))
+    caixa = destaque_caixa(d, x0, y0, larg, alt)
+    folga = d["linha"] + 2.0
+    bx0, by0 = max(0, int(math.floor(caixa[0] - folga))), max(0, int(math.floor(caixa[1] - folga)))
+    bx1 = min(tela.width, int(math.ceil(caixa[2] + folga)))
+    by1 = min(tela.height, int(math.ceil(caixa[3] + folga)))
+    if bx1 > bx0 and by1 > by0:
+        # O MEIO DA ZONA E A FOTO, AO BYTE, e cola-se sem contas: uma zona grande era um ecra
+        # inteiro de distancias por fotograma, e so a faixa a volta da borda as precisa. O miolo
+        # e o retangulo cujos cantos ficam a mais de meio pixel para dentro da borda (a zona e
+        # convexa, e entao o retangulo todo fica), e as contas fazem-se nas quatro tiras a volta.
+        ix0, iy0, ix1, iy1 = destaque_miolo(caixa, d["forma"], d["raio"], (bx0, by0, bx1, by1))
+        tiras = [(bx0, by0, bx1, iy0), (bx0, iy1, bx1, by1),
+                 (bx0, iy0, ix0, iy1), (ix1, iy0, bx1, iy1)]
+        if ix1 > ix0 and iy1 > iy0:
+            escura.paste(tela.crop((ix0, iy0, ix1, iy1)), (ix0, iy0))
+        for perto in tiras:
+            if perto[2] > perto[0] and perto[3] > perto[1]:
+                _destacar_tira(tela, escura, perto, caixa, d, alfa)
+    if d["nome"] is not None:
+        cx, cy = onde_vai_o_nome(d, caixa)
+        compor(escura, d["nome"], cx, cy, 1.0, alfa)
+    return escura
+
+
+def destaque_miolo(caixa, forma, raio, perto):
+    """(x0, y0, x1, y1) inteiros, dentro de `perto`, onde a zona cobre cada pixel por inteiro.
+
+    No retangulo e a zona encolhida do raio e de mais um pixel: ai a distancia a borda e pelo menos
+    um pixel. Na elipse e o retangulo inscrito a 0,7 dos semieixos, encolhido ate o canto ficar a
+    mais de meio pixel da borda pela propria destaque_distancia(); uma zona pequena demais fica sem
+    miolo, e conta-se toda. Vazio quando nao ha miolo: as tiras cobrem entao a caixa inteira.
+    """
+    import numpy as np
+    zx0, zy0, zx1, zy1 = caixa
+    cx, cy = (zx0 + zx1) / 2.0, (zy0 + zy1) / 2.0
+    if forma == "elipse":
+        mx, my = 0.7 * (zx1 - zx0) / 2.0 - 1.0, 0.7 * (zy1 - zy0) / 2.0 - 1.0
+        while mx > 0 and my > 0:
+            canto = destaque_distancia(np.array([cx + mx]), np.array([cy + my]), caixa, forma, raio)
+            if float(canto[0]) <= -1.0:
+                break
+            mx, my = mx - 1.0, my - 1.0
+    else:
+        mx = (zx1 - zx0) / 2.0 - min(raio, (zx1 - zx0) / 2.0) - 1.0
+        my = (zy1 - zy0) / 2.0 - min(raio, (zy1 - zy0) / 2.0) - 1.0
+    if mx <= 0 or my <= 0:
+        return perto[0], perto[1], perto[0], perto[1]
+    # So os pixeis inteiros dentro: o pixel i vai de i a i+1.
+    ix0 = max(perto[0], int(math.ceil(cx - mx)))
+    iy0 = max(perto[1], int(math.ceil(cy - my)))
+    ix1 = min(perto[2], int(math.floor(cx + mx)))
+    iy1 = min(perto[3], int(math.floor(cy + my)))
+    if ix1 <= ix0 or iy1 <= iy0:
+        return perto[0], perto[1], perto[0], perto[1]
+    return ix0, iy0, ix1, iy1
+
+
+def _destacar_tira(tela, escura, perto, caixa, d, alfa):
+    """Uma tira da caixa da zona: a foto e a sombra misturadas pela cobertura, e o contorno por cima."""
+    import numpy as np
+    bx0, by0, bx1, by1 = perto
+    ys, xs = np.mgrid[by0:by1, bx0:bx1].astype(np.float32)
+    dist = destaque_distancia(xs + 0.5, ys + 0.5, caixa, d["forma"], d["raio"])
+    dentro = np.clip(0.5 - dist, 0.0, 1.0).astype(np.float32)
+    traco = (np.clip(0.5 - (dist - d["linha"]), 0.0, 1.0) - dentro).astype(np.float32) * alfa
+    foto = np.asarray(tela.crop(perto), dtype=np.float32)
+    sombra = np.asarray(escura.crop(perto), dtype=np.float32)
+    junto = sombra + (foto - sombra) * dentro[..., None]
+    junto += (np.array(d["cor"], dtype=np.float32) - junto) * traco[..., None]
+    escura.paste(Image.fromarray(np.floor(junto + 0.5).astype(np.uint8), "RGB"), (bx0, by0))
+
+
+def destaque_na_foto(tela, d, sprite, escala, cx, cy, t_rel):
+    """O destacar() de uma foto composta pelo compor() ou pelo compor_visivel(): o retangulo e o deles.
+
+    As mesmas contas do compor(): a foto sem a margem, vezes a escala, centrada em (cx, cy), com
+    as casas decimais todas. E isso que prende a zona a foto ao sub-pixel durante o zoom.
+    """
+    larg = (sprite.width - 2 * MARGEM) * escala
+    alt = (sprite.height - 2 * MARGEM) * escala
+    return destacar(tela, d, cx - larg / 2.0, cy - alt / 2.0, larg, alt, t_rel)
+
+
+def destaque_fora_do_ecra(zd, x0, y0, larg, alt):
+    """A fracao da zona que fica fora do ecra, com a foto em (x0, y0, larg, alt). So para o aviso."""
+    caixa = destaque_caixa(zd, x0, y0, larg, alt)
+    area = (caixa[2] - caixa[0]) * (caixa[3] - caixa[1])
+    if area <= 0:
+        return 0.0
+    vx = max(0.0, min(L, caixa[2]) - max(0.0, caixa[0]))
+    vy = max(0.0, min(A, caixa[3]) - max(0.0, caixa[1]))
+    return 1.0 - vx * vy / area
+
+
+def destaque_do_clip(clip, legenda="", clip_leg=None):
+    """O destaque preparado de uma foto solta, ou None se a coluna destaque nao o traz.
+
+    Os encadeados sao os do aproxima, que vem do main por ligar_transicoes: _transicao_entrada, e
+    _transicao_seguinte, o do clip seguinte ou o fade do fim. Sem eles conta o do proprio clip.
+    `clip_leg` sao as opcoes do clip: o teto do nome e o da legenda, onde ela estiver.
+    """
+    zd, aviso = ler_destaque(clip.get("destaque"))
+    quem = " do clip %s" % clip.get("ordem", "?")
+    if aviso:
+        print("  destaque%s: %s" % (quem, aviso))
+    if zd is None:
+        return None
+    entra = clip.get("_transicao_entrada")
+    entra = float(clip.get("transicao_s") or 0.0) if entra in (None, "") else float(entra)
+    sai = clip.get("_transicao_seguinte")
+    sai = entra if sai in (None, "") else float(sai)
+    return preparar_destaque(zd, entra, sai, duracao_do_clip(clip) or 4.0, legenda, quem, clip_leg)
+
+
+def caixa_da_rajada(tamanho, foco):
+    """(x0, y0, largura, altura) da foto inteira no ecra, na rajada: as contas do cobrir_foco() e do cobrir()."""
+    if foco is not None:
+        nw, nh, x, y = janela_foco(tamanho, L, A, foco)
+    else:
+        f = max(L / tamanho[0], A / tamanho[1])
+        nw, nh = max(1, round(tamanho[0] * f)), max(1, round(tamanho[1] * f))
+        x, y = (nw - L) // 2, (nh - A) // 2
+    return -x, -y, nw, nh
+
+
 def preparar(clip, inv_por_nome):
     """Prepara o clip uma vez: sprite no tamanho maximo e legenda em camada.
 
@@ -4008,13 +5362,17 @@ def preparar(clip, inv_por_nome):
     No lado a lado e a disposicao, e na colagem e na pilha o estilo, ver ESTILOS_MONTE.
     """
     texto = clip["texto_ecra"]
+    # AS OPCOES DO CLIP (3 de outubro): a legenda numa linha (x1), o lp e as fotos inteiras do lado
+    # a lado (li). Sem a coluna, ou sem nada nela, e None, e tudo abaixo e o de sempre.
+    clip_leg = ler_opcoes_clip(clip.get(COLUNA_OPCOES_CLIP))
     if clip["tipo"] == "cartao":
         # Um cartao vazio continua a ser preto (e o de uma foto que falta, em carregar_montagem).
         if (texto or "").strip():
             return {"tipo": "cartao", "let": letreiro_do_cartao(texto.strip()), "capa": None}
         return {"tipo": "cartao", "base": cartao(texto), "capa": None}
     if clip["tipo"] == "nome":
-        return {"tipo": "nome", "let": letreiro([(texto or "").strip().upper()], NOME_TAMANHO,
+        return {"tipo": "nome", "let": letreiro([(texto or "").strip().upper()],
+                                                corpo_do_estilo("nome", "tamanho", NOME_TAMANHO),
                                                 NOME_ESPACO, 7), "capa": None}
     if clip["tipo"] == "contador":
         # DOIS FORMATOS, UM SO TIPO DE CLIP. O de anos, "2026>1995|...", e o de sempre;
@@ -4072,7 +5430,7 @@ def preparar(clip, inv_por_nome):
             # quinze minutos a meio. Fica o cartao preto que fica uma foto que nao abre, e
             # o nome vai para os faltaram, que o render lista no fim.
             return None
-        return {"tipo": "video", "quadros": quadros, "capa": faixa_texto(texto)}
+        return {"tipo": "video", "quadros": quadros, "capa": faixa_texto(texto, clip_leg=clip_leg)}
 
     if clip["tipo"] == "lado":
         lay = (clip.get("tratamento") or "").strip()
@@ -4086,7 +5444,7 @@ def preparar(clip, inv_por_nome):
         return preparar_lado(lay, imagens, focos, texto,
                              ler_textos_fotos(clip.get("textos_fotos")),
                              ler_textos_opcoes(clip.get("textos_opcoes")),
-                             duracao_do_clip(clip))
+                             duracao_do_clip(clip), clip_leg=clip_leg)
 
     if clip["tipo"] in LIMITES_MONTE:
         # o limite do estilo, que no mergulho e outro (decisao 102), ver limites_do_grupo()
@@ -4111,14 +5469,14 @@ def preparar(clip, inv_por_nome):
         # agenda de monte nem poses, ver preparar_mergulho().
         if clip["tipo"] == "colagem" and (clip.get("tratamento") or "").strip() == MERGULHO_ESTILO:
             return preparar_mergulho(imagens, focos, texto, entra, sai,
-                                     duracao_do_clip(clip) or 4.0)
+                                     duracao_do_clip(clip) or 4.0, clip_leg=clip_leg)
         # O estilo vem na coluna tratamento, decisao 068. O "fiel" das montagens de antes
         # e qualquer valor desconhecido dao a omissao, ver estilo_monte().
         return preparar_monte(clip["tipo"], imagens, focos, texto, entra, sai,
                               clip.get("tratamento"),
                               textos=ler_textos_fotos(clip.get("textos_fotos")),
                               opcoes=ler_textos_opcoes(clip.get("textos_opcoes")),
-                              duracao=duracao_do_clip(clip))
+                              duracao=duracao_do_clip(clip), clip_leg=clip_leg)
 
     caminho = clip.get("_caminho")
     if not caminho or not os.path.exists(caminho):
@@ -4129,11 +5487,23 @@ def preparar(clip, inv_por_nome):
 
     tratamento = (clip.get("tratamento") or "fiel").strip() or "fiel"
     im = ImageOps.exif_transpose(Image.open(caminho)).convert("RGB")
+    # A ZONA DE DESTAQUE so existe com a coluna destaque; sem ela fica None e nada abaixo muda.
+    destaque = destaque_do_clip(clip, texto, clip_leg)
 
     if tratamento == "rajada":
-        return {"tipo": "rajada",
-                "base": cobrir_foco(im, L, A, ler_foco(clip.get("fonte_imagem"))) or cobrir(im, L, A),
-                "capa": faixa_texto(texto)}
+        pronto = {"tipo": "rajada",
+                  "base": cobrir_foco(im, L, A, ler_foco(clip.get("fonte_imagem"))) or cobrir(im, L, A),
+                  "capa": faixa_texto(texto, clip_leg=clip_leg)}
+        if destaque is not None:
+            # A rajada nao se mexe: a foto fica onde o corte a pos, e a zona com ela.
+            destaque["foto"] = caixa_da_rajada(im.size, ler_foco(clip.get("fonte_imagem")))
+            fora = destaque_fora_do_ecra(destaque, *destaque["foto"])
+            if fora > DESTAQUE_FORA_AVISO:
+                print("  destaque do clip %s: na rajada a foto enche o ecra e o corte deixa %d%% da "
+                      "zona de fora; marca o ponto de foco dentro da zona"
+                      % (clip.get("ordem", "?"), round(100 * fora)))
+            pronto["destaque"] = destaque
+        return pronto
 
     escala_max = 1.0 + ZOOM
     alvo = encaixar(im, int(L * escala_max), int(A * escala_max))
@@ -4146,7 +5516,7 @@ def preparar(clip, inv_por_nome):
     modo = "esticar" if fundo is not None else "preto"
     mov = (clip.get("movimento") or "").strip()
     pronto = {"tipo": "foto", "sprite": com_margem(alvo, modo), "fundo": fundo,
-              "capa": faixa_texto(texto), "mov": mov}
+              "capa": faixa_texto(texto, clip_leg=clip_leg), "mov": mov}
     # O "aproxima" traz mais contas e mais um sprite, e por isso so se prepara quando e
     # pedido: sem ele o clip fica byte a byte o que era antes deste enquadramento existir.
     aproxima, az, aviso = ler_aproxima(mov)
@@ -4169,6 +5539,19 @@ def preparar(clip, inv_por_nome):
                   "movimento ocupa o clip inteiro e acaba debaixo do encadeado de saida"
                   % (clip.get("ordem", "?"), max(0.0, dur - entra - sai), APROXIMA_MOVIMENTO_MIN))
         pronto["aproxima"] = ap
+        if destaque is not None:
+            # O APROXIMA FECHA NO PONTO DE FOCO, e a zona vai com a foto: se o ponto de foco nao
+            # estiver dentro dela, no fim a zona pode ficar fora do ecra. Conta-se no fim do
+            # movimento, com o tamanho e o centro que o aproxima_quadro() la vai usar.
+            larg1, alt1 = aproxima_tamanho(ap, 1.0 + (az - 1.0) * aproxima_curva(1.0))
+            fora = destaque_fora_do_ecra(destaque, ap["fim"][0] - larg1 / 2.0,
+                                         ap["fim"][1] - alt1 / 2.0, larg1, alt1)
+            if fora > DESTAQUE_FORA_AVISO:
+                print("  destaque do clip %s: no fim do aproxima %d%% da zona fica fora do ecra; "
+                      "poe o ponto de foco dentro da zona, ou baixa o zoom"
+                      % (clip.get("ordem", "?"), round(100 * fora)))
+    if destaque is not None:
+        pronto["destaque"] = destaque
     return pronto
 
 
@@ -4202,7 +5585,7 @@ def desenhar(pronto, t_rel, duracao):
         # posicoes inteiras e os pixeis sao os mesmos, mas um encadeado ou uma margem
         # esquecida sao exatamente como nasce a borda que pisca.
         compor(tela, com_margem(im, "preto"), L / 2.0, A / 2.0, 1.0)
-        if pronto["capa"] is not None:
+        if pronto["capa"] is not None and not SEM_LEGENDAS:
             cor, mascara = pronto["capa"]
             tela.paste(cor, (0, 0), mascara)
         return tela
@@ -4263,7 +5646,9 @@ def desenhar(pronto, t_rel, duracao):
         return desenhar_monte(pronto, t_rel, duracao)
     if pronto["tipo"] == "rajada":
         tela = pronto["base"].copy()
-        if pronto["capa"] is not None:
+        if pronto.get("destaque") is not None:
+            tela = destacar(tela, pronto["destaque"], *pronto["destaque"]["foto"], t_rel=t_rel)
+        if pronto["capa"] is not None and not SEM_LEGENDAS:
             cor, mascara = pronto["capa"]
             tela.paste(cor, (0, 0), mascara)
         return tela
@@ -4278,7 +5663,9 @@ def desenhar(pronto, t_rel, duracao):
         ap = pronto["aproxima"]
         sprite, escala, cx, cy = aproxima_quadro(ap, aproxima_progresso(ap, t_rel, duracao))
         compor_visivel(tela, sprite, cx, cy, escala)
-        if pronto["capa"] is not None:
+        if pronto.get("destaque") is not None:
+            tela = destaque_na_foto(tela, pronto["destaque"], sprite, escala, cx, cy, t_rel)
+        if pronto["capa"] is not None and not SEM_LEGENDAS:
             cor, mascara = pronto["capa"]
             tela.paste(cor, (0, 0), mascara)
         return tela
@@ -4295,7 +5682,9 @@ def desenhar(pronto, t_rel, duracao):
     else:
         escala = (1.0 + ZOOM * p) / (1.0 + ZOOM)
     compor(tela, pronto["sprite"], L / 2.0, A / 2.0, escala)
-    if pronto["capa"] is not None:
+    if pronto.get("destaque") is not None:
+        tela = destaque_na_foto(tela, pronto["destaque"], pronto["sprite"], escala, L / 2.0, A / 2.0, t_rel)
+    if pronto["capa"] is not None and not SEM_LEGENDAS:
         cor, mascara = pronto["capa"]
         tela.paste(cor, (0, 0), mascara)
     return tela
@@ -4869,6 +6258,24 @@ def construir_som(ff, entradas, duracao_total, saida, fade_fim=0.0):
     return True
 
 
+def caminho_do_final(pasta, base_nome, sufixo=""):
+    """O caminho do filme: pasta/base_nome + sufixo + .mp4, ou base_nome_2 + sufixo, _3... se ja existir.
+
+    O SUFIXO FICA SEMPRE NO FIM DO NOME, DEPOIS DO NUMERO (corretor, 2 de outubro). O filme sem
+    legendas (o "_sem_legendas") nunca pode passar por um filme da sala: o ponto5 procura o render
+    mais recente pelos nomes que acabam num algarismo (v3_*[0-9].mp4). Com o numero depois do
+    sufixo, dois renders --sem-legendas no mesmo minuto davam "..._sem_legendas_2.mp4", que acaba
+    num algarismo, e um --master sem --filme fazia o ficheiro da sala sem legendas. Sem sufixo, o
+    nome e o de sempre.
+    """
+    final = os.path.join(pasta, base_nome + sufixo + ".mp4")
+    k = 2
+    while os.path.exists(final):
+        final = os.path.join(pasta, "%s_%d%s.mp4" % (base_nome, k, sufixo))
+        k += 1
+    return final
+
+
 RENDERS = os.path.join(REPO, "data", "renders.csv")
 COLUNAS_RENDER = ["quando", "montagem", "ficheiro", "leve", "duracao_s", "mb",
                   "clips", "parcial", "musicas"]
@@ -5028,17 +6435,30 @@ def quadros_da_fatia(k, n, total):
     return range(k, total, n)
 
 
-def carregar_montagem(nome, ate):
+def carregar_montagem(nome, ate, falar=True):
     """Tudo o que o render conta antes de desenhar, numa funcao so, para o pai e para as fatias.
 
     Le a montagem e o inventario, poe em cada clip o ficheiro que o data/finais.csv manda
     abrir, liga os encadeados e corta no --ate. Devolve o estado de que fotograma() precisa.
     O pai e cada fatia partem daqui, e por isso contam o mesmo desvio, o mesmo fim e o
     mesmo numero de fotogramas: um que contasse de outra maneira desenhava outro filme.
+
+    E O ESTILO DA MESA PASSA A VALER AQUI (2 de outubro), pela mesma razao: o pai e cada fatia
+    leem o mesmo <nome>.estilo.json da mesma pasta, e desenham com as mesmas letras e cores. Sem
+    ficheiro volta o de sempre, mesmo que este processo tenha feito antes outra montagem com
+    estilo. `falar` e falso nas fatias: o pai ja disse o que havia a dizer do estilo.
     """
     caminho_csv = os.path.join(MONTAGENS, nome + ".csv")
     with open(caminho_csv, encoding="utf-8-sig", newline="") as fh:
         clips = list(csv.DictReader(fh))
+    avisos_estilo = []
+    estilo = aplicar_estilo(ler_estilo(nome), avisos_estilo)
+    if falar:
+        for a in avisos_estilo:
+            print("  AVISO: %s" % a)
+        if estilo:
+            print("  estilo da Mesa: %s" % ", ".join(
+                "%s.%s=%s" % (parte, chave, v) for parte in sorted(estilo) for chave, v in sorted(estilo[parte].items())))
     with open(INVENTARIO, encoding="utf-8-sig", newline="") as fh:
         inv = list(csv.DictReader(fh))
     inv_por_nome = {r["ficheiro"].lower(): r for r in inv}
@@ -5093,6 +6513,15 @@ def carregar_montagem(nome, ate):
     for c in maus:
         print("  CONTADOR QUE NAO CONSIGO LER, sai preto: clip %s, %r"
               % (c["ordem"], (c["texto_ecra"] or "")[:60]))
+    # OS TEXTOS QUE NAO SAEM COMO ESTAO ESCRITOS (2 de outubro): um caracter que nem a letra nem a de
+    # emojis tem (caixa vazia), ou um emoji de varios caracteres que esta Pillow nao junta. Os emojis
+    # simples saem a cores e nao se dizem. So o pai fala; o montar ja o disse antes.
+    if falar:
+        for a in avisos_dos_textos(resto):
+            print("  AVISO: %s" % a)
+        # a legenda numa linha que nao cabe, e a posicao que nao chega onde foi pedida (3 de outubro)
+        for a in avisos_das_legendas(resto):
+            print("  AVISO: %s" % a)
 
     desvio = float(resto[0]["inicio_s"]) if resto else 0.0
     fim = max(float(c["fim_s"]) for c in resto) - desvio
@@ -5250,6 +6679,11 @@ def comando_da_fatia(nome, k, n, argv):
     for opcao in ("--ate", "--escala"):
         if opcao in argv:
             cmd += [opcao, argv[argv.index(opcao) + 1]]
+    # O --sem-legendas desenha outros fotogramas, e por isso vai para cada fatia, como o estilo:
+    # so no pai, o encoder recebia um fotograma com faixa e o seguinte sem ela, alternados. Sem
+    # ele a linha de comando e a de sempre.
+    if "--sem-legendas" in argv:
+        cmd.append("--sem-legendas")
     return cmd
 
 
@@ -5361,6 +6795,14 @@ def main():
     # de 23 de setembro, e faz a do telemovel direto do ficheiro final. O ficheiro final sai na
     # mesma: e ele que o desenho dos fotogramas produz, e e dele que a copia do telemovel sai.
     so_telemovel = "--so-telemovel" in sys.argv
+    # O FILME PARA O DAVINCI (2 de outubro), ver SEM_LEGENDAS: sem a faixa de baixo, com o nome a
+    # dize-lo, e as legendas num .srt a parte. Posto aqui a cada chamada, e nao so quando vem: um
+    # main() corrido dentro de outro processo (os testes) nao herda o de uma chamada anterior.
+    global SEM_LEGENDAS
+    SEM_LEGENDAS = "--sem-legendas" in sys.argv
+    # SO O FICHEIRO FINAL, sem a copia leve nem a do telemovel: o pacote do DaVinci so precisa dele,
+    # e as duas copias eram 5 a 10 minutos a mais de um render que ja e o mais demorado.
+    sem_copias = "--sem-copias" in sys.argv
     fatias = fatias_pedidas(sys.argv)
     ate = None
     if "--ate" in sys.argv:
@@ -5376,11 +6818,17 @@ def main():
         # A pasta das montagens, que o pai passa as fatias: pode nao ser a do repositorio.
         global MONTAGENS
         MONTAGENS = sys.argv[sys.argv.index("--montagens") + 1]
+    if "--saida" in sys.argv and fatia is None:
+        # OUTRA PASTA PARA O FILME E PARA OS FICHEIROS DE TRABALHO (o _corpo, o _som, os videos de
+        # abertura): o pacote do DaVinci faz tudo dentro da sua pasta nova, e nada do que la fica
+        # escreve por cima de um ficheiro de outro render. Sem ele e a SAIDA de sempre.
+        global SAIDA
+        SAIDA = sys.argv[sys.argv.index("--saida") + 1]
 
     if fatia is None:
         ff = ffmpeg()
         os.makedirs(SAIDA, exist_ok=True)
-    estado = carregar_montagem(nome, ate)
+    estado = carregar_montagem(nome, ate, falar=fatia is None)
     if fatia is not None:
         correr_fatia(estado, fatia[0], fatia[1], canal)
         return
@@ -5488,11 +6936,7 @@ def main():
     carimbo = datetime.datetime.now().strftime("%Y-%m-%d_%H%M")
     parcial = bool(ate) or L != 1920
     base_nome = "%s_%s%s" % (nome, carimbo, "_parcial" if parcial else "")
-    final = os.path.join(SAIDA, base_nome + ".mp4")
-    k = 2
-    while os.path.exists(final):
-        final = os.path.join(SAIDA, "%s_%d.mp4" % (base_nome, k))
-        k += 1
+    final = caminho_do_final(SAIDA, base_nome, "_sem_legendas" if SEM_LEGENDAS else "")
     if len(partes) == 1:
         os.replace(partes[0], final)
     else:
@@ -5500,9 +6944,18 @@ def main():
         with open(lista, "w", encoding="utf-8") as fh:
             for p in partes:
                 fh.write("file '%s'\n" % p.replace("\\", "/"))
+        # NO FILME PARA O DAVINCI, UM FOTOGRAMA A CADA 0,04 S, SEM BURACOS. O primeiro video de
+        # abertura da 518 fotogramas para 20,8 s (o som e mais comprido do que a imagem), e a juncao
+        # deixa um buraco de 0,12 s entre ele e o seguinte: um leitor segura o ultimo fotograma, um
+        # programa de montagem pode contar fotogramas, e entao tudo o que vem a seguir chega 2
+        # fotogramas mais cedo do que o .srt diz. Com fotogramas a cadencia certa o buraco enche-se
+        # com o mesmo fotograma, que e o que o leitor ja mostrava, e as duas contas dao o mesmo. So
+        # aqui: sem --sem-legendas a juncao e a de sempre, ao byte.
+        cadencia = ["-fps_mode", "cfr", "-r", str(FPS)] if SEM_LEGENDAS else []
         r = subprocess.run([ff, "-hide_banner", "-loglevel", "error", "-y",
-                            "-f", "concat", "-safe", "0", "-i", lista,
-                            "-c:v", "libx264", "-crf", "20", "-preset", "veryfast",
+                            "-f", "concat", "-safe", "0", "-i", lista]
+                           + cadencia +
+                           ["-c:v", "libx264", "-crf", "20", "-preset", "veryfast",
                             "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "192k",
                             final], capture_output=True, text=True)
         if r.returncode != 0:
@@ -5515,7 +6968,7 @@ def main():
     # A copia leve, a que vai para o telemovel, passa a sair sempre com o render
     # e com o mesmo nome. Antes era feita a mao, e a mao esquece-se.
     leve = ""
-    if os.path.exists(final) and not parcial and not so_telemovel:
+    if os.path.exists(final) and not parcial and not so_telemovel and not sem_copias:
         leve = final[:-4] + "_leve.mp4"
         r = subprocess.run([ff, "-hide_banner", "-loglevel", "error", "-y",
                             "-i", final, "-vf", "scale=1280:720:flags=lanczos",
@@ -5530,7 +6983,7 @@ def main():
     # telemovel, e o envio para la tem um limite de 30 MB. A copia leve de um filme
     # de 6:30 ja tem 41 MB e nao chegava. Quando a leve passa dos 29 MB, sai tambem
     # uma copia a 960x540, apertada ate caber.
-    if ((so_telemovel and os.path.exists(final) and not parcial)
+    if not sem_copias and ((so_telemovel and os.path.exists(final) and not parcial)
             or (leve and os.path.exists(leve) and os.path.getsize(leve) > 29 * 1048576)):
         movel = final[:-4] + "_telemovel.mp4"
         # POR TAMANHO ALVO, E NAO POR TENTATIVA. Isto era uma escada de qualidade, crf 28, 31

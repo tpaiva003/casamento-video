@@ -12875,6 +12875,8 @@ def teste_validador_apanha_o_emoji_e_os_erros_de_escrita():
     do jantar. A regra da Mesa e positiva (o que a Arial garante) e nao uma lista negra de
     emojis, que envelhecia; por isso o que aqui se mede e se a regra da Mesa CONCORDA COM A
     PILLOW, letra a letra, sobre a mesma letra que o render usa (render.FONTE_TEXTO).
+    Desde 2 de outubro (decisao 106) o filme desenha os emojis a cores, e a conta e a do render:
+    render.caracteres_sem_letra, o que nem o Arial Bold nem a letra de emojis desenham.
 
     E os erros de escrita: a proposta e construida a partir do texto inteiro e nao do pedaco
     apanhado, senao o par do "12ºano" propunha "2º" para "2º", porque a letra que vem a seguir
@@ -12937,6 +12939,7 @@ def teste_validador_apanha_o_emoji_e_os_erros_de_escrita():
     letras = set(" .,;:!?'\"()-–—…/&@#%€$ªº+*=<>|_~^`0123456789")
     letras |= set("AaÀàÁáÂâÃãÇçÉéÊêÍíÓóÔôÕõÚúÜüÑñŁłČčŠšŽžØøÅå")
     letras |= set("😮🎉❤")
+    letras |= set("中𝄞")        # e dois que nem o Arial Bold nem a letra de emojis desenham (106)
     if os.path.exists(estado):
         with open(estado, encoding="utf-8") as fh:
             est = json.load(fh)
@@ -12959,7 +12962,13 @@ def teste_validador_apanha_o_emoji_e_os_erros_de_escrita():
     # O .notdef, desenhado a partir de um ponto de codigo de uso privado que nenhuma letra
     # tem. Um caracter que saia igual a isto e um rectangulo vazio no video.
     sem_glifo = _desenha("")
-    pillow_nao_desenha = {ch for ch in letras if _desenha(ch) == sem_glifo}
+    # DESDE 2 DE OUTUBRO O FILME DESENHA OS EMOJIS A CORES (decisao 106): o que sai numa caixa
+    # vazia e o que nem o Arial Bold nem a letra de emojis desenham, e e essa a conta do render
+    # (render.caracteres_sem_letra). A Mesa mudou o forasDaLetra para a mesma regra, e o teste
+    # passou a comparar com ela; o .notdef so confirma que o render nao conta um que o Arial tem.
+    pillow_nao_desenha = {ch for ch in letras if render.caracteres_sem_letra(ch, fonte)}
+    if any(_desenha(ch) != sem_glifo for ch in pillow_nao_desenha):
+        problemas.append("o render conta como sem letra um caracter que o Arial desenha")
 
     musicas = [("Lang Lang - Beauty and the Beast (From Lang Lang Plays Disney  Live)", True),
                ("Inês Homem de Melo – Fome de Viagem (Music Video).mp3", True),
@@ -12988,6 +12997,7 @@ process.stdout.write(JSON.stringify({
   /* UM EMOJI CONTA UMA VEZ. Sao dois pedacos de texto em JavaScript, e sem o salto do par
      substituto a mensagem saia com dois rectangulos partidos em vez de um caracter. */
   emojiNoTexto: forasDaLetra("O pai ficou assim 😮 quando soube do preço"),
+  semLetraNoTexto: forasDaLetra("O pai ficou assim 𝄞 quando soube do preço"),
   musicas: MUSICAS.map(musicaConhecida),
   recados: RECADOS.map(eRecado),
   /* o texto de ecra e o de cada foto de um grupo, EM BRUTO: o espaco nas pontas so se ve
@@ -13026,11 +13036,16 @@ process.stdout.write(JSON.stringify({
         # a Arial desenha bem (os acentos, o euro, o travessao) nao se volta a abrir.
         for ch in sorted(marcados - pillow_nao_desenha)[:6]:
             problemas.append("a Mesa marca %r e a Arial desenha-o bem" % ch)
-        if "\U0001F62E" not in marcados:
-            problemas.append("o emoji do clip 94 da demo_v3 passou pelo validador")
-        if saida["emojiNoTexto"] != ["\U0001F62E"]:
-            problemas.append("o emoji dentro de uma frase saiu como %s, esperado um caracter so"
+        # o emoji do clip 94 da demo_v3 sai a cores desde 2 de outubro (106): ja nao e erro
+        if "\U0001F62E" in marcados:
+            problemas.append("a Mesa marca o emoji do clip 94 da demo_v3, que o filme desenha a cores")
+        if saida["emojiNoTexto"] != []:
+            problemas.append("o emoji dentro de uma frase saiu como %s, e o filme desenha-o"
                              % (saida["emojiNoTexto"],))
+        # UM CARACTER FORA DO PLANO BASICO CONTA UMA VEZ: sao dois pedacos de texto em JavaScript
+        if saida["semLetraNoTexto"] != ["\U0001D11E"]:
+            problemas.append("a clave de sol dentro de uma frase saiu como %s, esperado um caracter so"
+                             % (saida["semLetraNoTexto"],))
         for (nome, era), veio in zip(musicas, saida["musicas"]):
             if veio != era:
                 problemas.append("a musica %r deu %s, esperado %s" % (nome[:40], veio, era))
@@ -13041,7 +13056,7 @@ process.stdout.write(JSON.stringify({
             problemas.append("os textos do clip vieram aparados ou em falta: %s" % (saida["textos"],))
     verifica("Mesa: o validador", not problemas,
              "; ".join(problemas)[:240] if problemas else
-             "%d caracteres conferidos com a Pillow (%d sem glifo, o emoji incluido), "
+             "%d caracteres conferidos com o render (%d sem letra nem emoji), "
              "%d textos de escrita, %d de sinais" % (len(letras), len(pillow_nao_desenha),
                                                      len(escrita), len(sinais)))
 
@@ -13059,6 +13074,8 @@ CAMPOS_EXPORTADOS = {
     # os textos de cada foto e as suas opcoes saem ja tratados, nao em bruto
     "xf": "textos_fotos", "vf": "textos_opcoes", "vm": "textos_opcoes",
     "tt": "textos_opcoes", "vt": "textos_opcoes",
+    # a zona de destaque de uma foto solta, 2 de outubro (contrato da Mesa, clip.zd)
+    "zd": "destaque",
 }
 
 
@@ -13907,6 +13924,4719 @@ def teste_fins_de_frase_avisam_quando_a_musica_muda_de_sitio():
              "no sitio medido entra, a 0,3 s dali avisa; o piano da abertura no acorde, sem rampa")
 
 
+# --------------------------------------------------- o estilo da Mesa, 2 de outubro
+# O Tiago, a 2 de outubro, para o dia com a Clara: a Mesa deixa mudar a letra, os tamanhos e as
+# cores (est.estilo). O montar_da_mesa.py escreve data/montagens/<nome>.estilo.json so com o que
+# difere da omissao, e o render le-o no carregar_montagem(), no pai e em cada fatia.
+#
+# O QUE ISTO GUARDA. Sem estilo o filme e o de sempre ao byte, e isso ja o guardam as assinaturas
+# de cima (ASSINATURA_CORPO_SINTETICO, ASSINATURAS_SEM_TEXTO, ASSINATURAS_TEXTO_36), que o estilo
+# nao mudou. Aqui guarda-se o resto: um estilo todo na omissao e o mesmo que nenhum; um estilo
+# nao fica preso ao processo depois de sair; com estilo muda o que foi pedido, medido no pixel; a
+# letra variavel sai no peso pedido; uma letra que nao abre nao para o render; e as fatias, que
+# sao outros processos, desenham com o mesmo estilo que o pai.
+
+# A tabela do contrato de 2 de outubro (saida/discussao/contrato_mesa_1002.md), copiada a letra:
+# o contrato diz que as omissoes sao as do codigo, e e isso que se confirma.
+ESTILO_DO_CONTRATO = {
+    "legenda": {"fonte": "arial_bold", "tamanho": 46, "cor": "#FFFFFF", "fundo": 0.647},
+    "cartao": {"fonte": "arial_bold", "curto": 100, "frase": 78, "quente": "#E2B88C", "claro": "#FFF7EA",
+               "brilho": "#FF9646"},
+    "nome": {"tamanho": 120},
+    "contador": {"linha": "#5C4E58", "regua": "#968490", "regua_texto": "#B0A4AC", "ponteiro": "#968A92",
+                 "marco": "#C83E56", "marco_texto": "#FFE2E8", "ano": "#F6F0F4", "ano_longe": "#6C6068",
+                 "nascimento": "#ECCCA8"},
+    # A letra (a cor das letras do letreiro solido) e o acrescento de 2 de outubro ao contrato:
+    # as paletas da Clara chamam-se pelas duas cores, e a segunda e a das letras. A fonte (a letra do
+    # letreiro, 2 de outubro a noite) e o Impact, "como esta": um id de data/fontes_intro.json.
+    "intro": {"fundo": "#96161C", "papel": "#F7E9D2", "tinta": "#2E0E10", "letra": "#FCFAFA", "tamanho": 288,
+              "fonte": "impact"},
+}
+# Um estilo que mexe em tudo o que o render desenha, com cores que nao existem no filme de hoje,
+# para se poderem contar no pixel.
+ESTILO_DE_ENSAIO = {
+    "legenda": {"fonte": "montserrat_bold", "tamanho": 60, "cor": "#FFD34D", "fundo": 0.9},
+    "cartao": {"fonte": "fraunces_bold", "curto": 120, "quente": "#40A0FF", "claro": "#40A0FF",
+               "brilho": "#000000"},
+    "nome": {"tamanho": 140},
+    "contador": {"linha": "#00C000", "marco": "#2060FF", "ponteiro": "#E0E000", "ano": "#FF8000",
+                 "regua_texto": "#00FFFF", "nascimento": "#FF00FF"},
+}
+
+
+def _quadros_de_ensaio(render, pasta):
+    """md5 de fotogramas de cada coisa que o estilo toca, pelo preparar() e desenhar() do render.
+
+    Um cartao curto e uma frase, o nome do bebe, uma foto com legenda, os dois contadores, a fita
+    de 1995 e um grupo com texto nas fotos e outro na legenda de baixo.
+    """
+    import hashlib
+    caminhos = []
+    for k, a in enumerate([4 / 3.0, 3 / 4.0, 16 / 9.0]):
+        c = os.path.join(pasta, "gradiente%d.png" % k)
+        if not os.path.exists(c):
+            _foto_gradiente(k, a).save(c)
+        caminhos.append(c)
+    casos = [
+        (dict(tipo="cartao", texto_ecra="Era uma vez"), 3.6, (0.3, 2.0)),
+        (dict(tipo="cartao", texto_ecra="Durante este periodo tambem o Tiago comprou o primeiro carro"),
+         3.6, (2.0,)),
+        (dict(tipo="nome", texto_ecra="O Tiago"), 3.0, (1.5,)),
+        (dict(tipo="foto", texto_ecra="Com o pai", tratamento="fundo", _caminho=caminhos[0]), 4.0, (2.0,)),
+        (dict(tipo="contador", texto_ecra="2026>1995|4 de outubro de 2026;2012=O encontro"), 9.0,
+         (0.9, 2.5, 4.6)),
+        (dict(tipo="contador", texto_ecra="04/10/2026>25/12/2025|4 de outubro de 2026;25/12/2025=o pedido"),
+         8.0, (1.0, 4.0)),
+        (dict(tipo="marcos", texto_ecra="1995@0-0.75|17/01 Terramoto em Kobe;*12/09 Nasce o Tiago"), 9.0,
+         (0.5, 3.0, 5.6)),
+        (dict(tipo="lado", tratamento="2v", texto_ecra="Amigos", textos_fotos='["Porto", "Gaia"]',
+              _caminhos=caminhos[:2], duracao_s="3"), 3.0, (2.5,)),
+        (dict(tipo="colagem", tratamento="filas", texto_ecra="", textos_fotos='["Natal", "", "2019"]',
+              textos_opcoes='{"modo": "legenda"}', _caminhos=caminhos, duracao_s="4",
+              transicao_s="0.4"), 4.0, (3.0,)),
+    ]
+    saida = []
+    for clip, dur, tempos in casos:
+        clip = dict(clip)
+        for col, v in (("duracao_s", str(dur)), ("transicao_s", "0"), ("ficheiro", ""), ("fonte_imagem", "")):
+            clip.setdefault(col, v)
+        pronto = render.preparar(clip, {})
+        for t in tempos:
+            saida.append(hashlib.md5(render.desenhar(pronto, t, dur).tobytes()).hexdigest())
+    return saida
+
+
+def teste_estilo_da_mesa_tem_as_omissoes_do_codigo():
+    """As omissoes do estilo sao as do contrato, e um estilo todo na omissao e o mesmo que nenhum.
+
+    O DEFEITO QUE ISTO EVITA: o montar escreve o estilo.json so com o que difere da omissao. Se
+    a omissao do render nao fosse a do filme de hoje (um "#FFFFFF" contra um branco de 254, um
+    fundo de 0,65 contra os 165 de alfa), a Mesa que mostra o de hoje gravava um estilo "igual"
+    que o montar via diferente, e o filme saia com uma cor que ninguem escolheu. E os do intro
+    tem de ser os do intro_flipbook, que e quem a desenha.
+    """
+    import render
+    import intro_flipbook
+    problemas = []
+    omissao = render.estilo_omissao()
+    if omissao != ESTILO_DO_CONTRATO:
+        problemas.append("as omissoes nao sao as do contrato: %s" % {
+            p: {k: v for k, v in omissao[p].items() if ESTILO_DO_CONTRATO.get(p, {}).get(k) != v}
+            for p in omissao if omissao[p] != ESTILO_DO_CONTRATO.get(p)})
+    intro = {"fundo": intro_flipbook.VERMELHO, "papel": intro_flipbook.PAPEL, "tinta": intro_flipbook.TINTA,
+             "letra": intro_flipbook.LETRA}
+    for k, rgb in intro.items():
+        if render.cor_rgb(omissao["intro"][k]) != tuple(rgb):
+            problemas.append("intro.%s %s e o intro_flipbook tem %s" % (k, omissao["intro"][k], rgb))
+    # O CORPO DO LETREIRO: o de hoje, o minimo da 084 e o maior que cabe, os mesmos nos dois.
+    if (render.INTRO_TAMANHO, render.INTRO_TAMANHO_MIN, render.INTRO_TAMANHO_MAX) != \
+            (intro_flipbook.TAMANHO, intro_flipbook.TAMANHO_MIN, intro_flipbook.TAMANHO_MAX):
+        problemas.append("o corpo da intro no render (%d, %d a %d) nao e o do intro_flipbook (%d, %d a %d)"
+                         % (render.INTRO_TAMANHO, render.INTRO_TAMANHO_MIN, render.INTRO_TAMANHO_MAX,
+                            intro_flipbook.TAMANHO, intro_flipbook.TAMANHO_MIN, intro_flipbook.TAMANHO_MAX))
+    if intro_flipbook.tamanho_que_cabe() != intro_flipbook.TAMANHO_MAX:
+        problemas.append("o maior letreiro que cabe e %d e o TAMANHO_MAX diz %d"
+                         % (intro_flipbook.tamanho_que_cabe(), intro_flipbook.TAMANHO_MAX))
+    for vazio in (None, {}, "", ESTILO_DO_CONTRATO,
+                  {"legenda": {"cor": "#fff", "fundo": 165 / 255.0, "tamanho": "46"}, "nome": {"tamanho": 120.0}}):
+        if render.normalizar_estilo(vazio) != {}:
+            problemas.append("%r nao da estilo vazio: %r" % (vazio, render.normalizar_estilo(vazio)))
+    avisos = []
+    limpo = render.normalizar_estilo({
+        "legenda": {"cor": "#ffd34d", "tamanho": "60", "fundo": 0.9, "sombra": 1},
+        "cartao": {"quente": "azul", "frase": 300, "fonte": "nao_existe"},
+        "intro": {"fonte": "arial_bold", "tamanho": 100, "fundo": "#1b2a4a"},
+        "outra": {"x": 1}}, avisos)
+    certo = {"legenda": {"cor": "#FFD34D", "tamanho": 60, "fundo": 0.9}, "intro": {"fundo": "#1B2A4A"}}
+    if limpo != certo:
+        problemas.append("limpo %r, devia ser %r" % (limpo, certo))
+    for pedaco in ("sombra", "azul", "frase 300", "nao_existe", "nao e uma das letras oferecidas para a intro",
+                   "intro.tamanho 100", "'outra'"):
+        if not any(pedaco in a for a in avisos):
+            problemas.append("sem aviso de %r: %s" % (pedaco, avisos))
+    verifica("estilo: as omissoes sao as do codigo e do contrato", not problemas,
+             "; ".join(problemas[:3]) if problemas else
+             "%d partes, intro igual ao intro_flipbook, %d avisos do que nao presta" % (len(omissao), len(avisos)))
+
+
+def teste_estilo_vazio_desenha_o_de_sempre():
+    """Sem estilo, com um estilo todo na omissao e depois de um estilo, os fotogramas sao os mesmos ao byte.
+
+    DOIS DEFEITOS POSSIVEIS. Um estilo "igual ao de hoje" (o que a Mesa grava se ela abrir o
+    painel e nao mexer) tem de desenhar o filme de hoje. E um estilo nao pode ficar preso ao
+    processo: o montar e o render correm no mesmo Python nos testes, e o render aplica o estilo
+    de cada montagem que carrega; uma cor do contador que ficasse no linha_tempo depois de se
+    voltar ao de sempre punha o verde de uma montagem na seguinte.
+    """
+    import contextlib
+    import io
+    import tempfile
+    import linha_tempo
+    import render
+    pasta = tempfile.mkdtemp(prefix="teste_estilo_vazio_")
+    guardado = _resolucao(render, 960, 540)
+    problemas = []
+    try:
+        with contextlib.redirect_stdout(io.StringIO()):
+            render.aplicar_estilo({})
+            sempre = _quadros_de_ensaio(render, pasta)
+            cores = {k: getattr(linha_tempo, k) for k in linha_tempo._CORES_DE_SEMPRE}
+            render.aplicar_estilo(ESTILO_DO_CONTRATO)
+            contrato = _quadros_de_ensaio(render, pasta)
+            render.aplicar_estilo(ESTILO_DE_ENSAIO)
+            ensaio = _quadros_de_ensaio(render, pasta)
+            render.aplicar_estilo({})
+            depois = _quadros_de_ensaio(render, pasta)
+            cores_depois = {k: getattr(linha_tempo, k) for k in linha_tempo._CORES_DE_SEMPRE}
+    finally:
+        render.L, render.A = guardado
+        render.aplicar_estilo({})
+    if contrato != sempre:
+        problemas.append("o estilo todo na omissao muda %d de %d fotogramas"
+                         % (sum(a != b for a, b in zip(contrato, sempre)), len(sempre)))
+    if depois != sempre:
+        problemas.append("depois de um estilo, o de sempre ficou com %d fotogramas diferentes"
+                         % sum(a != b for a, b in zip(depois, sempre)))
+    if cores_depois != cores:
+        problemas.append("as cores do linha_tempo ficaram com o estilo: %s"
+                         % [k for k in cores if cores[k] != cores_depois[k]])
+    mudam = sum(a != b for a, b in zip(ensaio, sempre))
+    if mudam != len(sempre):
+        problemas.append("o estilo de ensaio so muda %d de %d fotogramas" % (mudam, len(sempre)))
+    verifica("estilo: vazio ou na omissao desenha o de sempre", not problemas,
+             "; ".join(problemas) if problemas else
+             "%d fotogramas de 9 clips iguais ao byte; com o de ensaio mudam os %d" % (len(sempre), mudam))
+
+
+def teste_estilo_muda_a_legenda_o_cartao_e_o_contador():
+    """Com um estilo, a legenda, o cartao e o contador mudam como pedido, medido no pixel.
+
+    A cor e medida no pixel e o corpo na altura das maiusculas, no ecra de 1080: um estilo que
+    chegasse ao ficheiro e nao ao desenho (uma constante lida na importacao, um valor de omissao
+    preso na definicao da funcao) passava em qualquer teste que so lesse o JSON.
+    """
+    import contextlib
+    import io
+    import numpy as np
+    import render
+    guardado = _resolucao(render, 1920, 1080)
+    L, A = 1920, 1080
+    problemas = []
+    medidas = []
+
+    def maiusculas(estilo):
+        """(altura das maiusculas de "HHHH" na legenda, alfa da faixa, altura pela letra, a mascara)."""
+        render.aplicar_estilo(estilo)
+        cor, mascara = render.faixa_texto("HHHH")
+        rgb, m = np.asarray(cor), np.asarray(mascara)
+        alvo = np.array(render.legenda_cor())
+        letras = (m == 255) & (np.abs(rgb.astype(int) - alvo).sum(axis=2) <= 3)
+        filas = np.where(letras.any(axis=1))[0]
+        b = render.letra("legenda", render.legenda_tamanho()).getbbox("H")
+        return (int(filas[-1] - filas[0] + 1) if len(filas) else 0,
+                int(m[A - render.LEGENDA_FUNDO - 2, 10]), b[3] - b[1], m.tobytes())
+
+    def conta(im, cor, tol=1):
+        return int((np.abs(np.asarray(im).astype(int) - np.array(cor)).max(axis=2) <= tol).sum())
+
+    try:
+        with contextlib.redirect_stdout(io.StringIO()):
+            hoje = maiusculas({})
+            em_60 = maiusculas({"legenda": {"tamanho": 60, "cor": "#FFD34D", "fundo": 0.9}})
+            em_mont = maiusculas({"legenda": {"tamanho": 60, "fonte": "montserrat_bold"}})
+            maiusculas_arial_60 = maiusculas({"legenda": {"tamanho": 60}})[3]
+            # O CARTAO: as letras sem brilho, com o quente igual ao claro, sao essa cor por dentro.
+            cartoes = {}
+            for etiqueta, curto in (("100", None), ("120", 120)):
+                cartao = {"quente": "#40A0FF", "claro": "#40A0FF", "brilho": "#000000"}
+                if curto:
+                    cartao["curto"] = curto
+                render.aplicar_estilo({"cartao": cartao})
+                p = render.preparar(dict(tipo="cartao", texto_ecra="Era uma vez", duracao_s="3.6",
+                                         transicao_s="0", ficheiro="", fonte_imagem=""), {})
+                cartoes[etiqueta] = render.desenhar(p, 2.0, 3.6)
+            render.aplicar_estilo({})
+            p = render.preparar(dict(tipo="cartao", texto_ecra="Era uma vez", duracao_s="3.6", transicao_s="0",
+                                     ficheiro="", fonte_imagem=""), {})
+            cartao_hoje = render.desenhar(p, 2.0, 3.6)
+            # O CONTADOR, parado na primeira paragem com o marco aceso, e a fita de 1995 aberta.
+            quadros = {}
+            for etiqueta, estilo in (("hoje", {}), ("ensaio", ESTILO_DE_ENSAIO)):
+                render.aplicar_estilo(estilo)
+                p = render.preparar(dict(tipo="contador", texto_ecra="2026>1995|4 de outubro de 2026",
+                                         duracao_s="9", transicao_s="0", ficheiro="", fonte_imagem=""), {})
+                quadros[etiqueta] = render.desenhar(p, 9.0 * 0.62 / 2 / 2, 9.0)
+                p = render.preparar(dict(tipo="marcos", texto_ecra="1995@0-0.75|17/01 Terramoto em Kobe",
+                                         duracao_s="9", transicao_s="0", ficheiro="", fonte_imagem=""), {})
+                quadros[etiqueta + "_fita"] = render.desenhar(p, 4.0, 9.0)
+    finally:
+        render.L, render.A = guardado
+        render.aplicar_estilo({})
+    medidas.append("maiusculas %d -> %d px" % (hoje[0], em_60[0]))
+    for nome, (alto, alfa, esperado, _m), alfa_certo in (("hoje", hoje, 165), ("60 em Arial", em_60, 230),
+                                                         ("60 em Montserrat", em_mont, 165)):
+        if abs(alto - esperado) > 2:
+            problemas.append("legenda %s: maiusculas com %d px, a letra da %d" % (nome, alto, esperado))
+        if alfa != alfa_certo:
+            problemas.append("legenda %s: faixa com alfa %d, devia ser %d" % (nome, alfa, alfa_certo))
+    if not em_60[0] > hoje[0] + 7:
+        problemas.append("a legenda a 60 nao cresceu: %d contra %d px" % (em_60[0], hoje[0]))
+    if em_mont[3] == maiusculas_arial_60:
+        problemas.append("a legenda em Montserrat sai igual a do Arial")
+    azul = (64, 160, 255)
+    n100, n120, n_hoje = conta(cartoes["100"], azul), conta(cartoes["120"], azul), conta(cartao_hoje, azul)
+    medidas.append("cartao azul %d px" % n100)
+    if n100 < 2000 or n_hoje:
+        problemas.append("cartao: %d pixeis da cor pedida, e %d no de hoje" % (n100, n_hoje))
+
+    def altura(im):
+        filas = np.where((np.asarray(im.convert("L")) > 40).any(axis=1))[0]
+        return filas[-1] - filas[0] + 1
+
+    razao = altura(cartoes["120"]) / float(altura(cartoes["100"]))
+    medidas.append("curto 120/100 = %.2f" % razao)
+    if abs(razao - 1.2) > 0.05 or n120 <= n100:
+        problemas.append("cartao curto a 120: altura %.2f vezes a de 100" % razao)
+    y = int(A * 0.60)
+    pixeis = {"linha": ((100, y), "#00C000"), "ponteiro": ((L // 2, y - 40), "#E0E000"),
+              "marco": ((L // 2, y - 15), "#2060FF")}
+    for chave, ((x, yy), cor) in pixeis.items():
+        if quadros["ensaio"].getpixel((x, yy)) != render.cor_rgb(cor):
+            problemas.append("contador: %s em %s e %s, pedi %s" % (chave, (x, yy), quadros["ensaio"].getpixel((x, yy)), cor))
+        if quadros["hoje"].getpixel((x, yy)) == render.cor_rgb(cor):
+            problemas.append("contador: o de hoje ja tinha %s em %s" % (cor, chave))
+    for chave, im, cor, minimo in (("ano", quadros["ensaio"], (255, 128, 0), 2000),
+                                   ("regua_texto na fita", quadros["ensaio_fita"], (0, 255, 255), 300)):
+        n = conta(im, cor, 0)
+        medidas.append("%s %d px" % (chave, n))
+        if n < minimo:
+            problemas.append("%s: %d pixeis da cor pedida" % (chave, n))
+    verifica("estilo: legenda, cartao e contador mudam como pedido", not problemas,
+             "; ".join(problemas[:3]) if problemas else "; ".join(medidas))
+
+
+def teste_letra_variavel_no_peso_pedido():
+    """Uma letra variavel sai no eixo_peso de data/fontes.json, e nao no peso de omissao do ficheiro.
+
+    O DEFEITO: o ImageFont.truetype() abre um ficheiro variavel na instancia de omissao, e essa
+    nao e a pedida. Medido a 2 de outubro: o Montserrat e o League Spartan abrem no Thin (100), o
+    Fraunces no Black (900). A Mesa mostrava a letra a 700, pedida a Google, e o filme saia com
+    outra, mais fina ou mais gorda, sem ninguem saber porque. A medida e a tinta do texto, contra
+    a instancia com nome do proprio ficheiro para esse peso ("Bold" a 700, "Regular" a 400).
+    As letras que a Mesa marca "a_descarregar" e ainda nao estao em disco dizem-se e nao contam:
+    o render cai no Arial Bold com aviso, ver teste_letra_que_nao_abre_cai_no_arial.
+    """
+    import contextlib
+    import io
+    from PIL import ImageDraw, ImageFont
+    import render
+    texto = "Hamburgefonstiv nn"
+
+    def tinta(f):
+        im = Image.new("L", (1400, 160), 0)
+        ImageDraw.Draw(im).text((10, 10), texto, font=f, fill=255)
+        return float(sum(im.histogram()[k] * k for k in range(256)))
+
+    problemas, medidas, por_descarregar = [], [], []
+    instancias = {400: "Regular", 700: "Bold"}
+    entradas = render.letras_da_mesa()
+    variaveis = {i: e for i, e in entradas.items() if e.get("eixo_peso")}
+    if not variaveis:
+        salta("letra variavel no peso pedido", "data/fontes.json sem letras variaveis")
+        return
+    comparadas = 0
+    for ident, e in variaveis.items():
+        if not os.path.exists(e["ficheiro"]):
+            if e.get("a_descarregar"):
+                por_descarregar.append(ident)
+            else:
+                problemas.append("%s: falta o ficheiro %s" % (ident, e["ficheiro"]))
+            continue
+        f = render.abrir_letra(ident, 80, entradas, avisar=False)
+        if f is None:
+            problemas.append("%s nao abre" % ident)
+            continue
+        base = ImageFont.truetype(e["ficheiro"], 80)
+        r_base = tinta(base) / tinta(f)
+        nome = instancias.get(e["eixo_peso"])
+        ref = ImageFont.truetype(e["ficheiro"], 80)
+        if nome and nome.encode() in ref.get_variation_names():
+            ref.set_variation_by_name(nome)
+            r = tinta(f) / tinta(ref)
+            comparadas += 1
+            if abs(r - 1.0) > 0.01:
+                problemas.append("%s: tinta %.3f da do %s do ficheiro" % (ident, r, nome))
+        medidas.append("%s %.2f" % (ident, r_base))
+    # E PELO RENDER, com o estilo: a letra da legenda e a mesma que a abrir_letra() da.
+    try:
+        with contextlib.redirect_stdout(io.StringIO()):
+            render.aplicar_estilo({"legenda": {"fonte": "montserrat_bold"}})
+            pelo_render = tinta(render._fonte(80))
+    finally:
+        render.aplicar_estilo({})
+    if "montserrat_bold" in variaveis and abs(pelo_render / tinta(render.abrir_letra(
+            "montserrat_bold", 80, entradas, avisar=False)) - 1.0) > 1e-9:
+        problemas.append("a legenda do render nao usa o peso da abrir_letra()")
+    verifica("estilo: letra variavel sai no peso pedido", not problemas,
+             "; ".join(problemas[:3]) if problemas else
+             "%d letras iguais a instancia do peso no ficheiro; tinta da omissao do ficheiro contra a pedida: %s%s"
+             % (comparadas, ", ".join(medidas),
+                "; por descarregar: %s" % ", ".join(por_descarregar) if por_descarregar else ""))
+
+
+def teste_letra_que_nao_abre_cai_no_arial():
+    """Uma letra que nao abre da o desenho do Arial Bold, com um aviso so, e o render continua.
+
+    E a regra do imagem_da_marca(): uma letra em falta (um ficheiro apagado, uma pasta que nao
+    veio noutra maquina) nao pode parar um render de quinze minutos a meio.
+    """
+    import contextlib
+    import io
+    import json
+    import tempfile
+    import render
+    pasta = tempfile.mkdtemp(prefix="teste_letra_falta_")
+    fontes = os.path.join(pasta, "fontes.json")
+    json.dump({"omissao": "arial_bold", "fontes": [
+        {"id": "arial_bold", "ficheiro": render.FONTE_TEXTO, "eixo_peso": None},
+        {"id": "sumida", "ficheiro": os.path.join(pasta, "nao_existe.ttf"), "eixo_peso": None}]},
+        open(fontes, "w", encoding="utf-8"))
+    guardado = render.FONTES_DA_MESA
+    render.FONTES_DA_MESA = fontes
+    texto = io.StringIO()
+    problemas = []
+    try:
+        with contextlib.redirect_stdout(texto):
+            estilo = render.aplicar_estilo({"legenda": {"fonte": "sumida"}, "cartao": {"fonte": "sumida"}})
+            faixa = render.faixa_texto("Com o pai")[0].tobytes()
+            cartao = render.letreiro_do_cartao("Era uma vez").tobytes()
+            render.aplicar_estilo({})
+            faixa_hoje = render.faixa_texto("Com o pai")[0].tobytes()
+            cartao_hoje = render.letreiro_do_cartao("Era uma vez").tobytes()
+    except Exception as e:
+        problemas.append("parou: %r" % e)
+    finally:
+        render.FONTES_DA_MESA = guardado
+        render.aplicar_estilo({})
+    if not problemas:
+        if estilo != {"legenda": {"fonte": "sumida"}, "cartao": {"fonte": "sumida"}}:
+            problemas.append("o estilo nao ficou com a letra: %r" % estilo)
+        if faixa != faixa_hoje or cartao != cartao_hoje:
+            problemas.append("nao caiu no Arial Bold")
+        if texto.getvalue().count("a letra sumida nao abre") != 1:
+            problemas.append("avisou %d vezes" % texto.getvalue().count("a letra sumida nao abre"))
+    verifica("estilo: letra que nao abre cai no Arial Bold", not problemas,
+             "; ".join(problemas) if problemas else "legenda e cartao iguais ao Arial Bold, um aviso")
+
+
+def teste_montar_escreve_o_estilo_so_com_o_que_difere():
+    """O montar escreve o estilo.json so com o que difere, apaga o de antes quando nada difere, e o tt conta com ele.
+
+    A REGRA DAS COLUNAS NOVAS, num ficheiro: sem estilo a montagem e a de sempre, e nao ha
+    ficheiro. Um estilo.json que ficasse de uma montagem de antes, ao lado de uma montagem sem
+    estilo, era o filme a sair com cores que a Mesa ja nao tem. E o tt dos grupos: com a legenda
+    do estilo a 56, um grupo sem tt escreve a 56 e um com tt 46 escreve a 46, porque foi ele que
+    o escolheu; a coluna textos_opcoes tem de dizer qual.
+    """
+    import contextlib
+    import io
+    import json
+    import tempfile
+    import montar_da_mesa
+    import render
+    tres = ["f0331", "f0334", "f0336"]
+    inv = {r["id"] for r in csv.DictReader(open(os.path.join(REPO, "data", "inventario.csv"),
+                                                encoding="utf-8-sig"))}
+    if not all(i in inv for i in tres):
+        salta("montar escreve o estilo", "fotos do ensaio fora do inventario")
+        return
+    grupo = {"t": "pilha", "fotos": tres, "estilo": "monte", "d": 8, "c": 0.7, "r": "fiel", "vf": True,
+             "xf": ["Um", "", "Tres"]}
+    clips = [{"t": "cartao", "x": "Era uma vez", "d": 3.6, "c": 0.7, "r": "fiel"},
+             dict(grupo), dict(grupo, tt=46), dict(grupo, tt=56)]
+    pasta = tempfile.mkdtemp(prefix="teste_montar_estilo_")
+    cam = os.path.join(pasta, "estado.json")
+    estilo_json = os.path.join(pasta, "t.estilo.json")
+
+    def montar(estilo):
+        estado = {"versoes": [{"id": "t", "nome": "t", "clips": clips}]}
+        if estilo is not None:
+            estado["estilo"] = estilo
+        json.dump(estado, open(cam, "w", encoding="utf-8"), ensure_ascii=False)
+        guardado = (montar_da_mesa.ESTADO, montar_da_mesa.DESTINO, sys.argv)
+        montar_da_mesa.ESTADO, montar_da_mesa.DESTINO = cam, pasta
+        sys.argv = ["montar_da_mesa.py", "t", "--nome", "t"]
+        saida = io.StringIO()
+        try:
+            with contextlib.redirect_stdout(saida):
+                montar_da_mesa.main()
+        finally:
+            montar_da_mesa.ESTADO, montar_da_mesa.DESTINO, sys.argv = guardado
+        opcoes = [l["textos_opcoes"] for l in csv.DictReader(open(os.path.join(pasta, "t.csv"),
+                                                                  encoding="utf-8-sig"))
+                  if l["tipo"] == "pilha"]
+        lido = json.load(open(estilo_json, encoding="utf-8")) if os.path.exists(estilo_json) else None
+        return saida.getvalue(), opcoes, lido
+
+    problemas = []
+    pedido = {"legenda": {"tamanho": 56, "fonte": "bebas_neue", "cor": "#ffffff"},
+              "contador": {"marco": "#c83e56", "linha": "#00c000"},
+              "cartao": {"quente": "nao e cor"}, "intro": {"fonte": "arial_bold"}}
+    texto, opcoes, lido = montar(pedido)
+    certo = {"contador": {"linha": "#00C000"}, "legenda": {"fonte": "bebas_neue", "tamanho": 56}}
+    if lido != certo:
+        problemas.append("com estilo escreveu %r" % (lido,))
+    if opcoes != ["", '{"tamanho": 46}', ""]:
+        problemas.append("textos_opcoes com a legenda a 56: %r" % (opcoes,))
+    for pedaco in ("nao e uma cor", "nao e uma das letras oferecidas para a intro",
+                   "Bebas Neue a 56 le-se a 15 metros como o Arial Bold"):
+        if pedaco not in texto:
+            problemas.append("sem o aviso %r" % pedaco)
+    if render.estilo_ativo():
+        problemas.append("o render ficou com o estilo depois do montar: %r" % render.estilo_ativo())
+    texto, opcoes, lido = montar(None)
+    if lido is not None or os.path.exists(estilo_json):
+        problemas.append("sem estilo ficou o ficheiro de antes: %r" % (lido,))
+    if opcoes != ["", "", '{"tamanho": 56}']:
+        problemas.append("textos_opcoes sem estilo: %r" % (opcoes,))
+    _texto, _opcoes, lido = montar(ESTILO_DO_CONTRATO)
+    if lido is not None:
+        problemas.append("o estilo todo na omissao escreveu %r" % (lido,))
+    verifica("estilo: o montar escreve so o que difere", not problemas,
+             "; ".join(problemas[:3]) if problemas else
+             "so linha e legenda, avisos do que nao presta e da Bebas pequena; sem estilo nao ha ficheiro")
+
+
+def teste_corpo_minimo_medido_como_a_084():
+    """O corpo_minimo de data/fontes.json e o que o metodo da 084 mede, e o metodo ainda da 58 e 106.
+
+    O montar compara cada letra com o Arial Bold por este numero ("le-se a 15 metros como o Arial
+    Bold a 38"). Um numero escrito a mao, ou uma letra trocada de ficheiro sem medir outra vez,
+    dava ao Tiago um aviso falso, ou nenhum. As letras com null estao por medir e o montar diz-o;
+    as que ainda nao estao em disco nao se medem.
+    """
+    import contextlib
+    import io
+    import medir_corpo_minimo as M
+    import render
+    with contextlib.redirect_stdout(io.StringIO()):
+        erros = M.calibrar()
+    problemas = list(erros)
+    entradas = render.letras_da_mesa()
+    medidas = {}
+    for ident, e in entradas.items():
+        if e.get("corpo_minimo") is None or not os.path.exists(e.get("ficheiro") or ""):
+            continue
+        with contextlib.redirect_stdout(io.StringIO()):
+            medidas.update(M.medir_todas({ident: e}))
+        if medidas.get(ident, (None,))[0] != e["corpo_minimo"]:
+            problemas.append("%s: escrito %s, medido %s" % (ident, e["corpo_minimo"], medidas.get(ident, (None,))[0]))
+    por_medir = [i for i, e in entradas.items() if e.get("corpo_minimo") is None]
+    verifica("estilo: corpo_minimo medido como na 084", not problemas,
+             "; ".join(problemas[:3]) if problemas else
+             "Arial Bold 58 e Impact 106; %d letras iguais ao medido%s"
+             % (len(medidas), "; por medir: %s" % ", ".join(por_medir) if por_medir else ""))
+
+
+def teste_estilo_chega_as_fatias():
+    """As fatias, noutros processos, desenham com o estilo da montagem os mesmos fotogramas do pai.
+
+    O DEFEITO QUE ISTO EVITA: o estilo e estado do processo. Posto so no pai (pela linha de
+    comando, por uma variavel), as fatias desenhavam o filme de sempre e o pai entregava ao
+    encoder um fotograma de cada estilo, alternados. Cada fatia le o estilo.json no
+    carregar_montagem(), da mesma pasta que o pai lhe passa em --montagens. Corre as tres fatias
+    de verdade, com o render.py, e compara cada fotograma delas com o do caminho sequencial.
+    """
+    import contextlib
+    import hashlib
+    import io
+    import json
+    import subprocess
+    import tempfile
+    import render
+    inv = {r["id"] for r in csv.DictReader(open(os.path.join(REPO, "data", "inventario.csv"),
+                                                encoding="utf-8-sig"))}
+    if not all(i in inv for i in ("f0334", "f0336")):
+        salta("estilo chega as fatias", "fotos do ensaio fora do inventario")
+        return
+    pasta = tempfile.mkdtemp(prefix="teste_estilo_fatias_")
+    clips = [
+        dict(tipo="contador", duracao_s="1.6", transicao_s="0", texto_ecra="2026>1995|4 de outubro de 2026"),
+        dict(tipo="cartao", duracao_s="1.2", transicao_s="0.4", texto_ecra="Era uma vez"),
+        dict(tipo="foto", id="f0334", ficheiro="", duracao_s="1.6", transicao_s="0.4", movimento="Zoom in",
+             texto_ecra="Amigos", tratamento="fundo"),
+        dict(tipo="lado", id="f0334|f0336", duracao_s="2.0", transicao_s="0.4", texto_ecra="",
+             tratamento="2v", textos_fotos='["Porto", "Gaia"]'),
+    ]
+    nome = "estilo_fatias"
+    _escrever_montagem(pasta, nome, clips)
+    estilo_json = os.path.join(pasta, nome + ".estilo.json")
+    json.dump(ESTILO_DE_ENSAIO, open(estilo_json, "w", encoding="utf-8"))
+    guardado = (render.MONTAGENS,) + _resolucao(render, 480, 270)
+    render.MONTAGENS = pasta
+    problemas = []
+
+    def todos(estado):
+        return [hashlib.md5(render.fotograma(q, estado)[0].tobytes()).hexdigest()
+                for q in range(estado["total_quadros"])]
+    try:
+        with contextlib.redirect_stdout(io.StringIO()):
+            sequencial = todos(render.carregar_montagem(nome, None))
+            os.rename(estilo_json, estilo_json + ".fora")
+            sem_estilo = todos(render.carregar_montagem(nome, None))
+            os.rename(estilo_json + ".fora", estilo_json)
+        total, tamanho, n = len(sequencial), 480 * 270 * 3, 3
+        for k in range(n):
+            r = subprocess.run(render.comando_da_fatia(nome, k, n, ["--escala", "0.25"]),
+                               capture_output=True, timeout=600)
+            dados = r.stdout
+            quadros = list(render.quadros_da_fatia(k, n, total))
+            if r.returncode != 0 or len(dados) != tamanho * len(quadros):
+                problemas.append("fatia %d/%d: codigo %d, %d bytes: %s"
+                                 % (k, n, r.returncode, len(dados), r.stderr.decode("utf-8", "replace")[-300:]))
+                continue
+            for i, q in enumerate(quadros):
+                if hashlib.md5(dados[i * tamanho:(i + 1) * tamanho]).hexdigest() != sequencial[q]:
+                    problemas.append("fatia %d/%d: o fotograma %d difere do sequencial" % (k, n, q))
+                    break
+    finally:
+        render.MONTAGENS, render.L, render.A = guardado
+        render.aplicar_estilo({})
+    mudam = sum(a != b for a, b in zip(sequencial, sem_estilo))
+    if mudam < 0.9 * len(sequencial):
+        problemas.append("o estilo so muda %d de %d fotogramas" % (mudam, len(sequencial)))
+    verifica("estilo: chega as fatias, iguais ao sequencial", not problemas,
+             "; ".join(problemas[:3]) if problemas else
+             "%d fotogramas em 3 fatias de verdade iguais ao sequencial; o estilo muda %d deles"
+             % (len(sequencial), mudam))
+
+
+# ------------------------------------------------------- o contador numa so peca, 2 de outubro
+# O Tiago: "quando chegamos a 1995, e como se fosse um contador diferente em vez de so mexer de
+# forma similar como em Outubro de 2026", e "separa com um pouco mais de espaco entre a data '12
+# de Setembro de 1995' e a abreviatura do 'SET'". A escolha e est.estilo.contador.continuo; sem
+# ela a fita e a de sempre, ao byte (teste_contador_de_anos_igual_ao_byte e os do estilo).
+ESTILO_NUMA_PECA = {"contador": {"continuo": True}}
+NASC_TOLERANCIA = 8
+
+
+def _abertura_do_v3():
+    """(contador da abertura, [fitas que se lhe seguem]) da montagem v3, cada um (texto, duracao).
+
+    O contador e o primeiro que acaba em 1995 a recuar; as fitas sao as de 1995. Sem a montagem
+    (noutro PC) fica um caso de ensaio com os dois nascimentos e o Coa no mesmo dia da Clara.
+    """
+    cam = os.path.join(REPO, "data", "montagens", "v3.csv")
+    contador, fitas = None, []
+    if os.path.exists(cam):
+        for l in csv.DictReader(open(cam, encoding="utf-8-sig")):
+            if (l["tipo"] == "contador" and contador is None
+                    and linha_tempo.ano_de_chegada(l["texto_ecra"]) == 1995
+                    and linha_tempo.contador_recua(l["texto_ecra"])):
+                contador = (l["texto_ecra"], float(l["duracao_s"]))
+            elif l["tipo"] == "marcos" and linha_tempo.ler_meses(l["texto_ecra"])[0] == 1995:
+                fitas.append((l["texto_ecra"], float(l["duracao_s"])))
+    if contador is None or not fitas:
+        marcas = ("17/01 Terramoto em Kobe;04/09 Nasce o SAPO, em Aveiro;*12/09 Nasce o 2º filho da "
+                  "Graça e do Alberto;24/11 Salvam-se as gravuras do Côa;*24/11 Nasce a 1ª filha de Rosa e Jorge")
+        contador = ("2026>1995|4 de outubro de 2026", 9.0)
+        fitas = [("1995@0-0.67|" + marcas, 15.0), ("1995@0.67-0.70c|" + marcas + "~1.0@6.0", 9.0),
+                 ("1995@0.70-0.90|" + marcas + "~4.0@12.0", 18.0)]
+    return contador, fitas
+
+
+def _pronto(render, texto, tipo, duracao):
+    return render.preparar(dict(tipo=tipo, texto_ecra=texto, duracao_s=str(duracao), transicao_s="0",
+                                ficheiro="", fonte_imagem=""), {})
+
+
+def _pixeis_da_cor(im, cor, tol, caixa=None):
+    """A mascara dos pixeis a menos de `tol` da cor em cada canal (numpy), na caixa se for dada."""
+    import numpy as np
+    a = np.asarray(im if caixa is None else im.crop(caixa)).astype(int)
+    return (np.abs(a - np.array(cor[:3])).max(axis=2) <= tol)
+
+
+def _faixas(filas, folga=6):
+    """As filas agrupadas em faixas seguidas: [(primeira, ultima)]."""
+    faixas = []
+    for y in filas:
+        if faixas and y - faixas[-1][1] <= folga:
+            faixas[-1][1] = y
+        else:
+            faixas.append([y, y])
+    return [tuple(f) for f in faixas]
+
+
+def teste_contador_numa_peca_sem_salto():
+    """Com o contador numa so peca, a fita de 1995 comeca no ultimo fotograma do contador e e a mesma peca.
+
+    O DEFEITO, medido no render de 1 de outubro: no corte do contador para a fita a linha subia
+    44 px, o ponteiro dava lugar a um risco a 1,27 para 1, o "1995" saltava 45 px e encolhia, o
+    "1996" sumia e a regua mudava de desenho. Aqui mede-se, no render e pelo preparar() e
+    desenhar() dele, com o estilo da Mesa:
+      - o primeiro fotograma da fita e o ultimo do contador, pixel a pixel, a 1920 e a 960;
+      - em toda a fita o "1995" e o mesmo, no mesmo sitio, o ponteiro esta la na cor dele, a linha
+        atravessa o ecra, e os nomes dos meses tem a altura e o corpo dos do contador por datas;
+      - o tempo nao muda: os nascimentos acendem nos mesmos fotogramas com e sem a peca, e por
+        isso os foguetes e o som ficam onde estavam.
+    E as mesmas medidas na fita "como esta" tem de falhar, senao nao distinguem nada.
+    """
+    import contextlib
+    import io
+    import datetime
+    import numpy as np
+    import render
+    (t_cont, d_cont), fitas = _abertura_do_v3()
+    problemas, medidas = [], []
+    guardado = _resolucao(render, 1920, 1080)
+
+    def passagem(L, A, estilo):
+        render.L, render.A = L, A
+        render.aplicar_estilo(estilo)
+        fim = render.desenhar(_pronto(render, t_cont, "contador", d_cont), d_cont - 1.0 / 25, d_cont)
+        ini = render.desenhar(_pronto(render, fitas[0][0], "marcos", fitas[0][1]), 0.0, fitas[0][1])
+        return int((np.asarray(fim).astype(int) != np.asarray(ini).astype(int)).any(axis=2).sum()), fim
+
+    try:
+        with contextlib.redirect_stdout(io.StringIO()):
+            if linha_tempo.ler_meses(fitas[0][0])[2][0] > 1e-4 or not linha_tempo.ler_meses(fitas[0][0])[3]:
+                problemas.append("a primeira fita da abertura nao abre em janeiro: %r" % fitas[0][0][:40])
+            for L, A in ((1920, 1080), (960, 540)):
+                n, _fim = passagem(L, A, ESTILO_NUMA_PECA)
+                if n:
+                    problemas.append("a %dx%d o primeiro fotograma da fita difere do ultimo do contador "
+                                     "em %d pixeis" % (L, A, n))
+            n_hoje, _ = passagem(1920, 1080, {})
+            if not n_hoje:
+                problemas.append("como esta, a passagem tambem e igual ao pixel: a medida nao distingue")
+            medidas.append("passagem igual ao pixel (como esta: %d pixeis mudam)" % n_hoje)
+
+            # A MESMA PECA EM TODA A FITA, a 1920.
+            render.L, render.A = 1920, 1080
+            L, A = 1920, 1080
+            y_linha = int(A * 0.60)
+            render.aplicar_estilo(ESTILO_NUMA_PECA)
+            _n, fim = passagem(L, A, ESTILO_NUMA_PECA)
+            meio = np.asarray(fim.convert("L"))[y_linha - int(A * 0.30):y_linha - int(A * 0.06),
+                                                 L // 2 - 300:L // 2 + 300] > 200
+            filas, colunas = np.where(meio.any(axis=1))[0], np.where(meio.any(axis=0))[0]
+            caixa_ano = (L // 2 - 300 + colunas[0] - 4, y_linha - int(A * 0.30) + filas[0] - 4,
+                         L // 2 - 300 + colunas[-1] + 5, y_linha - int(A * 0.30) + filas[-1] + 5)
+            ano_contador = fim.crop(caixa_ano).tobytes()
+            ponto = (L // 2, y_linha + int(A * 0.10))
+            dias = datetime.date(2025, 12, 25)
+            nomes_datas = _pixeis_da_cor(linha_tempo.datas(L, A, datetime.date(2026, 10, 4), dias, [], 8.0, 9.0),
+                                         linha_tempo.REGUA_TEXTO, 3, (0, y_linha, L, y_linha + 120))
+            filas_datas = np.where(nomes_datas.any(axis=1))[0]
+
+            def mede(estilo):
+                render.aplicar_estilo(estilo)
+                erros, quadros = [], 0
+                for texto, dur in fitas:
+                    p = _pronto(render, texto, "marcos", dur)
+                    for q in range(0, int(round(dur * 25)), 9):
+                        im = render.desenhar(p, q / 25.0, dur)
+                        quadros += 1
+                        if im.crop(caixa_ano).tobytes() != ano_contador:
+                            erros.append("o 1995 aos %.2f s de %s" % (q / 25.0, texto[:14]))
+                        if im.getpixel(ponto) != linha_tempo.PONTEIRO:
+                            erros.append("sem ponteiro aos %.2f s (%s)" % (q / 25.0, im.getpixel(ponto),))
+                        linha = np.asarray(im)[y_linha].astype(int)
+                        if (np.abs(linha - np.array(linha_tempo.FUNDO)).max(axis=1) > 0).mean() < 0.95:
+                            erros.append("sem a linha a %d aos %.2f s" % (y_linha, q / 25.0))
+                        if q / 25.0 >= 1.5:
+                            nomes = _pixeis_da_cor(im, linha_tempo.REGUA_TEXTO, 3, (0, y_linha, L, y_linha + 120))
+                            f = np.where(nomes.any(axis=1))[0]
+                            if len(f) and (abs(f[0] - filas_datas[0]) > 1 or abs(f[-1] - filas_datas[-1]) > 1):
+                                erros.append("nomes dos meses nas filas %d a %d e no contador %d a %d"
+                                             % (f[0], f[-1], filas_datas[0], filas_datas[-1]))
+                return erros, quadros
+
+            erros, quadros = mede(ESTILO_NUMA_PECA)
+            if erros:
+                problemas.append("numa peca: %d de %d medidas falham, %s"
+                                 % (len(erros), quadros, "; ".join(sorted(set(e.split(" aos")[0] for e in erros))[:3])))
+            erros_hoje, _q = mede({})
+            for falta in ("o 1995", "sem ponteiro", "nomes dos meses"):
+                if not any(e.startswith(falta) for e in erros_hoje):
+                    problemas.append("como esta, a medida %r passa: nao distingue" % falta)
+            medidas.append("%d fotogramas da fita com o 1995, o ponteiro, a linha e os meses do contador" % quadros)
+
+            # O TEMPO: os nascimentos acendem nos mesmos fotogramas, a 960.
+            render.L, render.A = 960, 540
+            acesos = {}
+            for nome, estilo in (("hoje", {}), ("peca", ESTILO_NUMA_PECA)):
+                render.aplicar_estilo(estilo)
+                serie = []
+                for texto, dur in fitas:
+                    p = _pronto(render, texto, "marcos", dur)
+                    serie += [int(_pixeis_da_cor(render.desenhar(p, q / 25.0, dur), linha_tempo.NASC_COR,
+                                                 NASC_TOLERANCIA).sum() > 150)
+                              for q in range(0, int(round(dur * 25)), 3)]
+                acesos[nome] = serie
+            diferem = sum(a != b for a, b in zip(acesos["hoje"], acesos["peca"]))
+            if diferem or not sum(acesos["peca"]):
+                problemas.append("os nascimentos acendem em %d fotogramas diferentes (acesos %d e %d)"
+                                 % (diferem, sum(acesos["hoje"]), sum(acesos["peca"])))
+            medidas.append("nascimentos acesos nos mesmos %d de %d fotogramas" % (sum(acesos["peca"]), len(acesos["peca"])))
+    finally:
+        render.L, render.A = guardado
+        render.aplicar_estilo({})
+    if linha_tempo.CONTINUO:
+        problemas.append("o linha_tempo ficou com o contador numa peca depois de voltar ao de sempre")
+    verifica("contador numa so peca: a fita sem salto", not problemas,
+             "; ".join(problemas)[:300] if problemas else "; ".join(medidas))
+
+
+def teste_data_do_nascimento_longe_dos_meses():
+    """Com o contador numa so peca, a data de cada nascimento fica longe do "SET" e dentro do ecra.
+
+    O PEDIDO: "separa com um pouco mais de espaco entre a data '12 de Setembro de 1995' e a
+    abreviatura do 'SET'". Como esta, a data a 58 px fica a 14 px dos nomes dos meses. Na peca o
+    texto do marco vai logo abaixo do ponteiro e a data por baixo dele: mede-se, no fotograma
+    mais aceso de cada nascimento, a folga dos meses a data, a do texto a data, a do ponteiro ao
+    texto e o fundo da data contra o fundo do ecra. Os dois nascimentos, porque a Clara divide o
+    dia com o Coa.
+    """
+    import contextlib
+    import io
+    import numpy as np
+    import montar_da_mesa
+    import render
+    _contador, fitas = _abertura_do_v3()
+    L, A = 1920, 1080
+    y_linha = int(A * 0.60)
+    guardado = _resolucao(render, L, A)
+    problemas, medidas = [], []
+
+    def mais_aceso(texto, dur, dia_mes):
+        """O fotograma da fita com mais pixeis da cor do nascimento, ou None se ele nao acende ai.
+
+        Com a fita parada no fim (decisao 089) e o ultimo: o montar segura-a no meio da paragem do
+        nascimento, com a palavra acesa a 100%. Sem ela procura-se, de 4 em 4 fotogramas.
+        """
+        if dia_mes not in texto:
+            return None
+        p = _pronto(render, texto, "marcos", dur)
+        if linha_tempo.congela_de(texto) is not None:
+            return render.desenhar(p, dur - 1.0 / 25, dur)
+        melhor = (0, None)
+        for q in range(0, int(round(dur * 25)), 4):
+            im = render.desenhar(p, q / 25.0, dur)
+            n = int(_pixeis_da_cor(im, linha_tempo.NASC_COR, NASC_TOLERANCIA).sum())
+            if n > melhor[0]:
+                melhor = (n, im)
+        return melhor[1]
+
+    def folgas(im, y0):
+        """(fim dos nomes dos meses, faixas da cor do nascimento abaixo da linha, colunas da data).
+
+        `y0` e a linha de cada fita: a de sempre esta a 0,56 da altura, a da peca a 0,60.
+        """
+        nomes = _pixeis_da_cor(im, linha_tempo.REGUA_TEXTO, 3, (0, y0, L, y0 + 120))
+        fim_nomes = y0 + int(np.where(nomes.any(axis=1))[0][-1])
+        nasc = _pixeis_da_cor(im, linha_tempo.NASC_COR, NASC_TOLERANCIA, (0, y0, L, A))
+        faixas = [(y0 + a, y0 + b) for a, b in _faixas(np.where(nasc.any(axis=1))[0])]
+        data = nasc[faixas[-1][0] - y0:faixas[-1][1] - y0 + 1] if faixas else None
+        colunas = np.where(data.any(axis=0))[0] if data is not None else []
+        return fim_nomes, faixas, (colunas[0], colunas[-1]) if len(colunas) else None
+
+    try:
+        with contextlib.redirect_stdout(io.StringIO()):
+            for quem, dia_mes in (("Tiago", "12/09"), ("Clara", "24/11")):
+                medida = {}
+                for nome, estilo, y0 in (("hoje", {}, int(A * 0.56)), ("peca", ESTILO_NUMA_PECA, y_linha)):
+                    render.aplicar_estilo(estilo)
+                    im = None
+                    for texto, dur in fitas:
+                        if montar_da_mesa.quem_nasce_na_fita(texto) == quem:
+                            im = mais_aceso(texto, dur, dia_mes)
+                    if im is None:
+                        problemas.append("%s: nenhuma fita acende o nascimento (%s)" % (quem, nome))
+                        break
+                    medida[nome] = folgas(im, y0)
+                if len(medida) < 2:
+                    continue
+                fim_nomes, faixas, colunas = medida["peca"]
+                if len(faixas) != 2:
+                    problemas.append("%s: %d faixas na cor do nascimento abaixo da linha, e sao duas (o texto "
+                                     "e a data)" % (quem, len(faixas)))
+                    continue
+                texto, data = faixas
+                ponteiro = y_linha + int(A * linha_tempo.PONTEIRO_BAIXO)
+                hoje = medida["hoje"][1][-1][0] - medida["hoje"][0] if medida["hoje"][1] else None
+                if data[0] - fim_nomes < 100:
+                    problemas.append("%s: a data fica a %d px dos meses" % (quem, data[0] - fim_nomes))
+                if hoje is not None and data[0] - fim_nomes <= hoje + 60:
+                    problemas.append("%s: a data fica a %d px dos meses e como esta a %d" % (quem, data[0] - fim_nomes, hoje))
+                if data[0] - texto[1] < 20:
+                    problemas.append("%s: so %d px entre o texto e a data" % (quem, data[0] - texto[1]))
+                if texto[0] - ponteiro < 8:
+                    problemas.append("%s: o texto comeca a %d px do bico do ponteiro" % (quem, texto[0] - ponteiro))
+                if data[1] > A - 80 or colunas is None or colunas[0] < 40 or colunas[1] > L - 40:
+                    problemas.append("%s: a data sai do ecra ou encosta a borda (filas %s, colunas %s)"
+                                     % (quem, data, colunas))
+                if colunas is not None and abs((colunas[0] + colunas[1]) / 2.0 - L / 2.0) > 6:
+                    problemas.append("%s: a data nao esta centrada no ponteiro (%s)" % (quem, colunas))
+                medidas.append("%s: data a %d px dos meses (como esta %s), %d px abaixo do texto, fundo a %d"
+                               % (quem, data[0] - fim_nomes, hoje, data[0] - texto[1], data[1]))
+    finally:
+        render.L, render.A = guardado
+        render.aplicar_estilo({})
+    verifica("contador numa so peca: data do nascimento longe do mes", not problemas,
+             "; ".join(problemas)[:300] if problemas else "; ".join(medidas))
+
+
+def teste_continuo_do_estilo_ate_ao_montar():
+    """O est.estilo.contador.continuo chega limpo ao render e ao montar, e so o true conta.
+
+    O DEFEITO QUE ISTO EVITA: a Mesa grava o "uma so peca" e alguem pelo caminho deita-o fora (o
+    normalizar_estilo() avisava "a chave 'continuo' nao existe" ate 2 de outubro), ou o deixa preso
+    ao processo e a montagem seguinte, sem ele, sai numa peca. E o montar: com a peca, a fita que
+    continua o contador entra com corte seco, porque o primeiro fotograma dela e o ultimo dele;
+    sem a peca fica o encadeado que vier na Mesa, como sempre.
+    """
+    import contextlib
+    import io
+    import json
+    import tempfile
+    import montar_da_mesa
+    import render
+    problemas = []
+    casos = [({"contador": {"continuo": True}}, {"contador": {"continuo": True}}, 0),
+             ({"contador": {"continuo": False}}, {}, 0),
+             ({"contador": {"continuo": None, "linha": "#5C4E58"}}, {}, 0),
+             ({"contador": {"continuo": "sim"}}, {}, 1),
+             ({"contador": {"continuo": 1, "marco": "#2060FF"}}, {"contador": {"marco": "#2060FF"}}, 1),
+             ({"contador": {"continuo": True, "linha": "#00c000"}}, {"contador": {"continuo": True, "linha": "#00C000"}}, 0)]
+    for bruto, certo, n_avisos in casos:
+        avisos = []
+        limpo = render.normalizar_estilo(bruto, avisos)
+        if limpo != certo or len([a for a in avisos if "continuo" in a]) != n_avisos:
+            problemas.append("%r deu %r com avisos %r" % (bruto, limpo, avisos))
+    if "continuo" in render.estilo_omissao()["contador"]:
+        problemas.append("o estilo_omissao() tem o continuo: a Mesa compara la so as cores")
+    try:
+        with contextlib.redirect_stdout(io.StringIO()):
+            render.aplicar_estilo({"contador": {"continuo": True}})
+            ligado = linha_tempo.CONTINUO
+            render.aplicar_estilo({"contador": {"linha": "#00C000"}})
+            com_cor = linha_tempo.CONTINUO
+    finally:
+        render.aplicar_estilo({})
+    if not ligado or com_cor or linha_tempo.CONTINUO:
+        problemas.append("o linha_tempo.CONTINUO ficou %s, %s e %s" % (ligado, com_cor, linha_tempo.CONTINUO))
+
+    # O MONTAR, numa pasta de ensaio.
+    clips = [{"t": "contador", "x": "2026>1995|4 de outubro de 2026", "d": 9, "c": 0.7, "r": "fiel"},
+             {"t": "marcos", "x": "1995@0-0.5|17/01 Terramoto em Kobe", "d": 6, "c": 0.7, "r": "fiel"},
+             {"t": "cartao", "x": "Era uma vez", "d": 3.6, "c": 0.7, "r": "fiel"},
+             {"t": "marcos", "x": "1995@0.5-0.9|17/01 Terramoto em Kobe", "d": 6, "c": 0.7, "r": "fiel"}]
+    pasta = tempfile.mkdtemp(prefix="teste_continuo_montar_")
+    cam = os.path.join(pasta, "estado.json")
+
+    def montar(estilo):
+        estado = {"versoes": [{"id": "t", "nome": "t", "clips": clips}]}
+        if estilo is not None:
+            estado["estilo"] = estilo
+        json.dump(estado, open(cam, "w", encoding="utf-8"), ensure_ascii=False)
+        guardado = (montar_da_mesa.ESTADO, montar_da_mesa.DESTINO, sys.argv)
+        montar_da_mesa.ESTADO, montar_da_mesa.DESTINO = cam, pasta
+        sys.argv = ["montar_da_mesa.py", "t", "--nome", "t"]
+        saida = io.StringIO()
+        try:
+            with contextlib.redirect_stdout(saida):
+                montar_da_mesa.main()
+        finally:
+            montar_da_mesa.ESTADO, montar_da_mesa.DESTINO, sys.argv = guardado
+        linhas = list(csv.DictReader(open(os.path.join(pasta, "t.csv"), encoding="utf-8-sig")))
+        estilo_json = os.path.join(pasta, "t.estilo.json")
+        lido = json.load(open(estilo_json, encoding="utf-8")) if os.path.exists(estilo_json) else None
+        return saida.getvalue(), [l["transicao_s"] for l in linhas if l["tipo"] == "marcos"], lido
+
+    try:
+        texto, trans, lido = montar({"contador": {"continuo": True}})
+        if trans != ["0.0", "0.7"]:
+            problemas.append("com a peca as fitas entram com %s, e a que continua o contador e a seco" % trans)
+        if "continua o contador do clip 1 numa so peca" not in texto:
+            problemas.append("com a peca o montar nao disse que tirou o encadeado")
+        if lido != {"contador": {"continuo": True}}:
+            problemas.append("o estilo.json ficou %r" % (lido,))
+        if render.estilo_ativo() or linha_tempo.CONTINUO:
+            problemas.append("o render ficou com a peca depois do montar")
+        texto, trans, lido = montar(None)
+        if trans != ["0.7", "0.7"] or "numa so peca" in texto or lido is not None:
+            problemas.append("sem a peca: encadeados %s, estilo %r" % (trans, lido))
+    finally:
+        render.aplicar_estilo({})
+    verifica("contador numa so peca: do estilo ao montar", not problemas,
+             "; ".join(problemas)[:300] if problemas else
+             "so o true conta, com aviso do que nao presta; o montar corta a seco so com a peca")
+
+
+def teste_continuo_chega_as_fatias():
+    """As fatias desenham a fita numa so peca como o caminho sequencial, e a passagem sem salto.
+
+    O estilo e estado do processo (ver teste_estilo_chega_as_fatias): o continuo tem de chegar a
+    cada fatia pelo estilo.json da montagem. Uma fatia sem ele desenhava a fita de sempre em
+    fotogramas alternados. E pelo fotograma() do render, o que vai ao encoder, o ultimo do
+    contador e o primeiro da fita sao o mesmo.
+    """
+    import contextlib
+    import hashlib
+    import io
+    import json
+    import subprocess
+    import tempfile
+    import render
+    pasta = tempfile.mkdtemp(prefix="teste_continuo_fatias_")
+    clips = [dict(tipo="contador", duracao_s="1.6", transicao_s="0", texto_ecra="2026>1995|4 de outubro de 2026"),
+             dict(tipo="marcos", duracao_s="2.4", transicao_s="0",
+                  texto_ecra="1995@0-0.5|17/01 Terramoto em Kobe;*12/09 Nasce o Tiago"),
+             # um cartao preto no fim, para o fade a preto do fim do filme (2,5 s) nao cair na fita
+             dict(tipo="cartao", duracao_s="3.0", transicao_s="0", texto_ecra="")]
+    nome = "continuo_fatias"
+    _escrever_montagem(pasta, nome, clips)
+    estilo_json = os.path.join(pasta, nome + ".estilo.json")
+    json.dump(ESTILO_NUMA_PECA, open(estilo_json, "w", encoding="utf-8"))
+    guardado = (render.MONTAGENS,) + _resolucao(render, 480, 270)
+    render.MONTAGENS = pasta
+    problemas = []
+
+    def todos(estado):
+        return [render.fotograma(q, estado)[0].tobytes() for q in range(estado["total_quadros"])]
+    try:
+        with contextlib.redirect_stdout(io.StringIO()):
+            brutos = todos(render.carregar_montagem(nome, None))
+            os.rename(estilo_json, estilo_json + ".fora")
+            sem = [hashlib.md5(b).hexdigest() for b in todos(render.carregar_montagem(nome, None))]
+            os.rename(estilo_json + ".fora", estilo_json)
+        sequencial = [hashlib.md5(b).hexdigest() for b in brutos]
+        q_fita = int(round(1.6 * 25))
+        if brutos[q_fita - 1] != brutos[q_fita]:
+            problemas.append("pelo fotograma(), o primeiro da fita nao e o ultimo do contador")
+        if sem[q_fita - 1] == sem[q_fita]:
+            problemas.append("sem a peca a passagem tambem e igual: a medida nao distingue")
+        q_fim = q_fita + int(round(2.4 * 25))
+        if sum(a != b for a, b in zip(sequencial[q_fita:q_fim], sem[q_fita:q_fim])) < 0.9 * (q_fim - q_fita):
+            problemas.append("a peca so muda %d dos %d fotogramas da fita"
+                             % (sum(a != b for a, b in zip(sequencial[q_fita:q_fim], sem[q_fita:q_fim])), q_fim - q_fita))
+        if sequencial[:q_fita] != sem[:q_fita]:
+            problemas.append("a peca mudou o contador, que e o de sempre")
+        total, tamanho, n = len(sequencial), 480 * 270 * 3, 2
+        for k in range(n):
+            r = subprocess.run(render.comando_da_fatia(nome, k, n, ["--escala", "0.25"]),
+                               capture_output=True, timeout=600)
+            quadros = list(render.quadros_da_fatia(k, n, total))
+            if r.returncode != 0 or len(r.stdout) != tamanho * len(quadros):
+                problemas.append("fatia %d/%d: codigo %d, %d bytes: %s"
+                                 % (k, n, r.returncode, len(r.stdout), r.stderr.decode("utf-8", "replace")[-300:]))
+                continue
+            for i, q in enumerate(quadros):
+                if hashlib.md5(r.stdout[i * tamanho:(i + 1) * tamanho]).hexdigest() != sequencial[q]:
+                    problemas.append("fatia %d/%d: o fotograma %d difere do sequencial" % (k, n, q))
+                    break
+    finally:
+        render.MONTAGENS, render.L, render.A = guardado
+        render.aplicar_estilo({})
+    verifica("contador numa so peca: chega as fatias", not problemas,
+             "; ".join(problemas[:3]) if problemas else
+             "%d fotogramas em 2 fatias iguais ao sequencial; passagem igual pelo fotograma(), o contador "
+             "o de sempre" % len(sequencial))
+
+
+# ------------------------------------------------------- a data do nascimento afastada, 2 de outubro
+# O espaco entre a data do nascimento e o "SET" que ele pediu so existia numa so peca. A chave
+# est.estilo.contador.data_afastada da-o tambem na fita de sempre, a de duas pecas; sem ela a fita
+# e a de sempre, ao byte (os testes do estilo vazio, das assinaturas e das referencias).
+ESTILO_DATA_AFASTADA = {"contador": {"data_afastada": True}}
+
+
+def _instante_mais_aceso(render, texto, dur):
+    """O instante da fita com mais pixeis da cor do nascimento, ou None se ele nao acende ai.
+
+    Com a fita parada no fim (decisao 089) e o ultimo fotograma: o montar segura-a no meio da paragem
+    do nascimento, com a palavra acesa a 100%. Sem ela procura-se, de 4 em 4 fotogramas.
+    """
+    p = _pronto(render, texto, "marcos", dur)
+    if linha_tempo.congela_de(texto) is not None:
+        return dur - 1.0 / 25
+    melhor = (0, None)
+    for q in range(0, int(round(dur * 25)), 4):
+        n = int(_pixeis_da_cor(render.desenhar(p, q / 25.0, dur), linha_tempo.NASC_COR, NASC_TOLERANCIA).sum())
+        if n > melhor[0]:
+            melhor = (n, q / 25.0)
+    return melhor[1]
+
+
+def teste_data_afastada_desce_so_a_data():
+    """Com a data_afastada, na fita de duas pecas, a data de cada nascimento desce e mais nada muda.
+
+    O PEDIDO: "separa com um pouco mais de espaco entre a data '12 de Setembro de 1995' e a
+    abreviatura do 'SET'". Ate 2 de outubro so a fita numa so peca o dava; a chave
+    est.estilo.contador.data_afastada da-o tambem na fita de sempre. Mede-se nos dois sentidos, no
+    fotograma mais aceso de cada nascimento, pelo preparar() e desenhar() do render, a 1920:
+      - sem a chave (ausente, false ou vazia) o fotograma e o mesmo, e a data fica a 14 px dos meses;
+      - com ela a data fica abaixo dos meses a folga a que o texto do nascimento fica da bola do
+        risco (55 px), centrada e dentro do ecra;
+      - e e a mesma data NASC_DATA_AFASTA px mais abaixo: a faixa dela e igual ao byte, deslocada, e
+        fora das duas faixas nenhum pixel muda (o texto, a imagem, a regua, o ano);
+      - numa so peca a chave nao muda nada, porque a data ja la esta longe dos meses;
+      - o tempo nao muda: os nascimentos acendem nos mesmos fotogramas com e sem ela, a 960.
+    Os dois nascimentos, porque a Clara divide o dia com o Coa.
+    """
+    import contextlib
+    import io
+    import numpy as np
+    import montar_da_mesa
+    import render
+    _contador, fitas = _abertura_do_v3()
+    L, A = 1920, 1080
+    y0 = int(A * 0.56)
+    desce = linha_tempo.NASC_DATA_AFASTA
+    guardado = _resolucao(render, L, A)
+    problemas, medidas = [], []
+
+    def quadro(texto, dur, t, estilo):
+        render.aplicar_estilo(estilo)
+        return render.desenhar(_pronto(render, texto, "marcos", dur), t, dur)
+
+    def medir(im):
+        """(fim dos nomes dos meses, (topo, fundo) da data, colunas da data, folga do texto a bola)."""
+        nomes = _pixeis_da_cor(im, linha_tempo.REGUA_TEXTO, 3, (0, y0, L, y0 + 120))
+        fim_nomes = y0 + int(np.where(nomes.any(axis=1))[0][-1])
+        nasc = _pixeis_da_cor(im, linha_tempo.NASC_COR, NASC_TOLERANCIA)
+        baixo = [(y0 + a, y0 + b) for a, b in _faixas(np.where(nasc[y0:].any(axis=1))[0])]
+        cima = _faixas(np.where(nasc[:y0].any(axis=1))[0])
+        if not baixo or not cima:
+            return None
+        data = baixo[-1]
+        colunas = np.where(nasc[data[0]:data[1] + 1].any(axis=0))[0]
+        # a linha de base do texto: a ultima fila com um quarto das letras da fila mais cheia, por
+        # cima das pernas do g e do c cedilhado
+        contagem = nasc[cima[-1][0]:cima[-1][1] + 1].sum(axis=1)
+        base = cima[-1][0] + int(np.where(contagem >= 0.25 * contagem.max())[0][-1])
+        bola = _pixeis_da_cor(im, linha_tempo.MARCO, 3, (L // 2 - 20, 0, L // 2 + 20, y0))
+        topo_bola = int(np.where(bola.any(axis=1))[0][0])
+        return fim_nomes, data, (int(colunas[0]), int(colunas[-1])), topo_bola - base
+
+    try:
+        with contextlib.redirect_stdout(io.StringIO()):
+            for quem, dia_mes in (("Tiago", "12/09"), ("Clara", "24/11")):
+                escolhidas = [(texto, dur) for texto, dur in fitas
+                              if montar_da_mesa.quem_nasce_na_fita(texto) == quem and dia_mes in texto]
+                if not escolhidas:
+                    problemas.append("%s: nenhuma fita acende o nascimento" % quem)
+                    continue
+                texto, dur = escolhidas[-1]
+                render.aplicar_estilo({})
+                t = _instante_mais_aceso(render, texto, dur)
+                hoje = quadro(texto, dur, t, {})
+                for vazio in ({"contador": {"data_afastada": False}}, {"contador": {"data_afastada": None}},
+                              {"contador": {"data_afastada": ""}}):
+                    if quadro(texto, dur, t, vazio).tobytes() != hoje.tobytes():
+                        problemas.append("%s: %r muda o fotograma, e e como esta" % (quem, vazio))
+                afastada = quadro(texto, dur, t, ESTILO_DATA_AFASTADA)
+                m_hoje, m_afastada = medir(hoje), medir(afastada)
+                if m_hoje is None or m_afastada is None:
+                    problemas.append("%s: sem o texto ou a data no fotograma (%s, %s)" % (quem, m_hoje, m_afastada))
+                    continue
+                folga_hoje = m_hoje[1][0] - m_hoje[0]
+                folga = m_afastada[1][0] - m_afastada[0]
+                # OS DOIS SENTIDOS: como esta a data encosta aos meses, e afastada nao.
+                if folga_hoje > 20:
+                    problemas.append("%s: como esta a data ja fica a %d px dos meses: a medida nao distingue"
+                                     % (quem, folga_hoje))
+                if folga < 50 or abs(folga - m_afastada[3]) > 3:
+                    problemas.append("%s: afastada, a data fica a %d px dos meses, e o texto a %d px da bola"
+                                     % (quem, folga, m_afastada[3]))
+                if m_afastada[1][0] - m_hoje[1][0] != desce:
+                    problemas.append("%s: a data desce %d px, e sao %d" % (quem, m_afastada[1][0] - m_hoje[1][0], desce))
+                (c0, c1), data = m_afastada[2], m_afastada[1]
+                if data[1] > A - 80 or c0 < 40 or c1 > L - 40 or abs((c0 + c1) / 2.0 - L / 2.0) > 6:
+                    problemas.append("%s: a data sai do ecra, encosta a borda ou sai do centro (filas %s, "
+                                     "colunas %s)" % (quem, data, (c0, c1)))
+                # A MESMA DATA MAIS ABAIXO, E MAIS NADA.
+                a, b = m_hoje[1][0] - 6, m_hoje[1][1] + 7
+                h, f = np.asarray(hoje), np.asarray(afastada)
+                if h[a:b].tobytes() != f[a + desce:b + desce].tobytes():
+                    problemas.append("%s: a faixa da data nao e a mesma, deslocada %d px" % (quem, desce))
+                fora = np.ones(A, dtype=bool)
+                fora[a:b + desce] = False
+                if (h[fora] != f[fora]).any():
+                    problemas.append("%s: muda fora da faixa da data, em %d filas"
+                                     % (quem, int((h != f).any(axis=(1, 2))[fora].sum())))
+                # NUMA SO PECA A CHAVE NAO MUDA NADA.
+                peca = quadro(texto, dur, t, ESTILO_NUMA_PECA).tobytes()
+                if quadro(texto, dur, t, {"contador": {"continuo": True, "data_afastada": True}}).tobytes() != peca:
+                    problemas.append("%s: numa so peca a data_afastada muda o fotograma" % quem)
+                medidas.append("%s: data a %d px dos meses (como esta %d), o texto a %d px da bola"
+                               % (quem, folga, folga_hoje, m_afastada[3]))
+
+            # O TEMPO: os nascimentos acendem nos mesmos fotogramas, a 960.
+            render.L, render.A = 960, 540
+            acesos = {}
+            for nome, estilo in (("hoje", {}), ("afastada", ESTILO_DATA_AFASTADA)):
+                render.aplicar_estilo(estilo)
+                serie = []
+                for texto, dur in fitas:
+                    p = _pronto(render, texto, "marcos", dur)
+                    serie += [int(_pixeis_da_cor(render.desenhar(p, q / 25.0, dur), linha_tempo.NASC_COR,
+                                                 NASC_TOLERANCIA).sum() > 150)
+                              for q in range(0, int(round(dur * 25)), 6)]
+                acesos[nome] = serie
+            diferem = sum(x != y for x, y in zip(acesos["hoje"], acesos["afastada"]))
+            if diferem or not sum(acesos["afastada"]):
+                problemas.append("os nascimentos acendem em %d fotogramas diferentes (acesos %d e %d)"
+                                 % (diferem, sum(acesos["hoje"]), sum(acesos["afastada"])))
+            medidas.append("acesos nos mesmos %d de %d fotogramas" % (sum(acesos["afastada"]), len(acesos["afastada"])))
+    finally:
+        render.L, render.A = guardado
+        render.aplicar_estilo({})
+    if linha_tempo.DATA_AFASTADA:
+        problemas.append("o linha_tempo ficou com a data afastada depois de voltar ao de sempre")
+    verifica("data do nascimento afastada: so a data desce", not problemas,
+             "; ".join(problemas)[:300] if problemas else "; ".join(medidas))
+
+
+def teste_data_afastada_do_estilo_ate_ao_montar():
+    """O est.estilo.contador.data_afastada chega limpo ao render e ao montar, so o true conta, e o tempo nao muda.
+
+    O DEFEITO QUE ISTO EVITA: a Mesa grava a data afastada e alguem pelo caminho a deita fora (o
+    normalizar_estilo() so conhecia as cores e o continuo), ou a deixa presa ao processo e a
+    montagem seguinte, sem ela, sai com a data em baixo. E o montar: a chave so muda o desenho, por
+    isso o CSV da montagem sai igual ao byte com e sem ela, e so o estilo.json a leva. Ao contrario
+    do continuo, a fita nao passa a entrar com corte seco.
+    """
+    import contextlib
+    import io
+    import json
+    import tempfile
+    import montar_da_mesa
+    import render
+    problemas = []
+    casos = [({"contador": {"data_afastada": True}}, {"contador": {"data_afastada": True}}, 0),
+             ({"contador": {"data_afastada": False}}, {}, 0),
+             ({"contador": {"data_afastada": None, "linha": "#5C4E58"}}, {}, 0),
+             ({"contador": {"data_afastada": "sim"}}, {}, 1),
+             ({"contador": {"data_afastada": 1, "marco": "#2060FF"}}, {"contador": {"marco": "#2060FF"}}, 1),
+             ({"contador": {"data_afastada": True, "continuo": True}},
+              {"contador": {"data_afastada": True, "continuo": True}}, 0)]
+    for bruto, certo, n_avisos in casos:
+        avisos = []
+        limpo = render.normalizar_estilo(bruto, avisos)
+        if limpo != certo or len([a for a in avisos if "data_afastada" in a]) != n_avisos:
+            problemas.append("%r deu %r com avisos %r" % (bruto, limpo, avisos))
+    if "data_afastada" in render.estilo_omissao()["contador"]:
+        problemas.append("o estilo_omissao() tem a data_afastada: a Mesa compara la so as cores")
+    try:
+        with contextlib.redirect_stdout(io.StringIO()):
+            render.aplicar_estilo(ESTILO_DATA_AFASTADA)
+            ligado = (linha_tempo.DATA_AFASTADA, linha_tempo.CONTINUO)
+            render.aplicar_estilo({"contador": {"linha": "#00C000"}})
+            com_cor = linha_tempo.DATA_AFASTADA
+    finally:
+        render.aplicar_estilo({})
+    if ligado != (True, False) or com_cor or linha_tempo.DATA_AFASTADA:
+        problemas.append("o linha_tempo ficou com (data afastada, continuo) %s, depois %s e %s"
+                         % (ligado, com_cor, linha_tempo.DATA_AFASTADA))
+
+    # O MONTAR, numa pasta de ensaio, com a fita do nascimento.
+    clips = [{"t": "contador", "x": "2026>1995|4 de outubro de 2026", "d": 9, "c": 0.7, "r": "fiel"},
+             {"t": "marcos", "x": "1995@0-0.5|17/01 Terramoto em Kobe", "d": 6, "c": 0.7, "r": "fiel"},
+             {"t": "marcos", "x": "1995@0.5-0.9c|17/01 Terramoto em Kobe;*12/09 Nasce o Tiago",
+              "d": 9, "c": 0.7, "r": "fiel"},
+             {"t": "cartao", "x": "Era uma vez", "d": 3.6, "c": 0.7, "r": "fiel"}]
+    pasta = tempfile.mkdtemp(prefix="teste_data_afastada_montar_")
+    cam = os.path.join(pasta, "estado.json")
+
+    def montar(estilo):
+        estado = {"versoes": [{"id": "t", "nome": "t", "clips": clips}]}
+        if estilo is not None:
+            estado["estilo"] = estilo
+        json.dump(estado, open(cam, "w", encoding="utf-8"), ensure_ascii=False)
+        guardado = (montar_da_mesa.ESTADO, montar_da_mesa.DESTINO, sys.argv)
+        montar_da_mesa.ESTADO, montar_da_mesa.DESTINO = cam, pasta
+        sys.argv = ["montar_da_mesa.py", "t", "--nome", "t"]
+        saida = io.StringIO()
+        try:
+            with contextlib.redirect_stdout(saida):
+                montar_da_mesa.main()
+        finally:
+            montar_da_mesa.ESTADO, montar_da_mesa.DESTINO, sys.argv = guardado
+        csv_bytes = open(os.path.join(pasta, "t.csv"), "rb").read()
+        som = os.path.join(pasta, "t.som.csv")
+        som_bytes = open(som, "rb").read() if os.path.exists(som) else None
+        estilo_json = os.path.join(pasta, "t.estilo.json")
+        lido = json.load(open(estilo_json, encoding="utf-8")) if os.path.exists(estilo_json) else None
+        return saida.getvalue(), csv_bytes, som_bytes, lido
+
+    try:
+        texto_sem, csv_sem, som_sem, lido_sem = montar(None)
+        texto_com, csv_com, som_com, lido_com = montar(ESTILO_DATA_AFASTADA)
+        if lido_com != ESTILO_DATA_AFASTADA:
+            problemas.append("com a chave o estilo.json ficou %r" % (lido_com,))
+        if lido_sem is not None:
+            problemas.append("sem a chave ficou um estilo.json %r" % (lido_sem,))
+        if csv_com != csv_sem or som_com != som_sem:
+            problemas.append("a chave mudou o CSV da montagem ou o som, e so muda o desenho")
+        if "numa so peca" in texto_com:
+            problemas.append("com a data afastada o montar tirou um encadeado como no continuo")
+        if render.estilo_ativo() or linha_tempo.DATA_AFASTADA:
+            problemas.append("o render ficou com a data afastada depois do montar")
+        _t, _c, _s, lido_falso = montar({"contador": {"data_afastada": False}})
+        if lido_falso is not None:
+            problemas.append("com a chave a false ficou um estilo.json %r" % (lido_falso,))
+    finally:
+        render.aplicar_estilo({})
+    verifica("data do nascimento afastada: do estilo ao montar", not problemas,
+             "; ".join(problemas)[:300] if problemas else
+             "so o true conta, com aviso do que nao presta; o estilo.json leva-a e o CSV e o som "
+             "saem iguais ao byte")
+
+
+def teste_data_afastada_chega_as_fatias():
+    """As fatias desenham a data afastada como o caminho sequencial, e so nos fotogramas da data.
+
+    A chave chega a cada fatia pelo estilo.json da montagem, como as cores e o continuo
+    (teste_estilo_chega_as_fatias). Uma fatia sem ela desenhava a data no sitio de sempre em
+    fotogramas alternados, e a data saltava 10 px para cima e para baixo a 25 por segundo.
+    """
+    import contextlib
+    import hashlib
+    import io
+    import json
+    import subprocess
+    import tempfile
+    import render
+    pasta = tempfile.mkdtemp(prefix="teste_data_afastada_fatias_")
+    clips = [dict(tipo="marcos", duracao_s="3.0", transicao_s="0",
+                  texto_ecra="1995@0.6-0.75c|04/09 Nasce o SAPO, em Aveiro;*12/09 Nasce o Tiago"),
+             # um cartao preto no fim, para o fade a preto do fim do filme (2,5 s) nao cair na fita
+             dict(tipo="cartao", duracao_s="3.0", transicao_s="0", texto_ecra="")]
+    nome = "data_afastada_fatias"
+    _escrever_montagem(pasta, nome, clips)
+    estilo_json = os.path.join(pasta, nome + ".estilo.json")
+    json.dump(ESTILO_DATA_AFASTADA, open(estilo_json, "w", encoding="utf-8"))
+    guardado = (render.MONTAGENS,) + _resolucao(render, 480, 270)
+    render.MONTAGENS = pasta
+    problemas = []
+
+    def todos(estado):
+        return [render.fotograma(q, estado)[0].tobytes() for q in range(estado["total_quadros"])]
+    try:
+        import numpy as np
+        with contextlib.redirect_stdout(io.StringIO()):
+            brutos = todos(render.carregar_montagem(nome, None))
+            os.rename(estilo_json, estilo_json + ".fora")
+            sem_brutos = todos(render.carregar_montagem(nome, None))
+            os.rename(estilo_json + ".fora", estilo_json)
+        sequencial = [hashlib.md5(b).hexdigest() for b in brutos]
+        sem = [hashlib.md5(b).hexdigest() for b in sem_brutos]
+        mudam = [q for q in range(len(sequencial)) if sequencial[q] != sem[q]]
+        if not mudam:
+            problemas.append("com a chave nenhum fotograma muda: a medida nao distingue")
+        # SO AS FILAS DA DATA: abaixo dos nomes dos meses (centrados 34 px abaixo da linha, a 38 px)
+        # so ha a data do nascimento e a linha do centro, que e igual de cima a baixo.
+        abaixo_dos_meses = int(270 * 0.56) + 34 + 19
+        for q in mudam:
+            filas = np.where((np.frombuffer(brutos[q], np.uint8).reshape(270, 480, 3)
+                              != np.frombuffer(sem_brutos[q], np.uint8).reshape(270, 480, 3)).any(axis=(1, 2)))[0]
+            if filas[0] < abaixo_dos_meses:
+                problemas.append("o fotograma %d muda na fila %d, acima da data" % (q, filas[0]))
+                break
+        total, tamanho, n = len(sequencial), 480 * 270 * 3, 2
+        for k in range(n):
+            r = subprocess.run(render.comando_da_fatia(nome, k, n, ["--escala", "0.25"]),
+                               capture_output=True, timeout=600)
+            quadros = list(render.quadros_da_fatia(k, n, total))
+            if r.returncode != 0 or len(r.stdout) != tamanho * len(quadros):
+                problemas.append("fatia %d/%d: codigo %d, %d bytes: %s"
+                                 % (k, n, r.returncode, len(r.stdout), r.stderr.decode("utf-8", "replace")[-300:]))
+                continue
+            for i, q in enumerate(quadros):
+                if hashlib.md5(r.stdout[i * tamanho:(i + 1) * tamanho]).hexdigest() != sequencial[q]:
+                    problemas.append("fatia %d/%d: o fotograma %d difere do sequencial" % (k, n, q))
+                    break
+    finally:
+        render.MONTAGENS, render.L, render.A = guardado
+        render.aplicar_estilo({})
+    verifica("data do nascimento afastada: chega as fatias", not problemas,
+             "; ".join(problemas[:3]) if problemas else
+             "%d fotogramas em 2 fatias iguais ao sequencial; a chave muda %d, so nas filas da data"
+             % (len(sequencial), len(mudam)))
+
+
+def teste_intro_de_outras_cores_so_muda_as_cores():
+    """A intro com outras cores e a mesma intro: a mesma mascara, os mesmos tempos, so as cores.
+
+    O PEDIDO, 2 de outubro: a Clara acha que o vermelho "parece demasiado Marvel". O
+    intro_flipbook.py passou a aceitar o fundo, o papel e a tinta do duotone, a cor das letras e
+    o corpo do letreiro. Tres defeitos possiveis, e este teste apanha-os sem fazer o video:
+      - sem paleta, um pixel diferente: a intro do filme deixava de ser a que ele aprovou. Os
+        fotogramas com as cores de omissao sao os mesmos antes e depois de se desenhar com outra
+        paleta (o CORES nao fica preso), e o corpo 288 pedido a mao da a mascara da procura;
+      - com paleta, outra coisa alem das cores: no letreiro solido o fundo e o fundo e as letras
+        sao a letra, e o duotone vai da tinta ao papel;
+      - dois nomes iguais para paletas diferentes, ou um nome novo para a de sempre: o montar
+        pegava na intro errada, ou deixava de encontrar a de hoje.
+    """
+    import hashlib
+    import intro_flipbook as ib
+    import montar_da_mesa
+    problemas = []
+    guardado = dict(ib.CORES)
+    outra = {"fundo": (26, 44, 78), "papel": (241, 225, 188), "tinta": (6, 12, 24), "letra": (217, 180, 106)}
+    try:
+        fotos = [ib.duotone(ib.cobrir(_foto_gradiente(k, a, 600), int(ib.L * 1.22), int(ib.A * 1.22),
+                                      procurar_caras=True))
+                 for k, a in enumerate([4 / 3.0, 3 / 4.0, 16 / 9.0])]
+        pouso = ib.duotone(ib.cobrir(_foto_gradiente(3, 1.5, 600), int(ib.L * 1.25), int(ib.A * 1.25)))
+        mascara = ib.letreiro(int(ib.L * 0.86))
+        if ib.letreiro(int(ib.L * 0.86), ib.TAMANHO).tobytes() != mascara.tobytes():
+            problemas.append("o letreiro a %d pedido a mao nao e o da procura" % ib.TAMANHO)
+        tempos = (0.9, 3.0, 7.4, 9.5, 11.6, 13.3, 14.0)
+
+        def quadros():
+            return [hashlib.md5(ib.desenhar(t, fotos, pouso, mascara).tobytes()).hexdigest() for t in tempos]
+        antes = quadros()
+        ib.CORES.update(outra)
+        fotos_p = [ib.duotone(ib.cobrir(_foto_gradiente(k, a, 600), int(ib.L * 1.22), int(ib.A * 1.22),
+                                        procurar_caras=True))
+                   for k, a in enumerate([4 / 3.0, 3 / 4.0, 16 / 9.0])]
+        solido = ib.desenhar(ib.T_FIM, fotos_p, pouso, mascara)
+        rampa = ib.duotone(Image.linear_gradient("L").convert("RGB"))
+        ib.CORES.clear()
+        ib.CORES.update(guardado)
+        depois = quadros()
+        if antes != depois:
+            problemas.append("com as cores de omissao, %d de %d fotogramas mudaram depois de outra paleta"
+                             % (sum(a != b for a, b in zip(antes, depois)), len(tempos)))
+        # No letreiro solido: um ponto fora das letras e um dentro do traco do C, onde a mascara e 255.
+        m = mascara.load()
+        dentro = next((x, y) for y in range(ib.A // 2 - 40, ib.A // 2 + 80)
+                      for x in range(ib.L // 10, ib.L // 3) if m[x, y] == 255
+                      and all(m[x + dx, y + dy] == 255 for dx in (-3, 3) for dy in (-3, 3)))
+        if solido.getpixel((20, 20)) != outra["fundo"]:
+            problemas.append("o fundo do letreiro solido e %s e nao o fundo %s" % (solido.getpixel((20, 20)),
+                                                                               outra["fundo"]))
+        if solido.getpixel(dentro) != outra["letra"]:
+            problemas.append("as letras do letreiro solido sao %s e nao a letra %s"
+                             % (solido.getpixel(dentro), outra["letra"]))
+        if rampa.getpixel((0, 0)) != outra["tinta"] or rampa.getpixel((0, 255)) != outra["papel"]:
+            problemas.append("o duotone vai de %s a %s, e nao da tinta ao papel"
+                             % (rampa.getpixel((0, 0)), rampa.getpixel((0, 255))))
+    finally:
+        ib.CORES.clear()
+        ib.CORES.update(guardado)
+    # Os nomes: os de sempre sem paleta, um por paleta, e todos conhecidos do montar.
+    if (ib.nome_da_intro(), ib.nome_da_intro(sem_preto=True)) != \
+            ("intro_clara_tiago_5.mp4", "intro_clara_tiago_5 sem preto.mp4"):
+        problemas.append("sem paleta os nomes sao %s e %s" % (ib.nome_da_intro(), ib.nome_da_intro(sem_preto=True)))
+    if ib.nome_da_intro(ib.cores_de_omissao(), ib.TAMANHO, True) != "intro_clara_tiago_5 sem preto.mp4":
+        problemas.append("a paleta de omissao escrita por extenso nao da o nome de sempre")
+    nomes = {ib.nome_da_intro(outra, None, True), ib.nome_da_intro(dict(outra, papel=(240, 225, 188)), None, True),
+             ib.nome_da_intro(outra, 300, True), ib.nome_da_intro(outra, None, False)}
+    if len(nomes) != 4:
+        problemas.append("paletas diferentes com o mesmo nome: %s" % sorted(nomes))
+    for n in nomes:
+        if montar_da_mesa.variante_da_intro(n) is None:
+            problemas.append("o montar nao reconhece %s como a intro 5" % n)
+    if len(ib.FOTOS_DA_INTRO_5) != len(set(ib.FOTOS_DA_INTRO_5)) or ib.FOTOS_DA_INTRO_5[-1] != ib.POUSO:
+        problemas.append("a lista da intro 5 repete fotos ou nao acaba na de pouso")
+    verifica("intro: outras cores mudam so as cores", not problemas,
+             "; ".join(problemas[:3]) if problemas else
+             "%d fotogramas iguais sem paleta, fundo e letras na cor pedida, duotone da tinta ao papel, "
+             "4 paletas 4 nomes" % len(tempos))
+
+
+def teste_montar_troca_a_intro_pela_da_paleta():
+    """O montar troca a intro da fanfarra pela das cores da Mesa, so essa, e so se for desta paleta.
+
+    O render cola o ficheiro que a linha da fanfarra nomeia, por isso e o montar que troca. Sem
+    estilo.intro nada muda (os mesmos clips, o mesmo objeto). Com ele: a intro 5 passa a de outras
+    cores se ela existir e os metadados disserem esta paleta; senao fica a de sempre, com aviso.
+    Uma intro que nao e a 5 nao se refaz, e diz-se. Nada aqui faz uma intro (fazer=False): fazer
+    uma leva tres minutos.
+    """
+    import intro_flipbook as ib
+    import montar_da_mesa as mm
+    import render
+    problemas = []
+    clips = [{"t": "video", "f": "20th Century Fox Intro HD igualado.mp4", "d": 20.8},
+             {"t": "video", "f": "intro_clara_tiago_5 sem preto igualado.mp4", "d": 13.21},
+             {"t": "contador", "x": "2026>1995"},
+             {"t": "video", "f": "intro_clara_tiago_5 sem preto igualado.mp4", "d": 5}]
+    avisos = []
+    if mm.intro_da_paleta(clips, {}, avisos) is not clips or avisos:
+        problemas.append("sem estilo.intro os clips mudaram ou houve avisos: %s" % avisos)
+    if mm.intro_da_paleta(clips, render.normalizar_estilo(ESTILO_DO_CONTRATO), avisos) is not clips:
+        problemas.append("o estilo todo na omissao mexeu na intro")
+    # Uma paleta que nao existe em disco: fica a de sempre, com aviso.
+    nunca = render.normalizar_estilo({"intro": {"fundo": "#010203", "letra": "#FEFDFC"}})
+    avisos = []
+    fica = mm.intro_da_paleta(clips, nunca, avisos, fazer=False)
+    if [c["f"] for c in fica if c.get("f")] != [c["f"] for c in clips if c.get("f")] or \
+            not any("ainda nao existe" in a for a in avisos):
+        problemas.append("uma paleta sem ficheiro trocou a intro ou nao avisou: %s" % avisos)
+    # Uma intro que nao e a 5.
+    avisos = []
+    antiga = [dict(clips[0]), {"t": "video", "f": "intro_clara_tiago.mp4", "d": 14.4}]
+    if mm.intro_da_paleta(antiga, nunca, avisos, fazer=False)[1]["f"] != "intro_clara_tiago.mp4" or \
+            not any("nao refaz" in a for a in avisos):
+        problemas.append("a intro de 12 de setembro foi trocada ou nao avisou: %s" % avisos)
+    # A de vinho e champanhe, feita a 2 de outubro, se estiver em disco.
+    vinho = {"fundo": "#6B1E33", "papel": "#F4E4C8", "tinta": "#1E070F", "letra": "#E2B88C"}
+    estilo = render.normalizar_estilo({"intro": vinho})
+    import igualar_abertura
+    nome = igualar_abertura.nome_igualado(ib.nome_da_intro({k: render.cor_rgb(v) for k, v in vinho.items()},
+                                                          None, True))
+    detalhe_vinho = "a de vinho nao esta em disco, nao vi a troca"
+    if os.path.exists(os.path.join(igualar_abertura.DESTINO, nome)):
+        avisos = []
+        trocados = mm.intro_da_paleta(clips, estilo, avisos, fazer=False)
+        if [c.get("f") for c in trocados] != [clips[0]["f"], nome, None, clips[3]["f"]] or avisos:
+            problemas.append("com a de vinho ficou %s, avisos %s" % ([c.get("f") for c in trocados], avisos))
+        d = mm.duracao_do_video(nome)
+        if d is None or abs(d - 13.21) > 0.05:
+            problemas.append("a de vinho mede %s s e a sem preto 13,21" % d)
+        # Com os metadados de outra paleta, nao se usa.
+        verdadeira = mm.paleta_do_ficheiro
+        mm.paleta_do_ficheiro = lambda caminho: "paleta de outra coisa"
+        try:
+            avisos = []
+            if mm.intro_da_paleta(clips, estilo, avisos, fazer=False)[1]["f"] != clips[1]["f"] or \
+                    not any("nao e desta paleta" in a for a in avisos):
+                problemas.append("uma intro com metadados de outra paleta foi usada: %s" % avisos)
+        finally:
+            mm.paleta_do_ficheiro = verdadeira
+        detalhe_vinho = "a de vinho troca so a fanfarra e mede %.2f s" % d if d else ""
+    # A Mesa avisa (083): letras que se perdem no fundo, e a linha de cima pequena de mais.
+    import linha_tempo
+    pouco = mm.avisos_do_estilo(render.normalizar_estilo({"intro": {"tamanho": 200, "letra": "#7A2030"}}),
+                                render, linha_tempo)
+    if not any("1.2 para 1" in a for a in pouco) or not any("fica a 38 px" in a for a in pouco):
+        problemas.append("sem os avisos da intro: %s" % pouco)
+    if mm.avisos_do_estilo(render.normalizar_estilo({"intro": vinho}), render, linha_tempo):
+        problemas.append("a de vinho avisa sem razao")
+    verifica("intro: o montar troca so a da fanfarra", not problemas,
+             "; ".join(problemas[:3]) if problemas else
+             "sem estilo os mesmos clips, sem ficheiro fica a de sempre com aviso; " + detalhe_vinho)
+
+
+# ---------------------------------------------------------- a letra da intro, 2 de outubro a noite
+# O LETREIRO DE HOJE, em Impact, tirado antes de a letra se poder escolher (Pillow 12.3.0, FreeType
+# 2.14.3): o md5 da mascara a cada tamanho. Sem letra, e com "impact", tem de continuar a ser este.
+LETREIRO_DE_HOJE = {None: "f9cf75ecc06fade616d6b4fba79ba6f1", 132: "6e004f4caf6dd52fcd126bb0cbe13e96",
+                    200: "f81415e1664ccf51c305b919ca142617", 288: "f9cf75ecc06fade616d6b4fba79ba6f1",
+                    309: "a87a4f82056bc7aae885d477b600bbef"}
+# A area do letreiro de hoje a 288, pixeis acima de 128 (decisao 084)
+LETREIRO_IMPACT_AREA = 250835
+# AS QUATRO INTROS JA FEITAS a 2 de outubro, todas "sem preto" e a 288: o nome e o que o montar e a Mesa
+# procuram em disco, e nao pode mudar por a letra existir.
+INTROS_FEITAS_A_2 = (
+    ({"fundo": "#6B1E33", "letra": "#E2B88C", "papel": "#F4E4C8", "tinta": "#1E070F"},
+     "intro_clara_tiago_5 sem preto_727e5d.mp4"),
+    ({"fundo": "#1A2C4E", "letra": "#D9B46A", "papel": "#F1E1BC", "tinta": "#060C18"},
+     "intro_clara_tiago_5 sem preto_ae64f5.mp4"),
+    ({"fundo": "#1E4733", "letra": "#F3E8CF", "papel": "#F4EBD5", "tinta": "#07140D"},
+     "intro_clara_tiago_5 sem preto_d26cee.mp4"),
+    ({"fundo": "#0C0B09", "letra": "#D4AA5A", "papel": "#EEDCAE", "tinta": "#4A3B24"},
+     "intro_clara_tiago_5 sem preto_81ad6d.mp4"))
+# As letras que a medida de 2 de outubro oferece, pela ordem dela (data/fontes_intro.json)
+LETRAS_DA_INTRO = ("impact", "bernard", "showcard", "gillultra", "bahncond", "playbill", "agency", "rockcond")
+
+
+def _area_do_letreiro(m):
+    """Os pixeis acima de 128, a medida da decisao 084 (250.835 no Impact a 288)."""
+    return sum(m.histogram()[129:])
+
+
+def teste_letra_da_intro_sem_ela_igual_ao_byte():
+    """Sem letra, ou com "impact", o letreiro, os nomes e os resumos das intros sao os de hoje, ao byte.
+
+    O PEDIDO, 2 de outubro a noite: o Tiago quer poder mudar a letra da intro no Estilo da Mesa, e a
+    decisao 084 abriu-se nos termos dela, com o "Impact (como esta)" primeiro. Tres defeitos possiveis:
+      - o letreiro em Impact a mudar um pixel (a letra nova a passar por outro caminho de desenho): a
+        intro aprovada deixava de ser a que o montar faz;
+      - o nome ou os metadados de uma intro ja feita a mudar: o montar e a Mesa deixavam de a encontrar
+        (as quatro paletas de 2 de outubro e a de hoje), e faziam outra igual, tres minutos cada;
+      - o "impact" a ser guardado no estilo: o estilo.json passava a existir para um filme igual, e a
+        Mesa que grava o "como esta" mudava o nome da intro.
+    """
+    import hashlib
+    import PIL
+    import intro_flipbook as ib
+    import montar_da_mesa as mm
+    import igualar_abertura
+    import render
+    problemas = []
+    exato = PIL.__version__ == "12.3.0"
+    for tam, md5 in LETREIRO_DE_HOJE.items():
+        hoje = ib.letreiro(int(ib.L * 0.86), tam).tobytes()
+        if exato and hashlib.md5(hoje).hexdigest() != md5:
+            problemas.append("o letreiro a %s ja nao e o de hoje" % tam)
+        for fonte in (None, "", "impact"):
+            if ib.letreiro(int(ib.L * 0.86), tam, fonte).tobytes() != hoje:
+                problemas.append("o letreiro a %s com a fonte %r nao e o de hoje" % (tam, fonte))
+    hx = render.cor_rgb
+    for fonte in (None, "", "impact"):
+        for sp in (False, True):
+            certo = "intro_clara_tiago_5%s.mp4" % (" sem preto" if sp else "")
+            if ib.nome_da_intro(None, None, sp, fonte) != certo or \
+                    ib.nome_da_intro(ib.cores_de_omissao(), ib.TAMANHO, sp, fonte) != certo:
+                problemas.append("sem paleta, com a fonte %r, o nome nao e %s" % (fonte, certo))
+        if ib.tem_paleta(None, None, fonte):
+            problemas.append("a fonte %r conta como paleta" % (fonte,))
+        for cores, nome in INTROS_FEITAS_A_2:
+            c = {k: hx(v) for k, v in cores.items()}
+            for tam in (None, 288):
+                if ib.nome_da_intro(c, tam, True, fonte) != nome:
+                    problemas.append("a intro %s com a fonte %r passa a %s"
+                                     % (nome, fonte, ib.nome_da_intro(c, tam, True, fonte)))
+                if ib.resumo_da_paleta(c, tam, fonte) != ib.resumo_da_paleta(c, tam) or \
+                        ib.comentario_da_paleta(c, tam, True, fonte) != ib.comentario_da_paleta(c, tam):
+                    problemas.append("o resumo de %s mudou com a fonte %r" % (nome, fonte))
+    # os metadados das que estao em disco: o montar compara-os ao comentario, e tem de continuar a bater
+    vistas = 0
+    for cores, nome in INTROS_FEITAS_A_2:
+        caminho = os.path.join(igualar_abertura.DESTINO, igualar_abertura.nome_igualado(nome))
+        if os.path.exists(caminho):
+            vistas += 1
+            c = {k: hx(v) for k, v in cores.items()}
+            if mm.paleta_do_ficheiro(caminho) != ib.comentario_da_paleta(c, None, True, "impact"):
+                problemas.append("os metadados de %s ja nao sao o comentario da paleta" % nome)
+    # o "impact" nao se guarda, e o montar nao toca na intro
+    avisos = []
+    for pedido in ({"intro": {"fonte": "impact"}}, {"intro": {"fonte": "impact", "tamanho": 288}}):
+        if render.normalizar_estilo(pedido, avisos) != {}:
+            problemas.append("%r guardou-se: %r" % (pedido, render.normalizar_estilo(pedido)))
+    if avisos:
+        problemas.append("o impact avisou: %s" % avisos)
+    if render.estilo_omissao()["intro"].get("fonte") != "impact":
+        problemas.append("a omissao do render nao tem a fonte impact")
+    clips = [{"t": "video", "f": "intro_clara_tiago_5 sem preto igualado.mp4", "d": 13.21}]
+    if mm.intro_da_paleta(clips, render.normalizar_estilo({"intro": {"fonte": "impact"}}), avisos) is not clips:
+        problemas.append("o impact mexeu na intro da fanfarra")
+    verifica("letra da intro: sem ela, tudo como hoje", not problemas,
+             "; ".join(problemas[:3]) if problemas else
+             "letreiro igual a 5 tamanhos%s, nomes e resumos de hoje e das 4 paletas, %d com os metadados em disco"
+             % (" e ao md5 de hoje" if exato else "", vistas))
+
+
+def teste_letras_da_intro_medem_o_que_a_medida_diz():
+    """Cada letra oferecida desenha o que a medida de 2 de outubro diz: a area, a largura, o corpo minimo.
+
+    O QUE A OFERTA PROMETE. A 084 fechou o letreiro em Impact pela area: a foto ve-se por dentro das
+    letras. Abriu-se a escolha so a letras que mostram pelo menos dois tercos dessa area, cabem na zona
+    segura no tamanho maior da Mesa (309) e separam as letras a 15 m no menor (132). Se o desenho do
+    filme nao for o da medida, a promessa e outra:
+      - a area a 288 tem de ser a area_px do data/fontes_intro.json, ao pixel;
+      - a 309 o nome cabe nos 1785 px (93% de 1920), e a 132 o corpo da letra nao fica abaixo do
+        corpo_minimo dela;
+      - a Bahnschrift Condensed abre na largura 75: o abrir_letra() do render so poe o peso, e ela saia
+        na largura 100, outra letra, mais larga do que a caixa;
+      - a linha "A HISTORIA DE" fica fora da troca: a mesma letra e o mesmo corpo em todas.
+    """
+    import intro_flipbook as ib
+    import montar_da_mesa as mm
+    import linha_tempo as lt
+    import render
+    from PIL import ImageFont
+    problemas = []
+    letras = render.letras_da_intro()
+    ordem = tuple(i for i, _e in sorted(letras.items(), key=lambda x: x[1].get("ordem") or 99))
+    if ordem != LETRAS_DA_INTRO:
+        problemas.append("as oferecidas sao %s e a medida dizia %s" % (ordem, LETRAS_DA_INTRO))
+    zona = int(ib.ZONA_SEGURA * ib.L)
+
+    def linha_de_cima(m):
+        """(altura, largura) da linha "A HISTORIA DE": da primeira linha com tinta ate ao primeiro
+        intervalo de mais de 12 linhas vazias (o acento do O fica a menos do que isso das letras, e o
+        nome a 70 px). A largura e a das letras dessa faixa."""
+        y0 = m.getbbox()[1]
+        y, ultima = y0, y0
+        while y - ultima <= 12:
+            if m.crop((0, y, ib.L, y + 1)).getbbox():
+                ultima = y
+            y += 1
+        faixa = m.crop((0, y0, ib.L, ultima + 1)).getbbox()
+        return ultima + 1 - y0, faixa[2] - faixa[0]
+    cima = linha_de_cima(ib.letreiro(int(ib.L * 0.86)))
+    for ident in ordem:
+        e = letras[ident]
+        m = ib.letreiro(int(ib.L * 0.86), None, ident)
+        if _area_do_letreiro(m) != e.get("area_px"):
+            problemas.append("%s: area %d e a medida diz %s" % (ident, _area_do_letreiro(m), e.get("area_px")))
+        if ib.letreiro(int(ib.L * 0.86), 288, ident).tobytes() != m.tobytes():
+            problemas.append("%s: o letreiro a 288 pedido a mao nao e o da procura" % ident)
+        if 100.0 * _area_do_letreiro(m) / LETREIRO_IMPACT_AREA < 66.7:
+            problemas.append("%s mostra menos de dois tercos da foto do Impact" % ident)
+        f309 = ImageFont.truetype(ib.FONTE, 309) if ident == "impact" else \
+            render.abrir_letra_da_intro(e, render.corpo_da_letra_da_intro(e, 309))
+        caixa = f309.getbbox(ib.NOME)
+        if caixa[2] - caixa[0] > zona:
+            problemas.append("%s: a 309 o nome tem %d px, mais do que %d" % (ident, caixa[2] - caixa[0], zona))
+        c132 = 132 if ident == "impact" else render.corpo_da_letra_da_intro(e, 132)
+        if c132 < e["corpo_minimo"]:
+            problemas.append("%s: a 132 fica no corpo %d, abaixo do minimo %d" % (ident, c132, e["corpo_minimo"]))
+        if linha_de_cima(m) != cima:
+            problemas.append("%s: a linha de cima tem %s px (altura, largura) e no Impact %s"
+                             % (ident, linha_de_cima(m), cima))
+        # e o montar nao avisa de nenhuma em nenhum tamanho da Mesa
+        for tam in (132, 200, 309):
+            aviso = mm.avisos_do_estilo({"intro": {"fonte": ident, "tamanho": tam}}, render, lt)
+            if any("separa as letras" in a for a in aviso):
+                problemas.append("%s a %d: %s" % (ident, tam, aviso))
+    # A Bahnschrift: os dois eixos, pela ordem do fvar, e so esses
+    e = letras.get("bahncond")
+    if e:
+        estreita = render.abrir_letra_da_intro(e, 100).getbbox(ib.NOME)
+        larga = ImageFont.truetype(e["ficheiro"], 100)
+        larga.set_variation_by_axes([700, 100])
+        larga = larga.getbbox(ib.NOME)
+        if not estreita[2] - estreita[0] < 0.85 * (larga[2] - larga[0]):
+            problemas.append("a Bahnschrift abre com %d px, e na largura 100 tem %d: nao e a Condensed"
+                             % (estreita[2] - estreita[0], larga[2] - larga[0]))
+        try:
+            render.abrir_letra_da_intro(dict(e, eixos=[700.0]), 100)
+            problemas.append("a Bahnschrift com um eixo so abriu")
+        except OSError:
+            pass
+    verifica("letra da intro: cada oferecida e a da medida", not problemas,
+             "; ".join(problemas[:3]) if problemas else
+             "%d letras: a area ao pixel, cabem a 309, leem-se a 132, a linha de cima com %d x %d px em todas"
+             % (len(ordem), cima[1], cima[0]))
+
+
+def teste_letra_da_intro_que_nao_vale_fica_no_impact():
+    """Uma letra que nao se conhece, que nao e oferecida ou que nao abre: o Impact, com aviso, em tudo.
+
+    O DEFEITO QUE ISTO EVITA. Um estado escrito a mao (ou uma Mesa de outro dia) pode trazer uma letra
+    que a medida recusou, uma das letras dos textos (data/fontes.json), ou uma cujo ficheiro saiu do PC.
+    A meio caminho era o pior: o nome do ficheiro com a letra e o desenho em Impact, ou o contrario, e
+    o montar a refazer uma intro igual com outro nome. A regra: ou a pedida inteira, ou o Impact em tudo
+    (o desenho, o resumo e o nome), e diz-se porque.
+    """
+    import contextlib
+    import io
+    import json as _json
+    import subprocess
+    import tempfile
+    import intro_flipbook as ib
+    import render
+    problemas = []
+    fora = next((e["id"] for e in _json.load(open(render.FONTES_DA_INTRO, encoding="utf-8"))["letras"]
+                 if e.get("oferecida") is not True), None)
+    for pedido in ("arial_bold", "nao_existe", fora, 3, "Bernard"):
+        avisos = []
+        if render.normalizar_estilo({"intro": {"fonte": pedido}}, avisos) != {} or \
+                not any("nao e uma das letras oferecidas para a intro" in a and "fica o Impact" in a
+                        for a in avisos):
+            problemas.append("a fonte %r nao ficou no Impact com aviso: %s" % (pedido, avisos))
+    # uma oferecida cujo ficheiro saiu do PC
+    pasta = tempfile.mkdtemp(prefix="teste_letra_intro_")
+    falsa = os.path.join(pasta, "fontes_intro.json")
+    dados = _json.load(open(render.FONTES_DA_INTRO, encoding="utf-8"))
+    for e in dados["letras"]:
+        if e["id"] == "bernard":
+            e["ficheiro"] = os.path.join(pasta, "nao_esta.ttf")
+    with open(falsa, "w", encoding="utf-8") as fh:
+        _json.dump(dados, fh)
+    guardado = render.FONTES_DA_INTRO
+    render.FONTES_DA_INTRO = falsa
+    try:
+        avisos = []
+        if render.normalizar_estilo({"intro": {"fonte": "bernard", "fundo": "#010203"}}, avisos) != \
+                {"intro": {"fundo": "#010203"}} or not any("nao abre" in a for a in avisos):
+            problemas.append("a bernard sem ficheiro nao ficou no Impact com aviso: %s" % avisos)
+        saida = io.StringIO()
+        with contextlib.redirect_stdout(saida):
+            m = ib.letreiro(int(ib.L * 0.86), None, "bernard")
+        if m.tobytes() != ib.letreiro(int(ib.L * 0.86)).tobytes() or "nao abre" not in saida.getvalue():
+            problemas.append("o letreiro com a bernard sem ficheiro nao e o Impact com aviso")
+    finally:
+        render.FONTES_DA_INTRO = guardado
+    # o intro_flipbook.py pela linha de comandos: o Impact em tudo, e a letra pedida em tudo
+    script = os.path.join(REPO, "scripts", "intro_flipbook.py")
+    for fonte, deve in (("nao_existe", ("AVISO: estilo.intro.fonte 'nao_existe'",)),
+                        ("bernard", ("Letra: Bernard MT Condensed (corpo 288 no tamanho 288",
+                                     "tamanho 288 fonte bernard"))):
+        r = subprocess.run([sys.executable, script, "--fotos-da-5", "--so-lista", "--sem-preto", "--fonte", fonte],
+                           capture_output=True, text=True, encoding="utf-8", errors="replace")
+        texto = (r.stdout or "") + (r.stderr or "")
+        if r.returncode != 0 or any(d not in texto for d in deve):
+            problemas.append("--fonte %s: %s" % (fonte, " ".join(texto.split()[:40])))
+        if fonte == "nao_existe" and "Paleta:" in texto:
+            problemas.append("--fonte nao_existe fez uma paleta")
+    verifica("letra da intro: a que nao vale fica no Impact", not problemas,
+             "; ".join(problemas[:3]) if problemas else
+             "5 ids que nao valem e uma sem ficheiro: Impact com aviso, no estilo, no letreiro e no script")
+
+
+def teste_nome_da_intro_com_letra_e_o_montar():
+    """Com uma letra, a intro tem nome proprio, a familia conhece-o, e o montar pede-a e usa-a.
+
+    O CONTRATO (2 de outubro a noite): intro_clara_tiago_5[ sem preto]_<6 hex>_<id>.mp4, a copia
+    igualada com " igualado", e nos metadados o resumo com " fonte <id>". Defeitos possiveis:
+      - duas letras, ou a letra e o Impact, com o mesmo nome: o montar pegava na intro errada;
+      - o INTRO_DA_FAMILIA sem o _<id>: a intro com letra deixava de ser a intro 5, e uma Mesa que ja
+        aponte para ela nao podia voltar a mudar de cores;
+      - o montar a pedir a intro sem o --fonte: saia em Impact com o nome da letra.
+    """
+    import contextlib
+    import io
+    import subprocess
+    import intro_flipbook as ib
+    import montar_da_mesa as mm
+    import igualar_abertura
+    import render
+    problemas = []
+    nome = ib.nome_da_intro(None, None, True, "bernard")
+    texto = ib.resumo_da_paleta(None, None, "bernard")[1]
+    if not re.match(r"^intro_clara_tiago_5 sem preto_[0-9a-f]{6}_bernard\.mp4$", nome) or \
+            not texto.endswith("tamanho 288 fonte bernard") or \
+            ib.comentario_da_paleta(None, None, True, "bernard") != texto + "; fotos da intro 5":
+        problemas.append("a bernard da %s e %r" % (nome, texto))
+    nomes = set()
+    paletas = [None] + [{k: render.cor_rgb(v) for k, v in c.items()} for c, _n in INTROS_FEITAS_A_2]
+    for fonte in LETRAS_DA_INTRO:
+        if not re.match(r"^[a-z0-9]+$", fonte):
+            problemas.append("o id %r nao cabe no _[a-z0-9]+ do nome" % fonte)
+        for cores in paletas:
+            for sp in (False, True):
+                n = ib.nome_da_intro(cores, None, sp, fonte)
+                nomes.add(n)
+                for x in (n, igualar_abertura.nome_igualado(n)):
+                    if mm.variante_da_intro(x) is not sp:
+                        problemas.append("o montar nao reconhece %s" % x)
+    # o impact sem paleta e o nome de sempre, e e o unico que se repete com e sem preto
+    if len(nomes) != len(LETRAS_DA_INTRO) * len(paletas) * 2:
+        problemas.append("%d nomes para %d intros" % (len(nomes), len(LETRAS_DA_INTRO) * len(paletas) * 2))
+    for x in ("intro_clara_tiago.mp4", "intro_clara_tiago_5 sem preto_727e5d_bernard mt igualado.mp4",
+              "intro_clara_tiago_5_bernard.mp4"):
+        if mm.variante_da_intro(x) is not None:
+            problemas.append("o montar aceita %s" % x)
+    # o montar pede a intro com o --fonte, e sem ficheiro fica a de sempre
+    clips = [{"t": "video", "f": "20th Century Fox Intro HD igualado.mp4", "d": 20.8},
+             {"t": "video", "f": "intro_clara_tiago_5 sem preto igualado.mp4", "d": 13.21},
+             {"t": "contador", "x": "2026>1995"}]
+    nunca = render.normalizar_estilo({"intro": {"fonte": "rockcond", "fundo": "#010203"}})
+    avisos = []
+    if mm.intro_da_paleta(clips, nunca, avisos, fazer=False)[1]["f"] != clips[1]["f"] or \
+            not any("ainda nao existe" in a and "Rockwell Condensed" in a for a in avisos):
+        problemas.append("a rockcond sem ficheiro trocou a intro ou nao avisou: %s" % avisos)
+    pedidos = []
+    verdadeiro = subprocess.run
+
+    def corre(cmd, *a, **k):
+        pedidos.append(list(cmd))
+        return subprocess.CompletedProcess(cmd, 1, "", "nao feito no teste")
+    subprocess.run = corre
+    try:
+        avisos = []
+        with contextlib.redirect_stdout(io.StringIO()):
+            mm.intro_da_paleta(clips, nunca, avisos, fazer=True)
+    finally:
+        subprocess.run = verdadeiro
+    cmd = next((c for c in pedidos if any("intro_flipbook" in str(x) for x in c)), [])
+    if "--fonte" not in cmd or cmd[cmd.index("--fonte") + 1] != "rockcond":
+        problemas.append("o montar pediu a intro sem a letra: %s" % cmd)
+    if ib.nome_da_intro({"fundo": (1, 2, 3)}, None, True, "rockcond") not in cmd:
+        problemas.append("o montar pediu outro nome: %s" % cmd)
+    if not any("nao se fez" in a for a in avisos):
+        problemas.append("a intro que nao se fez nao avisou: %s" % avisos)
+    # a da prova de 2 de outubro, a bernard com as cores de hoje, se estiver em disco
+    estilo = render.normalizar_estilo({"intro": {"fonte": "bernard"}})
+    igualado = igualar_abertura.nome_igualado(nome)
+    detalhe = "a bernard nao esta em disco, nao vi a troca"
+    if os.path.exists(os.path.join(igualar_abertura.DESTINO, igualado)):
+        avisos = []
+        trocados = mm.intro_da_paleta(clips, estilo, avisos, fazer=False)
+        if [c.get("f") for c in trocados] != [clips[0]["f"], igualado, None] or avisos:
+            problemas.append("com a bernard ficou %s, avisos %s" % ([c.get("f") for c in trocados], avisos))
+        d = mm.duracao_do_video(igualado)
+        if d is None or abs(d - 13.21) > 0.05:
+            problemas.append("a bernard mede %s s e a sem preto 13,21" % d)
+        verdadeira = mm.paleta_do_ficheiro
+        mm.paleta_do_ficheiro = lambda caminho: ib.comentario_da_paleta(None, None, True)
+        try:
+            avisos = []
+            if mm.intro_da_paleta(clips, estilo, avisos, fazer=False)[1]["f"] != clips[1]["f"] or \
+                    not any("nao e desta paleta" in a for a in avisos):
+                problemas.append("uma intro com os metadados sem a letra foi usada: %s" % avisos)
+        finally:
+            mm.paleta_do_ficheiro = verdadeira
+        detalhe = "a bernard em disco troca so a fanfarra e mede %.2f s" % d if d else ""
+    verifica("letra da intro: o nome, a familia e o montar", not problemas,
+             "; ".join(problemas[:3]) if problemas else
+             "%d nomes diferentes, todos da familia; o montar pede --fonte; %s" % (len(nomes), detalhe))
+
+
+# ---------------------------------------------------------- os creditos pela Mesa e o projetor, 2 de outubro
+def _ponto5():
+    """O scripts/discussao/ponto5_creditos.py, que e quem desenha os creditos."""
+    pasta = os.path.join(REPO, "scripts", "discussao")
+    if pasta not in sys.path:
+        sys.path.insert(0, pasta)
+    import ponto5_creditos
+    return ponto5_creditos
+
+
+# Convidados de ensaio, sem um unico nome da folha dele (os nomes verdadeiros nunca entram no Git)
+CONVIDADOS_DE_ENSAIO = [
+    {"nome": "Ana", "apelido": "Um", "familia": "F1", "etiquetas": ["Família Clara - Mãe"]},
+    {"nome": "Rui", "apelido": "Um", "familia": "F1", "etiquetas": ["Família Clara - Mãe"]},
+    {"nome": "Eva", "apelido": "Dois", "familia": "F2", "etiquetas": ["Família Clara - Pai"]},
+    {"nome": "Luis", "apelido": "Tres", "familia": "", "etiquetas": ["Amigos Tiago - PwC"]},
+    {"nome": "Rita", "apelido": "Quatro", "familia": "F4", "etiquetas": ["Amigos Tiago - FEP", "Convite enviado"]},
+]
+
+
+def teste_creditos_seguem_a_ordem_da_mesa():
+    """A coluna dos creditos tem as fotos pela mesma ordem que o painel da Mesa mostra.
+
+    O PEDIDO, do Tiago a 2 de outubro: ajustar a ordem das fotos dos creditos "de forma simples e
+    pratica enquanto os nomes movem". A Mesa arruma-as no browser (credFotos) e grava a ordem em
+    est.creditos.ordem; o ponto5_creditos.py desenha-as pela ordem_das_fotos(). O contrato de 2 de
+    outubro: primeiro a ordem dele, depois a versao "Creditos", depois o numero da Mesa, e as
+    marcadas que faltem no fim.
+
+    O DEFEITO QUE ISTO APANHA: duas contas da mesma ordem, uma em cada lado. Bastava uma diferenca
+    (a foto a que ele tirou a etiqueta continuar no filme, uma repetida contar duas vezes, as que
+    faltam irem para o principio) e a Mesa mostrava uma coluna e o filme saia com outra, depois de
+    uma hora de render. Cada caso corre nos dois lados: a credFotos() do editor_base.html no node
+    e a ordem_das_fotos() aqui. Sem node, so o lado do render, contra o que o contrato diz.
+    """
+    import json
+    import shutil
+    import subprocess
+    import tempfile
+    p5 = _ponto5()
+    base = {"pessoas": [{"id": "p_a", "nome": "Clara"}, {"id": "p_c", "nome": " CRÉDITOS "}],
+            "tags": {"f03": ["p_c"], "f01": ["p_c", "p_a"], "f05": ["p_c"], "f02": ["p_a"]},
+            "versoes": [{"id": "v1", "nome": "demo", "clips": []}]}
+
+    def com(**mudas):
+        e = json.loads(json.dumps(base))
+        e.update(mudas)
+        return e
+    versao = {"id": "vc", "nome": "Créditos", "clips": [{"t": "cartao", "x": "ola"}, {"t": "foto", "i": "f05"},
+                                                        {"t": "colagem", "fotos": ["f02", "f03"]}]}
+    casos = [
+        ("so a etiqueta: o numero da Mesa", base, ["f01", "f03", "f05"]),
+        ("a versao Creditos, e a marcada que falta no fim",
+         com(versoes=base["versoes"] + [versao]), ["f05", "f02", "f03", "f01"]),
+        ("a ordem dele: repetida uma vez, a da versao fica sem etiqueta, a que falta no fim",
+         com(versoes=base["versoes"] + [versao], creditos={"ordem": ["f05", "f02", "f05", "f03"]}),
+         ["f05", "f02", "f03", "f01"]),
+        ("a ordem dele sem versao: sem etiqueta sai", com(creditos={"ordem": ["f05", "f02", "f03"]}),
+         ["f05", "f03", "f01"]),
+        ("a ordem dele e uma foto posta na versao depois", com(versoes=base["versoes"] + [versao],
+                                                               creditos={"ordem": ["f03"]}),
+         ["f03", "f01", "f05", "f02"]),
+        ("a ordem vazia: as marcadas todas no fim", com(creditos={"ordem": []}), ["f01", "f03", "f05"]),
+        ("a ordem com lixo e uma que nao existe", com(creditos={"ordem": ["f03", "f99", "f03"]}),
+         ["f03", "f01", "f05"]),
+        ("so os textos, sem ordem: a versao", com(versoes=base["versoes"] + [versao], creditos={"titulo": "X"}),
+         ["f05", "f02", "f03", "f01"]),
+    ]
+    problemas = []
+    for nome, est, esperado in casos:
+        ids = p5.ordem_das_fotos(est)[0]
+        if ids != esperado:
+            problemas.append("render, %s: %s em vez de %s" % (nome, ids, esperado))
+    node = shutil.which("node")
+    detalhe = "sem node: so o lado do render"
+    if node:
+        html = open(os.path.join(REPO, "scripts", "editor_base.html"), encoding="utf-8").read()
+        marcas = ["function credSemAcentos(", "function credPid(", "function credVersao(", "function credMarcadas(",
+                  "function credFotos("]
+        js = ("var est = null;\nfunction credMedida(id){ return {falta: false}; }\n"
+              + "\n".join(_bloco_do_editor(html, m, problemas) for m in marcas) + "\nvar r = [];\n")
+        for _nome, est, _e in casos:
+            js += "est = %s; r.push(credFotos().lista.map(function(x){ return x.id; }));\n" % json.dumps(est)
+        js += "console.log(JSON.stringify(r));\n"
+        if not problemas:
+            with tempfile.NamedTemporaryFile("w", suffix=".js", delete=False, encoding="utf-8") as fh:
+                fh.write(js)
+            try:
+                saida = subprocess.run([node, fh.name], capture_output=True, text=True, encoding="utf-8")
+            finally:
+                os.remove(fh.name)
+            if saida.returncode != 0:
+                problemas.append("o node parou: %s" % (saida.stderr or "").strip()[-200:])
+            else:
+                for (nome, est, _e), mesa in zip(casos, json.loads(saida.stdout)):
+                    if mesa != p5.ordem_das_fotos(est)[0]:
+                        problemas.append("%s: a Mesa da %s e o render %s" % (nome, mesa, p5.ordem_das_fotos(est)[0]))
+                detalhe = "a Mesa e o render dao a mesma coluna"
+    verifica("creditos: a ordem das fotos e a da Mesa", not problemas,
+             "; ".join(problemas[:3]) if problemas else "%d casos; %s" % (len(casos), detalhe))
+
+
+def teste_creditos_textos_dele_com_os_de_hoje_no_resto():
+    """Os textos que ele escreve no painel dos creditos chegam ao filme, campo a campo.
+
+    O PEDIDO, do Tiago a 2 de outubro: "editar os textos que aparecem na parte final dos creditos".
+    A Mesa guarda so o que ele mudou (est.creditos), e um campo vazio quer dizer o de hoje.
+
+    O DEFEITO QUE ISTO APANHA: um cargo em que ele so mudou o "quem" a perder o cargo de hoje, um
+    campo vazio a apagar o texto no ecra, um titulo de grupo que ele escreveu a nao chegar ao rolo,
+    ou uma coisa mal escrita na base (um numero no titulo, uma etiqueta que nao e de nenhum grupo) a
+    parar os creditos ou a cair calada. Os convidados sao de ensaio.
+    """
+    p5 = _ponto5()
+    problemas = []
+    avisos = []
+    hoje = p5.textos_dos_creditos({}, avisos)
+    if (hoje["cargos"], hoje["titulo"], hoje["data"], hoje["grupos"]) != (p5.CARGOS, p5.TITULO, p5.DATA, {}) \
+            or avisos:
+        problemas.append("sem est.creditos nao ficam os de hoje")
+    pwc = next(g for g in p5.GRUPOS if g[0] == "Amigos Tiago - PwC")
+    est = {"creditos": {"cargos": [{"quem": "OS NOIVOS"}, None, {"cargo": "   "}],
+                        "titulo": "  C & T ", "data": "",
+                        "grupos": {"Família Clara - Mãe": {"titulo": "A FAMÍLIA DELA"},
+                                   "Etiqueta que nao existe": {"titulo": "x"},
+                                   "Amigos Tiago - PwC": {"titulo": pwc[1], "sub": pwc[2]}}}}
+    avisos = []
+    t = p5.textos_dos_creditos(est, avisos)
+    if t["cargos"] != [(p5.CARGOS[0][0], "OS NOIVOS"), p5.CARGOS[1], p5.CARGOS[2]]:
+        problemas.append("cargos: %s" % t["cargos"])
+    if (t["titulo"], t["data"]) != ("C & T", p5.DATA):
+        problemas.append("titulo e data: %s, %s" % (t["titulo"], t["data"]))
+    if t["grupos"] != {"Família Clara - Mãe": ("A FAMÍLIA DELA", "do lado da mãe")}:
+        problemas.append("grupos: %s" % t["grupos"])
+    if len(avisos) != 1 or "nao e de GRUPOS" not in avisos[0]:
+        problemas.append("a etiqueta que nao existe nao avisou uma vez: %s" % avisos)
+    if p5.textos_mudados(t) != ["cargo 1", "titulo", "grupo Família Clara - Mãe"]:
+        problemas.append("o que mudou diz-se mal: %s" % p5.textos_mudados(t))
+    avisos = []
+    mau = p5.textos_dos_creditos({"creditos": {"cargos": "x", "titulo": 5, "grupos": []}}, avisos)
+    if (mau["cargos"], mau["titulo"], mau["grupos"]) != (p5.CARGOS, p5.TITULO, {}) or len(avisos) != 3:
+        problemas.append("o mal escrito nao ficou no de hoje com tres avisos: %s" % avisos)
+    # DESDE O CONTRATO DOS CARGOS (2 de outubro a noite) um quarto cargo entra, so com o que ele escreveu;
+    # o que fica de fora, com aviso, e o que passa dos 8 (teste_creditos_cargos_primeiro_e_mais_cargos)
+    avisos = []
+    quatro = p5.textos_dos_creditos({"creditos": {"cargos": [{}, {}, {}, {"quem": "QUARTO"}]}}, avisos)
+    if quatro["cargos"] != list(p5.CARGOS) + [("", "QUARTO")] or avisos:
+        problemas.append("um quarto cargo nao entrou so com o quem: %s, %s" % (quatro["cargos"][3:], avisos))
+    avisos = []
+    p5.textos_dos_creditos({"creditos": {"cargos": [{"quem": "Q%d" % k} for k in range(10)]}}, avisos)
+    if not any("os ultimos 2 ficam de fora" in a for a in avisos):
+        problemas.append("dez cargos nao avisaram dos dois que ficam de fora: %s" % avisos)
+    # O ROLO: o titulo dele separa a Familia da Clara do lado da mae da do lado do pai, que hoje
+    # partilham o titulo (dois grupos seguidos com o mesmo titulo partilham-no, como a Mesa conta)
+    blocos_hoje, _ = p5.por_grupo(CONVIDADOS_DE_ENSAIO)
+    blocos, _ = p5.por_grupo(CONVIDADOS_DE_ENSAIO, t["grupos"])
+    if [b[0] for b in blocos_hoje][:2] != ["FAMÍLIA DA CLARA", "FAMÍLIA DA CLARA"] or \
+            [b[0] for b in blocos][:2] != ["A FAMÍLIA DELA", "FAMÍLIA DA CLARA"] or \
+            [b[2] for b in blocos] != [b[2] for b in blocos_hoje]:
+        problemas.append("o titulo dele nao chegou ao rolo, ou mudou quem esta em cada grupo")
+    if p5.rolo_de_nomes(blocos).height <= p5.rolo_de_nomes(blocos_hoje).height:
+        problemas.append("com dois titulos em vez de um partilhado o rolo nao cresceu")
+    verifica("creditos: os textos dele, e os de hoje no resto", not problemas,
+             "; ".join(problemas[:3]) if problemas else
+             "vazio e o de hoje, so o que mudou fica, o mal escrito avisa, o titulo chega ao rolo")
+
+
+def teste_creditos_sem_estilo_nem_textos_iguais_ao_byte():
+    """Sem estilo e sem textos dele, os creditos desenham-se como antes de 2 de outubro.
+
+    O DEFEITO QUE ISTO APANHA: o estilo da Mesa mudar os creditos sem ninguem o pedir. A letra dos
+    nomes passou a vir do render.letra() e a cor do estilo; um "como esta" que nao fosse exatamente o
+    de antes (o branco da legenda, #FFFFFF, no lugar do branco quente dos nomes, ou a letra aberta de
+    outra maneira) mudava os creditos de toda a gente. Compara-se o rolo de nomes de ensaio desenhado
+    pelo ponto5 do commit 8858ef9 (o de 1 de outubro, lido do git e corrido em memoria) com o de
+    agora: sem estilo, com o estilo todo na omissao e com textos iguais aos de hoje. E com estilo tem
+    de mudar: a cor da legenda chega aos nomes, e as do cartao aos titulos. O exemplo inteiro foi
+    provado igual ao byte a 2 de outubro (os 4370 fotogramas e o som); isto guarda o rolo, que e o
+    que o estilo toca.
+    """
+    import hashlib
+    import subprocess
+    from PIL import ImageChops
+    import render
+    p5 = _ponto5()
+    problemas = []
+
+    def md5(im):
+        return hashlib.md5(im.tobytes()).hexdigest()
+
+    try:
+        render.aplicar_estilo(None)
+        blocos, _ = p5.por_grupo(CONVIDADOS_DE_ENSAIO)
+        sem = p5.rolo_de_nomes(blocos)
+        # O ROLO DE ANTES: o rolo_de_nomes do ponto5 de 1 de outubro, tal como esta no git
+        r = subprocess.run(["git", "show", "8858ef9:scripts/discussao/ponto5_creditos.py"], cwd=REPO,
+                           capture_output=True, text=True, encoding="utf-8")
+        detalhe_antes = "sem o git, nao comparei com o de 1 de outubro"
+        if r.returncode == 0 and "def rolo_de_nomes" in r.stdout:
+            ns = {"__name__": "ponto5_de_1_de_outubro", "__file__": p5.__file__}
+            exec(compile(r.stdout, "ponto5@8858ef9", "exec"), ns)
+            if md5(ns["rolo_de_nomes"](blocos)) != md5(sem):
+                problemas.append("sem estilo o rolo nao e o de 1 de outubro")
+            detalhe_antes = "o rolo igual ao byte ao de 1 de outubro"
+        omissao = render.estilo_omissao()
+        render.aplicar_estilo({"legenda": omissao["legenda"], "cartao": omissao["cartao"]})
+        if md5(p5.rolo_de_nomes(blocos)) != md5(sem):
+            problemas.append("o estilo todo na omissao mudou o rolo")
+        render.aplicar_estilo(None)
+        t = p5.textos_dos_creditos({"creditos": {"titulo": p5.TITULO, "cargos": [{"cargo": c, "quem": q}
+                                                                                 for c, q in p5.CARGOS],
+                                                 "grupos": {e: {"titulo": ti, "sub": s} for e, ti, s in p5.GRUPOS}}})
+        if p5.textos_mudados(t) or md5(p5.rolo_de_nomes(p5.por_grupo(CONVIDADOS_DE_ENSAIO, t["grupos"])[0])) != md5(sem):
+            problemas.append("textos iguais aos de hoje mudaram o rolo")
+        # COM ESTILO: a cor da legenda nos nomes, as do cartao nos titulos
+        render.aplicar_estilo({"legenda": {"cor": "#FFE9A0"},
+                               "cartao": {"quente": "#6A9BD9", "claro": "#DDEBFF", "brilho": "#3060FF"}})
+        com = p5.rolo_de_nomes(blocos)
+        if com.size != sem.size or not ImageChops.difference(com, sem).getbbox():
+            problemas.append("com estilo o rolo ficou igual")
+        else:
+            cores = {c for _n, c in com.getcolors(1 << 20) if c[0] > 200 and c[1] > 200}
+            if (255, 233, 160) not in cores:
+                problemas.append("a cor da legenda do estilo nao esta nos nomes")
+            # o titulo do grupo e o letreiro: mais azul do que vermelho com as tres cores azuis
+            topo = com.crop((0, 0, com.width, 120))
+            r, g, b = [sum(px[k] for px in topo.getdata()) for k in range(3)]
+            if not topo.getbbox() or b <= r:
+                problemas.append("as cores do cartao nao chegaram ao titulo do grupo")
+    finally:
+        render.aplicar_estilo(None)
+    verifica("creditos: sem estilo nem textos, o desenho de antes", not problemas,
+             "; ".join(problemas[:3]) if problemas else
+             detalhe_antes + "; a omissao igual; a cor da legenda nos nomes e as do cartao nos titulos")
+
+
+def teste_creditos_textos_que_nao_cabem():
+    """Um texto dos creditos mais largo do que o sitio onde vai para tudo antes de se desenhar.
+
+    O DEFEITO QUE ISTO APANHA: a Mesa deixa-o escrever um cargo ou um titulo do tamanho que
+    quiser. O letreiro e colado ao centro sem medir, e um cargo de 60 letras saia cortado nas duas
+    pontas do ecra, e num projetor que ainda corta as bordas perdiam-se mais letras. Os de hoje
+    cabem todos. O TITULO DE UM GRUPO JA NAO PARA (2 de outubro): encolhe ate caber, e isso e o
+    teste_creditos_titulo_de_grupo_encolhe; aqui so se confirma que ja nao entra na lista do que para.
+    """
+    p5 = _ponto5()
+    problemas = []
+    blocos, _ = p5.por_grupo(CONVIDADOS_DE_ENSAIO)
+    hoje = p5.textos_dos_creditos({})
+    if p5.textos_que_nao_cabem(hoje, blocos):
+        problemas.append("os de hoje nao cabem: %s" % p5.textos_que_nao_cabem(hoje, blocos))
+    longo = p5.textos_dos_creditos({"creditos": {
+        "cargos": [{"cargo": "Ideia, textos, musica, fotografias, legendas e muitas horas sem conta"}],
+        "titulo": "CLARA E TIAGO, QUATRO DE OUTUBRO",
+        "grupos": {"Família Clara - Mãe": {"titulo": "A FAMILIA TODA DA CLARA DO LADO DA MAE"}}}})
+    nao = p5.textos_que_nao_cabem(longo, p5.por_grupo(CONVIDADOS_DE_ENSAIO, longo["grupos"])[0])
+    if len(nao) != 2 or not all("encurta-o na Mesa" in n for n in nao) or any("titulo de grupo" in n for n in nao):
+        problemas.append("esperava 2 (cargo e titulo final), sem o titulo de grupo: %s" % nao)
+    verifica("creditos: o que nao cabe para antes de desenhar", not problemas,
+             "; ".join(problemas[:2]) if problemas else
+             "os de hoje cabem; cargo e titulo final compridos param, o titulo de grupo ja nao")
+
+
+def teste_creditos_titulo_de_grupo_encolhe():
+    """Um titulo de grupo mais largo do que o painel dos nomes encolhe ate caber, e os creditos andam.
+
+    O PEDIDO, 2 de outubro: um titulo de grupo com mais de 920 px nao pode parar os creditos a meio.
+    Ate aqui parava: o main() antes de desenhar e o rolo_de_nomes() com um SystemExit, e com o
+    --master isso era depois da hora de render, por um titulo que ele escreveu na Mesa.
+
+    O DEFEITO QUE ISTO APANHA: um titulo comprido a parar o rolo; a encolher mais do que precisa (o
+    corpo tem de ser o maior que cabe); a sair do painel; ou a mudar a altura do rolo, que mudava a
+    velocidade dos nomes e a duracao dos creditos e punha a Mesa (que conta cada titulo com a mesma
+    altura) a mostrar outro filme. Um titulo que cabe fica igual ao byte.
+    """
+    import contextlib
+    import io
+    import render
+    p5 = _ponto5()
+    problemas = []
+    render.aplicar_estilo(None)
+    painel = p5.PAINEL_NOMES[1] - p5.PAINEL_NOMES[0]
+    longo = "A FAMILIA TODA DA CLARA DO LADO DA MAE"
+    corpo = p5.corpo_do_titulo(longo)
+    if not (corpo < p5.TITULO_CORPO and p5.largura_do_letreiro(longo, corpo, p5.TITULO_ESPACO) <= painel
+            < p5.largura_do_letreiro(longo, corpo + 1, p5.TITULO_ESPACO)):
+        problemas.append("o corpo %d nao e o maior que cabe nos %d px" % (corpo, painel))
+    hoje = p5.textos_dos_creditos({})
+    if any(p5.corpo_do_titulo(t) != p5.TITULO_CORPO for _e, t, _s in p5.GRUPOS):
+        problemas.append("um titulo de hoje encolheu")
+    curto = p5.GRUPOS[0][1]
+    if p5.letreiro_do_titulo(curto).tobytes() != p5.letreiro_1x([curto], p5.TITULO_CORPO, p5.TITULO_ESPACO).tobytes():
+        problemas.append("um titulo que cabe nao saiu igual ao byte")
+    t = p5.textos_dos_creditos({"creditos": {"grupos": {"Família Clara - Mãe": {"titulo": longo}}}})
+    blocos_hoje, _ = p5.por_grupo(CONVIDADOS_DE_ENSAIO, hoje["grupos"])
+    blocos, _ = p5.por_grupo(CONVIDADOS_DE_ENSAIO, t["grupos"])
+    try:
+        with contextlib.redirect_stdout(io.StringIO()):
+            rolo = p5.rolo_de_nomes(blocos)
+    except SystemExit as erro:
+        rolo = None
+        problemas.append("o titulo comprido parou o rolo: %s" % erro)
+    # o de hoje com o titulo partido em dois (o lado da mae e o do pai deixam de partilhar), para
+    # comparar a altura com o mesmo numero de titulos
+    t_dois = p5.textos_dos_creditos({"creditos": {"grupos": {"Família Clara - Mãe": {"titulo": "A FAMILIA DELA"}}}})
+    rolo_dois = p5.rolo_de_nomes(p5.por_grupo(CONVIDADOS_DE_ENSAIO, t_dois["grupos"])[0])
+    if rolo is not None:
+        if rolo.size != rolo_dois.size:
+            problemas.append("o rolo mudou de altura com o titulo encolhido: %s contra %s" % (rolo.size, rolo_dois.size))
+        # as letras do titulo (o que acende mais do que o brilho) dentro do painel, e na mesma linha
+        alto = p5.letreiro_1x(["X"], p5.TITULO_CORPO, p5.TITULO_ESPACO).height - 2 * 110
+        letras = rolo.crop((0, 0, rolo.width, alto)).convert("L").point(lambda v: 255 if v > 150 else 0).getbbox()
+        letras_dois = rolo_dois.crop((0, 0, rolo.width, alto)).convert("L").point(
+            lambda v: 255 if v > 150 else 0).getbbox()
+        if not letras or letras[0] < p5.MARGEM_BRILHO - 1 or letras[2] > p5.MARGEM_BRILHO + painel + 1:
+            problemas.append("o titulo encolhido sai do painel: %s" % (letras,))
+        elif letras[1] < letras_dois[1] - 1 or letras[3] > letras_dois[3] + 1:
+            # vai ao meio do lugar de um titulo de sempre, como a Mesa o desenha (a linha de base a
+            # 0,18 do corpo abaixo do meio): as letras ficam dentro da faixa das de um titulo de 60
+            problemas.append("o titulo encolhido saiu da faixa de um titulo de sempre: %s contra %s"
+                             % (letras, letras_dois))
+    avisos = p5.titulos_que_encolhem(blocos)
+    if len(avisos) != 1 or longo not in avisos[0] or ("para %d px" % corpo) not in avisos[0]:
+        problemas.append("o aviso nao diz o titulo e o corpo: %s" % avisos)
+    if p5.titulos_que_encolhem(blocos_hoje):
+        problemas.append("os titulos de hoje avisam: %s" % p5.titulos_que_encolhem(blocos_hoje))
+    verifica("creditos: o titulo de grupo comprido encolhe", not problemas,
+             "; ".join(problemas[:3]) if problemas else
+             "encolhe para %d px e cabe, o rolo nao muda de altura, os de hoje iguais ao byte" % corpo)
+
+
+def teste_creditos_primeiro_cargo_entra_com_fade():
+    """O primeiro cargo acende do preto em 0,6 s, como os outros, e fica o mesmo tempo que eles.
+
+    O DEFEITO QUE ISTO APANHA (2 de outubro): os cargos contavam-se do fim do rolo (t_rolo), mas o rolo
+    ainda ocupa o segundo seguinte (if tr < t_rolo + 1.0), e o primeiro cargo so aparecia com u = 1,0:
+    ja aceso, sem a entrada de 0,6 s, e 2,6 s inteiro contra os 3,0 dos outros. Corre o desenho dos
+    creditos (desenho_dos_creditos) com os convidados de ensaio e duas fotos de cor, sem a folha dele.
+    """
+    import hashlib
+    import shutil
+    import tempfile
+    import render
+    from PIL import Image, ImageStat
+    p5 = _ponto5()
+    problemas = []
+    render.aplicar_estilo(None)
+    pasta = tempfile.mkdtemp(prefix="cargos_")
+    try:
+        fotos = []
+        for k, (tam, cor) in enumerate((((800, 600), (180, 120, 90)), ((600, 800), (90, 140, 180)))):
+            fotos.append(os.path.join(pasta, "f%d.jpg" % k))
+            Image.new("RGB", tam, cor).save(fotos[-1], quality=90)
+        textos = p5.textos_dos_creditos({})
+        rolo = p5.rolo_de_nomes(p5.por_grupo(CONVIDADOS_DE_ENSAIO)[0])
+        coluna = p5.coluna_de_fotos(fotos)
+        T = p5.tempos_dos_creditos(rolo.height, coluna.height, len(textos["cargos"]))
+        creditos = p5.desenho_dos_creditos(rolo, coluna, textos, {}, T)
+    finally:
+        shutil.rmtree(pasta, ignore_errors=True)
+    esperado = T["t_entrada"] + T["t_rolo"] + 1.0 + 3 * 4.2 + 7.0
+    if abs(T["dur"] - esperado) > 1e-9 or abs(T["t_cargos"] - (T["t_entrada"] + T["t_rolo"] + 1.0)) > 1e-9:
+        problemas.append("a duracao %.3f nao tem o segundo do fim do rolo (%.3f)" % (T["dur"], esperado))
+
+    def luz(t):
+        return sum(ImageStat.Stat(creditos(t)).sum)
+
+    def md5(t):
+        return hashlib.md5(creditos(t).tobytes()).hexdigest()
+    t0 = T["t_cargos"]
+    if luz(t0 - 0.04) or luz(t0):
+        problemas.append("o primeiro cargo nao comeca no preto (%.0f antes, %.0f no inicio)" % (luz(t0 - 0.04), luz(t0)))
+    aceso = luz(t0 + 2.0)
+    perfis = []
+    for k in range(2):
+        tk = t0 + k * T["t_cargo"]
+        cheio = luz(tk + 2.0)
+        perfis.append([luz(tk + u) / cheio for u in (0.12, 0.3, 0.48)])
+    if not (0.3 < perfis[0][1] < 0.7) or any(abs(a - b) > 0.02 for a, b in zip(perfis[0], perfis[1])):
+        problemas.append("o primeiro cargo nao acende como o segundo: %s contra %s"
+                         % ([round(x, 3) for x in perfis[0]], [round(x, 3) for x in perfis[1]]))
+    if not aceso or md5(t0 + 0.7) != md5(t0 + 2.0) or md5(t0 + 3.5) != md5(t0 + 2.0):
+        problemas.append("o primeiro cargo nao fica inteiro de 0,6 a 3,6 s")
+    verifica("creditos: o primeiro cargo entra com o fade", not problemas,
+             "; ".join(problemas[:3]) if problemas else
+             "do preto em 0,6 s como o segundo, 3,0 s inteiro; os creditos com mais 1 s (%.1f)" % T["dur"])
+
+
+# AS ASSINATURAS DOS CREDITOS DE ANTES DOS CARGOS (2 de outubro a noite). Tiradas com o ponto5 de 2 de outubro
+# de antes do contrato dos cargos (a copia guardada as 20:42, md5 1cb63d6e...), pelo _instantes_dos_creditos() sobre o
+# rolo de ensaio e a _coluna_de_ensaio(): "hoje" sem est.creditos, "escritos" com tres cargos de uma pessoa
+# escritos por ele (um com o U+2011) e o titulo. O ponto5 dos cargos deu as mesmas, e cada fotograma dos creditos
+# com a folha dele e as fotos da leitura 64 tambem. Nao se tiram de novo: se mudarem, mudaram os creditos de
+# quem nao usa as chaves novas.
+ASSINATURAS_CREDITOS_ANTES = {"hoje": "6e4e0050c49f927b85665edcdc4759ae",
+                              "escritos": "50ca500500f9aa23dc81f17f141789e2"}
+
+
+def _coluna_de_ensaio():
+    """Uma coluna de fotos de ensaio, duas de cor, sem ficheiros."""
+    from PIL import Image
+    col = Image.new("RGB", (800, 2600), (0, 0, 0))
+    col.paste(Image.new("RGB", (760, 1200), (180, 120, 90)), (20, 20))
+    col.paste(Image.new("RGB", (760, 1200), (90, 140, 180)), (20, 1290))
+    return col
+
+
+def _instantes_dos_creditos(T):
+    """Os 20 instantes das assinaturas: o rolo a entrar, a andar, a apagar e preto; cada cargo a entrar, a meio de
+    acender, inteiro e a apagar; e o titulo a acender, inteiro e a apagar."""
+    tc, tf = T["t_cargos"], T["t_cargos"] + 3 * T["t_cargo"]
+    return ([0.0, 0.5, 5.0, T["t_entrada"] + T["t_rolo"] - 0.3, T["t_entrada"] + T["t_rolo"] + 0.9]
+            + [tc + k * T["t_cargo"] + u for k in range(3) for u in (0.0, 0.3, 2.0, 3.9)]
+            + [tf + u for u in (0.5, 2.5, 6.0)])
+
+
+def teste_creditos_sem_os_cargos_novos_iguais_ao_byte():
+    """Sem as chaves novas dos cargos, e com tres cargos de uma pessoa, os creditos sao os de antes, ao byte.
+
+    O CONTRATO DOS CARGOS (2 de outubro, 19:35; saida/discussao/contrato_creditos_cargos.md) abriu os cargos
+    primeiro, ate 8 cargos e ate 4 pessoas por cargo, e diz que sem isso os creditos saem iguais ao byte ao
+    ponto5 de antes: o desenho, a duracao e o som.
+
+    O DEFEITO QUE ISTO APANHA: o desenho dos cargos, reescrito para as varias pessoas e para a ordem, a mudar um
+    pixel dos creditos de sempre (a linha do cargo, o letreiro do quem, o rolo ou o titulo noutro sitio ou
+    noutro instante), ou a duracao a mudar e a arrastar a entrada da musica com "fim". As assinaturas sao as do
+    ponto5 de antes (ASSINATURAS_CREDITOS_ANTES); o som sai da mesma duracao pelas mesmas funcoes.
+    """
+    import hashlib
+    import render
+    p5 = _ponto5()
+    problemas = []
+    render.aplicar_estilo(None)
+    casos = {"hoje": {},
+             "escritos": {"creditos": {"cargos": [{"cargo": "Produção e paciência", "quem": "A MÃE DA CLARA"},
+                                                  {"quem": "O NOIVO"}, {"cargo": "Som‑e‑luz"}],
+                                       "titulo": "C & T", "cargos_primeiro": None}}}
+    durs = []
+    for nome, est in casos.items():
+        avisos = []
+        textos = p5.textos_dos_creditos(est, avisos)
+        rolo = p5.rolo_de_nomes(p5.por_grupo(CONVIDADOS_DE_ENSAIO, textos["grupos"])[0])
+        coluna = _coluna_de_ensaio()
+        T = p5.tempos_dos_creditos(rolo.height, coluna.height, len(textos["cargos"]), textos["cargos_primeiro"])
+        if textos["cargos_primeiro"] is not False or len(textos["cargos"]) != 3 or avisos or T["primeiro"] != "rolo":
+            problemas.append("%s: nao ficou na ordem de sempre com tres cargos (%s)" % (nome, avisos))
+        # a conta de sempre, pela mesma ordem: a mesma duracao ao bit
+        t_cargos = T["t_entrada"] + T["t_rolo"] + T["t_fim_rolo"]
+        if (T["t_cargos"], T["dur"], T["t_rolo_entra"]) != (t_cargos, t_cargos + 3 * T["t_cargo"] + T["t_titulo"], 0.0):
+            problemas.append("%s: a duracao mudou (%r)" % (nome, T["dur"]))
+        durs.append(T["dur"])
+        for _c, q in textos["cargos"]:
+            g = p5.geometria_do_cargo(q)
+            if (g["corpo"], g["sobe"], g["y_cargo"], g["y_quem"], g["pessoas"]) != (110, 0, 460, 580, [q]):
+                problemas.append("%s: o cargo de %r saiu de sitio: %s" % (nome, q, g))
+        cred = p5.desenho_dos_creditos(rolo, coluna, textos, {}, T)
+        md5 = hashlib.md5(b"".join(cred(t).tobytes() for t in _instantes_dos_creditos(T))).hexdigest()
+        if md5 != ASSINATURAS_CREDITOS_ANTES[nome]:
+            problemas.append("%s: os creditos nao sao os de antes (%s)" % (nome, md5))
+    verifica("creditos: sem os cargos novos, os de antes ao byte", not problemas,
+             "; ".join(problemas[:3]) if problemas else
+             "20 fotogramas de cada um iguais aos de antes, com e sem textos dele; a duracao ao bit (%.3f s)" % durs[0])
+
+
+def teste_creditos_cargos_primeiro_e_mais_cargos():
+    """Os cargos primeiro, ate 8 cargos e ate 4 pessoas por cargo, como o contrato dos cargos diz.
+
+    O PEDIDO, do Tiago a 2 de outubro as 19:33: "Nos creditos permite-nos testar a possibilidade de aparecer
+    primeiro os tais cargos nos videos, permite tambem acrescentar mais cargos e mais pessoas e depois as nossas
+    pessoas com os convidados e fotos." (saida/discussao/contrato_creditos_cargos.md)
+
+    O DEFEITO QUE ISTO APANHA:
+    - o que ele escreve a perder-se calado: um cargo acrescentado, uma pessoa a mais, os vazios a contar como
+      cargos, mais de 8 ou mais de 4 sem aviso, ou um cargos_primeiro mal escrito a mudar o filme;
+    - as contas dos tempos noutra ordem do que a que a Mesa conta (a duracao muda a entrada da musica com "fim");
+    - com os cargos primeiro: um preto entre o filme e o primeiro cargo (a sala aplaude no primeiro preto e
+      perdia o primeiro cargo), um cargo, o rolo ou o titulo diferentes dos de sempre, o rolo a aparecer de
+      repente depois do ultimo cargo, ou o fim sem o preto;
+    - varias pessoas umas por cima das outras ou fora do meio, e as que nao cabem a sair do ecra ou a encolher
+      cada uma para o seu lado; uma pessoa so que nao cabe ainda a parar o --master;
+    - o montar calado sobre o que nao cabe ou se perde.
+    """
+    import render
+    import musica_creditos as mc
+    import montar_da_mesa as mm
+    from PIL import ImageChops, ImageStat
+    import numpy as np
+    p5 = _ponto5()
+    problemas = []
+    render.aplicar_estilo(None)
+    # 1. O QUE ELE ESCREVE
+    av = []
+    t = p5.textos_dos_creditos({"creditos": {"cargos_primeiro": True, "cargos": [
+        {}, {"quem": "O NOIVO"}, None,
+        {"cargo": "Fotografia", "quem": "  OS PADRINHOS \n\n AS MADRINHAS\r\nOS IRMAOS  \n"},
+        {"cargo": "", "quem": "  "}, {"quem": "A AVÓ"}, {"cargo": "Bolo"}]}}, av)
+    esperado = [p5.CARGOS[0], (p5.CARGOS[1][0], "O NOIVO"), p5.CARGOS[2],
+                ("Fotografia", "OS PADRINHOS\nAS MADRINHAS\nOS IRMAOS"), ("", "A AVÓ"), ("Bolo", "")]
+    if t["cargos"] != esperado or t["cargos_primeiro"] is not True or av:
+        problemas.append("a lista dele nao entrou como escrita: %s, %s" % (t["cargos"][3:], av))
+    av = []
+    seis = p5.textos_dos_creditos({"creditos": {"cargos": [{"quem": "\n".join("P%d" % k for k in range(6))}]}}, av)
+    if seis["cargos"] != [(p5.CARGOS[0][0], "P0\nP1\nP2\nP3")] or not any("6 pessoas e cabem 4" in a for a in av):
+        problemas.append("seis pessoas num cargo: %s, %s" % (seis["cargos"], av))
+    for valor, fica, avisa in ((True, True, False), (False, False, False), (None, False, False), ("", False, False),
+                               ("true", False, True), (1, False, True)):
+        av = []
+        if p5.textos_dos_creditos({"creditos": {"cargos_primeiro": valor}}, av)["cargos_primeiro"] is not fica \
+                or bool(av) != avisa:
+            problemas.append("cargos_primeiro %r: %s" % (valor, av))
+    av = []
+    if p5.textos_dos_creditos({"creditos": {"cargos": []}}, av)["cargos"] != list(p5.CARGOS) or not av:
+        problemas.append("a lista vazia nao ficou nos tres de hoje com aviso")
+    # um campo que nao e texto num cargo acrescentado nao tem o de hoje: o aviso diz que fica vazio, e o cargo sem
+    # nenhum campo que preste diz que fica de fora (corretor, 2 de outubro a noite: dizia "fica o de hoje")
+    av = []
+    maus = p5.textos_dos_creditos({"creditos": {"cargos": [{}, {}, {}, {"cargo": 5, "quem": "X"},
+                                                           {"cargo": None, "quem": ["a"]}]}}, av)
+    if maus["cargos"] != list(p5.CARGOS) + [("", "X")] or any("fica o de hoje" in a for a in av) \
+            or not any("cargos[3].cargo 5 nao e texto, fica vazio" in a for a in av) \
+            or not any("cargos[4] fica de fora" in a for a in av):
+        problemas.append("um campo que nao e texto num cargo acrescentado: %s, %s" % (maus["cargos"][3:], av))
+    av = []
+    p5.textos_dos_creditos({"creditos": {"cargos": [{"cargo": 5}]}}, av)
+    if not any("cargos[0].cargo 5 nao e texto, fica o de hoje" in a for a in av):
+        problemas.append("um campo que nao e texto num dos tres de hoje ja nao diz que fica o de hoje: %s" % av)
+    if not {"a ordem (os cargos primeiro)", "cargo 6"} <= set(p5.textos_mudados(t)):
+        problemas.append("o que mudou nao diz a ordem e os cargos a mais: %s" % p5.textos_mudados(t))
+    # 2. AS CONTAS DOS TEMPOS, nas duas ordens
+    rolo = p5.rolo_de_nomes(p5.por_grupo(CONVIDADOS_DE_ENSAIO)[0])
+    coluna = _coluna_de_ensaio()
+    n = len(t["cargos"])
+    T3 = p5.tempos_dos_creditos(rolo.height, coluna.height, 3)
+    Tr = p5.tempos_dos_creditos(rolo.height, coluna.height, n)
+    Tc = p5.tempos_dos_creditos(rolo.height, coluna.height, n, True)
+    tr_ = Tr["t_rolo"]
+    contas = [("rolo primeiro", Tr, 0.0, 1.5 + tr_ + 1.0, 1.5 + tr_ + 1.0 + n * 4.2),
+              ("cargos primeiro", Tc, 0.9 + n * 4.2, 0.9, 0.9 + n * 4.2 + 1.5 + tr_ + 1.0)]
+    for nome, T, rolo_entra, cargos_em, titulo_em in contas:
+        if any(abs(a - b) > 1e-9 for a, b in ((T["t_rolo_entra"], rolo_entra), (T["t_cargos"], cargos_em),
+                                              (T["t_titulo_entra"], titulo_em), (T["dur"], titulo_em + 7.0))):
+            problemas.append("%s: as contas %s" % (nome, {k: round(T[k], 3) for k in ("t_rolo_entra", "t_cargos",
+                                                                                     "t_titulo_entra", "dur")}))
+    if abs(Tc["dur"] - Tr["dur"] - 0.9) > 1e-9 or abs(Tr["dur"] - T3["dur"] - (n - 3) * 4.2) > 1e-9:
+        problemas.append("a duracao nao cresce 4,2 s por cargo e 0,9 s com os cargos primeiro")
+    # 3. O DESENHO COM OS CARGOS PRIMEIRO, contra o de sempre com os mesmos cargos
+    cr = p5.desenho_dos_creditos(rolo, coluna, t, {}, Tr)
+    cc = p5.desenho_dos_creditos(rolo, coluna, t, {}, Tc)
+
+    def luz(im):
+        return sum(ImageStat.Stat(im).sum)
+
+    def parecido(a, b):
+        return max(ImageStat.Stat(ImageChops.difference(a, b)).mean) < 0.5
+    um = cr(Tr["t_cargos"] + 2.0).tobytes()
+    if any(cc(x).tobytes() != um for x in (0.0, 0.7, Tc["t_cargos"] + 2.0, Tc["t_cargos"] + 3.5)):
+        problemas.append("o primeiro cargo nao esta aceso desde o zero, sem preto depois do filme")
+    if min(luz(cc(x)) for x in (0.0, 1.0, 2.0, 3.0, 4.0, 4.6)) <= 0 or luz(cc(Tc["t_cargos"] + 4.2)) > 0:
+        problemas.append("o primeiro preto nao vem logo depois do primeiro cargo")
+    for k in range(1, n):
+        a, b = Tc["t_cargos"] + k * 4.2, Tr["t_cargos"] + k * 4.2
+        meio = luz(cc(a + 0.3)) / max(1.0, luz(cc(a + 2.0)))
+        if not parecido(cc(a + 2.0), cr(b + 2.0)) or not 0.4 < meio < 0.6:
+            problemas.append("o cargo %d nao e o de sempre, ou nao acende do preto (%.2f a meio)" % (k + 1, meio))
+    r0 = Tc["t_rolo_entra"]
+    entra = luz(cc(r0 + 0.75)) / max(1.0, luz(cr(0.75)))
+    if luz(cc(r0 + 0.02)) > 0.01 * luz(cr(0.02)) or not 0.45 < entra < 0.55:
+        problemas.append("o rolo nao entra do preto em 1,5 s depois do ultimo cargo (%.2f a meio)" % entra)
+    if not all(parecido(cc(r0 + x), cr(x)) for x in (1.5, 10.0, Tr["t_entrada"] + tr_ - 0.3, Tr["t_entrada"] + tr_ + 0.9)):
+        problemas.append("o rolo com os cargos primeiro nao e o de sempre")
+    if not all(parecido(cc(Tc["t_titulo_entra"] + u), cr(Tr["t_titulo_entra"] + u)) for u in (0.5, 2.5, 6.0)) \
+            or luz(cc(Tc["dur"] - 0.001)) > 0.01 * luz(cc(Tc["t_titulo_entra"] + 2.5)):
+        problemas.append("o titulo final com os cargos primeiro nao e o de sempre, ou nao acaba no preto")
+    # 4. AS PESSOAS: umas por baixo das outras, o cargo por cima, juntos no meio; e o que nao cabe encolhe
+    g = p5.geometria_do_cargo(t["cargos"][3][1])
+    linhas = np.asarray(cc(Tc["t_cargos"] + 3 * 4.2 + 2.0).convert("L")) > 150
+    filas = np.where(linhas.any(axis=1))[0]
+    bandas = 1 + int(np.sum(np.diff(filas) > 1)) if len(filas) else 0
+    if (g["corpo"], g["sobe"], g["y_cargo"], len(g["pessoas"])) != (110, 160, 300, 3) or bandas != 4 \
+            or abs((filas[0] + filas[-1]) / 2.0 - 520) > 15:
+        problemas.append("tres pessoas: %s, %d faixas de letras, de %d a %d" % (
+            {k: g[k] for k in ("corpo", "sobe", "y_cargo")}, bandas, filas[0], filas[-1]))
+    longo = "OS PADRINHOS\nA FAMILIA TODA DO LADO DO NOIVO\nAS MADRINHAS\nOS IRMAOS"
+    pessoas = p5.pessoas_do_quem(longo)
+    corpo = p5.corpo_do_quem(pessoas)
+    tela = p5.L * p5.ZONA_SEGURA
+
+    def mais_larga(c):
+        return max(p5.largura_do_letreiro(x, c, p5.QUEM_ESPACO) for x in pessoas)
+    if not (corpo < 110 and mais_larga(corpo) <= tela < mais_larga(corpo + 1)):
+        problemas.append("as quatro pessoas encolhem para %d, que nao e o maior que cabe" % corpo)
+    av = p5.quem_que_encolhe({"cargos": [("x", longo)]})
+    if len(av) != 1 or ("para %d px" % corpo) not in av[0] or "15 m" in av[0]:
+        problemas.append("o aviso das quatro pessoas: %s" % av)
+    muito = "UMA PESSOA COM UM NOME MESMO MUITO COMPRIDO DE MAIS PARA O ECRA"
+    av = p5.quem_que_encolhe({"cargos": [("x", muito)]})
+    if len(av) != 1 or "15 m" not in av[0] or \
+            p5.textos_que_nao_cabem({"cargos": [("x", muito)], "titulo": p5.TITULO, "data": p5.DATA}, []):
+        problemas.append("uma pessoa que nao cabe nao encolhe com aviso, ou ainda para: %s" % av)
+    # 5. A MUSICA COM "fim" ACOMPANHA A DURACAO: entra mais cedo no ficheiro o que os creditos crescem
+    e3, ec = mc.entrada("fim", 240.0, T3["dur"]), mc.entrada("fim", 240.0, Tc["dur"])
+    if abs((e3["in_s"] - ec["in_s"]) - (Tc["dur"] - T3["dur"])) > 0.011:
+        problemas.append("a musica com fim nao acompanha: %.2f contra %.2f" % (e3["in_s"] - ec["in_s"], Tc["dur"] - T3["dur"]))
+    # 6. O MONTAR AVISA do que se perde e do que encolhe; e nao avisa do que esta bem
+    try:
+        mal = mm.avisos_dos_creditos({"creditos": {"cargos_primeiro": "sim", "cargos": (
+            [{"quem": "\n".join("P%d" % k for k in range(6))}, {"quem": muito}] + [{"quem": "Q%d" % k} for k in range(8)])}}, {})
+        bem = mm.avisos_dos_creditos({"creditos": {"cargos_primeiro": True, "cargos": [
+            {}, {}, {}, {"cargo": "Fotografia", "quem": "OS PADRINHOS\nAS MADRINHAS\nOS IRMAOS"}, {"quem": "A AVO"}]}}, {})
+    finally:
+        render.aplicar_estilo(None)
+    for pedaco in ("cargos_primeiro 'sim'", "6 pessoas e cabem 4", "os ultimos 2 ficam de fora", "encolhe de 110 para"):
+        if not any(pedaco in a for a in mal):
+            problemas.append("o montar nao avisou %r: %s" % (pedaco, mal))
+    if bem:
+        problemas.append("o montar avisou de cargos que estao bem: %s" % bem)
+    verifica("creditos: os cargos primeiro, mais cargos e mais pessoas", not problemas,
+             "; ".join(problemas[:3]) if problemas else
+             "%d cargos; com os cargos primeiro o primeiro nasce do filme, o rolo do preto, %.1f s contra %.1f; "
+             "tres pessoas umas por baixo das outras; quatro que nao cabem a %d px" % (n, Tc["dur"], Tr["dur"], corpo))
+
+
+def teste_creditos_medidas_dos_cargos_iguais_as_da_mesa():
+    """As medidas dos cargos que a Mesa repete (creditos_para_mesa.MEDIDAS) sao as constantes do ponto5.
+
+    O DEFEITO QUE ISTO APANHA (corretor, 2 de outubro a noite): com os cargos o ponto5 passou a ter as medidas
+    dos cargos em constantes (T_CARGO, QUEM_CORPO, QUEM_ESPACO, QUEM_Y, CARGO_CORPO, CARGO_Y, CARGO_ENTRA) em vez
+    de numeros escritos no desenho, e o teste_medidas_dos_creditos_iguais_ao_ponto5 da Mesa, que os procura no
+    texto, deixou de os encontrar. Ate a Mesa o acertar, a guarda fica aqui: se alguem mudar uma constante do
+    ponto5 ou uma medida da Mesa, a pre-visualizacao e o filme deixavam de bater sem ninguem saber. Os valores
+    sao os de sempre; o teste_creditos_sem_os_cargos_novos_iguais_ao_byte prende o desenho a eles.
+    """
+    import creditos_para_mesa as cm
+    p5 = _ponto5()
+    M = cm.MEDIDAS
+    T = p5.tempos_dos_creditos(1000, 1000, 3)
+    pares = [("t_cargo", p5.T_CARGO), ("quem_corpo", p5.QUEM_CORPO), ("quem_espaco", p5.QUEM_ESPACO),
+             ("quem_y", p5.QUEM_Y), ("cargo_corpo", p5.CARGO_CORPO), ("cargo_y", p5.CARGO_Y),
+             ("cargo_entra", p5.CARGO_ENTRA), ("t_cargo", T["t_cargo"]), ("t_titulo", T["t_titulo"]),
+             ("t_entrada", T["t_entrada"]), ("fim_do_rolo", T["t_fim_rolo"])]
+    diferentes = ["%s (Mesa %r, ponto5 %r)" % (k, M.get(k), v) for k, v in pares if M.get(k) != v]
+    verifica("creditos: as medidas dos cargos da Mesa sao as constantes do ponto5", not diferentes,
+             "; ".join(diferentes) if diferentes else
+             "%d medidas iguais: %s s por cargo, quem a %s px, cargo a %s px" % (len(pares), p5.T_CARGO, p5.QUEM_CORPO,
+                                                                              p5.CARGO_CORPO))
+
+
+def teste_creditos_textos_e_titulos_como_a_mesa():
+    """O que ele escreve no painel dos creditos da Mesa chega ao ponto5 como a Mesa o mostra.
+
+    O QUE A MESA ASSUME DO ponto5 (2 de outubro), e isto confirma no codigo dos dois lados:
+    - os titulos mudados aplicam-se antes de juntar grupos seguidos com o mesmo titulo (credLayout
+      contra por_grupo e rolo_de_nomes);
+    - os tres cargos guardam-se juntos (credMudaTexto), e o ponto5 le-os um a um;
+    - um campo ausente, ou vazio, e o de omissao.
+    A quarta (uma foto dos creditos e a que tem a etiqueta ou esta na versao "Creditos") e o
+    teste_creditos_seguem_a_ordem_da_mesa.
+
+    O DEFEITO QUE ISTO APANHA: uma sequencia de mudancas feitas pela propria credMudaTexto() da Mesa,
+    lida pelo textos_dos_creditos(), a dar outro cargo, outro titulo ou outro rolo do que o painel
+    mostra. A altura do rolo compara-se tambem, com um titulo de grupo comprido que encolhe: a Mesa
+    conta cada titulo com a mesma altura, e o rolo tem de continuar a ter. Os convidados sao de ensaio.
+    """
+    import json
+    import shutil
+    import subprocess
+    import tempfile
+    import render
+    import creditos_para_mesa as cm
+    p5 = _ponto5()
+    problemas = []
+    node = shutil.which("node")
+    if not node:
+        salta("creditos: os textos como a Mesa os mostra", "sem node neste PC")
+        return
+    render.aplicar_estilo(None)
+    M = dict(cm.MEDIDAS)
+    M.update({"L": p5.L, "A": p5.A, "vel_nomes": p5.VELOCIDADE_NOMES, "vel_fotos_max": p5.VELOCIDADE_FOTOS_MAX,
+              "titulo_altura": p5.letreiro_1x(["X"], p5.TITULO_CORPO, p5.TITULO_ESPACO).height
+              - 2 * cm.MEDIDAS["corte_titulo"]})
+    cred = {"medidas": M, "grupos": cm.grupos_com_nomes(p5, CONVIDADOS_DE_ENSAIO), "fotos": {},
+            "omissoes": {"cargos": [{"cargo": c, "quem": q} for c, q in p5.CARGOS],
+                         "titulo": p5.TITULO, "data": p5.DATA}}
+    longo = "A FAMILIA TODA DA CLARA DO LADO DA MAE"
+    passos = [("quem", 0, "OS NOIVOS"), ("cargo", 2, "Outro cargo, escrito a mao"), ("quem", 0, ""),
+              ("gtitulo", "Família Clara - Pai", "AMIGOS DO TIAGO"), ("gsub", "Amigos Tiago - PwC", "da PwC"),
+              ("gtitulo", "Família Clara - Mãe", longo), ("titulo", None, "C & T"), ("data", None, "4/10/2026"),
+              ("gtitulo", "Família Clara - Pai", ""), ("titulo", None, ""), ("cargo", 2, "")]
+    html = open(os.path.join(REPO, "scripts", "editor_base.html"), encoding="utf-8").read()
+    marcas = ["function copiaFunda(", "function credOmissoes(", "function credCargo(", "function credTitulo(",
+              "function credData(", "function credGrupoTexto(", "function credGrupoPorEtiqueta(",
+              "function credLayout(", "function credPoe(", "function credMudaTexto("]
+    js = ("var CRED = %s;\nvar est = {pessoas: [], versoes: [], tags: {}};\nvar credLay = null;\n"
+          "function marcar(){}\nfunction credFotos(){ return {lista: []}; }\n" % json.dumps(cred, ensure_ascii=False)
+          + "\n".join(_bloco_do_editor(html, m, problemas) for m in marcas)
+          + "\nvar r = [];\nfunction foto(){ var L = credLayout(); r.push({creditos: est.creditos === undefined ? null : "
+            "est.creditos, cargos: [0, 1, 2].map(credCargo), titulo: credTitulo(), data: credData(), "
+            "titulos: L.pecas.filter(function(q){ return q.tipo === 'titulo'; }).map(function(q){ return q.texto; }), "
+            "Hr: L.Hr}); }\nfoto();\n")
+    for campo, chave, valor in passos:
+        js += "credMudaTexto(%s, %s, %s); foto();\n" % (json.dumps(campo), json.dumps(chave, ensure_ascii=False),
+                                                        json.dumps(valor, ensure_ascii=False))
+    js += "console.log(JSON.stringify(r));\n"
+    mesa = None
+    if not problemas:
+        with tempfile.NamedTemporaryFile("w", suffix=".js", delete=False, encoding="utf-8") as fh:
+            fh.write(js)
+        try:
+            saida = subprocess.run([node, fh.name], capture_output=True, text=True, encoding="utf-8")
+        finally:
+            os.remove(fh.name)
+        if saida.returncode != 0:
+            problemas.append("o node parou: %s" % (saida.stderr or "").strip()[-300:])
+        else:
+            mesa = json.loads(saida.stdout)
+    alturas = {}
+    for k, m in enumerate(mesa or []):
+        passo = "inicio" if k == 0 else "%s %s=%r" % (passos[k - 1][0], passos[k - 1][1] or "", passos[k - 1][2])
+        est = {"creditos": m["creditos"]} if m["creditos"] is not None else {}
+        avisos = []
+        t = p5.textos_dos_creditos(est, avisos)
+        if avisos:
+            problemas.append("%s: o ponto5 avisou do que a Mesa escreveu: %s" % (passo, avisos))
+        if [tuple(x) for x in ([c["cargo"], c["quem"]] for c in m["cargos"])] != t["cargos"]:
+            problemas.append("%s: cargos na Mesa %s, no ponto5 %s" % (passo, m["cargos"], t["cargos"]))
+        if (m["titulo"], m["data"]) != (t["titulo"], t["data"]):
+            problemas.append("%s: titulo e data na Mesa %s, no ponto5 %s" % (passo, (m["titulo"], m["data"]),
+                                                                               (t["titulo"], t["data"])))
+        blocos, _ = p5.por_grupo(CONVIDADOS_DE_ENSAIO, t["grupos"])
+        titulos = [b[0] for i, b in enumerate(blocos) if i == 0 or b[0] != blocos[i - 1][0]]
+        if m["titulos"] != titulos:
+            problemas.append("%s: titulos no rolo da Mesa %s, no ponto5 %s" % (passo, m["titulos"], titulos))
+        chave = tuple(b[0] for b in blocos)
+        if chave not in alturas:
+            alturas[chave] = p5.rolo_de_nomes(blocos).height
+        if m["Hr"] != alturas[chave]:
+            problemas.append("%s: rolo na Mesa %d px, o ponto5 desenha %d" % (passo, m["Hr"], alturas[chave]))
+    if mesa is not None:
+        # no fim ficam so a data e os dois grupos que continuam mudados: o resto voltou ao de hoje
+        fim = mesa[-1]["creditos"] or {}
+        if mesa[0]["creditos"] is not None or sorted(fim) != ["data", "grupos"] or \
+                sorted(fim["grupos"]) != ["Amigos Tiago - PwC", "Família Clara - Mãe"]:
+            problemas.append("o est.creditos nao comeca vazio ou nao fica so com o que difere: %s, %s"
+                             % (mesa[0]["creditos"], fim))
+        juntos = mesa[1]["creditos"].get("cargos") if mesa[1]["creditos"] else None
+        if not (isinstance(juntos, list) and len(juntos) == 3):
+            problemas.append("os tres cargos nao se guardaram juntos: %s" % juntos)
+        if len(mesa[4]["titulos"]) != 2:
+            problemas.append("o titulo mudado nao juntou os grupos seguidos: %s" % mesa[4]["titulos"])
+    verifica("creditos: os textos como a Mesa os mostra", not problemas,
+             "; ".join(problemas[:3]) if problemas else
+             "%d mudancas feitas pela Mesa: cargos juntos, vazio e o de hoje, titulos juntos antes de partilhar, "
+             "o mesmo rolo" % len(passos))
+
+
+def _video_de_ensaio(caminho, segundos, fonte="testsrc2", tom=440, tamanho="1920x1080", volume=0.5):
+    """Um mp4 curto feito pelo ffmpeg, com imagem e som estereo a 48 kHz, como os do render."""
+    import subprocess
+    import render
+    subprocess.run([render.ffmpeg(), "-hide_banner", "-loglevel", "error", "-y",
+                    "-f", "lavfi", "-i", "%s%ss=%s:r=25:d=%g" % (fonte, ":" if "=" in fonte else "=", tamanho, segundos),
+                    "-f", "lavfi", "-i", "sine=f=%d:d=%g:sample_rate=48000" % (tom, segundos),
+                    "-af", "volume=%g,aformat=channel_layouts=stereo" % volume,
+                    "-c:v", "libx264", "-crf", "20", "-preset", "veryfast", "-pix_fmt", "yuv420p",
+                    "-c:a", "aac", "-b:a", "192k", "-shortest", caminho], check=True)
+
+
+def _quadro_cinza(video, t, tamanho=(192, 108)):
+    """O fotograma do instante t, reduzido, em cinzento (0 a 255, como no ecra)."""
+    import subprocess
+    import render
+    from PIL import Image
+    r = subprocess.run([render.ffmpeg(), "-v", "error", "-ss", "%.3f" % t, "-i", video, "-frames:v", "1",
+                        "-vf", "scale=%d:%d" % tamanho, "-f", "rawvideo", "-pix_fmt", "gray", "-"],
+                       capture_output=True)
+    return Image.frombytes("L", tamanho, r.stdout[:tamanho[0] * tamanho[1]])
+
+
+def teste_master_com_creditos_no_sitio_do_colar():
+    """O --master junta o filme e os creditos em 1080p no mesmo sitio que o --colar, sem escrever por cima.
+
+    O PEDIDO, do Tiago a 2 de outubro: ajustar tudo na Mesa "e depois darmos so ordem para fazer
+    render". O --colar so dava a copia do telemovel; o ficheiro da sala tinha de ser feito a mao.
+
+    O DEFEITO QUE ISTO APANHA: um master cortado noutro sitio (os creditos a comecar com um salto
+    na imagem, ou depois do fade a preto, que e o que faz a sala aplaudir antes do tempo), em
+    meia resolucao, ou escrito por cima do master de ontem. Corre sobre dois videos de ensaio de
+    segundos: o "filme" com o padrao do ffmpeg e os "creditos" de uma cor so.
+    """
+    import shutil
+    import tempfile
+    from PIL import ImageChops, ImageStat
+    p5 = _ponto5()
+    problemas = []
+    pasta = tempfile.mkdtemp(prefix="master_")
+    try:
+        filme = os.path.join(pasta, "v3_ensaio.mp4")
+        cred = os.path.join(pasta, "exemplo_creditos.mp4")
+        _video_de_ensaio(filme, 8)
+        _video_de_ensaio(cred, 3, fonte="color=c=0x204060", tom=880)
+        import contextlib
+        import io
+        with contextlib.redirect_stdout(io.StringIO()):
+            m1 = p5.master_com_creditos(filme, 5.0, cred, pasta)
+            antes = open(m1, "rb").read()
+            m2 = p5.master_com_creditos(filme, 5.0, cred, pasta)
+        if os.path.basename(m1) != "v3_ensaio_com_creditos.mp4" or os.path.basename(m2) != "v3_ensaio_com_creditos_2.mp4" \
+                or open(m1, "rb").read() != antes:
+            problemas.append("os nomes nao sao novos ou o primeiro mudou: %s, %s" % (os.path.basename(m1),
+                                                                                       os.path.basename(m2)))
+        if [f for f in os.listdir(pasta) if "a_fazer" in f]:
+            problemas.append("ficou um _a_fazer para tras")
+        w, h, fps = p5.medir_video(m1)
+        dur = p5.C.duracao(m1)
+        if (w, h, fps) != (1920, 1080, 25.0) or abs(dur - 8.0) > 0.1:
+            problemas.append("o master tem %dx%d a %g fps e %.2f s, devia 1920x1080 a 25 e 8,00" % (w, h, fps, dur))
+        # antes do corte e o filme, depois sao os creditos
+        dif_filme = ImageStat.Stat(ImageChops.difference(_quadro_cinza(m1, 4.8), _quadro_cinza(filme, 4.8))).mean[0]
+        dif_cred = ImageStat.Stat(ImageChops.difference(_quadro_cinza(m1, 5.6), _quadro_cinza(cred, 0.6))).mean[0]
+        if dif_filme > 3 or dif_cred > 3:
+            problemas.append("a juncao nao esta no corte: %.1f do filme aos 4,8 s e %.1f dos creditos aos 5,6"
+                             % (dif_filme, dif_cred))
+        meio = os.path.join(pasta, "v3_meia.mp4")
+        _video_de_ensaio(meio, 2, tamanho="960x540")
+        try:
+            with contextlib.redirect_stdout(io.StringIO()):
+                p5.master_com_creditos(meio, 1.0, cred, pasta)
+            problemas.append("um render a meia resolucao deu master")
+        except SystemExit:
+            pass
+    finally:
+        shutil.rmtree(pasta, ignore_errors=True)
+    verifica("creditos: o master junta no sitio do --colar", not problemas,
+             "; ".join(problemas[:3]) if problemas else "1080p a 25, corte no sitio, nunca por cima")
+
+
+def teste_kit_do_projetor():
+    """O kit do projetor muda o que se pede e mais nada, e nunca escreve por cima.
+
+    O PEDIDO, do Tiago a 2 de outubro: se no teste do projetor for preciso "ajustar ligeiramente",
+    nao esperar uma hora por um render. O scripts/ajustar_projecao.py mexe no filme pronto.
+
+    O DEFEITO QUE ISTO APANHA: o filtro eq do ffmpeg faz a gama de 0 a 255, e com a gama a 1,2 o
+    preto do filme subia de 16 para 25 (medido a 2 de outubro): o fade a preto do fim ficava
+    cinzento na sala. Tambem: uma margem que nao centra ou corta, um volume a subir sem limitador (o
+    filme ja chega aos 0 dBFS, e a onda cortava), um ajuste so de volume a refazer a imagem (meia
+    hora em vez de segundos), e um ficheiro escrito por cima.
+    """
+    import contextlib
+    import io
+    import re as _re
+    import shutil
+    import subprocess
+    import tempfile
+    import ajustar_projecao as kit
+    import render
+    problemas = []
+    pasta = tempfile.mkdtemp(prefix="kit_")
+    try:
+        filme = os.path.join(pasta, "filme.mp4")
+        # uma imagem com o preto, o branco e um cinzento do meio, e um som a -1 dBFS
+        subprocess.run([render.ffmpeg(), "-hide_banner", "-loglevel", "error", "-y",
+                        "-f", "lavfi", "-i", "color=c=black:s=1920x1080:r=25:d=3",
+                        "-f", "lavfi", "-i", "sine=f=440:d=3:sample_rate=48000",
+                        "-filter_complex", "[0:v]drawbox=x=640:y=0:w=640:h=1080:color=0x808080:t=fill,"
+                        "drawbox=x=1280:y=0:w=640:h=1080:color=white:t=fill,format=yuv420p[v];"
+                        "[1:a]volume=0.89,aformat=channel_layouts=stereo[a]",
+                        "-map", "[v]", "-map", "[a]", "-c:v", "libx264", "-crf", "12", "-preset", "veryfast",
+                        "-c:a", "aac", "-b:a", "192k", "-shortest", filme], check=True)
+
+        def luma(video, x, y):
+            r = subprocess.run([render.ffmpeg(), "-v", "error", "-ss", "1", "-i", video, "-frames:v", "1",
+                                "-vf", "crop=8:8:%d:%d" % (x, y), "-f", "rawvideo", "-pix_fmt", "yuv420p", "-"],
+                               capture_output=True)
+            return sum(r.stdout[:64]) / 64.0
+
+        def volumes(video):
+            """(pico, media) em dB, do volumedetect."""
+            r = subprocess.run([render.ffmpeg(), "-hide_banner", "-i", video, "-af", "volumedetect", "-f", "null",
+                                "-"], capture_output=True, text=True)
+            m = [_re.search(r"%s_volume: (-?[\d.]+) dB" % k, r.stderr) for k in ("max", "mean")]
+            return tuple(float(x.group(1)) if x else None for x in m)
+
+        with contextlib.redirect_stdout(io.StringIO()):
+            g = kit.ajustar(filme, {"gama": 1.2}, pasta)
+            g2 = kit.ajustar(filme, {"gama": 1.2}, pasta)
+            mg = kit.ajustar(filme, {"margem": 5.0}, pasta)
+            vo = kit.ajustar(filme, {"volume": 6.0}, pasta)
+            am = kit.ajustar(filme, {"volume": -3.0}, pasta, amostra=1.0, desde=1.0)
+        preto, meio, branco = luma(filme, 300, 500), luma(filme, 940, 500), luma(filme, 1600, 500)
+        gp, gm, gb = luma(g, 300, 500), luma(g, 940, 500), luma(g, 1600, 500)
+        if abs(gp - preto) > 1 or abs(gb - branco) > 1 or gm < meio + 8:
+            problemas.append("a gama mexeu no preto ou no branco, ou nao clareou o meio: %.0f/%.0f/%.0f -> %.0f/%.0f/%.0f"
+                             % (preto, meio, branco, gp, gm, gb))
+        if os.path.basename(g) != "filme_projetor_g1.20.mp4" or os.path.basename(g2) != "filme_projetor_g1.20_2.mp4":
+            problemas.append("os nomes nao sao novos: %s, %s" % (os.path.basename(g), os.path.basename(g2)))
+        # a margem de 5%: 48 px de preto de cada lado e 27 em cima, a imagem ao centro
+        if luma(mg, 10, 500) > 17 or luma(mg, 1900, 500) > 17 or luma(mg, 960, 5) > 17 or \
+                abs(luma(mg, 1600, 500) - branco) > 2 or kit.medir(mg)["largura"] != 1920:
+            problemas.append("a margem nao poe preto a volta ou mexe no tamanho do quadro")
+        # o volume: so o som se refaz, e acima de 0 dB o limitador segura o pico em -1 dBFS
+        copia = [subprocess.run([render.ffmpeg(), "-v", "error", "-i", v, "-map", "0:v", "-c", "copy", "-f", "md5", "-"],
+                                capture_output=True, text=True).stdout for v in (filme, vo)]
+        if copia[0] != copia[1]:
+            problemas.append("so com o volume a imagem foi refeita")
+        (_p0, m0), (p1, m1) = volumes(filme), volumes(vo)
+        if p1 is None or p1 > -0.8 or m1 is None or m1 < m0 + 3:
+            problemas.append("com +6 dB o pico ficou em %s dB e a media subiu de %s para %s" % (p1, m0, m1))
+        if abs(kit.medir(am)["duracao"] - 1.0) > 0.1:
+            problemas.append("a amostra de 1 s tem %.2f s" % kit.medir(am)["duracao"])
+        try:
+            with contextlib.redirect_stdout(io.StringIO()):
+                kit.ajustar(filme, {}, pasta)
+            problemas.append("sem ajustes escreveu um ficheiro")
+        except SystemExit:
+            pass
+        backup = os.path.join(pasta, "00-Backup")
+        os.makedirs(backup)
+        try:
+            with contextlib.redirect_stdout(io.StringIO()):
+                kit.ajustar(filme, {"gama": 1.1}, backup)
+            problemas.append("escreveu na 00-Backup")
+        except SystemExit:
+            pass
+        if [f for f in os.listdir(pasta) if "a_fazer" in f]:
+            problemas.append("ficou um _a_fazer para tras")
+    finally:
+        shutil.rmtree(pasta, ignore_errors=True)
+    verifica("projetor: o kit muda so o que se pede", not problemas,
+             "; ".join(problemas[:3]) if problemas else
+             "gama sem mexer no preto, margem ao centro, volume com limitador e imagem copiada, nunca por cima")
+
+
+# ------------------------------------------------------------ a zona de destaque (2 de outubro)
+# O Tiago: "Permite-me dentro de uma foto marcar uma zona para ter mais detalhe, por exemplo eu
+# tenho umas fotos de equipa que se eu nao assinalar quem eu sou as pessoas podem nao perceber." E
+# no contrato da Mesa: "nem sempre e possivel com zoom". Ver render.destacar().
+#
+# AS ASSINATURAS DA FOTO SOLTA SEM DESTAQUE, md5 dos fotogramas 0,0 / 1,3 / 2,5 / 4,9 s de cada caso
+# sobre a foto de ensaio do aproxima. Tiradas a 2 de outubro com uma copia do render.py de ANTES da
+# zona de destaque (Pillow 12.3.0) e confirmadas iguais com o de depois: o destaque mexe no ramo de
+# quase todo o filme, e so o md5 diz se um ramo que nao devia correr mudou um pixel.
+ASSINATURAS_FOTO_SEM_DESTAQUE = {
+    "fiel|Zoom in|": "5d2089e59d3eae5cfe90316cd2597238",
+    "fundo|Parada|Andebol 2016": "7eb0357f6051f8590312685da11d1630",
+    "fiel|Afastada|": "3ea80284b1cbb79eedcc89f5edd491ca",
+    "fiel|Aproxima 2.2|": "cc578dcac8decc003046d33a4af74697",
+    "fundo|Aproxima 3|": "3b01bbc41da5b69525a733a7462e5e5e",
+    "rajada||Andebol": "ada9d9d3135ec931e667ddd792a74c3d",
+}
+
+
+def _clip_destaque(caminho, mov="Parada", tratamento="fiel", zd=None, texto="", dur=5.0):
+    """Uma foto solta de ensaio, com a coluna destaque quando `zd` vem (dict ou o texto da coluna)."""
+    import json
+    c = dict(_clip_aproxima(caminho, mov, tratamento=tratamento), texto_ecra=texto,
+             duracao_s=str(dur))
+    if zd is not None:
+        c["destaque"] = zd if isinstance(zd, str) else json.dumps(zd)
+    return c
+
+
+def _preparar_calado(render, clip):
+    import contextlib
+    import io
+    with contextlib.redirect_stdout(io.StringIO()):
+        return render.preparar(clip, {})
+
+
+def _caixa_da_foto_parada(render, pronto):
+    """(x0, y0, larg, alt) da foto no ecra com o enquadramento Parada: as contas do compor()."""
+    escala = 1.0 / (1.0 + render.ZOOM)
+    larg = (pronto["sprite"].width - 2 * render.MARGEM) * escala
+    alt = (pronto["sprite"].height - 2 * render.MARGEM) * escala
+    return render.L / 2.0 - larg / 2.0, render.A / 2.0 - alt / 2.0, larg, alt
+
+
+def teste_destaque_sem_ele_igual_ao_byte():
+    """Sem a coluna destaque a foto solta sai igual ao byte ao render de antes da zona de destaque.
+
+    O QUE PODIA PARTIR: o destaque mexe no desenhar() das fotos soltas, o caminho de quase todo o
+    filme. Um ramo que corresse sem destaque (um point() de fator 1, uma colagem do miolo) mudava
+    zero pixeis ou alguns, e so o md5 os distingue. E com destaque, a foto tem de entrar e assentar
+    igual a de sempre: escurecer enquanto ela aparece eram duas coisas ao mesmo tempo. E o montar
+    so escreve a coluna destaque quando algum clip a tem, senao o v3.csv deixava de sair igual ao
+    byte ao do ultimo render.
+    """
+    import hashlib
+    import tempfile
+    import render
+    problemas = []
+    pasta = tempfile.mkdtemp(prefix="teste_destaque_byte_")
+    foto = _foto_com_marca(pasta)
+    for chave, esperado in sorted(ASSINATURAS_FOTO_SEM_DESTAQUE.items()):
+        trat, mov, texto = chave.split("|")
+        for zd in (None, ""):
+            pronto = _preparar_calado(render, _clip_destaque(foto, mov, trat, zd, texto))
+            h = hashlib.md5()
+            for t in (0.0, 1.3, 2.5, 4.9):
+                h.update(render.desenhar(pronto, t, 5.0).tobytes())
+            if h.hexdigest() != esperado:
+                problemas.append("%s %s mudou" % (chave, "sem coluna" if zd is None else "com a coluna vazia"))
+    zd = {"x": 0.3, "y": 0.3, "w": 0.2, "h": 0.25, "texto": "Tiago"}
+    for trat, mov in (("fiel", "Zoom in"), ("fundo", "Aproxima 2.2")):
+        sem = _preparar_calado(render, _clip_destaque(foto, mov, trat))
+        com = _preparar_calado(render, _clip_destaque(foto, mov, trat, zd))
+        for t in (0.0, 0.5, 0.96):
+            if render.desenhar(sem, t, 5.0).tobytes() != render.desenhar(com, t, 5.0).tobytes():
+                problemas.append("%s %s: aos %.2f s, antes de o destaque comecar, ja mudou" % (trat, mov, t))
+    inv = {r["id"] for r in csv.DictReader(open(os.path.join(REPO, "data", "inventario.csv"),
+                                                encoding="utf-8-sig"))}
+    if "f0012" in inv:
+        f = {"t": "foto", "i": "f0012", "f": "", "x": "", "d": 4, "c": 0.7, "r": "fiel"}
+        _l, cab, _s, _p = _mesa_de_ensaio([f, dict(f)], "teste_destaque_sem_")
+        if "destaque" in cab:
+            problemas.append("o montar escreveu a coluna destaque sem nenhum clip com zona")
+        linhas, cab, _s, _p = _mesa_de_ensaio([dict(f, zd={"x": 0.1, "y": 0.1, "w": 0.2, "h": 0.2}), f],
+                                              "teste_destaque_com_")
+        if cab[-1:] != ["destaque"] or [l["destaque"] for l in linhas] != [
+                '{"x": 0.1, "y": 0.1, "w": 0.2, "h": 0.2}', ""]:
+            problemas.append("com uma zona, a coluna destaque nao veio no fim so nessa linha: %s"
+                             % cab[-3:])
+    else:
+        problemas.append("f0012 fora do inventario")
+    verifica("destaque: sem ele igual ao byte, e so depois de a foto assentar", not problemas,
+             "; ".join(problemas[:3]) if problemas else
+             "%d casos ao md5 do render de antes, a foto assenta igual e a coluna so com zona"
+             % len(ASSINATURAS_FOTO_SEM_DESTAQUE))
+
+
+def teste_destaque_escurece_fora_e_guarda_dentro():
+    """Fora da zona tudo escurece na medida pedida, dentro fica a foto ao byte, e o contorno e da cor quente.
+
+    O QUE PODIA PARTIR: "nada inventa pixeis" (decisao 090) quer dizer que dentro da zona a foto e a
+    mesma, pixel a pixel, e que fora so muda o brilho, pelo mesmo fator em todo o lado. Um escurecer
+    feito por mistura com uma imagem desfocada, ou por cima da zona, passava num olhar e falhava
+    aqui. O contorno e o do letreiro: se a Clara mudar o champanhe quente no estilo, o contorno muda
+    com ele. A meio do escurecer o fator e metade, que e o que o _suave() da a meio caminho.
+    """
+    import tempfile
+    import render
+    problemas, contas = [], {}
+    pasta = tempfile.mkdtemp(prefix="teste_destaque_escurece_")
+    foto = _foto_com_marca(pasta)
+    zd = {"x": 0.3, "y": 0.3, "w": 0.2, "h": 0.25}
+    sem = _preparar_calado(render, _clip_destaque(foto))
+    x0, y0, larg, alt = _caixa_da_foto_parada(render, sem)
+    zx0, zy0 = x0 + 0.3 * larg, y0 + 0.3 * alt
+    zx1, zy1 = x0 + 0.5 * larg, y0 + 0.55 * alt
+    linha = render.DESTAQUE_LINHA * render.A / 1080.0
+    raio = render.DESTAQUE_RAIO * render.A / 1080.0
+
+    def classe(x, y):
+        px, py = x + 0.5, y + 0.5
+        dx, dy = max(zx0 - px, 0.0, px - zx1), max(zy0 - py, 0.0, py - zy1)
+        if dx or dy:
+            fora = math.hypot(dx, dy)
+            if fora > linha + 1.5:
+                return "fora"
+            # ao lado de uma borda direita, longe dos cantos arredondados
+            if 1.0 <= fora <= linha - 1.0 and (
+                    (dy == 0.0 and min(py - zy0, zy1 - py) > raio + linha)
+                    or (dx == 0.0 and min(px - zx0, zx1 - px) > raio + linha)):
+                return "traco"
+            return None
+        fx, fy = min(px - zx0, zx1 - px), min(py - zy0, zy1 - py)
+        if min(fx, fy) > 1.5 and not (fx < raio + 1.5 and fy < raio + 1.5):
+            return "dentro"
+        return None
+
+    def medir(rot, quadro_sem, quadro_com, fator, cor, traco_parcial=None):
+        a, b = quadro_sem.load(), quadro_com.load()
+        tabela = [int(v * fator + 0.5) for v in range(256)]
+        n = {"fora": 0, "dentro": 0, "traco": 0}
+        maus = {"fora": 0, "dentro": 0, "traco": 0}
+        # o ecra de 3 em 3 pixeis, e a volta da zona todos, que o contorno so tem 4 de largura
+        perto = [(x, y) for y in range(int(zy0) - 8, int(zy1) + 9)
+                 for x in range(int(zx0) - 8, int(zx1) + 9)]
+        longe = [(x, y) for y in range(0, render.A, 3) for x in range(0, render.L, 3)
+                 if not (zx0 - 8 <= x <= zx1 + 8 and zy0 - 8 <= y <= zy1 + 8)]
+        for x, y in perto + longe:
+            k = classe(x, y)
+            if k is None:
+                continue
+            n[k] += 1
+            if k == "fora":
+                ok = b[x, y] == tuple(tabela[v] for v in a[x, y])
+            elif k == "dentro":
+                ok = b[x, y] == a[x, y]
+            elif traco_parcial is None:
+                ok = all(abs(u - v) <= 1 for u, v in zip(b[x, y], cor))
+            else:
+                alvo = [tabela[v] + (c - tabela[v]) * traco_parcial for v, c in zip(a[x, y], cor)]
+                ok = all(abs(u - v) <= 1.01 for u, v in zip(b[x, y], alvo))
+            maus[k] += 0 if ok else 1
+        contas[rot] = n
+        for k in n:
+            if not n[k]:
+                problemas.append("%s: nenhum pixel %s medido" % (rot, k))
+            elif maus[k]:
+                problemas.append("%s: %d de %d pixeis %s errados" % (rot, maus[k], n[k], k))
+
+    quente = render.LETREIRO_QUENTE
+    com = _preparar_calado(render, _clip_destaque(foto, zd=zd))
+    medir("assente", render.desenhar(sem, 3.0, 5.0), render.desenhar(com, 3.0, 5.0), 0.55, quente)
+    medir("a meio", render.desenhar(sem, 1.3, 5.0), render.desenhar(com, 1.3, 5.0),
+          1.0 - 0.45 * 0.5, quente, traco_parcial=0.5)
+    forte = _preparar_calado(render, _clip_destaque(foto, zd=dict(zd, escurecer=0.7)))
+    medir("escurecer 0,7", render.desenhar(sem, 3.0, 5.0), render.desenhar(forte, 3.0, 5.0), 0.3, quente)
+    try:
+        render.aplicar_estilo({"cartao": {"quente": "#3C8CDC"}}, [])
+        azul = _preparar_calado(render, _clip_destaque(foto, zd=zd))
+        medir("quente do estilo", render.desenhar(sem, 3.0, 5.0), render.desenhar(azul, 3.0, 5.0),
+              0.55, (60, 140, 220))
+    finally:
+        render.aplicar_estilo({}, [])
+    verifica("destaque: escurece fora, dentro igual, contorno quente", not problemas,
+             "; ".join(problemas[:3]) if problemas else
+             "assente %(fora)d fora, %(dentro)d dentro e %(traco)d no contorno, ao nivel; a meio e com o estilo tambem"
+             % contas["assente"])
+
+
+def teste_destaque_acompanha_a_foto():
+    """A zona fica onde a pessoa esta: com o zoom a meio, no aproxima, no afastada e na rajada.
+
+    O QUE PODIA PARTIR: a zona e da foto e nao do ecra. Contada no ecra, ou com o tamanho do nivel 0
+    no aproxima (o defeito que o aproxima_quadro() ja teve com a borda), ficava no sitio no primeiro
+    fotograma e escorregava para o lado da pessoa a meio do zoom. Mede-se pela MARCA da foto de
+    ensaio, que e o que vai ao ecra, e a zona e a propria marca: o contorno tem de lhe ficar a volta,
+    a DESTAQUE_LINHA de cada lado, e a marca tem de ficar cor de rosa por dentro, como sem destaque.
+    """
+    import tempfile
+    from PIL import ImageChops
+    import render
+    problemas, medidos = [], []
+    pasta = tempfile.mkdtemp(prefix="teste_destaque_acompanha_")
+    foto = _foto_com_marca(pasta)
+    meia = APROXIMA_MARCA / 2.0
+    cx, cy = APROXIMA_FOCO[0] * APROXIMA_FOTO[0], APROXIMA_FOCO[1] * APROXIMA_FOTO[1]
+    # o rectangle() da Pillow pinta as duas pontas: a marca vai de cx - 20 a cx + 20, 41 pixeis
+    zd = {"x": (cx - meia) / APROXIMA_FOTO[0], "y": (cy - meia) / APROXIMA_FOTO[1],
+          "w": (APROXIMA_MARCA + 1.0) / APROXIMA_FOTO[0], "h": (APROXIMA_MARCA + 1.0) / APROXIMA_FOTO[1]}
+    linha = render.DESTAQUE_LINHA * render.A / 1080.0
+    quente = render.LETREIRO_QUENTE
+    for trat, mov, t, dur in (("fiel", "Zoom in", 2.5, 5.0), ("fundo", "Zoom in", 2.5, 5.0),
+                              ("fiel", "Afastada", 3.5, 5.0), ("fiel", "Aproxima 2.2", 2.5, 5.0),
+                              ("fiel", "Aproxima 2.2", 5.0, 5.0), ("fundo", "Aproxima 3", 4.0, 5.0),
+                              ("rajada", "", 0.0, 0.5625)):
+        rot = "%s %s aos %.1f s" % (trat, mov or "", t)
+        com = render.desenhar(_preparar_calado(render, _clip_destaque(foto, mov, trat, zd, dur=dur)), t, dur)
+        sem = render.desenhar(_preparar_calado(render, _clip_destaque(foto, mov, trat, dur=dur)), t, dur)
+        marca, marca_sem = _caixa_da_marca(com), _caixa_da_marca(sem)
+        r, g, b = com.split()
+        mascara = ImageChops.multiply(ImageChops.multiply(
+            r.point(lambda v, c=quente[0]: 255 if abs(v - c) <= 2 else 0),
+            g.point(lambda v, c=quente[1]: 255 if abs(v - c) <= 2 else 0)),
+            b.point(lambda v, c=quente[2]: 255 if abs(v - c) <= 2 else 0))
+        traco = mascara.getbbox()
+        # A marca e a propria zona: os pixeis da borda dela ficam meio dentro e meio fora, e meio
+        # escurecidos podem sair do limiar do cor de rosa. Um pixel de cada lado, nao mais.
+        if marca is None or traco is None or max(abs(u - v) for u, v in zip(marca, marca_sem)) > 1:
+            problemas.append("%s: a marca %s e o contorno %s (sem destaque %s)" % (rot, marca, traco, marca_sem))
+            continue
+        lados = (marca[0] - traco[0], marca[1] - traco[1], traco[2] - marca[2], traco[3] - marca[3])
+        medidos.append(max(abs(v - linha) for v in lados))
+        if any(abs(v - linha) > 2.0 for v in lados):
+            problemas.append("%s: o contorno fica a %s px da marca, e devia ficar a %.0f de cada lado"
+                             % (rot, "/".join("%d" % v for v in lados), linha))
+        meio = ((marca[0] + marca[2]) // 2, (marca[1] + marca[3]) // 2)
+        if com.getpixel(meio) != sem.getpixel(meio):
+            problemas.append("%s: o meio da marca mudou com o destaque" % rot)
+    verifica("destaque: a zona acompanha a foto", not problemas,
+             "; ".join(problemas[:3]) if problemas else
+             "7 enquadramentos, o contorno a %.0f px da marca com erro maximo %.1f px"
+             % (linha, max(medidos)))
+
+
+def teste_destaque_anda_ao_subpixel():
+    """A borda da zona anda com o zoom lento ao sub-pixel, sem saltar de pixel em pixel.
+
+    O QUE PODIA PARTIR: a borda que pisca do CLAUDE.md. Com o zoom lento a zona anda menos de um
+    pixel por fotograma, e uma zona desenhada a pixeis inteiros (um rectangle() da ImageDraw, um
+    round() nos cantos) ficava parada dois ou tres fotogramas e saltava um pixel: o contorno a
+    tremer em volta da cara que se quer mostrar. Primeiro a conta: a cobertura de uma linha de
+    pixeis soma a largura exata da zona e tem o centro exato, em qualquer posicao fracionaria.
+    Depois os fotogramas: numa foto lisa, o centro do contorno da esquerda anda o mesmo de
+    fotograma para fotograma.
+    """
+    import tempfile
+    import numpy as np
+    import render
+    problemas = []
+    d = render.preparar_destaque({"x": 0, "y": 0, "w": 1, "h": 1, "forma": "retangulo", "texto": "",
+                                  "escurecer": 0.45}, 0.0, 0.0, 5.0)
+    xs = np.arange(60, 190, dtype=np.float64) + 0.5
+    ys = np.full_like(xs, 70.5)
+    pior = 0.0
+    for forma in render.DESTAQUE_FORMAS:
+        for k in range(9):
+            off = k / 8.0
+            caixa = (100.0 + off, 20.0, 140.3 + off, 120.0)
+            dist = render.destaque_distancia(xs, ys, caixa, forma, d["raio"])
+            dentro = np.clip(0.5 - dist, 0.0, 1.0)
+            traco = np.clip(0.5 - (dist - d["linha"]), 0.0, 1.0) - dentro
+            centro = float((xs * dentro).sum() / dentro.sum())
+            erros = (abs(dentro.sum() - 40.3), abs(centro - (120.15 + off)),
+                     abs(traco.sum() - 2 * d["linha"]))
+            pior = max(pior, max(erros))
+            if max(erros) > 0.02:
+                problemas.append("%s deslocada %.3f: largura %.3f, centro %.3f, contorno %.3f"
+                                 % (forma, off, dentro.sum(), centro, traco.sum()))
+    pasta = tempfile.mkdtemp(prefix="teste_destaque_subpixel_")
+    lisa = os.path.join(pasta, "lisa.png")
+    Image.new("RGB", APROXIMA_FOTO, (200, 200, 200)).save(lisa)
+    passos = []
+    try:
+        render.aplicar_estilo({"cartao": {"quente": "#FF0000"}}, [])
+        pronto = _preparar_calado(render, _clip_destaque(lisa, "Zoom in",
+                                                         zd={"x": 0.2, "y": 0.3, "w": 0.2, "h": 0.4}))
+        centros = []
+        for q in range(12):
+            quadro = np.asarray(render.desenhar(pronto, 2.0 + q / 25.0, 5.0), dtype=np.float64)
+            g = quadro[render.A // 2, :, 1]
+            # o contorno e o unico sitio vermelho; as barras pretas do "fiel" tambem tem o verde a 0
+            mais = int(np.argmax((quadro[render.A // 2, :, 0] - g)[:render.L // 2]))
+            janela = range(mais - 7, mais + 8)
+            # o contorno e vermelho puro: G a 0. Por fora mistura-se com a foto escurecida, G a 110:
+            # G = 110 (1 - c). Por dentro a borda da zona e da foto (G a 200) misturada com a sombra
+            # pela cobertura d, e o contorno cobre o resto, c = 1 - d: G = (110 + 90 d) d.
+            c = [max(0.0, min(1.0, 1.0 - g[x] / 110.0)) if x < mais else
+                 1.0 - (-110.0 + math.sqrt(110.0 ** 2 + 360.0 * g[x])) / 180.0 for x in janela]
+            centros.append(sum(x * w for x, w in zip(janela, c)) / sum(c))
+        passos = np.diff(centros)
+        if np.ptp(passos) > 0.05 or not (passos < 0).all():
+            problemas.append("o contorno anda aos saltos: %s" % ", ".join("%.2f" % p for p in passos))
+    finally:
+        render.aplicar_estilo({}, [])
+    verifica("destaque: a borda anda ao sub-pixel", not problemas,
+             "; ".join(problemas[:3]) if problemas else
+             "cobertura exata a %.3f px; no zoom o contorno anda %.2f a %.2f px por fotograma"
+             % (pior, min(passos), max(passos)))
+
+
+def teste_destaque_elipse_e_nome():
+    """A elipse escurece os cantos da caixa, e o nome vai por baixo da zona, ou por cima se nao couber.
+
+    O QUE PODIA PARTIR: uma elipse desenhada como a caixa dela era um retangulo com outro nome. E o
+    nome: a Mesa poe-no por baixo e encosta-o ao fundo do ecra quando a zona esta em baixo, e ai a
+    faixa tapava a propria zona. Aqui vai para cima. Com legenda em baixo a faixa do nome nunca
+    desce ate a da legenda, que e onde esta o texto do clip.
+    """
+    import tempfile
+    import numpy as np
+    import render
+    problemas = []
+    pasta = tempfile.mkdtemp(prefix="teste_destaque_elipse_")
+    foto = _foto_com_marca(pasta)
+    sem = _preparar_calado(render, _clip_destaque(foto))
+    x0, y0, larg, alt = _caixa_da_foto_parada(render, sem)
+    q_sem = render.desenhar(sem, 3.0, 5.0)
+    zd = {"x": 0.3, "y": 0.3, "w": 0.3, "h": 0.3, "forma": "elipse"}
+    q = render.desenhar(_preparar_calado(render, _clip_destaque(foto, zd=zd)), 3.0, 5.0)
+    zx0, zy0, zx1, zy1 = x0 + 0.3 * larg, y0 + 0.3 * alt, x0 + 0.6 * larg, y0 + 0.6 * alt
+    canto = (int(zx0) + 4, int(zy0) + 4)
+    meio = (int((zx0 + zx1) / 2), int((zy0 + zy1) / 2))
+    direita = (int(zx1 + 2.0), int((zy0 + zy1) / 2))
+    if q.getpixel(canto) != tuple(int(v * 0.55 + 0.5) for v in q_sem.getpixel(canto)):
+        problemas.append("o canto da caixa da elipse nao escureceu")
+    if q.getpixel(meio) != q_sem.getpixel(meio):
+        problemas.append("o meio da elipse mudou")
+    if any(abs(u - v) > 2 for u, v in zip(q.getpixel(direita), render.LETREIRO_QUENTE)):
+        problemas.append("a direita da elipse nao tem o contorno: %s" % (q.getpixel(direita),))
+
+    def letras(quadro, ate=None):
+        """O retangulo das letras brancas: a foto de ensaio nunca passa dos 219."""
+        a = np.asarray(quadro)[:ate]
+        sim = (a >= 250).all(axis=2)
+        if not sim.any():
+            return None
+        yy, xx = np.nonzero(sim)
+        return xx.min(), yy.min(), xx.max(), yy.max()
+
+    for rot, y, h, legenda in (("por baixo", 0.3, 0.15, ""), ("por cima", 0.82, 0.15, ""),
+                               ("com legenda", 0.6, 0.2, "Andebol 2016")):
+        zd = {"x": 0.4, "y": y, "w": 0.1, "h": h, "texto": "Tiago"}
+        q = render.desenhar(_preparar_calado(render, _clip_destaque(foto, zd=zd, texto=legenda)), 3.0, 5.0)
+        topo, fundo = y0 + y * alt, y0 + (y + h) * alt
+        centro = x0 + 0.45 * larg
+        faixa = None
+        if legenda:
+            faixa = render.A - render.LEGENDA_TEXTO - render.bloco_legenda(legenda) - render.LEGENDA_ALMOFADA
+        caixa = letras(q, int(faixa) if faixa else None)
+        if caixa is None:
+            problemas.append("%s: o nome nao aparece" % rot)
+            continue
+        if abs((caixa[0] + caixa[2]) / 2.0 - centro) > 4:
+            problemas.append("%s: o nome nao esta ao meio da zona" % rot)
+        if rot == "por baixo" and caixa[1] <= fundo:
+            problemas.append("por baixo: o nome comeca em %d, acima do fundo da zona %.0f" % (caixa[1], fundo))
+        if rot != "por baixo" and caixa[3] >= topo:
+            problemas.append("%s: o nome acaba em %d, abaixo do cimo da zona %.0f" % (rot, caixa[3], topo))
+    verifica("destaque: elipse e o nome no sitio", not problemas,
+             "; ".join(problemas[:3]) if problemas else
+             "a elipse escurece os cantos; o nome por baixo, por cima junto ao fundo e longe da legenda")
+
+
+def teste_destaque_tempos():
+    """O destaque acende depois de a foto assentar, e num clip curto acende mais cedo ou entra com ela.
+
+    O QUE PODIA PARTIR: a janela e uma conta com tres casos, e e a mesma que o montar usa para avisar
+    do destaque curto. Um clip de 4 s com encadeados de 0,7 acende de 1,0 a 1,6 s e fica 1,7 s
+    inteiro; um de 3 s acende logo no fim do encadeado; um de 2,5 s ou uma rajada entram acesos,
+    porque um destaque a acender durante o encadeado de saida nunca se via inteiro.
+    """
+    import render
+    problemas = []
+    for args, esperado in (((4.0, 0.7, 0.7), (1.0, 1.6)), ((3.0, 0.7, 0.7), (0.7, 1.3)),
+                           ((2.5, 0.7, 0.7), None), ((0.5625, 0.0, 0.0), None),
+                           ((6.0, 2.0, 0.7), (2.3, 2.9)), ((5.0, 0.0, 0.0), (1.0, 1.6))):
+        j = render.destaque_janela(*args)
+        if (j is None) != (esperado is None) or (j and any(abs(a - b) > 1e-9 for a, b in zip(j, esperado))):
+            problemas.append("janela %s deu %s e nao %s" % (args, j, esperado))
+    j = render.destaque_janela(4.0, 0.7, 0.7)
+    alfas = [render.destaque_alfa(j, t) for t in (0.99, 1.0, 1.3, 1.6, 3.9)]
+    if [round(a, 6) for a in alfas] != [0.0, 0.0, 0.5, 1.0, 1.0]:
+        problemas.append("o acender da %s" % alfas)
+    if render.destaque_alfa(None, 0.0) != 1.0:
+        problemas.append("sem janela nao entra aceso")
+    if abs(render.destaque_tempo_aceso(4.0, 0.7, 0.7) - 1.7) > 1e-9:
+        problemas.append("um clip de 4 s fica aceso %.2f s e nao 1,7" % render.destaque_tempo_aceso(4.0, 0.7, 0.7))
+    verifica("destaque: acende depois de a foto assentar", not problemas,
+             "; ".join(problemas[:3]) if problemas else
+             "4 s: de 1,0 a 1,6 s e 1,7 s inteiro; 3 s mais cedo; 2,5 s e rajada entram acesos")
+
+
+def teste_mesa_escreve_o_destaque():
+    """O zd da Mesa chega a coluna destaque validado, com avisos, e dali ao fotograma do render.
+
+    O QUE PODIA PARTIR: o montar e o unico sitio onde o Tiago le avisos antes do render. Uma zona
+    que passa da foto, uma forma que nao existe, um escurecer de 2, um nome que e uma frase, um zd
+    que ficou numa colagem ou um destaque numa rajada saiam calados e iam ao filme de outra maneira.
+    E as omissoes escritas por extenso nao vao a coluna, que fica so com o que difere. Depois o mesmo
+    CSV pelo carregar_montagem() do render: a foto com zona so muda depois de assentar.
+    """
+    import contextlib
+    import io
+    import render
+    problemas = []
+    inv = {r["id"] for r in csv.DictReader(open(os.path.join(REPO, "data", "inventario.csv"),
+                                                encoding="utf-8-sig"))}
+    tres = ["f0331", "f0334", "f0336"]
+    if not all(i in inv for i in tres + ["f0012"]):
+        verifica("Mesa escreve o destaque e ele chega ao render", False, "fotos do ensaio fora do inventario")
+        return
+    f = {"t": "foto", "i": "f0012", "f": "", "x": "", "d": 4, "c": 0.7, "r": "fiel"}
+    zona = {"x": 0.1, "y": 0.1, "w": 0.2, "h": 0.3}
+    clips = [
+        dict(f, zd={"x": 0.455, "y": 0.225, "w": 0.08, "h": 0.15, "texto": " Tiago "}),          # 1
+        dict(f),                                                                                 # 2
+        dict(f, zd={"x": 0.9, "y": -0.1, "w": 0.2, "h": 0.3, "forma": "elipse", "escurecer": 0.6}),  # 3
+        dict(f, zd={"x": "a", "y": 0, "w": 0.2, "h": 0.3}),                                      # 4
+        dict(f, zd=dict(zona, forma="estrela", escurecer=2, texto="O Tiago que esta aqui ao meio")),  # 5
+        dict(f, r="rajada", d=0.5625, c=0, zd=zona),                                             # 6
+        dict(f, d=3, zd=dict(zona, escurecer=0.45, forma="retangulo", texto="")),               # 7
+        {"t": "colagem", "fotos": tres, "x": "", "d": 8, "c": 0.7, "r": "fiel", "zd": zona},    # 8
+        dict(f, zd=dict(zona, escurecer=True)),                                                  # 9
+        dict(f, zd={"x": 0.5, "y": 0.5, "w": 0.002, "h": 0.3}),                                  # 10
+    ]
+    esperado = ['{"x": 0.455, "y": 0.225, "w": 0.08, "h": 0.15, "texto": "Tiago"}', "",
+                '{"x": 0.9, "y": 0.0, "w": 0.1, "h": 0.2, "forma": "elipse", "escurecer": 0.6}', "",
+                '{"x": 0.1, "y": 0.1, "w": 0.2, "h": 0.3, "texto": "O Tiago que esta aqui ao meio"}',
+                '{"x": 0.1, "y": 0.1, "w": 0.2, "h": 0.3}', '{"x": 0.1, "y": 0.1, "w": 0.2, "h": 0.3}',
+                "", '{"x": 0.1, "y": 0.1, "w": 0.2, "h": 0.3}', ""]
+    linhas, cab, saida, pasta = _mesa_de_ensaio(clips, "teste_destaque_mesa_")
+    obtido = [l.get("destaque", "") for l in linhas]
+    if obtido != esperado:
+        problemas.append("colunas %s" % [(k + 1, o) for k, (o, e) in enumerate(zip(obtido, esperado)) if o != e])
+    for pedaco in ("clip 3 passa da borda da foto", "clip 4 que nao se le", "clip 5 com forma 'estrela'",
+                   "clip 5 com escurecer 2", "clip 5 tem 7 palavras", "clip 6 esta numa rajada",
+                   "clip 7 fica inteira so 1.0 s", "com 3.8 s ou mais", "o clip 8 e colagem e tem zona",
+                   "clip 9 com escurecer True", "clip 10 sem tamanho"):
+        if pedaco not in saida:
+            problemas.append("falta o aviso %r" % pedaco)
+    if "clip 1 " in saida.split("AVISOS")[-1] or "clip 2 " in saida.split("AVISOS")[-1]:
+        problemas.append("avisou dos clips 1 ou 2, que estao bem")
+    # E DALI AO RENDER, pelo carregar_montagem() e pelo fotograma() de sempre.
+    sem_linhas, _c, _s, sem_pasta = _mesa_de_ensaio([dict(clips[0], zd=None), clips[1]], "teste_destaque_sem_zona_")
+    com_linhas, _c, _s, com_pasta = _mesa_de_ensaio(clips[:2], "teste_destaque_com_zona_")
+    guardado = render.MONTAGENS
+    quadros = {}
+    try:
+        for rot, p in (("sem", sem_pasta), ("com", com_pasta)):
+            render.MONTAGENS = p
+            with contextlib.redirect_stdout(io.StringIO()):
+                estado = render.carregar_montagem("t", None)
+                quadros[rot] = [render.fotograma(int(round(t * render.FPS)), estado)[0].tobytes()
+                                for t in (0.5, 2.5)]
+            quadros[rot + "_tem"] = bool(estado["resto"][0].get("destaque"))
+    finally:
+        render.MONTAGENS = guardado
+    if not quadros["com_tem"] or quadros["sem_tem"]:
+        problemas.append("o render nao leu a coluna destaque do CSV")
+    if quadros["com"][0] != quadros["sem"][0]:
+        problemas.append("aos 0,5 s, antes de a foto assentar, o fotograma ja mudou")
+    if quadros["com"][1] == quadros["sem"][1]:
+        problemas.append("aos 2,5 s o destaque nao aparece no fotograma")
+    verifica("Mesa escreve o destaque e ele chega ao render", not problemas,
+             "; ".join(problemas[:3]) if problemas else
+             "10 clips: a coluna so com o que difere, 11 avisos, e do CSV ao fotograma")
+
+
+# ---------------------------------------------------------------------------------------------
+# A REVISAO DE 2 DE OUTUBRO: o que os tres revisores apanharam no lado do render
+# ---------------------------------------------------------------------------------------------
+
+def teste_fundo_da_legenda_arredonda_como_a_mesa():
+    """O fundo da legenda vai ao ecra no mesmo alfa que a Mesa desenha.
+
+    O QUE PODIA PARTIR: o round do Python manda as metades para o par e o Math.round da Mesa para
+    cima. A barra da Mesa oferece 0,3 e 0,7, que dao 76,5 e 178,5: o filme saia um nivel abaixo do
+    que a Mesa mostrava. E o 0,647 de sempre tem de continuar a ser o 165, sem estilo.
+    """
+    import render
+    problemas = []
+    for f, esperado in ((0.3, 77), (0.7, 179), (0.647, 165), (0.0, 0), (1.0, 255), (0.5, 128)):
+        if render.alfa_do_fundo(f) != esperado:
+            problemas.append("%s deu %d e nao %d" % (f, render.alfa_do_fundo(f), esperado))
+    if render.normalizar_estilo({"legenda": {"fundo": 0.647}}) != {}:
+        problemas.append("o 0,647 de sempre deixou de ser a omissao")
+    guardado = render.estilo_ativo()
+    try:
+        render.aplicar_estilo({"legenda": {"fundo": 0.7}}, [])
+        if render.fundo_da_legenda(render.LEGENDA_ALFA) != 179:
+            problemas.append("a faixa a 0,7 sai com alfa %d" % render.fundo_da_legenda(render.LEGENDA_ALFA))
+    finally:
+        render.aplicar_estilo(guardado, [])
+    verifica("estilo: o fundo da legenda arredonda como a Mesa", not problemas,
+             "; ".join(problemas) if problemas else "0,3 da 77, 0,7 da 179 e o de sempre 165, como o Math.round")
+
+
+def teste_destaque_nome_nao_corta_as_pernas():
+    """O nome do destaque nao perde a ponta do "g" numa letra de descendentes compridos.
+
+    O QUE PODIA PARTIR: a faixa tem 1,45 corpos e a letra era desenhada dentro dela; em Playfair ou
+    numa manuscrita a perna do "g" de "Tiago" ficava cortada (a Mesa pinta a faixa e escreve por
+    cima sem cortar). Agora a tela cresce o que a tinta passa e a faixa fica no mesmo sitio; em
+    Arial Bold, sem tinta de fora, a tela e a faixa de sempre.
+    """
+    import numpy as np
+    import render
+    problemas = []
+    guardado = render.estilo_ativo()
+    zd = {"x": 0.3, "y": 0.3, "w": 0.2, "h": 0.2, "texto": "Tiago Jopy"}
+    caixa = (700.0, 400.0, 900.0, 500.0)
+    testadas = 0
+    try:
+        render.aplicar_estilo({}, [])
+        d = render.preparar_destaque(dict(zd), 0.7, 0.7, 5.0)
+        altura = int(math.ceil(render.legenda_tamanho() * 1.45))
+        if d["nome_faixa"] != (altura, 0, 0) or d["nome"].height != altura + 2 * render.MARGEM:
+            problemas.append("em Arial Bold a tela nao e a faixa: %s" % (d["nome_faixa"],))
+        cx, cy = render.onde_vai_o_nome(d, caixa)
+        topo_arial = cy - d["nome"].height / 2.0 + render.MARGEM
+        letras = render.letras_da_mesa()
+        for ident in ("playfair_display", "great_vibes", "pinyon_script"):
+            if not os.path.exists((letras.get(ident) or {}).get("ficheiro") or ""):
+                continue
+            render.aplicar_estilo({"legenda": {"fonte": ident}}, [])
+            d = render.preparar_destaque(dict(zd), 0.7, 0.7, 5.0)
+            alt, cima, baixo = d["nome_faixa"]
+            fonte = render.letra("legenda", render.legenda_tamanho())
+            _x0, _t0, _x1, t1 = fonte.getbbox(zd["texto"], anchor="ma")
+            fundo_tinta = render.legenda_tamanho() * 0.22 + t1
+            if fundo_tinta > alt and baixo < math.ceil(fundo_tinta) - alt:
+                problemas.append("%s: a tinta desce %.0f px abaixo da faixa e a tela so %d"
+                                 % (ident, fundo_tinta - alt, baixo))
+            # a tinta que passa esta la, e a faixa nao mudou de sitio
+            a = np.asarray(d["nome"])[..., 3]
+            if baixo and not a[render.MARGEM + cima + alt:render.MARGEM + cima + alt + baixo].any():
+                problemas.append("%s: a tela cresceu mas a tinta de baixo nao esta la" % ident)
+            cx, cy = render.onde_vai_o_nome(d, caixa)
+            topo = cy - d["nome"].height / 2.0 + render.MARGEM + cima
+            if abs(topo - topo_arial) > 1e-6:
+                problemas.append("%s: a faixa mudou de sitio (%.2f e nao %.2f)" % (ident, topo, topo_arial))
+            testadas += 1
+    finally:
+        render.aplicar_estilo(guardado, [])
+    verifica("destaque: o nome nao corta as pernas das letras", not problemas,
+             "; ".join(problemas[:3]) if problemas else
+             ("%d letras de descendentes compridos inteiras, a faixa no mesmo sitio; Arial ao byte" % testadas
+              if testadas else "Arial ao byte; sem as letras de descendentes compridos em disco"))
+
+
+def teste_troco_leva_o_estilo():
+    """O troco do fim do filme leva o estilo da Mesa, e o render le-o.
+
+    O QUE PODIA PARTIR: o render encontra o estilo pelo nome da montagem, e o troco_da_montagem.py
+    so copiava o CSV e o som. O fim mostrado ao Tiago saia em silencio com a letra e as cores de
+    sempre. E um estilo de um troco de antes, com a montagem ja sem estilo, tem de sair.
+    """
+    import contextlib
+    import io
+    import json
+    import tempfile
+    import render
+    import troco_da_montagem
+    problemas = []
+    origem = tempfile.mkdtemp(prefix="teste_troco_estilo_o_")
+    destino = tempfile.mkdtemp(prefix="teste_troco_estilo_d_")
+    campos = ["ordem", "tipo", "ficheiro", "inicio_s", "fim_s"]
+    with open(os.path.join(origem, "m.csv"), "w", encoding="utf-8-sig", newline="") as fh:
+        w = csv.DictWriter(fh, fieldnames=campos)
+        w.writeheader()
+        w.writerow({"ordem": 1, "tipo": "video", "ficheiro": "a.mp4", "inicio_s": "0.00", "fim_s": "10.00"})
+        w.writerow({"ordem": 2, "tipo": "cartao", "ficheiro": "", "inicio_s": "10.00", "fim_s": "14.00"})
+        w.writerow({"ordem": 3, "tipo": "cartao", "ficheiro": "", "inicio_s": "14.00", "fim_s": "18.00"})
+    estilo = {"legenda": {"tamanho": 60, "cor": "#E2B88C"}}
+    with open(os.path.join(origem, "m.estilo.json"), "w", encoding="utf-8") as fh:
+        json.dump(estilo, fh)
+    guardado = (troco_da_montagem.MONTAGENS, sys.argv)
+    try:
+        troco_da_montagem.MONTAGENS = origem
+        sys.argv = ["troco_da_montagem.py", "m", "3", destino, "m_fim"]
+        with contextlib.redirect_stdout(io.StringIO()):
+            troco_da_montagem.main()
+        p = os.path.join(destino, "m_fim.estilo.json")
+        if not os.path.exists(p):
+            problemas.append("o troco nao levou o estilo")
+        elif render.ler_estilo("m_fim", destino) != estilo:
+            problemas.append("o render le outro estilo do troco: %s" % render.ler_estilo("m_fim", destino))
+        os.remove(os.path.join(origem, "m.estilo.json"))
+        with contextlib.redirect_stdout(io.StringIO()):
+            troco_da_montagem.main()
+        if os.path.exists(p):
+            problemas.append("o estilo de um troco de antes ficou, com a montagem ja sem estilo")
+    finally:
+        troco_da_montagem.MONTAGENS, sys.argv = guardado
+    verifica("troco do fim leva o estilo da Mesa", not problemas,
+             "; ".join(problemas) if problemas else "o estilo.json vai com o troco e o render le-o; sem estilo, sai")
+
+
+def teste_montar_avisa_cores_e_creditos():
+    """O montar avisa de todas as cores do contador, da legenda numa foto escura e dos creditos.
+
+    O QUE PODIA PARTIR: (1) a linha, os tracos grandes e os anos ao lado do contador, as "linhas" que
+    a Clara pediu para mudar, passavam sem aviso, mesmo da cor do fundo; (2) uma legenda escura sem
+    faixa so se media contra uma foto branca; (3) um titulo de grupo dos creditos que cabe em Arial e
+    nao cabe na letra do estilo so parava o ponto5 --master depois do render. Nada se corrige (083),
+    e o estilo de hoje escrito por extenso continua sem avisos. Desde a tarde de 2 de outubro esse
+    titulo ja nao para o --master, encolhe ate caber: o aviso continua, e diz o corpo a que fica.
+    """
+    import render
+    import montar_da_mesa as mm
+    problemas = []
+
+    def avisos(estilo):
+        return mm.avisos_do_estilo(render.normalizar_estilo(estilo), render, linha_tempo)
+
+    for estilo, pedaco in (({"contador": {"linha": "#0A080C"}}, "a linha a #0A080C fica a 1.0"),
+                           ({"contador": {"regua": "#14100F"}}, "os tracos grandes da regua"),
+                           ({"contador": {"ano_longe": "#2A2428"}}, "os anos ao lado"),
+                           ({"legenda": {"cor": "#202020", "fundo": 0.0}}, "numa foto escura"),
+                           ({"cartao": {"claro": "#303030"}}, "acaba em #303030")):
+        if not any(pedaco in a for a in avisos(estilo)):
+            problemas.append("%s sem o aviso %r" % (estilo, pedaco))
+    # o de hoje escrito por extenso nao avisa, e cores mais claras do que as de hoje tambem nao
+    hoje = {"contador": dict(render.estilo_omissao()["contador"]), "legenda": {"cor": "#FFFFFF", "fundo": 0.647}}
+    if avisos(hoje):
+        problemas.append("o estilo de hoje por extenso avisa: %s" % avisos(hoje))
+    if avisos({"contador": {"linha": "#C9A45C", "regua": "#F0D9A8", "ano_longe": "#8A7C84"}}):
+        problemas.append("cores mais claras do que as de hoje avisam")
+    estado = {"creditos": {"grupos": {"Amigos Clara - Faculdade": {"titulo": "AMIGOS DO MESTRADO"}}}}
+    guardado = render.estilo_ativo()
+    try:
+        render.aplicar_estilo({}, [])
+        em_arial = mm.avisos_dos_creditos(estado, {})
+        tem_georgia = os.path.exists((render.letras_da_mesa().get("georgia_bold") or {}).get("ficheiro") or "")
+        render.aplicar_estilo({"cartao": {"fonte": "georgia_bold"}}, [])
+        em_georgia = mm.avisos_dos_creditos(estado, render.estilo_ativo())
+        render.aplicar_estilo({}, [])
+        sem_nada = mm.avisos_dos_creditos({}, {})
+    finally:
+        render.aplicar_estilo(guardado, [])
+    if em_arial:
+        problemas.append("em Arial o titulo cabe e avisou: %s" % em_arial)
+    if tem_georgia and not any("AMIGOS DO MESTRADO" in a and "encolhe de 60 para" in a and "--master nao para" in a
+                               for a in em_georgia):
+        problemas.append("em Georgia o titulo nao cabe e nao avisou que encolhe: %s" % em_georgia)
+    if any("para sem desenhar" in a for a in em_georgia):
+        problemas.append("o titulo de grupo ainda diz que para o --master: %s" % em_georgia)
+    if sem_nada:
+        problemas.append("sem textos nem letra, avisou: %s" % sem_nada)
+    verifica("montar: avisa das cores do contador, da legenda escura e dos creditos", not problemas,
+             "; ".join(problemas[:3]) if problemas else
+             "linha, regua e anos ao lado; a legenda numa foto escura; o titulo que nao cabe em Georgia")
+
+
+def teste_montar_calado_importa_a_intro():
+    """O montar com o stdout num StringIO importa o render, o intro_flipbook e o igualar_abertura.
+
+    O QUE PODIA PARTIR: os tres faziam sys.stdout.reconfigure() ao importar, e o montar importa-os
+    dentro do main() (o intro_flipbook so quando a Mesa traz cores para a intro). Um teste que monte
+    calado, com um estado que tenha estilo.intro, rebentava com AttributeError. Corre num processo
+    novo, onde nenhum dos tres foi importado.
+    """
+    import subprocess
+    codigo = ("import sys, io, contextlib; sys.path.insert(0, %r)\n"
+              "with contextlib.redirect_stdout(io.StringIO()):\n"
+              "    import render, intro_flipbook, igualar_abertura\n"
+              "print('ok')\n" % os.path.dirname(os.path.abspath(__file__)))
+    r = subprocess.run([sys.executable, "-c", codigo], capture_output=True, text=True,
+                       encoding="utf-8", errors="replace")
+    ok = r.returncode == 0 and r.stdout.strip() == "ok"
+    verifica("montar calado importa o render e a intro", ok,
+             "o import com o stdout num StringIO passa" if ok else (r.stderr or r.stdout).strip()[-200:])
+
+
+# ---------------------------------------------------------------- o pacote do DaVinci, 2 de outubro
+def _montagem_das_legendas(pasta):
+    """Os sitios onde a legenda de baixo entra, sai ou troca: para o --sem-legendas e o .srt.
+
+    O nome do bebe a fazer subir do preto uma foto com legenda; duas fotos seguidas com o mesmo
+    texto (uma legenda so); falas em linhas separadas; rajadas com e sem texto, em corte seco; um
+    lado a lado e uma pilha com a legenda a mudar com cada foto (e uma foto sem texto a mostrar o
+    do grupo); um lado a lado com texto dentro das fotos e legenda do grupo; o mergulho; um cartao;
+    e uma foto com legenda a acabar no fade do fim. Devolve (nome, caminhos por id).
+    """
+    import render
+    formas = [4 / 3.0, 3 / 4.0, 16 / 9.0, 2 / 3.0, 1.0]
+    caminhos = {}
+    for k, a in enumerate(formas):
+        c = os.path.join(pasta, "gradiente%d.png" % k)
+        if not os.path.exists(c):
+            _foto_gradiente(k, a).save(c)
+        caminhos["g%d" % k] = c
+    mergulho = "%.2f" % max(4.0, render.duracao_mergulho(4, 0.4, 0.4) + 0.2)
+    clips = [
+        dict(tipo="contador", duracao_s="1.6", transicao_s="0", texto_ecra="2026>1995|4 de outubro de 2026"),
+        dict(tipo="nome", duracao_s="2.6", transicao_s="0.7", texto_ecra="O TIAGO"),
+        dict(tipo="foto", id="g0", ficheiro="g0.png", duracao_s="2.0", transicao_s="1.0",
+             movimento="Zoom in", texto_ecra="Com o pai", tratamento="fundo"),
+        dict(tipo="foto", id="g1", ficheiro="g1.png", duracao_s="1.6", transicao_s="0.4",
+             movimento="Zoom in", texto_ecra="Com o pai", tratamento="fiel"),
+        dict(tipo="foto", id="g2", ficheiro="g2.png", duracao_s="1.8", transicao_s="0.4",
+             movimento="Zoom in", texto_ecra="- Gostas?\n- Gosto!", tratamento="fundo"),
+        dict(tipo="foto", id="g3", ficheiro="g3.png", duracao_s="0.8", transicao_s="0",
+             movimento="Nenhum", texto_ecra="Corte", tratamento="rajada"),
+        dict(tipo="foto", id="g4", ficheiro="g4.png", duracao_s="0.8", transicao_s="0",
+             movimento="Nenhum", texto_ecra="", tratamento="rajada"),
+        dict(tipo="lado", id="g1|g3", duracao_s="2.0", transicao_s="0.4", texto_ecra="Amigos",
+             tratamento="2v", textos_fotos='["Porto", ""]', textos_opcoes='{"modo": "legenda"}'),
+        dict(tipo="lado", id="g0|g2", duracao_s="1.6", transicao_s="0.4", texto_ecra="Os dois",
+             tratamento="2v", textos_fotos='["Gaia", "Porto"]'),
+        dict(tipo="colagem", id="g0|g1|g2|g3", duracao_s=mergulho, transicao_s="0.4", texto_ecra="Grelha",
+             tratamento="mergulho"),
+        dict(tipo="pilha", id="g0|g1|g2", duracao_s="2.8", transicao_s="0.4", texto_ecra="",
+             tratamento="monte", textos_fotos='["Um", "Dois", "Tres"]', textos_opcoes='{"modo": "legenda"}'),
+        dict(tipo="cartao", duracao_s="1.2", transicao_s="0.4", texto_ecra="Era uma vez"),
+        dict(tipo="foto", id="g4", ficheiro="g4.png", duracao_s="3.0", transicao_s="0.4",
+             movimento="Parada", texto_ecra="Fim", tratamento="fundo"),
+    ]
+    _escrever_montagem(pasta, "legendas", clips)
+    return "legendas", caminhos
+
+
+def _faixa_do_plano(render, plano, texto):
+    """A faixa que o desenho cola para `texto` neste clip: a de sempre, ou a do grupo na opcao legenda."""
+    if plano is not None and "por_foto" in plano:
+        return render.legenda_por_foto(plano["por_foto"], plano["tamanho"])["faixas"][texto]
+    return render.faixa_texto(texto)
+
+
+def teste_sem_legendas_tira_so_a_faixa_e_o_srt_bate():
+    """--sem-legendas tira so a faixa de baixo, e o .srt pesa cada faixa como o desenho a pesa.
+
+    O PEDIDO (2 de outubro): o filme para o DaVinci sem as legendas de baixo, com tudo o resto
+    gravado, e as legendas num .srt nos tempos em que o render as mostra. Desenham-se todos os
+    fotogramas da montagem das legendas duas vezes, com e sem a faixa, dos mesmos clips preparados:
+      - num fotograma de um clip so, sem encadeado, sem troca de texto e sem fade, o sem legendas e
+        o de sempre sao iguais ao byte quando o .srt nao tem legenda, e com a faixa do .srt colada
+        por cima sao iguais ao byte quando tem: o --sem-legendas nao mexe em mais nada (o nome do
+        bebe, o cartao, o contador e o texto dentro das fotos do lado a lado ficam);
+      - num fotograma com encadeado, com o nome do bebe ou no fade do fim, MEDE-SE quanto pesa a
+        faixa de cada clip no fotograma de sempre (a diferenca entre o com e o sem, decomposta pelas
+        faixas de cada clip desenhado sozinho) e compara-se com o peso que o .srt usa;
+      - numa troca de texto da opcao legenda, o texto que o .srt escolhe e o que esta mais inteiro
+        (as duas faixas tem a mesma banda, so as letras mudam), fora do meio da troca.
+    E as legendas juntam as duas fotos com o mesmo texto, partem as falas em linhas, e nao ha
+    legenda nenhuma por cima do cartao.
+
+    PORQUE NAO SE COMPARA SO COM A FAIXA INTEIRA: num encadeado de uma rajada clara para um lado a
+    lado (fundo preto debaixo da faixa), a faixa a 70% muda pouco o fotograma, porque escurece um
+    preto; e a faixa inteira por cima da mistura parece mais longe dele do que nenhuma. A primeira
+    versao deste teste caiu nisso. Medir o peso nao depende do que esta por baixo.
+    """
+    import contextlib
+    import io
+    import tempfile
+    import numpy as np
+    import render
+    import legendas_srt as S
+    pasta = tempfile.mkdtemp(prefix="teste_sem_legendas_")
+    nome, caminhos = _montagem_das_legendas(pasta)
+    guardado = _resolucao(render, 480, 270)
+    problemas = []
+    exatos = medidos = trocas = saltados = 0
+    pior = 0.0
+
+    def desenha(sem, pronto, t_rel, dur):
+        render.SEM_LEGENDAS = sem
+        try:
+            return np.asarray(render.desenhar(pronto, t_rel, dur), np.float64)
+        finally:
+            render.SEM_LEGENDAS = False
+    try:
+        with contextlib.redirect_stdout(io.StringIO()):
+            estado = _estado_sintetico(render, pasta, nome, caminhos)
+            planos = S.planos_do_estado(estado)
+            legendas = S.legendas_do_corpo(estado)
+        por_q = {}
+        for leg in legendas:
+            for q in range(leg["q0"], leg["q1"]):
+                por_q[q] = leg["texto"]
+        for q in range(estado["total_quadros"]):
+            t = estado["desvio"] + q / float(render.FPS)
+            with contextlib.redirect_stdout(io.StringIO()):
+                render.SEM_LEGENDAS = False
+                com, ativos = render.fotograma(q, estado)
+                render.SEM_LEGENDAS = True
+                sem, _a = render.fotograma(q, estado)
+                render.SEM_LEGENDAS = False
+            pesos = S.pesos_do_fotograma(q, estado, planos)
+            txt = por_q.get(q, "")
+            nome_ativo = any(c["tipo"] == "nome" for c in ativos)
+            # a troca de texto na opcao legenda: o texto do .srt tem de ser o mais inteiro no clip
+            troca = None
+            for c in ativos:
+                plano = planos.get(c["ordem"])
+                if plano and "por_foto" in plano:
+                    t_rel = t - float(c["inicio_s"])
+                    tempos = render.tempos_da_agenda(plano["inicios"], float(c["duracao_s"]))
+                    i = max([0] + [k for k, (ini, _f) in enumerate(tempos) if t_rel >= ini])
+                    passa = render.troca_da_legenda(tempos, i)
+                    if i and plano["por_foto"][i] != plano["por_foto"][i - 1] and t_rel - tempos[i][0] < passa:
+                        troca = (c, plano, t_rel, (t_rel - tempos[i][0]) / passa, plano["por_foto"][i - 1],
+                                 plano["por_foto"][i])
+            puro = len(pesos) == 1 and pesos[0][1] == 1.0 and not nome_ativo and troca is None
+            if puro:
+                esperado = sem.copy()
+                if txt:
+                    capa = _faixa_do_plano(render, pesos[0][2], txt)
+                    esperado.paste(capa[0], (0, 0), capa[1])
+                elif pesos[0][0].strip():
+                    problemas.append("fotograma %d: o clip tem a faixa %r e o .srt nao" % (q, pesos[0][0]))
+                    continue
+                if esperado.tobytes() != com.tobytes():
+                    problemas.append("fotograma %d (%r): sem legendas + a faixa do .srt nao da o de sempre" % (q, txt))
+                exatos += 1
+                continue
+            if troca is not None:
+                c, plano, t_rel, f, velho, novo = troca
+                if abs(f - 0.5) < 0.15:
+                    saltados += 1
+                else:
+                    pronto = estado["prontos"][c["ordem"]]
+                    dur = float(c["duracao_s"])
+                    proprio, sem_c = desenha(False, pronto, t_rel, dur), desenha(True, pronto, t_rel, dur)
+                    dist = {}
+                    for cand in (velho, novo):
+                        capa = _faixa_do_plano(render, plano, cand)
+                        cor = np.asarray(capa[0], np.float64)
+                        m = np.asarray(capa[1], np.float64)[..., None] / 255.0
+                        dist[cand] = float(np.abs(sem_c * (1 - m) + cor * m - proprio).sum())
+                    escolhido = S.texto_no_instante(plano, t_rel, dur)
+                    if escolhido != min(dist, key=dist.get):
+                        problemas.append("fotograma %d: na troca %r -> %r a %.0f%% o .srt escolhe %r"
+                                         % (q, velho, novo, 100 * f, escolhido))
+                    trocas += 1
+                continue
+            # O PESO DE CADA FAIXA, MEDIDO: com - sem = soma dos pesos x (faixa de cada clip sozinho)
+            D = (np.asarray(com, np.float64) - np.asarray(sem, np.float64)).ravel()
+            fora = None
+            if nome_ativo:
+                # O NOME E UM LETREIRO EM "screen" POR CIMA, e onde o brilho dele passa a faixa conta
+                # menos: mede-se so onde o letreiro e preto (o letreiro sozinho, por cima do preto).
+                n0 = [c for c in ativos if c["tipo"] == "nome"][0]
+                n1 = dict(n0, _pronto=estado["prontos"][n0["ordem"]])
+                preto = Image.new("RGB", (render.L, render.A), (0, 0, 0))
+                letras = render.compor_nome([(n1 if c is n0 else c, preto) for c in ativos], n1, t)
+                fora = np.repeat((np.asarray(letras).max(axis=2) == 0).ravel(), 3)
+            colunas, calculados = [], []
+            for c in ativos:
+                if c["tipo"] == "nome":
+                    continue
+                pronto = estado["prontos"][c["ordem"]]
+                t_rel, dur = t - float(c["inicio_s"]), float(c["duracao_s"])
+                delta = (desenha(False, pronto, t_rel, dur) - desenha(True, pronto, t_rel, dur)).ravel()
+                if not delta.any():
+                    continue
+                colunas.append(delta)
+                calculados.append(sum(p for cc, p in S.clips_e_pesos(q, estado) if cc is c))
+            if not colunas:
+                if D.any():
+                    problemas.append("fotograma %d: o com e o sem diferem sem nenhum clip com faixa" % q)
+                medidos += 1
+                continue
+            M = np.stack(colunas, axis=1)
+            if fora is not None:
+                M, D = M[fora], D[fora]
+            w, _res, _r, _s = np.linalg.lstsq(M, D, rcond=None)
+            for medido, calculado in zip(w, calculados):
+                pior = max(pior, abs(medido - calculado))
+                if abs(medido - calculado) > 0.03:
+                    problemas.append("fotograma %d: a faixa pesa %.3f no desenho e %.3f no .srt" % (q, medido, calculado))
+            medidos += 1
+        textos = [leg["texto"] for leg in legendas]
+        esperados = ["Com o pai", "- Gostas?\n- Gosto!", "Corte", "Porto", "Amigos", "Os dois", "Grelha",
+                     "Um", "Dois", "Tres", "Fim"]
+        if textos != esperados:
+            problemas.append("legendas %s, e deviam ser %s" % (textos, esperados))
+        falas = [e for e in S.entradas_do_filme(legendas, 0) if e["texto"].startswith("- Gostas")]
+        if not falas or falas[0]["linhas"] != ["- Gostas?", "- Gosto!"]:
+            problemas.append("as falas nao ficam em linhas separadas: %s" % (falas[0]["linhas"] if falas else None))
+        cartao = [c for c in estado["resto"] if c["tipo"] == "cartao"][0]
+        q_cartao = int(round((float(cartao["inicio_s"]) + 0.6 - estado["desvio"]) * render.FPS))
+        if por_q.get(q_cartao):
+            problemas.append("ha legenda %r por cima do cartao" % por_q[q_cartao])
+    finally:
+        render.SEM_LEGENDAS = False
+        render.L, render.A = guardado
+    verifica("--sem-legendas tira so a faixa, e o .srt pesa-a como o desenho", not problemas and exatos > 100,
+             "; ".join(problemas[:3]) if problemas else
+             "%d fotogramas ao byte; %d encadeados com o peso medido (erro max %.3f); %d trocas; %d a meio"
+             % (exatos, medidos, pior, trocas, saltados))
+
+
+def teste_sem_legendas_pelo_main_e_nas_fatias():
+    """Pelo main, o --sem-legendas chega as fatias, poe o nome no ficheiro, e sem ele o filme e o de sempre.
+
+    O DEFEITO QUE ISTO EVITA: o --sem-legendas e estado do processo. So no pai, as fatias desenhavam
+    com a faixa e o encoder recebia um fotograma de cada maneira; por isso vai na linha de comando de
+    cada uma (comando_da_fatia). Corre o render com 1 e com 3 fatias e compara os dois mp4 ao byte;
+    e o ficheiro sem a opcao continua a ser o de --fatias 1 sem ela, sem "_sem_legendas" no nome.
+    """
+    import tempfile
+    import render
+    pasta = tempfile.mkdtemp(prefix="teste_sem_legendas_main_")
+    nome = _montagem_real(pasta)
+    if not nome:
+        salta("sem legendas pelo main e nas fatias", "fotos do ensaio fora do inventario")
+        return
+    problemas = []
+    feitos = {}
+    for chave, extra in (("sem1", ["--sem-legendas", "--fatias", "1"]), ("sem3", ["--sem-legendas", "--fatias", "3"]),
+                         ("com1", ["--fatias", "1"])):
+        saida = os.path.join(pasta, chave)
+        texto, ficheiros, erro = _correr_render(
+            render, [nome, "--ate", "8", "--escala", "0.25", "--sem-som"] + extra, pasta, saida)
+        if erro or len(ficheiros) != 1:
+            problemas.append("%s: erro %r, ficheiros %s" % (chave, erro, ficheiros))
+            continue
+        fim = "_parcial_sem_legendas.mp4" if chave.startswith("sem") else "_parcial.mp4"
+        if not ficheiros[0].endswith(fim) or (chave == "com1" and "sem_legendas" in ficheiros[0]):
+            problemas.append("%s: o ficheiro chama-se %s" % (chave, ficheiros[0]))
+        feitos[chave] = open(os.path.join(saida, ficheiros[0]), "rb").read()
+    if render.SEM_LEGENDAS:
+        problemas.append("o main deixou o SEM_LEGENDAS ligado")
+    if len(feitos) == 3:
+        if feitos["sem1"] != feitos["sem3"]:
+            problemas.append("com --sem-legendas, 1 e 3 fatias dao ficheiros diferentes (as fatias nao o receberam)")
+        if feitos["sem1"] == feitos["com1"]:
+            problemas.append("com e sem --sem-legendas dao o mesmo ficheiro")
+    cmd = render.comando_da_fatia(nome, 0, 3, ["render.py", nome, "--ate", "8"])
+    if "--sem-legendas" in cmd:
+        problemas.append("sem a opcao, a fatia recebe --sem-legendas")
+    verifica("--sem-legendas pelo main, nas fatias e no nome", not problemas,
+             "; ".join(problemas[:3]) if problemas else
+             "1 e 3 fatias iguais ao byte, diferentes do de sempre, _sem_legendas no nome")
+
+
+def teste_srt_tempos_relogio_e_formato():
+    """O .srt: os tempos ao fotograma, o relogio do filme com a abertura, o corte do master e o formato.
+
+    O QUE PODIA PARTIR SEM SE VER: um tempo arredondado ao milissegundo errado poe a legenda um
+    fotograma ao lado no DaVinci; a abertura esquecida poe todas 34 s mais cedo; uma legenda que
+    passasse do corte do master ficava por cima dos creditos; e um .srt com uma linha a mais entre
+    legendas, ou sem as mudancas de linha do Windows, o DaVinci le pela metade. E as linhas
+    partem-se como o render, ou para outro corpo com --corpo.
+    """
+    import tempfile
+    import legendas_srt as S
+    problemas = []
+    if S.tempo_srt(850) != "00:00:34,000" or S.tempo_srt(1812) != "00:01:12,480" or S.tempo_srt(90001) != "01:00:00,040":
+        problemas.append("tempos: %s %s %s" % (S.tempo_srt(850), S.tempo_srt(1812), S.tempo_srt(90001)))
+    legendas = [{"q0": 10, "q1": 60, "texto": "Com o pai", "tamanho": 46},
+                {"q0": 60, "q1": 140, "texto": "- Gostas?\n- Gosto!", "tamanho": 46},
+                {"q0": 300, "q1": 400, "texto": "Fim", "tamanho": 46}]
+    e = S.entradas_do_filme(legendas, 850, corte=1200)
+    if [(x["q0"], x["q1"]) for x in e] != [(860, 910), (910, 990), (1150, 1200)]:
+        problemas.append("relogio e corte: %s" % [(x["q0"], x["q1"]) for x in e])
+    if len(S.entradas_do_filme(legendas, 850, corte=1100)) != 2:
+        problemas.append("uma legenda depois do corte ficou")
+    texto = S.texto_srt(e)
+    esperado = ("1\r\n00:00:34,400 --> 00:00:36,400\r\nCom o pai\r\n\r\n"
+                "2\r\n00:00:36,400 --> 00:00:39,600\r\n- Gostas?\r\n- Gosto!\r\n\r\n"
+                "3\r\n00:00:46,000 --> 00:00:48,000\r\nFim\r\n")
+    if texto != esperado:
+        problemas.append("formato: %r" % texto[:200])
+    longa = {"q0": 0, "q1": 50, "tamanho": 46,
+             "texto": "Ir trabalhar para Lisboa no dia de aniversario e a deixar a familia em sua casa"}
+    a46 = S.entradas_do_filme([longa], 0)[0]["linhas"]
+    a70 = S.entradas_do_filme([longa], 0, corpo=70)[0]["linhas"]
+    if len(a46) != 2 or len(a70[0]) >= len(a46[0]):
+        problemas.append("partir as linhas: a 46 %s, a 70 %s" % (a46, a70))
+    pasta = tempfile.mkdtemp(prefix="teste_srt_")
+    caminho = os.path.join(pasta, "x.srt")
+    S.escrever_srt(caminho, e)
+    if open(caminho, "rb").read() != esperado.encode("utf-8"):
+        problemas.append("o ficheiro nao e o texto em UTF-8 sem marca")
+    try:
+        S.escrever_srt(caminho, e)
+        problemas.append("escreveu por cima de um .srt que ja existia")
+    except SystemExit:
+        pass
+    verifica(".srt: tempos, relogio do filme, corte e formato", not problemas,
+             "; ".join(problemas[:3]) if problemas else
+             "ao fotograma, 34 s de abertura, nada passa do corte, CRLF, linhas como o render")
+
+
+def teste_guia_do_davinci_diz_o_estilo():
+    """O guia diz a letra, o corpo, a cor e a faixa do estilo da montagem, e o passo do Burn into video.
+
+    O QUE PODIA PARTIR: um guia escrito a mao com o Arial a 46 ficava errado no dia em que a Mesa
+    muda a letra ou o corpo, e o filme exportado no DaVinci saia com outra legenda. E uma letra que
+    so existe na pasta das letras da Mesa nao aparece no DaVinci sem ser instalada no Windows. Sem
+    o "Burn into video" o DaVinci exporta o filme sem legenda nenhuma.
+    """
+    import contextlib
+    import io
+    import render
+    import davinci_pacote as P
+    problemas = []
+    entradas = [{"n": 1, "q0": 1812, "q1": 1894, "linhas": ["Com o pai"], "texto": "Com o pai",
+                 "tamanho": 46, "no_ecra": 46},
+                {"n": 2, "q0": 2000, "q1": 2100, "linhas": ["- Gostas?", "- Gosto!"], "texto": "- Gostas?\n- Gosto!",
+                 "tamanho": 46, "no_ecra": 46}]
+    try:
+        with contextlib.redirect_stdout(io.StringIO()):
+            render.aplicar_estilo({})
+            sempre = P.guia("v3", "C:/x", "C:/x/f_com_creditos.mp4", "C:/x/f.mp4", "C:/x/legendas.srt",
+                            entradas, [], {"render": 2400, "corte_q": 20000}, False)
+            render.aplicar_estilo({"legenda": {"fonte": "montserrat_bold", "tamanho": 56, "fundo": 0.8,
+                                               "cor": "#FFF7EA"}})
+            outro = P.guia("v3", "C:/x", "C:/x/f_com_creditos.mp4", "C:/x/f.mp4", "C:/x/legendas.srt",
+                           entradas, [], {}, False)
+    finally:
+        with contextlib.redirect_stdout(io.StringIO()):
+            render.aplicar_estilo({})
+    for frase in ("Font: Arial. Face: Bold.", "Size: começa em 46", "Color: #FFFFFF", "Opacity 65%",
+                  "Burn into video", "de 00:01:12:12 a 00:01:15:19", "Start Timecode: 00:00:00:00"):
+        if frase not in sempre:
+            problemas.append("sem estilo falta %r" % frase)
+    for frase in ("Font: Montserrat. Face: Bold.", "Size: começa em 56", "Color: #FFF7EA", "Opacity 80%",
+                  "NÃO ESTÁ INSTALADA"):
+        if frase not in outro:
+            problemas.append("com o estilo falta %r" % frase)
+    for nome, texto in (("sem estilo", sempre), ("com estilo", outro)):
+        if "\u2014" in texto or "\u2013" in texto:
+            problemas.append("o guia %s tem travessoes" % nome)
+    verifica("guia do DaVinci: o estilo da montagem e o Burn into video", not problemas,
+             "; ".join(problemas[:3]) if problemas else "Arial 46 #FFFFFF 65%; Montserrat 56 a instalar")
+
+
+# ------------------------------------------------- o fecho de 2 de outubro (o corretor)
+def teste_creditos_caracteres_que_a_letra_nao_tem():
+    """Um sinal que a letra nao tem: o hifen especial sai como o de sempre, o resto avisa-se.
+
+    O DEFEITO (revisao de 2 de outubro, leitura 63): o cargo 3, "Audio-Visual Operations Maestro",
+    vinha com o hifen nao separavel (U+2011). O Arial Bold nao o tem, e a Pillow desenha o glifo de
+    falta, uma caixa vazia, sem se queixar; a Mesa mostra-o como um hifen. O --master levava a caixa
+    para o ficheiro da sala. E um emoji num cargo ou num nome saia da mesma maneira, sem aviso.
+
+    DESDE A TARDE DE 2 DE OUTUBRO o emoji sai a cores (texto_emojis) e os hifens especiais saem como o
+    hifen em todo o filme, e por isso "sem letra" e so o que nem o Arial Bold nem a letra de emojis
+    desenham (o caracter chines U+4E2D, aqui). O resto da prova e a de antes.
+    """
+    import contextlib
+    import io
+    import render
+    import montar_da_mesa as mm
+    from PIL import Image, ImageChops, ImageFont
+    p5 = _ponto5()
+    problemas = []
+    render.aplicar_estilo(None)
+    arial = ImageFont.truetype(render.FONTE_TEXTO, 58)
+    fora = render.caracteres_sem_letra("Audio\u2011Visual \u2010 \U0001F62E - \u20ac \u00e3\u00aa \u00a0 Ana \u4e2d", arial)
+    if fora != ["\u4e2d"]:
+        problemas.append("sem letra devia ser so o U+4E2D (o hifen especial e o emoji desenham-se): %s"
+                         % [hex(ord(c)) for c in fora])
+    escrito = {"creditos": {"cargos": [{}, {}, {"cargo": "Audio\u2011Visual Operations Maestro", "quem": "MUSIC\u2060BOX"}],
+                            "titulo": "CLARA\ufeff & TIAGO"}}
+    com_hifen = {"creditos": {"cargos": [{}, {}, {"cargo": "Audio-Visual Operations Maestro", "quem": "MUSICBOX"}],
+                              "titulo": "CLARA & TIAGO"}}
+    t1, t2 = p5.textos_dos_creditos(escrito, []), p5.textos_dos_creditos(com_hifen, [])
+    if t1 != t2:
+        problemas.append("os sinais especiais nao sairam como o hifen de sempre: %s" % ascii(t1["cargos"][2]))
+    if render.com_equivalentes("Clara \u00e9 \u20ac") != "Clara \u00e9 \u20ac":
+        problemas.append("um texto sem sinais especiais mudou")
+    # o fotograma do cargo e o mesmo, ao pixel
+    rolo = Image.new("RGB", (p5.PAINEL_NOMES[1] - p5.PAINEL_NOMES[0] + 2 * p5.MARGEM_BRILHO, 400))
+    coluna = Image.new("RGB", (p5.LARGURA_FOTO, 400))
+    T = p5.tempos_dos_creditos(rolo.height, coluna.height, 3)
+    t = T["t_cargos"] + 2 * T["t_cargo"] + 2.0
+    a = p5.desenho_dos_creditos(rolo, coluna, t1, {}, T)(t)
+    b = p5.desenho_dos_creditos(rolo, coluna, t2, {}, T)(t)
+    if ImageChops.difference(a, b).getbbox() is not None:
+        problemas.append("o fotograma do cargo 3 nao e o do hifen de sempre")
+    if p5.caracteres_que_faltam(t1, []):
+        problemas.append("avisou de um sinal que ja foi trocado: %s" % p5.caracteres_que_faltam(t1, []))
+    # o que nao tem igual avisa-se, e o nome de um convidado nunca vai para o aviso; um emoji simples
+    # sai a cores e nao se avisa
+    t3 = dict(t2, cargos=[t2["cargos"][0], ("Som e luz 中 \U0001F62E", "MUSIC BOX"), t2["cargos"][2]])
+    avisos = p5.caracteres_que_faltam(t3, [("AMIGOS", "da escola", [["Zulmira 中 Teste", "Rui \U0001F600"]])])
+    if len(avisos) != 2 or not any("cargo 2" in a and "U+4E2D" in a for a in avisos) \
+            or not any("1 nome do grupo" in a for a in avisos) or any("Zulmira" in a for a in avisos) \
+            or any("U+1F62E" in a or "U+1F600" in a for a in avisos):
+        problemas.append("os avisos dos caracteres: %s" % ascii(avisos))
+    with contextlib.redirect_stdout(io.StringIO()):
+        do_montar = mm.avisos_dos_creditos({"creditos": {"cargos": [{"cargo": "Ideia 中 \U0001F62E"}]}}, {})
+    if not any("U+4E2D" in a and "nao para" in a for a in do_montar) or any("U+1F62E" in a for a in do_montar):
+        problemas.append("o montar nao avisa do caracter sem letra num cargo, ou avisa do emoji: %s"
+                         % ascii(do_montar))
+    with contextlib.redirect_stdout(io.StringIO()):
+        if [a for a in mm.avisos_dos_creditos(escrito, {}) if "letra nao tem" in a]:
+            problemas.append("o montar avisa do hifen nao separavel, que ja sai como o de sempre")
+    verifica("creditos: os sinais que a letra nao tem", not problemas,
+             "; ".join(problemas[:3]) if problemas else
+             "U+2011 sai como o hifen, ao pixel; o sem letra avisa no ponto5 e no montar, sem o nome do convidado")
+
+
+def teste_creditos_musica_da_mesa():
+    """A musica que ele escolhe no painel dos creditos chega ao som do ponto5; sem ela, o de sempre.
+
+    O DEFEITO (revisao de 2 de outubro): a Mesa tocava a escolha (est.creditos.musica, contrato,
+    seccao 6) e o ponto5 nao a lia; a leitura 63 pede o Taking Care of Business e o --master tocava
+    os Queen. Prova-se: sem escolha, a faixa e a das linhas de antes, igual; com ela, a juncao do
+    musica_creditos.faixas_dos_creditos(); um segundo depois de a musica se calar vale "fim", como na
+    Mesa; uma escolha mal escrita fica "Como esta" com aviso; e o render.construir_som aceita as
+    faixas e da som ate ao fim dos creditos. As musicas sao tons de ensaio, sem ler a biblioteca.
+    """
+    import contextlib
+    import io
+    import shutil
+    import subprocess
+    import tempfile
+    import render
+    p5 = _ponto5()
+    problemas = []
+    ff = render.ffmpeg()
+    pasta = tempfile.mkdtemp(prefix="musica_creditos_")
+    try:
+        sai, entra = os.path.join(pasta, "sai.m4a"), os.path.join(pasta, "entra.m4a")
+        for caminho, seg, tom in ((sai, 12, 330), (entra, 40, 550)):
+            subprocess.run([ff, "-v", "error", "-y", "-f", "lavfi", "-i", "sine=frequency=%d:duration=%d" % (tom, seg),
+                            "-ac", "2", "-ar", "48000", "-c:a", "aac", caminho], check=True)
+        ultima = {"ficheiro": "sai.m4a", "caminho": sai, "quando": 300.0, "in_s": 0.5, "dura": 20.0,
+                  "dura_medida": 20.0, "ganho": 1.0, "encontrado": "Sim", "cruza": 0.0, "_subida": 2.2}
+        pos, antes, dur = 2.0, 5.0, 20.0
+        # sem escolha: as linhas de antes, ao byte
+        velho = dict(ultima)
+        velho.pop("_subida", None)
+        livre = p5.C.duracao(sai) - pos
+        velho.update({"quando": 0.0, "in_s": pos, "dura": min(antes + dur, livre), "dura_medida": min(antes + dur, livre),
+                      "subida": render.SUBIDA_NUM_INICIO, "cruza": 0.0})
+        # sem escolha e o que o if(!m) da Mesa diz que nao ha: None e "" (musica_creditos.escolha_ausente). O {}
+        # e uma escolha mal escrita, sem ficheiro, e avisa nos dois lados (contrato, seccoes 6 e 9): passou
+        # para as mal escritas abaixo a 2 de outubro a noite, quando o modulo o deixou de tratar como ausente
+        for escolha in (None, ""):
+            av = []
+            if p5.som_dos_creditos(ultima, pos, antes, dur, escolha, av) != ([velho], None) or av:
+                problemas.append("sem escolha (%r) o som nao e o de sempre" % (escolha,))
+        if p5.escolha_da_musica({"creditos": {"musica": {"ficheiro": "x"}}}) != {"ficheiro": "x"} \
+                or p5.escolha_da_musica({}) is not None or p5.escolha_da_musica({"creditos": "x"}) is not None:
+            problemas.append("a escolha nao se le do est.creditos.musica")
+        med = {"fim": 36.0, "silencios": [[36.0, 40.0]], "duracao": 40.0}
+        av = []
+        feito = p5.som_dos_creditos(ultima, pos, antes, dur, {"ficheiro": "entra.m4a", "inicio": "fim"}, av, med, entra)
+        fx, info = feito if feito else ([], None)
+        if len(fx) != 2 or info is None or abs(fx[1]["in_s"] - 16.0) > 0.01 or fx[1]["quando"] != antes \
+                or abs(fx[0]["dura"] - (antes + render.CRUZAMENTO)) > 1e-6:
+            problemas.append("a escolha \"fim\" nao deu a juncao: %s" % [(f["ficheiro"], f["quando"], f["in_s"], f["dura"])
+                                                                        for f in fx])
+        av = []
+        fx2, _ = p5.som_dos_creditos(ultima, pos, antes, dur, {"ficheiro": "entra.m4a", "inicio": 37.5}, av, med, entra)
+        if len(fx2) != 2 or abs(fx2[1]["in_s"] - 16.0) > 0.01 or not any("como \"fim\"" in a for a in av):
+            problemas.append("um segundo depois de se calar nao vale \"fim\": %s" % av)
+        for errada in ({"ficheiro": "entra.m4a", "inicio": "talvez"}, {"inicio": "fim"}, {}):
+            av = []
+            if p5.som_dos_creditos(ultima, pos, antes, dur, errada, av, med, entra) != ([velho], None) or not av:
+                problemas.append("a escolha mal escrita %r nao ficou como esta com aviso" % (errada,))
+        # o construir_som aceita a juncao, e ha som ate ao fim dos creditos
+        saida = os.path.join(pasta, "som.m4a")
+        with contextlib.redirect_stdout(io.StringIO()):
+            ok = render.construir_som(ff, fx, antes + dur, saida, render.FADE_FIM_SOM)
+        if not ok or abs(p5.C.duracao(saida) - (antes + dur)) > 0.1:
+            problemas.append("o construir_som nao deu %.1f s de som (%s)" % (antes + dur, ok))
+    finally:
+        shutil.rmtree(pasta, ignore_errors=True)
+    # a Mesa deixa de dizer que o render nao usa a escolha (gerar_mesa.le_a_musica_dos_creditos)
+    texto = open(os.path.join(REPO, "scripts", "discussao", "ponto5_creditos.py"), encoding="utf-8").read()
+    if not re.search(r"faixas_dos_creditos\s*\(", texto) or "escolha_da_musica(leitura[0])" not in texto:
+        problemas.append("o main() do ponto5 nao chama a juncao com a escolha da leitura")
+    verifica("creditos: a musica escolhida na Mesa chega ao som", not problemas,
+             "; ".join(problemas[:3]) if problemas else
+             "sem escolha igual; \"fim\" entra a 16 s; depois de se calar vale \"fim\"; mal escrita fica como esta")
+
+
+def teste_creditos_passagem_no_fim_da_frase():
+    """A passagem para a musica dos creditos: sem a opcao, a de sempre; com "frase", espera pelo fim da frase.
+
+    A PERGUNTA (2 de outubro, a noite; decisao 096 e est.creditos.musica): no corte dos creditos os Queen
+    estao a meio de uma frase. (A) trocar no corte, (B) a que sai acaba a frase e a dos creditos entra
+    depois, ate 3 s. A (A) e uma linha do data/fins_de_frase.csv e o render ja a faz; a (B) e a opcao
+    est.creditos.musica.passagem = "frase" do ponto5 (PASSAGENS), com a omissao igual a de hoje. Prova-se,
+    com tons de ensaio e um fins_de_frase.csv de ensaio: sem a opcao, "corte" ou uma que nao vale, as
+    faixas sao as do faixas_dos_creditos de sempre, mesmo com a linha da (B) no ficheiro; com "frase" e a
+    linha, a que sai acaba na frase e a dos creditos entra la, com a entrada "fim" a andar o mesmo; sem a
+    linha, ou com ela a mais de 3 s, fica no corte com aviso; e o construir_som faz o som todo. As pausas
+    do juncao_creditos.py encontram a pausa de um envelope de ensaio.
+    """
+    import contextlib
+    import io
+    import shutil
+    import subprocess
+    import tempfile
+    import numpy as np
+    import render
+    p5 = _ponto5()
+    import musica_creditos as mc
+    import juncao_creditos as jc
+    problemas = []
+    ff = render.ffmpeg()
+    pasta = tempfile.mkdtemp(prefix="passagem_")
+    original = mc.FINS_DE_FRASE
+    try:
+        sai, entra = os.path.join(pasta, "sai.m4a"), os.path.join(pasta, "entra.m4a")
+        for caminho, seg, tom in ((sai, 14, 330), (entra, 40, 550)):
+            subprocess.run([ff, "-v", "error", "-y", "-f", "lavfi", "-i", "sine=frequency=%d:duration=%d" % (tom, seg),
+                            "-ac", "2", "-ar", "48000", "-c:a", "aac", caminho], check=True)
+        ultima = {"ficheiro": "sai.m4a", "caminho": sai, "quando": 300.0, "in_s": 0.5, "dura": 20.0,
+                  "dura_medida": 20.0, "ganho": 1.0, "encontrado": "Sim", "cruza": 0.0, "_subida": 2.2}
+        pos, antes, dur = 2.0, 5.0, 20.0
+        med = {"fim": 36.0, "silencios": [[36.0, 40.0]], "duracao": 40.0}
+        base = {"ficheiro": "entra.m4a", "inicio": "fim"}
+        fins = os.path.join(pasta, "fins_de_frase.csv")
+        cab = "sai,entra,no_corte,entra_in,sai_s,cauda,subida_entra,confianca,id\n"
+
+        def escreve(*linhas):
+            with open(fins, "w", encoding="utf-8", newline="") as fh:
+                fh.write(cab + "".join(l + "\n" for l in linhas))
+            mc.FINS_DE_FRASE = fins
+
+        def chama(escolha, av):
+            with contextlib.redirect_stdout(io.StringIO()):
+                return p5.som_dos_creditos(ultima, pos, antes, dur, escolha, av, med, entra)
+
+        def resumo(feito):
+            fx, info = feito
+            return [(f["ficheiro"], f["quando"], round(f["in_s"], 3), round(f["dura"], 3), f.get("subida"),
+                     f.get("descida"), f.get("cruza")) for f in fx], info
+        # A DE SEMPRE: o faixas_dos_creditos chamado como antes, sem nenhuma linha
+        escreve()
+        with contextlib.redirect_stdout(io.StringIO()):
+            sempre = mc.faixas_dos_creditos(ultima, pos, antes, dur, dict(base), [], med, entra)
+        # a linha da (B): a que sai esta aos 7,0 no corte da imagem; a frase acaba 2,5 s depois (9,5) e a entrada
+        # "fim" dos creditos encurtados (17,5 s) e 36 - 17,5 = 18,5
+        linha_b = "sai.m4a,entra.m4a,9.50,18.50,9.50,0.50,0.50,ensaio,b"
+        for linhas, escolha, quer_aviso, nome in (
+                ((), dict(base), False, "sem opcao e sem linha"),
+                ((linha_b,), dict(base), False, "sem opcao, com a linha da (B)"),
+                ((linha_b,), dict(base, passagem="corte"), False, "corte"),
+                ((linha_b,), dict(base, passagem=""), False, "passagem vazia"),
+                ((linha_b,), dict(base, passagem="talvez"), True, "passagem que nao vale"),
+                ((), dict(base, passagem="frase"), True, "frase sem linha"),
+                (("sai.m4a,entra.m4a,10.50,19.50,10.50,0.50,0.50,ensaio,longe",), dict(base, passagem="frase"), True,
+                 "frase com a linha a 3,5 s"),
+                (("sai.m4a,entra.m4a,9.50,16.00,9.50,0.50,0.50,ensaio,outra",), dict(base, passagem="frase"), True,
+                 "frase com outra entrada")):
+            escreve(*linhas)
+            av = []
+            feito = chama(escolha, av)
+            if resumo(feito)[0] != resumo(sempre)[0] or feito[1] != sempre[1]:
+                problemas.append("%s: as faixas nao sao as de sempre: %s" % (nome, resumo(feito)[0]))
+            avisos_passagem = [a for a in av if "passagem" in a]
+            if bool(avisos_passagem) != quer_aviso:
+                problemas.append("%s: avisos da passagem %r" % (nome, avisos_passagem))
+        # (B): passagem "frase" com a linha
+        escreve(linha_b)
+        av = []
+        fx, info = chama(dict(base, passagem="frase"), av)
+        q, t = fx
+        esperado = (antes + 2.5, 18.5, 17.5)
+        if (t["quando"], round(t["in_s"], 2), round(t["dura"], 2)) != esperado:
+            problemas.append("frase: a dos creditos entra %s, e devia %s" % ((t["quando"], t["in_s"], t["dura"]), esperado))
+        if (round(q["dura"], 3), q.get("descida"), q.get("cruza"), t.get("subida")) != (8.0, 0.5, 0.0, 0.5):
+            problemas.append("frase: a que sai %s e a subida %s" % ((q["dura"], q.get("descida"), q.get("cruza")),
+                                                                    t.get("subida")))
+        if (info.get("passagem"), info.get("espera"), info.get("corte_da_imagem"), info.get("no_corte")) != \
+                ("frase", 2.5, 7.0, 9.5) or [a for a in av if "passagem" in a]:
+            problemas.append("frase: o info %s, avisos %s" % ({k: info.get(k) for k in
+                                                               ("passagem", "espera", "corte_da_imagem", "no_corte")}, av))
+        # a entrada "inicio" nao anda com a espera: toca menos esse tempo
+        escreve("sai.m4a,entra.m4a,9.50,0.00,9.50,0.50,0.50,ensaio,inicio")
+        fx2, info2 = chama({"ficheiro": "entra.m4a", "inicio": "inicio", "passagem": "frase"}, [])
+        if (fx2[1]["quando"], fx2[1]["in_s"], round(fx2[1]["dura"], 2)) != (antes + 2.5, 0.0, 17.5):
+            problemas.append("frase com inicio: %s" % ((fx2[1]["quando"], fx2[1]["in_s"], fx2[1]["dura"]),))
+        # o construir_som faz o som todo
+        saida = os.path.join(pasta, "som.m4a")
+        with contextlib.redirect_stdout(io.StringIO()):
+            ok = render.construir_som(ff, fx, antes + dur, saida, render.FADE_FIM_SOM)
+        if not ok or abs(p5.C.duracao(saida) - (antes + dur)) > 0.1:
+            problemas.append("o construir_som nao deu %.1f s de som (%s)" % (antes + dur, ok))
+        # as pausas do juncao_creditos: uma voz a -20 com um buraco a -40 de 1,0 a 1,4 s
+        tt = np.arange(0, 3, 0.01)
+        voz = np.where((tt >= 1.0) & (tt < 1.4), -40.0, -20.0)
+        lista, nivel = jc.pausas(tt, voz, 0.0, 3.0)
+        if len(lista) != 1 or abs(lista[0][0] - 1.0) > 0.04 or abs(lista[0][2] - 1.4) > 0.04 or nivel != -20.0:
+            problemas.append("as pausas do juncao_creditos: %s, nivel %s" % (lista, nivel))
+        prop, _dizer = jc.propostas(1.1, lista)
+        if prop.get("A", (0, 0))[0] != 1.1 or not (0.1 <= prop["A"][1] <= jc.CAUDA_MAX_A):
+            problemas.append("a proposta A dentro da pausa: %s" % prop)
+    finally:
+        mc.FINS_DE_FRASE = original
+        shutil.rmtree(pasta, ignore_errors=True)
+    verifica("creditos: a passagem no fim da frase so com a opcao", not problemas,
+             "; ".join(problemas[:3]) if problemas else
+             "sem opcao, corte ou mal escrita igual ao de sempre, mesmo com a linha; frase entra 2,5 s depois, aos 18,5")
+
+
+def teste_guia_do_davinci_prova_e_referencias():
+    """O pacote da prova (--ate): o comando do passo 6, o fim do guia, a referencia e a abertura negativa.
+
+    OS DEFEITOS (revisao de 2 de outubro): (1) o comando do passo 6 nao levava o --ate, e o
+    legendas_srt.py escrevia o .srt do filme inteiro contra a prova, com tempos negativos e sem queixa;
+    (2) a referencia_N.png era o fotograma seguinte ao do timecode do guia (-ss q/25 + 0,001); (3) o
+    passo 8 dizia "os creditos no fim" num pacote sem creditos; (4) um emoji numa legenda ia para o
+    .srt sem o guia o dizer.
+    """
+    import contextlib
+    import io
+    import shutil
+    import subprocess
+    import tempfile
+    import render
+    import davinci_pacote as P
+    import legendas_srt as S
+    from PIL import Image, ImageStat
+    problemas = []
+    entradas = [{"n": 1, "q0": 962, "q1": 1044, "linhas": ["Com o pai"], "texto": "Com o pai", "tamanho": 46, "no_ecra": 46},
+                {"n": 2, "q0": 1100, "q1": 1200, "linhas": ["Uns \u20ac como modelo? \U0001F62E"],
+                 "texto": "Uns \u20ac como modelo? \U0001F62E", "tamanho": 46, "no_ecra": 46},
+                {"n": 3, "q0": 1300, "q1": 1400, "linhas": ["Em \u4e2d"], "texto": "Em \u4e2d", "tamanho": 46,
+                 "no_ecra": 46}]
+    with contextlib.redirect_stdout(io.StringIO()):
+        render.aplicar_estilo({})
+        prova = P.guia("v3", "C:/x", "C:/x/trabalho/f_parcial_sem_legendas.mp4", "C:/x/trabalho/f_parcial_sem_legendas.mp4",
+                       "C:/x/legendas.srt", entradas, [], {"render": 600}, True, "120")
+        inteiro = P.guia("v3", "C:/x", "C:/x/f_com_creditos.mp4", "C:/x/trabalho/f.mp4", "C:/x/legendas.srt",
+                         entradas, [], {"render": 2400, "corte_q": 20000}, False)
+    linha = [l for l in prova.split("\r\n") if "legendas_srt.py" in l]
+    if not linha or "--ate 120" not in linha[0]:
+        problemas.append("o comando do passo 6 da prova nao leva o --ate: %s" % linha[:1])
+    if any("--ate" in l for l in inteiro.split("\r\n") if "legendas_srt.py" in l):
+        problemas.append("o pacote inteiro leva um --ate")
+    if "créditos no fim" in prova or "créditos no fim" not in inteiro:
+        problemas.append("o passo 8 fala dos creditos onde nao ha, ou cala-os onde ha")
+    # desde a tarde de 2 de outubro o emoji sai a cores no nosso render e o guia diz-o a parte; "sem letra"
+    # e so o que nem a letra nem a de emojis tem
+    if "EMOJIS: legenda 2, U+1F62E" not in prova or "legenda 1," in prova:
+        problemas.append("o guia nao diz da legenda com o emoji")
+    if "CARACTERES QUE A LETRA NÃO TEM" not in prova or "legenda 3, U+4E2D" not in prova \
+            or "legenda 2, U+1F62E (" in prova:
+        problemas.append("o guia nao diz da legenda com o caracter sem letra, ou poe la o emoji")
+    # o fotograma q e o q: um filme de ensaio com cada fotograma de outro cinzento
+    pasta = tempfile.mkdtemp(prefix="davinci_ref_")
+    try:
+        filme = os.path.join(pasta, "f.mp4")
+        enc = subprocess.Popen([render.ffmpeg(), "-v", "error", "-y", "-f", "rawvideo", "-pix_fmt", "gray", "-s",
+                                "%dx%d" % (render.L, render.A), "-r", str(render.FPS), "-i", "-", "-c:v", "libx264",
+                                "-qp", "0", "-pix_fmt", "yuv420p", filme], stdin=subprocess.PIPE)
+        for k in range(8):
+            enc.stdin.write(bytes([20 + 25 * k]) * (render.L * render.A))
+        enc.stdin.close()
+        enc.wait()
+        vistos = []
+        for q in (0, 3, 6):
+            im = P.fotograma_do_filme(filme, q)
+            vistos.append(round(ImageStat.Stat(im.convert("L")).mean[0]) if im is not None else None)
+        # o cinzento passa pelo yuv420p e volta com um nivel de diferenca; os vizinhos estao a 25
+        if not all(v is not None and abs(v - e) <= 3 for v, e in zip(vistos, (20, 95, 170))):
+            problemas.append("os fotogramas 0, 3 e 6 deram os cinzentos %s, e nao 20, 95 e 170" % vistos)
+        # uma abertura negativa para, e nao escreve nada
+        original = S.duracao_da_imagem
+        S.duracao_da_imagem = lambda f: 10.0
+        try:
+            S.abertura_medida(filme, {"total_quadros": 3000, "ate": None})
+            problemas.append("uma abertura negativa nao parou")
+        except SystemExit as erro:
+            if "--ate" not in str(erro):
+                problemas.append("a abertura negativa parou sem dizer do --ate: %s" % erro)
+        finally:
+            S.duracao_da_imagem = original
+    finally:
+        shutil.rmtree(pasta, ignore_errors=True)
+    verifica("guia do DaVinci: a prova, a referencia e o emoji", not problemas,
+             "; ".join(problemas[:3]) if problemas else
+             "--ate no passo 6; creditos so com creditos; o fotograma q e o q; abertura negativa para")
+
+
+def teste_filme_sem_legendas_nunca_passa_por_filme_da_sala():
+    """O nome do filme sem legendas acaba sempre em _sem_legendas, mesmo com o numero anti-colisao.
+
+    O DEFEITO (revisao de 2 de outubro): o numero ia depois do sufixo, e o segundo render
+    --sem-legendas do mesmo minuto chamava-se ..._sem_legendas_2.mp4, que acaba num algarismo e
+    casa com o v3_*[0-9].mp4 com que o ponto5 procura o filme da sala. Sem sufixo, os nomes sao os de
+    sempre.
+    """
+    import fnmatch
+    import shutil
+    import tempfile
+    import render
+    problemas = []
+    pasta = tempfile.mkdtemp(prefix="nome_final_")
+    try:
+        nomes = []
+        for sufixo in ("", "", "", "_sem_legendas", "_sem_legendas", "_sem_legendas"):
+            caminho = render.caminho_do_final(pasta, "v3_2026-10-04_1200", sufixo)
+            open(caminho, "wb").close()
+            nomes.append(os.path.basename(caminho))
+    finally:
+        shutil.rmtree(pasta, ignore_errors=True)
+    esperado = ["v3_2026-10-04_1200.mp4", "v3_2026-10-04_1200_2.mp4", "v3_2026-10-04_1200_3.mp4",
+                "v3_2026-10-04_1200_sem_legendas.mp4", "v3_2026-10-04_1200_2_sem_legendas.mp4",
+                "v3_2026-10-04_1200_3_sem_legendas.mp4"]
+    if nomes != esperado:
+        problemas.append("nomes %s" % nomes)
+    sala = [n for n in nomes if fnmatch.fnmatch(n, "v3_*[0-9].mp4")]
+    if sala != esperado[:3]:
+        problemas.append("o glob do ponto5 apanha %s" % sala)
+    texto = open(os.path.join(REPO, "scripts", "discussao", "ponto5_creditos.py"), encoding="utf-8").read()
+    if '"_sem_legendas" not in os.path.basename(r)' not in texto:
+        problemas.append("o ponto5 nao deixa de fora os filmes sem legendas")
+    verifica("filme sem legendas nunca passa por filme da sala", not problemas,
+             "; ".join(problemas[:3]) if problemas else "o _2 vai antes do _sem_legendas; o glob do ponto5 nao o apanha")
+
+
+# ------------------------------------------------- os emojis a cores, 2 de outubro (a tarde)
+EMOJI_AZUL = "\U0001F499"     # o coracao azul: nenhuma letra do filme, nem o champanhe nem o brilho, e azul
+
+
+def _azuis(im, folga=60):
+    """Quantos pixeis sao claramente azuis (o azul acima do vermelho e do verde): so um emoji os tem."""
+    import numpy as np
+    a = np.asarray(im.convert("RGB"), np.int16)
+    return int(((a[..., 2] - a[..., 0] > folga) & (a[..., 2] - a[..., 1] > folga)).sum())
+
+
+def _azul_mais_forte(im):
+    """O maior excesso de azul sobre o vermelho, num pixel: quanto o emoji azul ja acendeu."""
+    import numpy as np
+    a = np.asarray(im.convert("RGB"), np.int16)
+    return int((a[..., 2] - a[..., 0]).max())
+
+
+def _cores_vivas(im, minimo=90):
+    """Quantos pixeis tem cor (o maior canal menos o menor acima de `minimo`): as letras brancas nao."""
+    import numpy as np
+    a = np.asarray(im.convert("RGB"), np.int16)
+    return int((a.max(axis=2) - a.min(axis=2) > minimo).sum())
+
+
+def _marco_aceso(marcas, duracao, troco=(0.0, 1.0), abre=True):
+    """(instante aceso por inteiro, instante a meio de acender) do primeiro marco da fita."""
+    aceso, meio = None, None
+    for k in range(int(duracao * 25)):
+        _pos, atual, a = linha_tempo._andamento_da_fita(marcas, k / 25.0, duracao, troco, abre)
+        if atual is marcas[0]:
+            if aceso is None or a > aceso[1]:
+                aceso = (k / 25.0, a)
+            if 0.3 < a < 0.7 and (meio is None or abs(a - 0.5) < abs(meio[1] - 0.5)):
+                meio = (k / 25.0, a)
+    return aceso[0], meio[0]
+
+
+def teste_emojis_a_cores_na_legenda_e_nas_fotos():
+    """O emoji do clip 72 da v3 sai a cores na legenda, do tamanho das maiusculas e na linha de base.
+
+    O DEFEITO (o Tiago, 2 de outubro: "Prefiro que faca o render de emojis se incluirmos"): o Arial Bold
+    nao tem emojis e a Pillow desenhava o glifo de falta, uma caixa vazia, sem se queixar. O clip 72 da
+    v3 acaba em "modelo?" e um emoji. Prova-se: a legenda, o texto de uma foto de grupo e o nome do
+    destaque levam o emoji a cores, e a linha centra-se com ele; o corpo do emoji e o da amostra
+    aprovada (42 para a letra 46), assenta na linha de base e fica centrado nas maiusculas.
+    """
+    import numpy as np
+    import render
+    import texto_emojis as T
+    from PIL import ImageDraw, ImageFont
+    if T.letra_emojis(42) is None:
+        salta("emojis: a cores na legenda e nas fotos", "sem a letra de emojis neste PC")
+        return
+    problemas = []
+    render.aplicar_estilo(None)
+    arial = ImageFont.truetype(render.FONTE_TEXTO, 46)
+    if T.corpo_do_emoji(arial) != 42:
+        problemas.append("o emoji ao lado da letra 46 tem corpo %d, e a amostra aprovada e 42" % T.corpo_do_emoji(arial))
+    # na linha de base e centrado nas maiusculas
+    im = Image.new("RGB", (300, 130))
+    T.escrever(ImageDraw.Draw(im), (10, 90), "H\U0001F62E", arial, (255, 255, 255), anchor="ls")
+    a = np.asarray(im, np.int16)
+    hx = int(10 + arial.getlength("H"))
+    ys_h = np.where((a[:, :hx].min(axis=2) > 200).any(axis=1))[0]
+    ys_e = np.where((a[:, hx + 2:].max(axis=2) > 60).any(axis=1))[0]
+    if not len(ys_h) or not len(ys_e):
+        problemas.append("o H ou o emoji nao se desenharam")
+    else:
+        meio_h, meio_e = (ys_h[0] + ys_h[-1]) / 2.0, (ys_e[0] + ys_e[-1]) / 2.0
+        if abs(meio_h - meio_e) > 2 or not ys_h[-1] <= ys_e[-1] <= ys_h[-1] + 8 or ys_e[0] >= ys_h[0]:
+            problemas.append("o emoji nao assenta na linha de base centrado nas maiusculas: H %d-%d, emoji %d-%d"
+                             % (ys_h[0], ys_h[-1], ys_e[0], ys_e[-1]))
+    # a legenda do clip 72
+    texto = "E porque não ganhar uns € como modelo?\U0001F62E"
+    if render.caracteres_sem_letra(texto, arial):
+        problemas.append("o emoji do clip 72 ainda conta como sem letra")
+    cor, mascara = render.faixa_texto(texto)
+    faixa = Image.new("RGB", (render.L, render.A))
+    faixa.paste(cor, (0, 0), mascara)
+    vivas = _cores_vivas(faixa)
+    tinta = np.asarray(faixa, np.int16).max(axis=2) > 120
+    xs = np.where(tinta.any(axis=0))[0]
+    if vivas < 300:
+        problemas.append("a legenda do clip 72 tem so %d pixeis de cor: o emoji nao saiu a cores" % vivas)
+    if not len(xs) or abs((xs[0] + xs[-1]) / 2.0 - render.L / 2.0) > 6:
+        problemas.append("a legenda com o emoji nao esta centrada: tinta de %s a %s" % (xs[:1], xs[-1:]))
+    # o texto dentro de uma foto de grupo, e o nome do destaque
+    capa, _cortado = render.capa_texto_foto("O primeiro veículo " + EMOJI_AZUL, 900)
+    if _azuis(capa) < 100:
+        problemas.append("o texto da foto do grupo nao tem o emoji a cores")
+    d = render.preparar_destaque({"x": 0.3, "y": 0.3, "w": 0.3, "h": 0.3, "forma": "retangulo", "escurecer": 0.45,
+                                  "texto": "A Clara " + EMOJI_AZUL}, 0.7, 0.7, 4.0)
+    if d.get("nome") is None or _azuis(d["nome"].convert("RGBA")) < 100:
+        problemas.append("o nome do destaque nao tem o emoji a cores")
+    verifica("emojis: a cores na legenda e nas fotos", not problemas,
+             "; ".join(problemas[:3]) if problemas else
+             "corpo 42 para 46, na linha de base; o clip 72 com %d pixeis de cor, centrado; foto de grupo e destaque" % vivas)
+
+
+def teste_equivalentes_em_todos_os_textos():
+    """O hifen U+2011 e o U+2010 saem como o hifen, e os invisiveis tiram-se, em todos os textos do filme.
+
+    O DEFEITO (2 de outubro): os equivalentes so valiam nos creditos. Um texto de um clip com o hifen nao
+    separavel, copiado de outro sitio, saia com uma caixa vazia na legenda, nas fotos, nos cartoes, no
+    nome do bebe, na fita, nos contadores e no nome do destaque, e a Mesa mostrava um hifen. Prova-se ao
+    pixel contra o mesmo texto escrito com o hifen de sempre e sem os invisiveis.
+    """
+    import datetime
+    import render
+    p5 = _ponto5()
+    render.aplicar_estilo(None)
+    lt = linha_tempo
+    especial, normal = "Audio‑Visual ‐ Op⁠era​﻿", "Audio-Visual - Opera"
+    frase_e, frase_n = "O Audio‑Visual da festa ‐ sempre", "O Audio-Visual da festa - sempre"
+    t_fita, _meio = _marco_aceso([(24, 8, "x", False, None)], 8.0)
+
+    def fita(t):
+        return lt.meses(960, 540, 1995, [(24, 8, t, False, None)], t_fita, 8.0)
+
+    def peca(t):
+        return lt._meses_numa_peca(960, 540, 1995, [(24, 8, t, False, None)], t_fita, 8.0)
+
+    def destaque(t):
+        return render.preparar_destaque({"x": 0.3, "y": 0.3, "w": 0.3, "h": 0.3, "forma": "retangulo",
+                                         "escurecer": 0.45, "texto": t}, 0.7, 0.7, 4.0)["nome"]
+    casos = [
+        ("a legenda", lambda t: render.faixa_texto(t)),
+        ("o texto de uma foto", lambda t: render.capa_texto_foto(t, 700)[0]),
+        ("o cartao curto", lambda t: render.letreiro_do_cartao(t)),
+        ("o nome do bebe", lambda t: render.letreiro([t.upper()], render.NOME_TAMANHO, render.NOME_ESPACO, 7)),
+        ("a fita", fita),
+        ("a fita numa so peca", peca),
+        ("o contador de anos", lambda t: lt.anos(960, 540, 2026, 1995, [(2026, t)], 0.6, 9.0)),
+        ("o contador por datas", lambda t: lt.datas(960, 540, datetime.date(2026, 10, 4), datetime.date(2025, 12, 25),
+                                                    [(datetime.date(2026, 10, 4), t)], 0.6, 9.0)),
+        ("o nome do destaque", destaque),
+        ("o rolo dos creditos", lambda t: p5.rolo_de_nomes([("AMIGOS", "da " + t, [["Ana " + t, "Rui"]])])),
+    ]
+    problemas = []
+
+    def bytes_de(x):
+        if isinstance(x, tuple):
+            return b"".join(bytes_de(y) for y in x)
+        return x.tobytes() + repr((x.mode, x.size)).encode()
+    for nome, f in casos:
+        if bytes_de(f(especial)) != bytes_de(f(normal)):
+            problemas.append("%s com o U+2011 nao sai igual ao do hifen" % nome)
+    if bytes_de(render.letreiro_do_cartao(frase_e)) != bytes_de(render.letreiro_do_cartao(frase_n)):
+        problemas.append("o cartao frase com o U+2011 nao sai igual ao do hifen")
+    if render.linhas_legenda(especial)[1] != render.linhas_legenda(normal)[1]:
+        problemas.append("as linhas da legenda (as do .srt) ficam com o U+2011")
+    verifica("equivalentes: o hifen especial em todos os textos", not problemas,
+             "; ".join(problemas[:3]) if problemas else "%d sitios iguais ao pixel ao texto com o hifen" % (len(casos) + 1))
+
+
+def teste_emoji_no_letreiro_acende_e_aproxima():
+    """No cartao, no nome do bebe e nos creditos, o emoji fica com as cores dele e acende e aproxima-se com as letras.
+
+    O DEFEITO (2 de outubro): o letreiro desenha uma mascara de letras e pinta-a de champanhe; um emoji
+    ali seria uma mancha champanhe com a forma dele, ou uma caixa vazia. Prova-se: o azul mais forte do
+    letreiro e o do proprio emoji (sem o degrade), o primeiro fotograma e preto, a meio de acender o
+    emoji esta mais escuro do que aceso, e cresce com as letras.
+    """
+    import numpy as np
+    import render
+    import texto_emojis as T
+    if T.letra_emojis(42) is None:
+        salta("emojis: no letreiro, a acender e a aproximar", "sem a letra de emojis neste PC")
+        return
+    problemas = []
+    render.aplicar_estilo(None)
+    let = render.letreiro_do_cartao("Viagens " + EMOJI_AZUL)
+    f = render.letra("cartao", render.LETREIRO_CURTO_TAMANHO * render.LETREIRO_SS)
+    sozinho, _onde = T.emoji_rgba(EMOJI_AZUL, T.emojis_para(f), 0.0, 0.0)
+    cheio = np.asarray(sozinho, np.int16)
+    cheio = cheio[cheio[..., 3] == 255][:, :3]
+    if abs(_azul_mais_forte(let) - int((cheio[:, 2] - cheio[:, 0]).max())) > 3:
+        problemas.append("o azul do emoji no letreiro (%d) nao e o do emoji (%d): levou o degrade"
+                         % (_azul_mais_forte(let), int((cheio[:, 2] - cheio[:, 0]).max())))
+    if render.desenhar_letreiro(let, 0.0, render.LETREIRO_ENTRA).getbbox() is not None:
+        problemas.append("o primeiro fotograma do cartao com o emoji nao e preto")
+    meio = _azul_mais_forte(render.desenhar_letreiro(let, render.LETREIRO_ENTRA / 2, render.LETREIRO_ENTRA))
+    aceso = _azul_mais_forte(render.desenhar_letreiro(let, render.LETREIRO_ENTRA, render.LETREIRO_ENTRA))
+    if not 0 < meio < aceso:
+        problemas.append("o emoji nao acende com as letras: a meio %d, aceso %d" % (meio, aceso))
+
+    def largura_azul(t):
+        a = np.asarray(render.pousar_letreiro(let, t), np.int16)
+        xs = np.where(((a[..., 2] - a[..., 0]) > 60).any(axis=0))[0]
+        return xs[-1] - xs[0] if len(xs) else 0
+    if not largura_azul(4.0) > largura_azul(0.7) > 0:
+        problemas.append("o emoji nao se aproxima com as letras: %d px a 0,7 s e %d a 4 s"
+                         % (largura_azul(0.7), largura_azul(4.0)))
+    nome = render.letreiro(["O TIAGO " + EMOJI_AZUL], render.NOME_TAMANHO, render.NOME_ESPACO, 7)
+    frase = render.letreiro_do_cartao("Gosto pelo desporto e muito " + EMOJI_AZUL)
+    if _azuis(nome) < 500 or _azuis(frase) < 500:
+        problemas.append("o nome do bebe ou o cartao frase sem o emoji a cores (%d, %d)" % (_azuis(nome), _azuis(frase)))
+    verifica("emojis: no letreiro, a acender e a aproximar", not problemas,
+             "; ".join(problemas[:3]) if problemas else
+             "as cores do emoji; preto no inicio, %d a meio e %d aceso; cresce com as letras" % (meio, aceso))
+
+
+def teste_emoji_na_fita_e_nos_contadores():
+    """Um emoji no texto de um marco sai a cores na fita de 1995 (as duas) e nos contadores, e acende com ele.
+
+    O DEFEITO (2 de outubro): os textos dos marcos sao dele, escritos na Mesa, e a fita desenhava-os no
+    Arial Bold: um emoji saia uma caixa vazia. As letras acendem pela cor, que o desenho escurece; o
+    emoji tem as cores dele e acende pelo alfa do marco.
+    """
+    import datetime
+    import render
+    import texto_emojis as T
+    if T.letra_emojis(42) is None:
+        salta("emojis: na fita e nos contadores", "sem a letra de emojis neste PC")
+        return
+    lt = linha_tempo
+    render.aplicar_estilo(None)
+    problemas = []
+    marcas = [(24, 8, "Sai o Windows 95 " + EMOJI_AZUL, False, None)]
+    t_aceso, t_meio = _marco_aceso(marcas, 8.0)
+    for nome, f in (("a fita", lt.meses), ("a fita numa so peca", lt._meses_numa_peca)):
+        aceso = _azul_mais_forte(f(960, 540, 1995, marcas, t_aceso, 8.0))
+        meio = _azul_mais_forte(f(960, 540, 1995, marcas, t_meio, 8.0))
+        apagado = _azuis(f(960, 540, 1995, marcas, 0.0, 8.0))
+        if not (aceso > 60 and 0 < meio < aceso) or apagado:
+            problemas.append("%s: o emoji aceso %d, a meio %d, apagado %d pixeis" % (nome, aceso, meio, apagado))
+    anos = lt.anos(960, 540, 2026, 1995, [(2026, "4 de outubro de 2026 " + EMOJI_AZUL)], 0.6, 9.0)
+    datas = lt.datas(960, 540, datetime.date(2026, 10, 4), datetime.date(2025, 12, 25),
+                     [(datetime.date(2026, 10, 4), "Hoje " + EMOJI_AZUL)], 0.6, 9.0)
+    if _azuis(anos) < 50 or _azuis(datas) < 50:
+        problemas.append("os contadores sem o emoji a cores (%d, %d)" % (_azuis(anos), _azuis(datas)))
+    verifica("emojis: na fita e nos contadores", not problemas,
+             "; ".join(problemas[:3]) if problemas else "as duas fitas acendem o emoji com o marco; os dois contadores")
+
+
+def teste_sem_letra_e_sequencias_avisam():
+    """Avisa-se so do que nao sai como esta escrito: a caixa vazia e o emoji que esta Pillow nao junta.
+
+    O DEFEITO QUE ISTO GUARDA (2 de outubro): com os emojis a cores, o aviso de "a letra nao tem"
+    passava a ser falso para eles, e sem o raqm a Pillow nao junta os emojis de varios caracteres (o tom
+    de pele sai num quadrado ao lado, a familia em figuras separadas, a bandeira em duas letras). Prova-se
+    o que sai, ao pixel, e que o montar e o render o dizem com o numero do clip.
+    """
+    import render
+    import texto_emojis as T
+    from PIL import ImageDraw, ImageFont
+    if T.letra_emojis(42) is None:
+        salta("emojis: o que nao sai como esta escrito avisa-se", "sem a letra de emojis neste PC")
+        return
+    problemas = []
+    render.aplicar_estilo(None)
+    arial = ImageFont.truetype(render.FONTE_TEXTO, 46)
+    fora = render.caracteres_sem_letra("x \U0001F62E ❤️ \U0001F44D\U0001F3FD "
+                                       "\U0001F468‍\U0001F469‍\U0001F467 \U0001F1F5\U0001F1F9 中", arial)
+    if fora != ["中"]:
+        problemas.append("sem letra: %s" % [hex(ord(c)) for c in fora])
+    if T.sequencias("Boa \U0001F62E ❤️ ♥"):
+        problemas.append("os emojis simples (e o U+FE0F) contam como sequencias")
+    seq = dict(T.sequencias("a \U0001F44D\U0001F3FD b \U0001F468‍\U0001F469‍\U0001F467 c \U0001F1F5\U0001F1F9 "
+                            "d 1️⃣"))
+    if len(seq) != 4 or "quadrado da cor da pele" not in seq.get("\U0001F44D\U0001F3FD", "") \
+            or "separadas" not in seq.get("\U0001F468‍\U0001F469‍\U0001F467", "") \
+            or "duas letras" not in seq.get("\U0001F1F5\U0001F1F9", ""):
+        problemas.append("as sequencias: %s" % ascii(seq))
+
+    def desenho(t):
+        im = Image.new("RGB", (700, 100))
+        T.escrever(ImageDraw.Draw(im), (10, 10), t, arial, (255, 255, 255))
+        return im.tobytes()
+    # o que se diz que sai e o que sai: o ZWJ e o U+FE0F nao se desenham (a familia e as tres figuras, lado
+    # a lado, como a Pillow as desenha sem o ZWJ, que a letra de emojis desenharia como um risco); o tom de
+    # pele e um quadrado ao lado
+    sem_zwj = Image.new("RGB", (700, 100))
+    ImageDraw.Draw(sem_zwj).text((10, 10 + T.desce(arial, "a")), "\U0001F468\U0001F469\U0001F467", font=T.emojis_para(arial),
+                                 fill=(255, 255, 255), anchor="ls", embedded_color=True)
+    if desenho("\U0001F468‍\U0001F469‍\U0001F467") != sem_zwj.tobytes():
+        problemas.append("a familia com o ZWJ nao sai como as figuras separadas")
+    if T.largura("❤️", arial) != T.largura("❤", arial):
+        problemas.append("o U+FE0F ocupa espaco")
+    if abs(T.largura("\U0001F44D\U0001F3FD", arial) - 2 * T.largura("\U0001F44D", arial)) > 0.01:
+        problemas.append("o tom de pele nao e um quadrado ao lado")
+    if T.pedacos("♥", arial) is not None or not T.pedacos("♥️", arial):
+        problemas.append("o coracao U+2665 que o Arial tem mudou, ou com o U+FE0F nao vai a cores")
+    clips = [{"tipo": "foto", "ordem": "7", "texto_ecra": "Boa \U0001F44D\U0001F3FD"},
+             {"tipo": "cartao", "ordem": "8", "texto_ecra": "Em 中"},
+             {"tipo": "foto", "ordem": "9", "texto_ecra": "modelo?\U0001F62E"},
+             {"tipo": "pilha", "ordem": "10", "texto_ecra": "", "textos_fotos": '["a", "Porto \U0001F1F5\U0001F1F9"]'},
+             {"tipo": "foto", "ordem": "11", "texto_ecra": "",
+              "destaque": '{"x": 0.1, "y": 0.1, "w": 0.3, "h": 0.3, "texto": "Ana 中"}'}]
+    avisos = render.avisos_dos_textos(clips)
+    esperado = [("clip 7", "tom de pele"), ("clip 8", "caixa vazia"), ("foto 2 do clip 10", "duas letras"),
+                ("nome do destaque do clip 11", "caixa vazia")]
+    if len(avisos) != 4 or not all(any(a in x and b in x for x in avisos) for a, b in esperado) \
+            or any("clip 9" in x for x in avisos):
+        problemas.append("os avisos dos textos dos clips: %s" % ascii(avisos))
+    montar = open(os.path.join(REPO, "scripts", "montar_da_mesa.py"), encoding="utf-8").read()
+    if "render.avisos_dos_textos(corpo_m)" not in montar:
+        problemas.append("o montar nao diz dos textos dos clips")
+    verifica("emojis: o que nao sai como esta escrito avisa-se", not problemas,
+             "; ".join(problemas[:3]) if problemas else
+             "so a caixa vazia e as sequencias; o que sai medido ao pixel; os avisos com o clip")
+
+
+def teste_srt_leva_o_emoji_em_utf8():
+    """O .srt do DaVinci leva o emoji como texto, em UTF-8 sem marca, e o hifen especial como o hifen.
+
+    O QUE PODIA PARTIR (2 de outubro): o DaVinci desenha o emoji com as letras dele, e por isso ele tem de
+    chegar inteiro ao .srt (os quatro bytes em UTF-8, com o U+FE0F e o ZWJ, que sao do emoji). Os
+    equivalentes valem no .srt como no filme: as linhas do .srt sao as do render.linhas_legenda().
+    """
+    import shutil
+    import tempfile
+    import legendas_srt as S
+    problemas = []
+    legendas = [{"q0": 0, "q1": 50, "texto": "E porque nao? \U0001F62E", "tamanho": 46},
+                {"q0": 50, "q1": 100, "texto": "Audio‑Visual⁠ ❤️", "tamanho": 46}]
+    pasta = tempfile.mkdtemp(prefix="srt_emoji_")
+    try:
+        caminho = os.path.join(pasta, "legendas.srt")
+        S.escrever_srt(caminho, S.entradas_do_filme(legendas, 0))
+        b = open(caminho, "rb").read()
+    finally:
+        shutil.rmtree(pasta, ignore_errors=True)
+    if b.startswith(b"\xef\xbb\xbf"):
+        problemas.append("o .srt comeca com a marca do UTF-8")
+    if b"\xf0\x9f\x98\xae" not in b:
+        problemas.append("o emoji nao esta no .srt em UTF-8")
+    if "Audio-Visual ❤️".encode("utf-8") not in b:
+        problemas.append("o hifen especial ou o coracao com o U+FE0F nao chegaram certos")
+    try:
+        b.decode("utf-8")
+    except UnicodeDecodeError:
+        problemas.append("o .srt nao e UTF-8")
+    if b"\r\n" not in b or b.replace(b"\r\n", b"").count(b"\n"):
+        problemas.append("o .srt tem mudancas de linha que nao sao as do Windows")
+    verifica("emojis: o .srt leva o emoji em UTF-8", not problemas,
+             "; ".join(problemas[:3]) if problemas else "F0 9F 98 AE, sem marca, CRLF, o U+2011 como hifen")
+
+
+def teste_creditos_com_emojis():
+    """Nos creditos, um emoji nos nomes, nos subtitulos, nos cargos, nos titulos e na data sai a cores.
+
+    O DEFEITO (2 de outubro): o ponto5 so avisava do emoji, e no ficheiro da sala saia uma caixa vazia.
+    Prova-se cada sitio pelo azul do emoji, a largura do letreiro a contar com ele, e que nao se avisa.
+    """
+    import render
+    import texto_emojis as T
+    if T.letra_emojis(42) is None:
+        salta("emojis: nos creditos", "sem a letra de emojis neste PC")
+        return
+    p5 = _ponto5()
+    render.aplicar_estilo(None)
+    problemas = []
+    az = " " + EMOJI_AZUL
+    textos = p5.textos_dos_creditos({"creditos": {"cargos": [{}, {"cargo": "Som e luz" + az, "quem": "MUSIC BOX" + az}, {}],
+                                                  "titulo": "CLARA & TIAGO" + az, "data": "4 DE OUTUBRO" + az}}, [])
+    blocos = [("AMIGOS" + az, "da escola" + az, [["Ana Um" + az, "Rui Um"]])]
+    rolo = p5.rolo_de_nomes(blocos)
+    if _azuis(rolo) < 300:
+        problemas.append("o rolo sem os emojis a cores (%d pixeis)" % _azuis(rolo))
+    coluna = Image.new("RGB", (p5.LARGURA_FOTO, 400))
+    tempos = p5.tempos_dos_creditos(rolo.height, coluna.height, 3)
+    cred = p5.desenho_dos_creditos(rolo, coluna, textos, {}, tempos)
+    cargo = cred(tempos["t_cargos"] + tempos["t_cargo"] + 2.0)
+    titulo = cred(tempos["t_cargos"] + 3 * tempos["t_cargo"] + 3.0)
+    if _azuis(cargo) < 300 or _azuis(titulo) < 300:
+        problemas.append("o cargo ou o titulo final sem o emoji a cores (%d, %d)" % (_azuis(cargo), _azuis(titulo)))
+    f = render.letra("cartao", 60 * render.LETREIRO_SS)
+    mais = p5.largura_do_letreiro("A" + EMOJI_AZUL, 60, 0.18) - p5.largura_do_letreiro("A", 60, 0.18)
+    esperado = (T.emojis_para(f).getlength(EMOJI_AZUL) + 0.18 * 60 * render.LETREIRO_SS) / render.LETREIRO_SS
+    if abs(mais - esperado) > 0.01:
+        problemas.append("a largura do letreiro conta o emoji com %.1f px, e sao %.1f" % (mais, esperado))
+    if p5.caracteres_que_faltam(textos, blocos):
+        problemas.append("avisa dos emojis, que saem a cores: %s" % ascii(p5.caracteres_que_faltam(textos, blocos)))
+    verifica("emojis: nos creditos", not problemas,
+             "; ".join(problemas[:3]) if problemas else "rolo, cargo, quem, titulo e data a cores; a largura conta-o; sem aviso")
+
+
+# ------------------------------------------------- o corretor dos emojis e da letra da intro, 2 de outubro (a noite)
+VISTO = "✓"     # um simbolo que o Arial Bold nao tem e que a letra de emojis desenha numa so cor
+
+
+def teste_simbolo_de_uma_cor_na_cor_do_texto():
+    """Um simbolo de uma so cor da letra de emojis (o visto U+2713) sai na cor do texto, e no letreiro em champanhe.
+
+    O DEFEITO (revisor de 2 de outubro, a noite): os simbolos sem cores proprias iam para a camada dos
+    emojis desenhados a branco. No letreiro (cartoes, nome do bebe, creditos) o visto saia branco puro e
+    nao champanhe (098); na fita e nos contadores saia branco enquanto o marco acendia e saltava para a
+    cor do texto no fotograma em que o alfa chegava a 1. Prova-se: o visto e de uma so cor e os emojis a
+    cores nao; a acender (alfa 0,4) o texto sai igual ao byte ao do alfa 1 com a mesma cor, como as
+    letras; o letreiro nao tem nenhum branco e o visto vai na mascara das letras.
+    """
+    import numpy as np
+    import render
+    import texto_emojis as T
+    from PIL import ImageDraw, ImageFont
+    if T.letra_emojis(42) is None:
+        salta("emojis: o simbolo de uma so cor na cor do texto", "sem a letra de emojis neste PC")
+        return
+    problemas = []
+    render.aplicar_estilo(None)
+    if not T.so_uma_cor(VISTO) or T.so_uma_cor(EMOJI_AZUL) or T.so_uma_cor("\U0001F62E"):
+        problemas.append("so_uma_cor: visto %s, azul %s, cara %s"
+                         % (T.so_uma_cor(VISTO), T.so_uma_cor(EMOJI_AZUL), T.so_uma_cor("\U0001F62E")))
+    arial = ImageFont.truetype(render.FONTE_TEXTO, 46)
+    cor = tuple(int(c * 0.4) for c in linha_tempo.NASC_COR)
+
+    def escrito(alfa, texto="Feito " + VISTO):
+        im = Image.new("RGB", (400, 100))
+        linha_tempo._texto(ImageDraw.Draw(im), texto, arial, 200, 50, cor, alfa=alfa)
+        return im
+    if escrito(0.4).tobytes() != escrito(1.0).tobytes():
+        problemas.append("a acender, o visto nao vai na cor do texto (sai diferente do alfa 1)")
+    a = np.asarray(escrito(0.4), np.int16)
+    if a.reshape(-1, 3).max(axis=0).tolist() != list(cor):
+        problemas.append("a fita a 0,4 tem o visto a %s, e a cor do texto e %s" % (a.reshape(-1, 3).max(axis=0).tolist(), cor))
+    # o emoji a cores continua a acender pelo alfa
+    if escrito(0.4, "Feito " + EMOJI_AZUL).tobytes() == escrito(1.0, "Feito " + EMOJI_AZUL).tobytes():
+        problemas.append("o emoji a cores deixou de acender pelo alfa")
+    for nome, let in (("o cartao", render.letreiro_do_cartao("Feito " + VISTO)),
+                      ("o nome do bebe", render.letreiro(["O TIAGO " + VISTO], render.NOME_TAMANHO, render.NOME_ESPACO, 7))):
+        b = np.asarray(let, np.int16).reshape(-1, 3)
+        if int(((b >= 250).all(axis=1)).sum()):
+            problemas.append("%s tem %d pixeis brancos: o visto nao levou o champanhe" % (nome, int(((b >= 250).all(axis=1)).sum())))
+    m, cores = render._pecas_do_letreiro(["FEITO " + VISTO], 100, 0.18)
+    so_letras, _c = render._pecas_do_letreiro(["FEITO"], 100, 0.18)
+    if cores is not None or np.asarray(m).sum() <= np.asarray(so_letras).sum():
+        problemas.append("o visto nao vai na mascara das letras do letreiro")
+    verifica("emojis: o simbolo de uma so cor na cor do texto", not problemas,
+             "; ".join(problemas[:3]) if problemas else
+             "o visto a acender igual ao alfa 1, na cor do texto; o azul acende pelo alfa; no letreiro sem branco, na mascara")
+
+
+def teste_emoji_escuro_avisa():
+    """Um emoji escuro, que quase nao se ve no preto, avisa-se no montar e no ponto5. Nao muda nada.
+
+    O DEFEITO (revisor de 2 de outubro, a noite): o emoji sai com as cores da Segoe UI Emoji, e a nota
+    U+1F3B5 e cor de vinho (64,42,50): no preto dos creditos da 1,6:1, contra 12,6:1 das letras ao lado,
+    e a Mesa no Windows mostra o mesmo glifo, por isso nao se da por isso na previa. O limite e o dos
+    graficos, 3:1. Os emojis claros (a cara do clip 72, o coracao azul dos testes) nao avisam.
+    """
+    import render
+    import texto_emojis as T
+    if T.letra_emojis(42) is None:
+        salta("emojis: o escuro avisa-se", "sem a letra de emojis neste PC")
+        return
+    problemas = []
+    render.aplicar_estilo(None)
+    nota = "\U0001F3B5"
+    k = T.contraste_no_preto(nota)
+    if k is None or not k < T.CONTRASTE_MINIMO:
+        problemas.append("a nota tem contraste %s" % k)
+    for e in ("\U0001F62E", EMOJI_AZUL, "\U0001F48D"):
+        if not (T.contraste_no_preto(e) or 0) >= T.CONTRASTE_MINIMO:
+            problemas.append("%s conta como escuro (%s)" % (T.codigos(e), T.contraste_no_preto(e)))
+    if T.contraste_no_preto(VISTO) is not None:
+        problemas.append("o visto, que vai na cor do texto, tem contraste proprio")
+    avisos = render.avisos_dos_textos([{"tipo": "cartao", "ordem": "3", "texto_ecra": "Banda sonora " + nota},
+                                       {"tipo": "foto", "ordem": "4", "texto_ecra": "modelo?\U0001F62E"}])
+    if len(avisos) != 1 or "clip 3" not in avisos[0] or "escuro" not in avisos[0] or "1,6:1" not in avisos[0]:
+        problemas.append("os avisos do montar: %s" % ascii(avisos))
+    p5 = _ponto5()
+    textos = p5.textos_dos_creditos({"creditos": {"cargos": [{}, {}, {"cargo": "Banda sonora " + nota}]}}, [])
+    cred = p5.caracteres_que_faltam(textos, [])
+    if len(cred) != 1 or "cargo 3" not in cred[0] or "escuro" not in cred[0]:
+        problemas.append("os avisos dos creditos: %s" % ascii(cred))
+    verifica("emojis: o escuro avisa-se", not problemas,
+             "; ".join(problemas[:3]) if problemas else
+             "a nota a %s:1 avisa no montar e no ponto5; a cara, o azul e o anel nao" % ("%.1f" % k).replace(".", ","))
+
+
+def teste_rascunho_da_intro_nao_e_da_familia():
+    """Um rascunho do intro_flipbook.py nao conta como a intro 5, e a familia continua igual a da Mesa.
+
+    O DEFEITO (revisor de 2 de outubro, a noite): o sufixo da letra na familia, (?:_[a-z0-9]+)?, aceita
+    qualquer palavra, e "intro_clara_tiago_5 sem preto_727e5d_rascunho.mp4" (o --escala) passava a ser a
+    intro 5: o montar trocava-o pela intro da paleta, quando antes o deixava ficar e avisava. A palavra
+    confere-se agora contra as letras oferecidas; o padrao nao muda, porque a Mesa o compara.
+    """
+    import montar_da_mesa as mm
+    problemas = []
+    if mm.INTRO_DA_FAMILIA.pattern != r"^intro_clara_tiago_5( sem preto)?(_[0-9a-f]{6}(?:_[a-z0-9]+)?)?( igualado)?\.mp4$":
+        problemas.append("o padrao da familia mudou, e a Mesa compara-o")
+    casos = {"intro_clara_tiago_5 sem preto_727e5d_rascunho.mp4": None,
+             "intro_clara_tiago_5_727e5d_rascunho.mp4": None,
+             "intro_clara_tiago_5 sem preto_727e5d_bernard_rascunho.mp4": None,
+             "intro_clara_tiago_5_727e5d_qualquer igualado.mp4": None,
+             "intro_clara_tiago_5 sem preto_5f68a8_bernard igualado.mp4": True,
+             "intro_clara_tiago_5_5f68a8_Bernard.mp4": False,
+             "intro_clara_tiago_5 sem preto_727e5d.mp4": True,
+             "intro_clara_tiago_5.mp4": False,
+             "intro_clara_tiago_5 sem preto igualado.mp4": True}
+    for nome, certo in casos.items():
+        if mm.variante_da_intro(nome) is not certo:
+            problemas.append("%s da %r" % (nome, mm.variante_da_intro(nome)))
+    rascunho = "intro_clara_tiago_5 sem preto_727e5d_rascunho.mp4"
+    avisos = []
+    clips = mm.intro_da_paleta([{"t": "video", "f": rascunho}, {"t": "foto", "f": "x.jpg"}],
+                               {"intro": {"fundo": "#6B1E33"}}, avisos, fazer=False)
+    if clips[0]["f"] != rascunho or not any("nao refaz" in a for a in avisos):
+        problemas.append("o montar trocou o rascunho (%s) ou nao avisou (%s)" % (clips[0]["f"], avisos))
+    verifica("letra da intro: um rascunho nao e a intro 5", not problemas,
+             "; ".join(problemas[:3]) if problemas else
+             "%d nomes; o rascunho fica como esta, com aviso; o padrao e o da Mesa" % len(casos))
+
+
 def main():
     rapido = "--rapido" in sys.argv
     print("TESTES DE REGRESSAO")
@@ -14064,6 +18794,82 @@ def main():
     teste_fins_de_frase_avisam_quando_a_musica_muda_de_sitio()
     teste_nome_composto_como_a_previa()
     teste_som_dos_nascimentos_e_da_mesa()
+    print("o estilo da Mesa, 2 de outubro")
+    teste_estilo_da_mesa_tem_as_omissoes_do_codigo()
+    teste_estilo_vazio_desenha_o_de_sempre()
+    teste_estilo_muda_a_legenda_o_cartao_e_o_contador()
+    teste_letra_variavel_no_peso_pedido()
+    teste_letra_que_nao_abre_cai_no_arial()
+    teste_montar_escreve_o_estilo_so_com_o_que_difere()
+    teste_corpo_minimo_medido_como_a_084()
+    teste_estilo_chega_as_fatias()
+    teste_intro_de_outras_cores_so_muda_as_cores()
+    teste_montar_troca_a_intro_pela_da_paleta()
+    print("a letra da intro, 2 de outubro a noite")
+    teste_letra_da_intro_sem_ela_igual_ao_byte()
+    teste_letras_da_intro_medem_o_que_a_medida_diz()
+    teste_letra_da_intro_que_nao_vale_fica_no_impact()
+    teste_nome_da_intro_com_letra_e_o_montar()
+    print("os creditos pela Mesa e o projetor, 2 de outubro")
+    teste_creditos_seguem_a_ordem_da_mesa()
+    teste_creditos_textos_dele_com_os_de_hoje_no_resto()
+    teste_creditos_sem_estilo_nem_textos_iguais_ao_byte()
+    teste_creditos_textos_que_nao_cabem()
+    teste_creditos_titulo_de_grupo_encolhe()
+    teste_creditos_primeiro_cargo_entra_com_fade()
+    teste_creditos_sem_os_cargos_novos_iguais_ao_byte()
+    teste_creditos_cargos_primeiro_e_mais_cargos()
+    teste_creditos_medidas_dos_cargos_iguais_as_da_mesa()
+    teste_creditos_textos_e_titulos_como_a_mesa()
+    teste_master_com_creditos_no_sitio_do_colar()
+    teste_kit_do_projetor()
+    print("a zona de destaque, 2 de outubro")
+    teste_destaque_sem_ele_igual_ao_byte()
+    teste_destaque_escurece_fora_e_guarda_dentro()
+    teste_destaque_acompanha_a_foto()
+    teste_destaque_anda_ao_subpixel()
+    teste_destaque_elipse_e_nome()
+    teste_destaque_tempos()
+    teste_mesa_escreve_o_destaque()
+    print("o contador numa so peca, 2 de outubro")
+    teste_continuo_do_estilo_ate_ao_montar()
+    teste_contador_numa_peca_sem_salto()
+    teste_data_do_nascimento_longe_dos_meses()
+    teste_continuo_chega_as_fatias()
+    print("a data do nascimento afastada, 2 de outubro")
+    teste_data_afastada_do_estilo_ate_ao_montar()
+    teste_data_afastada_desce_so_a_data()
+    teste_data_afastada_chega_as_fatias()
+    print("a revisao de 2 de outubro")
+    teste_fundo_da_legenda_arredonda_como_a_mesa()
+    teste_destaque_nome_nao_corta_as_pernas()
+    teste_troco_leva_o_estilo()
+    teste_montar_avisa_cores_e_creditos()
+    teste_montar_calado_importa_a_intro()
+    print("o pacote do DaVinci, 2 de outubro")
+    teste_sem_legendas_tira_so_a_faixa_e_o_srt_bate()
+    teste_sem_legendas_pelo_main_e_nas_fatias()
+    teste_srt_tempos_relogio_e_formato()
+    teste_guia_do_davinci_diz_o_estilo()
+    print("o fecho de 2 de outubro")
+    teste_creditos_caracteres_que_a_letra_nao_tem()
+    teste_creditos_musica_da_mesa()
+    teste_guia_do_davinci_prova_e_referencias()
+    teste_filme_sem_legendas_nunca_passa_por_filme_da_sala()
+    print("os emojis a cores e os sinais equivalentes, 2 de outubro")
+    teste_emojis_a_cores_na_legenda_e_nas_fotos()
+    teste_equivalentes_em_todos_os_textos()
+    teste_emoji_no_letreiro_acende_e_aproxima()
+    teste_emoji_na_fita_e_nos_contadores()
+    teste_sem_letra_e_sequencias_avisam()
+    teste_srt_leva_o_emoji_em_utf8()
+    teste_creditos_com_emojis()
+    print("o corretor dos emojis e da letra da intro, 2 de outubro")
+    teste_simbolo_de_uma_cor_na_cor_do_texto()
+    teste_emoji_escuro_avisa()
+    teste_rascunho_da_intro_nao_e_da_familia()
+    print("a passagem para a musica dos creditos, 2 de outubro")
+    teste_creditos_passagem_no_fim_da_frase()
     print()
     print("%d passaram, %d falharam%s"
           % (len(PASSOU), len(FALHAS),

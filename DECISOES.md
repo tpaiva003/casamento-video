@@ -3655,6 +3655,601 @@ Ao mostrá-las, diz-se-lhe:
 **Quem:** o Tiago decidiu (102); os agentes construíram, reviram e corrigiram.
 
 ---
+
+### 2026-10-02 | 104 | A Mesa de 2 de outubro, do lado do render: estilo, intro, créditos, destaque, contador e projetor
+
+**O que ele pediu,** para o dia com a Clara: ajustar ao máximo na Mesa e depois só dar ordem de render.
+Do lado do render isso é a letra e o tamanho, o vermelho da intro (*"parece demasiado Marvel"*), as cores
+e as linhas do contador, os textos e a ordem dos créditos, uma zona de destaque nas fotos de equipa, o
+contador de 1995 que não pode *"parecer outra peça"*, mais espaço entre a data e o «SET», e o que fazer
+se o projetor pedir ajustes. Às 02:23 acrescentou *"we should always be able to keep it as is"*: cada
+opção nova tem «Como está», e é essa a omissão.
+
+**A regra que atravessa tudo:** sem estilo e sem destaque, o filme sai igual ao byte. Foi provado com
+md5 antes e depois de cada etapa e outra vez depois das correções da revisão:
+- as 8 versões da leitura 59 dão os mesmos 24 ficheiros que o HEAD;
+- o corpo sintético dá a assinatura de sempre;
+- os fotogramas reais da demo_v3, do conceito_mariah e da v1c são iguais;
+- as assinaturas e as referências não se tocaram.
+
+**Construído:**
+- **O estilo.** O `est.estilo` da Mesa vai para `data/montagens/<nome>.estilo.json`, só com o que difere.
+  O render usa-o no pai e em cada fatia:
+  - na legenda e no texto das fotos dos grupos;
+  - nos cartões e no nome do bebé;
+  - no contador e na fita de 1995, linhas, riscos e contornos incluídos.
+
+  Os corpos aceites são: legenda 28 a 90, cartão curto 60 a 160, frase 44 a 120, nome 60 a 200, letreiro
+  da intro 132 a 309. O contador fica em Arial Bold e só muda de cor.
+- **As letras e a 084.** O Impact continua a ser a letra de marca, só no letreiro da intro, e não se
+  troca. Cada letra de `data/fontes.json` tem o `corpo_minimo` medido pelo método da 084, com o
+  `scripts/medir_corpo_minimo.py`, que recusa escrever se o Arial Bold não der 58 e o Impact 106. Com os
+  corpos de hoje, uma letra de mínimo maior lê-se pior a 15 m, e o montar diz o corpo que faria falta:
+
+  | Letra | Corpo mínimo | A legenda de 46 precisa de |
+  |---|---|---|
+  | Arial Bold, Georgia, Fraunces, Cinzel Bold | 58 | 46 |
+  | Montserrat, Cinzel Regular | 54 | 43 |
+  | Archivo Black, Candara, Corbel, Playfair | 62 | 50 |
+  | League Spartan, Cambria | 66 | 53 |
+  | Calibri, Cormorant Bold e Regular | 70 | 56 |
+  | Cormorant Itálico | 74 | 59 |
+  | Pinyon Script | 82 | 66 |
+  | Bebas Neue | 98 | 78 |
+  | Great Vibes | 114 | 91, acima do máximo |
+
+  O método mede o espaço entre as letras, não o traço fino. O Cormorant e o Playfair podem medir bem e
+  perder as hastes a 15 m: a medida do traço de 28 de setembro dava 261 ao Cormorant Bold. As
+  manuscritas só servem para títulos curtos.
+- **A intro sem o vermelho.** O montar troca a intro 5 pela das cores da Mesa. Uma paleta nova leva uns
+  3 minutos na primeira montagem (o flipbook e o igualar com ganho direto, 084), e depois nada. Estão
+  feitas e igualadas em `gerados\`, todas com as fotos e o som da intro 5 aprovada e o letreiro a 288
+  (fundo, letras, papel, tinta):
+  - Vinho e champanhe: #6B1E33, #E2B88C, #F4E4C8, #1E070F;
+  - Azul noite e dourado: #1A2C4E, #D9B46A, #F1E1BC, #060C18;
+  - Verde garrafa e creme: #1E4733, #F3E8CF, #F4EBD5, #07140D;
+  - Preto e dourado: #0C0B09, #D4AA5A, #EEDCAE, #4A3B24.
+
+  As letras ficam de 6,2 a 9,1 para 1 contra o fundo; o vermelho de hoje dá 8,3. Os fundos escuros
+  veem-se no projetor antes de decidir, porque projetado um fundo escuro fica mais cinzento. A linha «A
+  HISTÓRIA DE» já hoje tem 54 px, abaixo dos 58; com o letreiro a 132 cai para 25, e o montar avisa.
+- **Os créditos pela Mesa** (`ponto5_creditos.py`):
+  - a ordem das fotos: primeiro `est.creditos.ordem`, depois a versão «Créditos», depois o número da Mesa;
+  - os textos dos cargos, do título, da data e dos grupos;
+  - a letra e as cores do estilo.
+
+  Um texto que não cabe para o ponto5 antes de desenhar. Sem `est.creditos` e sem estilo, os créditos
+  saem iguais ao byte aos de 1 de outubro. O `--master` faz o ficheiro da sala,
+  `<render>_com_creditos.mp4` em 1080p (CRF 18, veryfast), sem nunca escrever por cima: são uns 18
+  minutos depois do render.
+- **A zona de destaque** (`clip.zd`, coluna `destaque` só quando há). Depois de a foto assentar, o resto
+  escurece para 55% em 0,6 s e acende um contorno de 4 px na cor quente; o nome, se houver, vai por
+  baixo da zona. Não aproxima: dentro da zona a foto fica igual ao byte (090). Para se ler a 15 m, a foto
+  com destaque fica pelo menos 3,8 s. Numa rajada não se chega a ver, e o montar avisa dos dois casos.
+- **O contador numa só peça** (`est.estilo.contador.continuo`). A fita de 1995 desenha-se como o próprio
+  contador visto de perto: o primeiro fotograma dela é igual ao pixel ao último do contador, e a data do
+  nascimento fica a 180 px do «SET», contra os 14 de hoje. Os tempos, os foguetes e o som não mudam.
+- **O kit do projetor** (`scripts/ajustar_projecao.py`). Mexe na gama, no contraste, no brilho, na
+  saturação, na margem e no volume do filme pronto, sem render. Uma amostra de 60 s leva 1 minuto, o
+  filme todo 6,5 minutos, e só o volume 21 s. A carta de teste está em `saida\projetor\`.
+
+**O DaVinci.** Dá, e não custa nada: a versão gratuita já está instalada. Mas para estes ajustes faz o
+mesmo que o kit e leva o mesmo tempo a exportar, porque o pesado é codificar os 14 minutos. A legenda
+está desenhada nos píxeis do filme, e mudar o tamanho dela é na Mesa e com render novo: cerca de uma
+hora, mais os 18 minutos do `--master`. Por isso o tamanho da legenda vê-se já com a carta, e não no dia
+do projetor.
+
+**A revisão** (três revisores e um corretor) encontrou e corrigiu:
+- o troço do fim (`troco_da_montagem.py`) não levava o `estilo.json`, e saía calado com as cores de sempre;
+- o montar com o stdout num StringIO rebentava ao importar o render e a intro;
+- o nome do destaque cortava a perna do «g» nas letras de descendentes compridos (Playfair e as
+  manuscritas). A Mesa escreve por cima da faixa sem cortar, e o render faz agora o mesmo;
+- o fundo da legenda arredondava as metades para o par: a 0,3 e a 0,7 o filme saía um nível abaixo do
+  que a Mesa mostra;
+- o montar não avisava de três cores do contador (a linha, os traços grandes e os anos ao lado), da
+  legenda escura numa foto escura, nem do claro dos cartões;
+- um título dos créditos que cabe em Arial e não na letra do estilo só parava o `--master` depois do
+  render. Agora o montar avisa antes, com a conta do ponto5.
+
+**Por decidir pelo Tiago:**
+- **O espaço entre a data e o «SET».** Só existe com «Uma só peça». Em «Como está» a data fica a 13 px
+  do «SET», como a 1 de outubro, porque sem estilo nada muda ao byte. Tê-lo também em «Como está» é uma
+  chave nova, na Mesa e no render.
+- **A intro de hoje tem 7 fotos da rede neuronal,** contra a 090: f0041, f0153, f0105, f0125, f0106,
+  f0013 e f0107. O ficheiro é de 22 de setembro, de antes da 090. As quatro paletas já usam o Lanczos.
+  Refazer a vermelha com nome novo leva 3 minutos e muda um ficheiro aprovado (2 a 4 níveis em 255 nos
+  primeiros 3 s).
+- **A cor do filme.** O corpo é convertido com a matriz BT.601 e o ficheiro vai etiquetado BT.709. Num
+  vermelho puro (200,30,30) o leitor mostra (214,45,27); nas fotos são 0 a 1,3 níveis em média.
+  Corrigir no render muda o filme ao byte; dá para corrigir só no master, se ele quiser, depois de ver a
+  comparação.
+
+**Para a equipa da Mesa, por fechar:**
+- Com uma intro de outras cores, a pré-visualização perde a intro: fica sem som, mostra «sem cópia» e
+  diz que o clip mudou. O CSV traz o nome com o `_xxxxxx` da paleta e a Mesa procura pelo dela. A
+  correção é tirar o `_xxxxxx` na chave (`som_para_mesa.chave_base`) e nas cópias do `audio_para_mesa.py`.
+  O filme sai certo.
+- O painel dos créditos mede e parte os nomes em Arial. Com outra letra o rolo cresce (de 9743 para
+  11225 px em Montserrat), e os nomes ao lado de cada foto deixam de ser os que a Mesa mostra.
+- A Mesa ainda não avisa das cores e dos textos que o montar já avisa (as três cores do contador, a
+  legenda escura, o claro dos cartões, os créditos na letra do estilo).
+- O `palcoDestaque()` difere do render no tempo, no contorno e no sítio do nome.
+- O contrato (`saida/discussao/contrato_mesa_1002.md`) ficou para trás: falta `intro.letra` (#FCFAFA), o
+  letreiro vai até 309 e não até 400, e quem troca a intro é o montar.
+
+**Quem:** o Tiago pediu; os agentes construíram, reviram e corrigiram. Sem commits.
+
+---
+
+### 2026-10-02 | 105 | O fecho de 2 de outubro: a data afastada como escolha, os acertos dos créditos e o pacote do DaVinci
+
+**O que ele pediu:** *"para já trabalharmos na mesa, mas também colocarmos a opção a certa altura de criar o
+ficheiro como falaste para o Davinci, assim se começar a apertar, mudo para o davinci de forma mais «fácil»"*.
+E ficava da 104, por decidir, o espaço entre a data do nascimento e o «SET» com o contador «Como está».
+
+**Construído** (sem commits, porque ele não pediu):
+- **A data do nascimento afastada, como escolha à parte.** `est.estilo.contador.data_afastada = true`;
+  ausente, `false`, `null` ou `""` é «Como está», e é essa a omissão. Na fita de duas peças a data de um
+  nascimento desce `linha_tempo.NASC_DATA_AFASTA` (40 px a 1080) e fica a 54 px dos meses, contra 14. A
+  medida é a folga que o texto «Nasce o ...» já tem por cima da bola, para a data ficar tão longe por baixo
+  como o texto por cima. Com «Uma só peça» não muda nada, porque aí a data já está a 180 px. Os tempos, os
+  foguetes, o som, o CSV e o som.csv ficam iguais; só o estilo.json a leva. A Mesa já a desenha no palco e
+  na amostra. **Corrige a 104**, que dizia que o espaço só existia com «Uma só peça».
+- **Os créditos:**
+  - um título de grupo mais largo do que o painel (920 px) encolhe de 1 em 1 px até caber, com aviso no
+    ponto5 e no montar, e já não para o `--master`. Fica no lugar de um título normal: a altura do rolo, a
+    velocidade dos nomes e a duração não mudam. Na leitura 63, «DO TRABALHO DA CLARA» tem 979 px e fica a
+    56, abaixo dos 58 do Arial Bold: o aviso diz para o encurtar;
+  - o primeiro cargo acende do preto em 0,6 s e fica 3,0 s inteiro, como os outros (aparecia já aceso e
+    ficava 2,6 s). Os créditos ficam 1 s mais compridos: 170,8 s com 30 fotos, 179,9 s com as 33 da leitura
+    63. **É a única peça desta noite que muda sem nenhuma opção nova:** os créditos e o master já não são
+    iguais ao byte aos de 1 de outubro. O rolo e os títulos que cabem ficam iguais, e cada fotograma depois
+    do rolo é o de antes 1 s mais tarde;
+  - o hífen não separável (U+2011) e o hífen U+2010 saem como o hífen de sempre, e os invisíveis U+2060,
+    U+FEFF e U+200B tiram-se (`render.EQUIVALENTES`). O cargo 3 da leitura 63, «Audio-Visual Operations
+    Maestro», vinha com o U+2011, que o Arial Bold não tem: a Pillow desenhava uma caixa vazia sem aviso, e a
+    Mesa mostrava um hífen. O fotograma sai agora igual ao pixel ao do mesmo texto escrito com o hífen. Outro
+    carácter que a letra não tenha (um emoji) avisa no ponto5 e no montar, sem parar o `--master`; dos
+    convidados diz-se o grupo e quantos nomes, nunca o nome. A folha dos convidados não tem nenhum;
+  - **a música que ele escolhe na Mesa chega ao filme** (`est.creditos.musica`, secção 6 do contrato). O
+    ponto5 usa o `musica_creditos.faixas_dos_creditos()`, a mesma junção que a Mesa toca. Sem escolha, ou com
+    uma que não vale (mal escrita, ficheiro que já não está, música que não chega a tocar), fica «Como está»
+    com aviso, e o som sai igual ao byte. Um segundo depois de a música se calar vale «fim», com aviso, como
+    na Mesa. Na leitura 63, o Taking Care of Business com «fim» entra aos 111,91 s do ficheiro e toca até ao
+    fim dos 179,9 s. Na troca, os Queen chegam ao corte aos 95,00 s do ficheiro; o fim de frase desta troca
+    está medido aos 97,50, longe de mais, e por isso descem no corte em 2,2 s e o montar diz «por medir
+    outra vez» (096);
+  - as contas da música dizem-se pelo fim audível e não pela duração do ficheiro. Com «Como está» e as 33
+    fotos, os Queen calam-se 35,6 s antes do fim do exemplo, e não 20,3 s como se disse de manhã: o fim do
+    rolo, os três cargos e o título ficavam em silêncio. Com 30 fotos seriam 26,5 s.
+- **O pacote do DaVinci** (`scripts/davinci_pacote.py`, com o `legendas_srt.py` e o `render.py
+  --sem-legendas`):
+  - **o comando:** `py -3.11 scripts/davinci_pacote.py v3`. Faz uma pasta nova
+    `C:\casamento-video-media\saida\davinci_<AAAA-MM-DD_HHMM>\` com o filme sem a legenda de baixo e já com os
+    créditos (é esse que vai para o DaVinci), o `legendas.srt` nos instantes em que o render as mostra, três
+    `referencia_N.png` para acertar o estilo a olho, e o `guia.txt` passo a passo. Nunca escreve por cima.
+    A prova é `--ate 120` e leva 3 minutos;
+  - **o tempo:** o render sem legendas (uns 45 minutos, sem as cópias) e os créditos (o exemplo e o master,
+    uns 25): uma hora e pouco. A exportação no DaVinci não se mede daqui; o mesmo trabalho pelo ffmpeg levou
+    1,2 a 1,7 vezes a duração, 20 a 30 minutos para os 14 minutos com os créditos;
+  - **fica editável no DaVinci:** a legenda de baixo, toda de uma vez (o tamanho, a letra, a cor, o fundo e
+    a posição) ou uma a uma. Até ao corpo que o guia diz, as linhas de hoje cabem; acima, o .srt parte-se de
+    novo em segundos (`legendas_srt.py --corpo N`). E os acertos do projetor (gama, contraste, brilho,
+    volume), como no kit;
+  - **não fica editável:** tudo o que está gravado na imagem: os cartões, os nomes dos bebés, os textos
+    dentro das fotos dos grupos, o contador e a fita, o destaque, a intro, os créditos e a ordem. Isso muda-se
+    na Mesa, com render novo. O som vai inteiro, numa faixa. E no DaVinci a caixa escura da legenda fica à
+    volta do texto, e não na largura toda, como no nosso;
+  - sem `--sem-legendas`, o render sai igual ao byte.
+
+**A revisão** (dois revisores e um corretor) encontrou e corrigiu:
+- num pacote de prova, o comando do passo 6 do guia não levava o `--ate`, e o `legendas_srt.py` escrevia o
+  .srt do filme inteiro contra a prova, com tempos negativos e sem queixa. O guia leva agora o `--ate`, e uma
+  abertura negativa para com a explicação;
+- as `referencia_N.png` eram o fotograma seguinte ao do timecode do guia: o `-ss` deitava fora o próprio
+  fotograma. Agora pede-se o meio do fotograma de antes, e sai o certo;
+- o passo 8 falava dos créditos num pacote sem créditos;
+- o emoji da legenda 39 da v3 (U+1F62E) passa tal e qual para o .srt, e no nosso render é uma caixa vazia. O
+  guia diz agora que legendas têm caracteres que a letra não tem;
+- dois renders `--sem-legendas` no mesmo minuto davam `..._sem_legendas_2.mp4`, que acaba num algarismo e o
+  ponto5 apanhava como filme da sala. O número vai agora antes do sufixo, e o ponto5 deixa de fora qualquer
+  filme sem legendas.
+
+**Provado:** sem as opções novas, o filme sai igual ao byte ao do HEAD: 2356 fotogramas da v3, 1227 da
+demo_v3, o corpo sintético com a assinatura de sempre (1e236d1c...), e as 8 versões da leitura 63 dão os 24
+ficheiros do HEAD, outra vez depois das correções. Testes: 244 passaram e só falham as 2
+esperadas.
+
+**Não experimentado no DaVinci.** O scripting não chega a um Resolve fechado, e a versão gratuita bloqueia-o
+de fora; não se abriu o programa, para não mexer nos projetos dele. Ficam por confirmar lá os nomes dos menus
+do guia, se o .srt em UTF-8 sem marca entra, e se o Size do DaVinci corresponde aos 46 px. Fora do DaVinci
+confirmou-se o .srt (66 legendas, tempos ao fotograma, CRLF, acentos certos), os tempos contra 430 fotogramas
+do render de 1 de outubro, e o relógio da junção e do master.
+
+**Por decidir pelo Tiago:**
+- se os 54 px da data afastada chegam. As datas dos marcos pequenos continuam junto aos meses; afastá-las
+  é outra decisão;
+- quando fazer o pacote do DaVinci: a opção está pronta, e ele disse que por agora se trabalha na Mesa.
+
+**Para a equipa da Mesa:**
+- o `RENDER_LE.creditos_musica` passa a `true` na próxima Mesa montada (o ponto5 chama o
+  `faixas_dos_creditos(`), e a frase «O render ainda não a usa» desaparece sozinha;
+- o Validar não olha para os textos dos créditos (o `forasDaLetra` só corre nos clips). O render troca os
+  hífens especiais e avisa do resto; o painel dos créditos pode dizer o mesmo antes do render;
+- o contraste entre o papel e a tinta da intro só a Mesa o diz (contrato, secção 7): continua por acertar
+  de que lado fica.
+
+**Quem:** o Tiago pediu; os agentes construíram, reviram e corrigiram. Sem commits.
+
+---
+
+### 2026-10-02 | 106 | Os emojis a cores e os sinais equivalentes em todos os textos do filme
+
+**O que ele pediu:** *"Prefiro que faça o render de emojis se incluirmos."* Era o emoji no fim de «E porque
+não ganhar uns € como modelo?» (clip 72 da v3, f0108): o Arial Bold não o tem, e a Pillow desenhava no lugar
+dele uma caixa vazia, sem avisar. A Mesa mostrava o emoji.
+
+**Decisão:** o filme desenha os emojis a cores, com a letra de emojis do Windows (Segoe UI Emoji), em todos
+os textos que desenha. São eles a legenda de baixo, a legenda e o texto de cada foto dos grupos, o nome do
+destaque, os cartões, os nomes dos bebés, a fita de 1995 (as duas), os dois contadores e os créditos. E os
+sinais equivalentes, que até aqui só valiam nos créditos (105), valem em todo o lado e no .srt: o U+2010 e o
+U+2011 saem como o hífen de sempre, e o U+2060, o U+FEFF e o U+200B tiram-se.
+
+**Como:**
+- **Uma maneira só de medir e de desenhar texto,** o `scripts/texto_emojis.py` (`caixa()`, `largura()`,
+  `escrever()`, `unidades()`). Um texto novo do filme passa por lá, senão volta a caixa vazia.
+- **O emoji fica do tamanho da amostra aprovada,** 42 para a letra 46: o corpo é 42/33 da altura das
+  maiúsculas, na mesma linha de base, um pouco mais alto do que elas e centrado nelas.
+- **Só vai para a letra de emojis o que a letra do texto não tem,** ou o que o texto pede com o U+FE0F. O
+  coração U+2665, que o Arial tem, continua no Arial.
+- **No letreiro** (cartões, nome do bebé, créditos) o emoji fica com as cores dele, sem o degradê, com o
+  brilho quente à volta; acende do preto e aproxima-se com as letras. Na fita e nos contadores acende pelo
+  alfa do marco.
+- **Os símbolos de uma só cor vão como as letras** (corretor). A letra de emojis tem 419 sem cores
+  próprias: o visto U+2713, o quadrado U+2610, as setas, as letras de uma bandeira. Saem na cor do texto e,
+  no letreiro, no champanhe da 098. Antes saíam brancos, e na fita mudavam de cor no último passo de acender.
+- **O `render.caracteres_sem_letra()` conta só o que nem a letra nem a de emojis desenham.**
+
+**O que não sai como no telemóvel.** Falta à Pillow deste PC a biblioteca raqm, que junta os emojis de
+vários caracteres. Medido ao píxel:
+- o tom de pele sai num quadrado da cor da pele ao lado do emoji amarelo;
+- a família e a bandeira do arco-íris (ZWJ) saem com as figuras separadas;
+- a bandeira de um país sai como as duas letras, pequenas («PT»);
+- a tecla sai como o algarismo e um quadrado vazio;
+- a bandeira de uma região sai só preta.
+
+Avisa-se no montar (com o número do clip da Mesa), no arranque do render, no ponto5 e no guia do DaVinci. A
+solução é trocá-lo por um emoji simples. Instalar o raqm é mudar o sistema, e não se fez.
+
+**Os avisos** (a Mesa avisa, nunca corrige, 083). O montar e o ponto5 avisam de três coisas:
+- a caixa vazia;
+- as sequências;
+- o emoji escuro (corretor). Abaixo de 3:1 de contraste contra o preto, que é o limite dos gráficos, pela
+  luminância média do emoji. A nota U+1F3B5 dá 1,6:1, contra 12,6:1 das letras dos créditos ao lado; o
+  coração preto dá 1,7 e a cartola 2,2. O coração azul (4,1), o anel (9,7) e a cara do clip 72 (11,7) não
+  avisam.
+
+Um emoji simples e claro não avisa.
+
+**O que muda no filme de hoje:** só o clip 72 da v3 (o 71 do CSV da leitura 64) e os encadeados dele, com o
+emoji a cores em vez da caixa.
+
+**Provado:** sem emojis e sem equivalentes, tudo igual ao byte.
+- 5318 fotogramas do corpo da demo_v3 da leitura 64, com o render de antes e o de agora: só 14 diferem, todos
+  no clip do emoji e nos encadeados dele com o 70 e o 72. Na v3, um fotograma em cada 9, só os 12 desses
+  clips; a demo_v3, o conceito e a v1c sem mexer, iguais.
+- 3651 peças de texto, em três estilos, com os textos de todas as montagens e das leituras 63 e 64: só diferem
+  as que têm o emoji ou o U+2011.
+- 457 fotogramas dos créditos e o .srt da leitura 64, iguais.
+- O montar das 8 versões da leitura 63 e a demo_v3 da 64: o CSV, o som.csv e o estilo.json iguais ao byte.
+- As assinaturas e as referências não se tocaram: no testes.py inteiro passaram 258 e falharam 3. Duas são as esperadas: «v3 sem vozes igual ao byte» e as fatias, com a assinatura de sempre, 1e236d1c...
+  A terceira é o validador da Mesa, que a equipa da Mesa passou à regra nova, como a 106 pede. O teste passou a comparar com o `render.caracteres_sem_letra()`, e sozinho passa.
+
+**O custo:** um texto sem emoji paga só a verificação, cerca de 0,03 ms. Um texto com emoji custa 0,4 a
+0,6 ms por desenho, e um cartão com emoji cerca de 0,1 s, uma vez por clip. O fotograma do clip 72 fica nos
+110 ms, antes e depois. O tempo do render não muda.
+
+**O que a revisão encontrou** (dois revisores e um corretor):
+- os símbolos de uma só cor saíam brancos: corrigido, ver acima;
+- os emojis escuros quase desaparecem no preto, e a Mesa no Windows mostra o mesmo glifo, por isso não se dá
+  por isso na prévia: o montar e o ponto5 avisam;
+- **um emoji no título final dos créditos já não cabe.** «CLARA & TIAGO» com um anel tem 1832 px e cabem 1728;
+  com dois emojis a tinta é cortada nas bordas. O ponto5 pára os créditos («nada foi desenhado») e o montar
+  avisa antes. Não se muda nada: encurta-se o título;
+- **num marco da fita, o emoji alarga o texto** (avança 58 px, contra os 33 da caixa) e pode tapar parte da
+  bola do marco grande seguinte. Hoje nenhum marco tem emoji, e vê-se na prévia da Mesa. Fica assim.
+
+**Por decidir pelo Tiago:** o brilho quente à volta do emoji nos cartões, nos nomes e nos créditos, posto
+para parecer da mesma peça. Fica assim ou sem brilho.
+
+**Não experimentado no DaVinci:** se o emoji do .srt sai lá a cores, a preto e branco ou numa caixa. O guia
+manda confirmar na faixa ST1.
+
+**Para a equipa da Mesa:**
+- **O Validar** (`forasDaLetra`, `VAL_LETRA`) marca os emojis como «Está mal», e o filme desenha-os. A regra
+  certa é a do `render.caracteres_sem_letra()`. Quando mudar, o
+  `teste_validador_apanha_o_emoji_e_os_erros_de_escrita` passa a comparar com ela.
+- **Um «Confirma tu» para as sequências,** com a frase do `texto_emojis.SAI`, e para os emojis escuros
+  (`texto_emojis.contraste_no_preto()` abaixo de 3).
+- **As medidas:** o emoji avança 1,26 corpo no render e cerca de 1,38 no browser. Uma linha com emoji no
+  limite pode partir-se noutro sítio na Mesa.
+
+**Quem:** o Tiago pediu; os agentes construíram, reviram e corrigiram. Sem commits.
+
+---
+
+### 2026-10-02 | 107 | A letra do letreiro da intro escolhe-se no Estilo, com o Impact por omissão
+
+**O que ele pediu:** *"E já agora é possível alterar o tipo de letra da intro da Marvel nos estilos como
+criaste?"* Isto mexia na 084 e na 104, e perguntou-se se ele queria abrir. Proposta: «Impact (como está)»
+por omissão, só letras grossas o suficiente, cada uma com quanto da foto se vê por dentro dela, e uns 3
+minutos por letra nova na montagem. Ele: *"Sim, abre a escolha da letra nesses termos."*
+
+**Decisão:** o Impact continua a ser a letra do letreiro da intro, por omissão, mas deixa de ser a única. No
+Estilo da Mesa escolhe-se outra entre as oferecidas em `data/fontes_intro.json`. **Muda a 084 e a 104 só na
+frase de que o Impact não se troca.** O resto da 084 fica: tudo o que é para ler continua em Arial Bold,
+também a linha «A HISTÓRIA DE», que fica fora da troca.
+
+**O limiar.** A razão da 084 era a área: o efeito da intro é a foto ver-se por dentro das letras, e a máscara
+em Impact tem 250.835 píxeis contra 105.607 em Arial Bold, menos 58%. Oferece-se uma letra que cumpre três
+coisas:
+- mostra pelo menos **dois terços (66,7%) da área do Impact**, ou seja a janela por onde a foto se vê não
+  perde mais de um terço;
+- separa as maiúsculas a 15 m no mínimo da Mesa, 132. É a medida da 084, estendida aos pares NN, HH e II;
+- no máximo, 309, cabe em 93% do quadro.
+
+Mediram-se as 124 candidatas que há no PC, de 397 faces lidas, e nada foi descarregado. O que decide é a
+letra ser estreita, não o peso: a Arial Black fica nos 44,9%. A Haettenschweiler (86%) só se lê a partir de
+200. A Bebas Neue (67,4%) fica de fora pelo máximo de oito, e o & dela parece um E.
+
+**As oito oferecidas,** pela área:
+
+| Letra | Da foto que o Impact mostra | Separa as letras a partir do tamanho |
+|---|---|---|
+| Impact (como está) | 100% | 106 |
+| Bernard MT Condensed | 80,9% | 90 |
+| Showcard Gothic | 78,7% | 105 |
+| Gill Sans Ultra Bold Condensed | 74,6% | 117 |
+| Bahnschrift Bold Condensed | 73,2% | 108 |
+| Playbill | 71,9% | 109 |
+| Agency FB Bold | 70,4% | 91 |
+| Rockwell Condensed | 68,2% | 75 |
+
+Todas separam as letras abaixo do mínimo 132 da Mesa. Por isso o aviso de corpo pequeno do montar, que
+existe de guarda, nunca aparece com a medida de hoje.
+
+**O tamanho:** o tamanho da Mesa (132 a 309) continua a ser o corpo do Impact. Outra letra vai ao corpo
+`round(T × corpo_que_cabe / 288)`, sempre dentro da caixa do nome em Impact a esse tamanho.
+
+**O contrato** (`saida/discussao/contrato_mesa_1002.md`, secção 10):
+- `est.estilo.intro.fonte = "<id>"`. Ausente, `""` ou `"impact"` é «Como está», e a Mesa nunca grava o
+  `"impact"`;
+- só valem ids com `oferecida: true`, pelo id exato. Um que não vale, não oferecido, ou cujo ficheiro não abre
+  fica no Impact com aviso, no estilo, no desenho, no nome e no script;
+- uma proposta de cores não muda a letra;
+- na junção por partes é a parte `["estilo","intro","fonte"]`.
+
+**O nome da intro** leva a letra a seguir aos 6 hex, `intro_clara_tiago_5[ sem preto]_<6 hex>_<id>.mp4`, e os
+metadados levam ` fonte <id>`. Sem letra, os nomes de sempre. A palavra a seguir aos 6 hex tem de ser uma
+letra oferecida (corretor): um rascunho do `--escala`, que acaba em `_rascunho`, passava a contar como a
+intro 5 e o montar trocava-o. Agora fica como está, com aviso, como antes.
+
+**O custo:** cada combinação nova (cores, tamanho, variante e letra) faz-se uma vez, na primeira montagem.
+É o `intro_flipbook.py` com `--fonte`, e depois o `igualar_abertura.py` com ganho direto (084). A Bernard nas
+cores de hoje levou 138 s e está em `gerados\som_igualado\intro_clara_tiago_5 sem preto_5f68a8_bernard
+igualado.mp4`. Depois disso não custa nada. Na Mesa, a cópia para o palco são 2 ficheiros, 1,0 MB.
+
+**Provado:** sem letra, ou com `"impact"`, tudo igual ao byte.
+- O letreiro a cinco tamanhos (sem tamanho, 132, 200, 288 e 309), com o código de antes e o de agora.
+- Os nomes e os resumos da intro de hoje e das quatro paletas.
+- O estilo.json, o CSV e o som.csv da leitura 64.
+
+Com a Bernard muda só o nome da intro no CSV e o `intro.fonte` no estilo.json; o som.csv fica igual. A intro
+na Bernard, vista fotograma a fotograma:
+- cabe, das 138 às 1783 px, dentro da zona segura;
+- as letras ficam a 4 a 12 px umas das outras;
+- a foto vê-se por dentro, com 81% da área de letra do Impact no fotograma;
+- o som é igual, à amostra, ao da intro de hoje.
+
+**Quem:** o Tiago decidiu abrir a escolha; os agentes mediram, construíram, reviram e corrigiram. Sem commits.
+
+**Substitui:** a 084 e a 104, só na frase de que a letra do letreiro não se troca.
+
+---
+### 2026-10-02 | 108 | A música dos créditos na Mesa, e duas gravações no mesmo instante
+
+**O que ele pediu:** *"gostava de também poder alterar a música que toca nos créditos, sendo que idealmente gostava de também a conseguir editar na própria Mesa ... gostava de voltar ao Taking care of business"*.
+
+**O que é:**
+- **O painel:** Créditos, aba «Música». Há duas escolhas:
+  - «Como está (original)», a omissão: a última música do filme continua de onde o filme a deixa, como sempre;
+  - «Outra música», com procura (ignora acentos e apóstrofos).
+- **«Começa»:** «para acabar com o fim da música» (a omissão), «do início» ou «no segundo» do ficheiro.
+- **O que grava:** `est.creditos.musica = {ficheiro, inicio}` (contrato, secção 6), pelo Anular e pela gravação normal. «Como está» tira a chave. O render já a usa (o ponto5 das 14:59:52, decisão 105).
+- **O fim de uma música** é o fim audível, o início do último silêncio de -45 dB durante 0,3 s, e não a duração do ficheiro. O Taking Care of Business cala-se aos 291,81 s e os Queen aos 239,34 s.
+- **O que não vale:** um segundo depois do fim audível vale «fim», e uma escolha que toca 0,4 s ou menos fica «Como está». Avisa-se nos dois lados.
+- **O que a Mesa diz:** de que minuto a que minuto do ficheiro toca, e se acaba com os créditos. Avisa e não corrige (083): silêncio no fim, uma parte que já toca no filme, um ficheiro que falta, o fim de frase por medir (096).
+- **Para ouvir:** «Ouvir a entrada», «Ouvir o fim» e «Ouvir tudo», pelo motor do palco. O «Ver a correr» passa os créditos sem som, e a aba diz isso.
+- **A lista** deixa de fora os sons feitos pelo projeto (o andar da fita, o som do pedido). O cabeçalho dos créditos conta o filme como o render: 14:09 com os créditos, e não 14:00.
+- **Duas gravações no mesmo instante:**
+  - **O defeito:** dois aparelhos que liam a mesma revisão gravavam a mesma revisão, e a primeira desaparecia sem aviso.
+  - **Os campos novos:** cada gravação leva agora `gravacao` (uma marca ao acaso) e `cadeia` (as últimas 40 gravações em que se apoia).
+  - **O que a página faz:** a que ficou por baixo dá por isso na vigia, na gravação seguinte, no «Guardar agora» ou ao recarregar. Volta à base de antes e junta as duas pela juntarComBase(): partes diferentes juntam-se, e a mesma parte dá a cópia de sempre.
+  - **O montar e o render** não leem estes campos. Quem escrever o estado à mão pode deixá-los ou tirá-los, nunca os inventa.
+
+**Porquê:**
+- Ele quer decidir a música dos créditos com a Clara, amanhã, na Mesa, a ouvir a passagem, e não por um render.
+- A conta pela duração do ficheiro mentia: os Queen calam-se 6,2 s antes do fim do ficheiro.
+- Amanhã vão estar os dois a gravar ao mesmo tempo em dois aparelhos. A corrida acontecia com gravações a menos de meio segundo uma da outra, e perdia trabalho calada.
+
+**Como se usa:** Créditos, Música. «Outra música» ou «Trocar de música», procurar e tocar na música (o Enter escolhe a primeira). Depois o «Começa», e ouvir. Anular desfaz cada passo, e «Como está» volta aos Queen.
+- **Hoje, na base (rev 1389):** o Taking Care of Business, «para acabar com o fim». Com as 33 fotos, os créditos têm 179,88 s e a música entra aos 111,93 s do ficheiro.
+- **Atenção:** com «fim», a entrada muda sempre que muda o número de fotos nos créditos.
+
+**Por decidir pelo Tiago:**
+- «fim» (111,93 s), a frase medida mais perto (114,1 s, ainda por ouvir) ou outro segundo;
+- trocar no corte, ou 2,5 s depois.
+
+O fim de frase dos Queen no corte dos créditos (68,70 s do ficheiro, com a leitura 63) mede-se antes do render final, com os créditos fechados (096).
+
+**Quem:** o Tiago pediu; os agentes construíram, reviram e corrigiram. Sem commits.
+
+---
+
+### 2026-10-02 | 109 | Os cargos dos créditos: primeiro, mais cargos e mais pessoas (o lado do render)
+
+**O que ele pediu,** às 19:33: *"Nos créditos permite-nos testar a possibilidade de aparecer primeiro os tais
+cargos nos vídeos, permite também acrescentar mais cargos e mais pessoas e depois as nossas pessoas com os
+convidados e fotos."* O contrato é o `saida/discussao/contrato_creditos_cargos.md`. A equipa da Mesa faz o painel
+e a pré-visualização; isto é o lado do render (`scripts/discussao/ponto5_creditos.py` e o aviso do montar).
+
+**A ordem.** `est.creditos.cargos_primeiro = true` põe os cargos primeiro, depois o rolo dos convidados com as
+fotos, e no fim o título. Ausente, `false`, `null` ou `""` é «Como está». Outro valor fica «Como está», com aviso.
+
+**Como começa a seguir ao filme, e porquê.** O primeiro cargo nasce da última imagem do filme, sem preto, no
+mesmo 1,5 s em que hoje nasce o rolo. Fica depois 3,0 s inteiro e apaga-se em 0,6 s, como os outros.
+- A razão é a da forma de 28 de setembro: a sala aplaude no primeiro preto.
+- Com um preto entre a história e o primeiro cargo, o aplauso cobria o cargo da mãe da Clara. Assim o primeiro
+  preto vem depois dele.
+- A outra maneira (o filme a ir ao preto e o primeiro cargo a acender do preto, como os outros) é uma linha no
+  `tempos_dos_creditos`. Fica para ele decidir ao ver.
+
+**Como o rolo entra depois do último cargo.** O último cargo apaga-se para o preto. O rolo entra desse preto com a
+entrada de sempre: 1,5 s a acender, com os nomes e as fotos já a andar, como hoje quando sai do filme. Dali para a
+frente é o rolo de sempre, a mesma imagem no mesmo instante dele, e depois o título, como hoje.
+
+**As contas** (`tempos_dos_creditos`, com N cargos; t_entrada 1,5, t_cargo 4,2, t_fim_rolo 1,0, t_titulo 7,0):
+
+| | «Como está» | Os cargos primeiro |
+|---|---|---|
+| o primeiro cargo (t_cargos) | 1,5 + t_rolo + 1,0 | 1,5 − 0,6 = 0,9 |
+| o rolo entra | 0 | 0,9 + N × 4,2 |
+| o título acende | t_cargos + N × 4,2 | rolo entra + 1,5 + t_rolo + 1,0 |
+| duração | título + 7,0 | título + 7,0 |
+
+Com os cargos primeiro os créditos ficam 0,9 s mais compridos: o primeiro cargo entra em 1,5 s em vez de 0,6, e o
+rolo continua a entrar em 1,5 s. Com as 33 fotos da leitura 64 (t_rolo 157,79 s, pela coluna):
+
+| | 3 cargos | 5 cargos |
+|---|---|---|
+| «Como está» | 179,89 s | 188,29 s |
+| Os cargos primeiro | 180,79 s | 189,19 s |
+
+**Mais cargos.** De 1 a 8, a lista inteira junta, pela ordem.
+- Um campo vazio é o de hoje só nos três primeiros; nos outros fica vazio (só a linha do cargo, ou só as pessoas).
+- Uma entrada a mais com os dois campos vazios não entra.
+- Com mais de 8 entram os primeiros 8, com aviso. Uma lista vazia fica nos três de hoje, com aviso.
+- Cada cargo fica os 4,2 s de hoje, com o mesmo fade. A música com «fim» entra mais cedo no ficheiro na mesma medida.
+
+**Mais pessoas por cargo.** De 1 a 4, separadas por uma mudança de linha, umas por baixo das outras no letreiro do
+quem, a 1,45 do corpo umas das outras.
+- A linha do cargo sobe meio bloco por cada pessoa a mais, e o conjunto fica no meio do ecrã como hoje: com uma
+  pessoa as letras vão dos 438 aos 602 px, com três o cargo fica nos 300, e com quatro vão dos 198 aos 846.
+- Com mais de 4 ficam as primeiras 4, com aviso.
+- **O que não cabe encolhe:** as pessoas de um cargo descem todas juntas, de 1 em 1 px, até a mais larga caber nos
+  1728 px da zona segura, como o título de um grupo. Avisa sempre, e abaixo do corpo mínimo da letra do cartão (58
+  no Arial Bold) diz que não se lê a 15 m.
+- **Muda uma coisa de hoje:** um quem de uma pessoa mais largo do que 1728 px parava o `--master` depois do render.
+  Agora encolhe, com aviso, pela mesma razão da 105 para os títulos dos grupos.
+
+**O montar avisa** (`avisos_dos_creditos`): mais de 8 cargos, mais de 4 pessoas, um `cargos_primeiro` que não é
+`true`, e as pessoas que encolhem. Nada para o render.
+
+**Provado:** sem as chaves novas, e com três cargos de uma pessoa, os créditos saem iguais ao byte ao ponto5 de
+antes desta noite (a cópia guardada às 20:42, md5 1cb63d6e):
+- cada fotograma dos créditos a 25 por segundo, com o rolo da folha dele (só em memória) e as 33 fotos da leitura
+  64, em quatro casos: sem `est.creditos`, os textos da leitura 64, os três de hoje escritos, e o
+  `cargos_primeiro` a `null` e a `""`. São 4497 fotogramas de 179,89 s em cada um, 17 988 ao todo, e nenhum difere;
+- com o rolo e as fotos de ensaio, 848 fotogramas, e as mesmas duas assinaturas, agora guardadas no teste;
+- o `--so-dizer` da leitura 64 dá o mesmo texto, letra a letra;
+- os avisos do montar da leitura 64 são os mesmos, sem estilo, em Georgia e em Montserrat com Bebas;
+- a duração é a mesma ao bit, e por isso o som também: a música sai da duração pelas mesmas funções;
+- a revisão repetiu-o com estilo (sem estilo, Georgia com Montserrat, Bebas com Cormorant e cores): 4752 fotogramas
+  com o rolo de ensaio e 2622 com o rolo verdadeiro, nenhum diferente, e os avisos iguais.
+
+Os seis momentos com os cargos primeiro e cinco cargos (um com três pessoas) foram vistos fotograma a fotograma: o
+filme a desfazer-se no primeiro cargo, o primeiro inteiro, o das três pessoas, o rolo a entrar do preto, o rolo a
+andar e o título.
+
+**Testes:** três novos, `teste_creditos_sem_os_cargos_novos_iguais_ao_byte`,
+`teste_creditos_cargos_primeiro_e_mais_cargos` e `teste_creditos_medidas_dos_cargos_iguais_as_da_mesa`, e o dos
+textos passou à regra nova (um quarto cargo entra). Os dois primeiros falham quando se desloca a linha do cargo 1 px,
+quando o primeiro cargo começa com preto, e quando a linha do cargo não sobe com as pessoas. No `testes.py` inteiro,
+na corrida do corretor, passaram 262 e falharam 2, as esperadas: «v3 sem vozes igual ao byte» e as fatias, com a
+assinatura de sempre, 1e236d1c...
+
+**O que o corretor confirmou e acertou** (2 de outubro, à noite):
+- Confirmado: as contas e o desenho que se mandaram à Mesa, escritos em JavaScript à letra, dão o mesmo bit que o
+  ponto5 em 80 casos de tempos (N de 1 a 8, as duas ordens) e a mesma peça e o mesmo alfa em 27 477 fotogramas de
+  seis casos. A geometria das pessoas bate a menos de 1 px.
+- Acertado: num cargo acrescentado (do quarto em diante), um campo que não é texto avisava «fica o de hoje», e esse
+  cargo não tem texto de hoje. Agora diz «fica vazio», e se nenhum dos dois campos presta diz que o cargo fica de
+  fora. Nos três primeiros o aviso é o de sempre.
+- Acertado: o `main()` só dizia as pessoas com os cargos primeiro ou com outro número de cargos. Agora diz também
+  quando um dos três cargos tem mais de uma pessoa. O `--so-dizer` da leitura 64 continua igual, letra a letra.
+- A guarda das medidas: o ponto5 passou a ter as medidas dos cargos em constantes (`T_CARGO`, `QUEM_CORPO`,
+  `QUEM_ESPACO`, `QUEM_Y`, `CARGO_CORPO`, `CARGO_Y`, `CARGO_ENTRA`), com os valores de sempre. O
+  `teste_medidas_dos_creditos_iguais_ao_ponto5` da Mesa procura os números no texto do desenho e deixou de encontrar
+  seis. Enquanto a Mesa não passa a ler as constantes, a guarda fica no `testes.py`, no teste novo das medidas.
+- O `teste_creditos_musica_da_mesa`: o `{}` passou das escolhas ausentes para as mal escritas, como a equipa da Mesa
+  pediu no contrato (secção 12), depois de o `musica_creditos.py` o deixar de tratar como ausente, às 21:36. Só muda
+  o aviso; o som fica «Como está».
+
+**Para a equipa da Mesa:**
+- as contas acima, na mesma ordem das somas, dão os mesmos números ao bit. Com os cargos primeiro os créditos ficam
+  0,9 s mais compridos, o que o contrato das 19:35 não diz: sem isso a pré-visualização fica 0,9 s mais curta do que
+  o filme e a música com «fim» entra noutro sítio do ficheiro;
+- o quem deixou de parar o render: encolhe e avisa, como os títulos dos grupos. O
+  `teste_creditos_desenho_e_avisos_como_o_ponto5` acusa o «quem» até o `credAvisoDoTexto("quem")` passar ao
+  `quem_que_encolhe()`;
+- o `teste_medidas_dos_creditos_iguais_ao_ponto5` passa a ler as constantes do ponto5 em vez dos números no desenho;
+- num dos três primeiros cargos, um campo vazio vale o de hoje dessa posição: ao tirar um cargo ou mudar a ordem,
+  gravam-se os dois campos escritos;
+- o `juncao_creditos.py` mede a duração sem a ordem e fica 0,9 s curto com os cargos primeiro (uma linha a acertar).
+
+**Por decidir pelo Tiago:** se o primeiro cargo nasce do filme sem preto (o que está feito) ou se o filme vai ao
+preto antes dele.
+
+**Quem:** o Tiago pediu; os agentes construíram; o corretor confirmou e acertou o que está acima. Sem commits.
+
+### 2026-10-02 | 110 | A Mesa da noite de 2 de outubro: a letra da intro, os emojis no Validar, a passagem, tirar fotos dos créditos e os cargos
+
+
+**O que ele pediu:**
+- A letra da intro, na decisão 107.
+- Os emojis a cores, na decisão 106.
+- A passagem (C), às 18:47: *"c"*.
+- Às 18:46: *"torna simples também na zona de editar os créditos de remover fotos que já estão incluídas neste momento como sendo marcada para crédito"*.
+- Às 19:33: *"Nos créditos permite-nos testar a possibilidade de aparecer primeiro os tais cargos nos vídeos, permite também acrescentar mais cargos e mais pessoas"*.
+
+**Decisão:** a Mesa passa a fazer o lado dela das decisões 106, 107 e 109. «Como está» é sempre a omissão, e sem escolhas novas a Mesa grava o mesmo de antes: abrir e navegar dá 0 escritas. Mantém-se a decisão 083: a Mesa avisa e nunca corrige.
+
+**O que é:**
+- **A letra da intro.** Está em Estilo, aba Intro, «Letra do letreiro». Grava `est.estilo.intro.fonte`, só com os ids oferecidos de `data/fontes_intro.json`. O Impact tira a chave. As 8 letras aparecem pela ordem da medida, cada uma com uma amostra da foto por dentro (a máscara do render), quanto da foto mostra contra o Impact, e o custo: «já feita» ou «nova: cerca de 2 a 3 minutos na montagem». Uma proposta de cores não muda a letra, e o «já feita» das propostas é com a letra de agora. Hoje estão feitas as 4 propostas em Impact e a Bernard no vermelho de hoje. As cópias da Bernard para o palco são 2 ficheiros, 1,0 MB.
+- **O Validar com os emojis a cores.** Segue a regra do `render.caracteres_sem_letra()`, com a tabela das letras do PC do render (`caracteres_para_mesa.py`, 17 KB na página):
+  - em «Está mal» só aparece o caracter que sai numa caixa vazia;
+  - em «Confirma tu» aparecem as sequências que o filme não junta (tom de pele, família, bandeira) e os emojis escuros;
+  - os textos dos créditos entram no Validar, e cada linha abre o campo dele.
+- **A passagem (C).** Está em Créditos, aba Música, com outra música escolhida. Diz em que segundo a música do fim está no corte, se cai a meio de uma frase, quanto falta ao último clip e a duração a escrever. Com a leitura 64: «faltam 2,58 s ao clip 169, de 4 s para 6,58 s». «Ir ao clip» abre o inspetor sem gravar nada. A zona da voz é a do `juncao_creditos.py`, a partir de 0,05 s antes de a voz se calar. A chave `passagem: "frase"` (B) é guardada, mas a Mesa não a oferece.
+- **Tirar fotos dos créditos.** Há um «Tirar» em cada foto, e «Escolher várias». Tira a foto da etiqueta Créditos, da versão «Créditos» e da ordem dele. A foto fica no filme. O Anular desfaz cada passo, e as «Tiradas hoje neste aparelho» têm «Repor» (só no localStorage). Não há campo novo.
+- **Os cargos.** Está em Créditos, «Textos do fim»:
+  - «Antes dos convidados» grava `cargos_primeiro: true`;
+  - os créditos ficam 0,9 s mais compridos;
+  - pode haver até 8 cargos, cada um com até 4 pessoas, uma por linha (mais pessoas ficam escritas, com aviso);
+  - setas para a ordem, «✕ Tirar» e «+ Acrescentar»;
+  - as contas são as do ponto5, ao bit.
+  
+  Um cargo vazio não entra no filme. Ao escrever, o rodapé diz a duração nova e onde a música com «fim» entra.
+
+**Porque:** são pedidos dele. Cada escolha tem «Como está», porque ele pediu a 2 de outubro, às 02:23, *"We should always be able to keep it as is"*. A Mesa só diz o que o render vai fazer, com as mesmas contas: os testes comparam a Mesa com o render, o ponto5, o montar e o juncao.
+
+**Como se usa:**
+- Monta-se com `py -3.11 scripts/gerar_mesa.py`, que faz as cópias das intros novas para o palco.
+- Publica-se a página e os ficheiros novos de `saida/audio` e `saida/video`. Depois corre-se `py -3.11 scripts/audio_para_mesa.py --publicado`.
+- As Mesas abertas recarregam-se pela barra «Há uma versão mais nova». Uma Mesa 53 aberta corta os cargos para 3 ao mudar o texto de um cargo, e perde a passagem ao mudar a música.
+- Antes do render final, a passagem mede-se outra vez (decisão 096).
+- O contrato está em `saida/discussao/contrato_mesa_1002.md`, secções 10 a 15.
+
 ## Em aberto
 
 Não assumir nenhuma destas sem decisão explícita do Tiago.

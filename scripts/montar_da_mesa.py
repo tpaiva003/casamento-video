@@ -44,6 +44,12 @@ COLUNAS = ["ordem", "id", "tipo", "seccao", "ficheiro", "duracao_s",
 # montagem que nao tem videos com troco tem de dar o ficheiro de sempre, byte a byte, e
 # duas colunas vazias no cabecalho ja nao davam. Ver teste_v3_sem_vozes_igual_ao_byte.
 COLUNAS_TROCO = ["in_s", "out_s"]
+# A ZONA DE DESTAQUE de uma foto (contrato de 2 de outubro), no fim e so quando algum clip a tem.
+COLUNA_DESTAQUE = "destaque"
+# AS OPCOES DO CLIP (contrato de 3 de outubro, pontos 2 a 4): a legenda numa linha (x1), a posicao
+# da legenda deste clip (lp) e as fotos inteiras do lado a lado (li). JSON so com o que difere, e a
+# coluna so entra, depois da do destaque, quando algum clip a tem: sem elas o CSV sai igual ao byte.
+COLUNA_OPCOES_CLIP = "opcoes_clip"
 COLUNAS_SOM = ["ficheiro", "caminho", "quando_s", "in_s", "dura_s", "ganho", "nota"]
 
 # OS VIDEOS VEM DA MESA, nao deste ficheiro.
@@ -189,6 +195,410 @@ TEXTO_FOTO_TAMANHOS = (28, 90)
 MODOS_TEXTO = ("foto", "legenda")
 TAPADAS_TEXTO = ("some", "fica")
 OPCOES_OMISSAO = {"modo": MODOS_TEXTO[0], "tamanho": TEXTO_FOTO_TAMANHO, "tapadas": TAPADAS_TEXTO[0]}
+# O TAMANHO DE UM GRUPO SEM tt E O DA LEGENDA DO ESTILO DA MESA (2 de outubro), como no
+# render.ler_textos_opcoes(). E o main() que o poe, a cada montagem; sem estilo e o de sempre.
+# Um tt escrito igual a ele nao vai a coluna, e um tt de 46 com o estilo noutro tamanho vai:
+# foi ele que o escolheu, e o render tem de saber que nao e a omissao.
+TAMANHO_DOS_TEXTOS = TEXTO_FOTO_TAMANHO
+
+# ------------------------------------------------------------------ o estilo da Mesa
+# O Tiago, a 2 de outubro: a Mesa deixa mudar a letra, os tamanhos e as cores (o contrato e o de
+# saida/discussao/contrato_mesa_1002.md). O estado traz est.estilo no topo; aqui limpa-se pelo
+# render.normalizar_estilo(), a mesma guarda que o render usa ao ler, e escreve-se
+# data/montagens/<nome>.estilo.json SO COM O QUE DIFERE DA OMISSAO. Sem nada diferente nao ha
+# ficheiro, e um que tenha ficado de uma montagem de antes apaga-se: e um ficheiro do
+# repositorio feito por este script, e um estilo velho ao lado de uma montagem sem estilo era o
+# filme a sair com cores que a Mesa ja nao tem.
+#
+# A MESA AVISA, NAO CORRIGE (083), e aqui tambem: o que se le pior a 15 metros do que hoje diz-se
+# nos avisos, e o estilo vai como ele o escolheu.
+ESTILO_SUFIXO = ".estilo.json"
+# Os corpos de hoje, a medida com que uma letra nova se compara: (parte da letra, parte do corpo,
+# chave do corpo, o corpo de hoje, como se diz).
+LEITURA_DE_HOJE = (("legenda", "legenda", "tamanho", 46, "a legenda"),
+                   ("cartao", "cartao", "frase", 78, "a frase dos cartoes"),
+                   ("cartao", "cartao", "curto", 100, "o cartao curto"),
+                   ("cartao", "nome", "tamanho", 120, "o nome do bebe"))
+CORPO_MINIMO_ARIAL = 58           # decisao 084
+CONTRASTE_TEXTO = 4.5             # a regra do texto, a do linha_tempo.contraste()
+CONTRASTE_TRACO = 3.0             # e a das pecas que nao sao texto: o ponteiro, o risco do marco
+
+
+def caminho_do_estilo(nome):
+    return os.path.join(DESTINO, nome + ESTILO_SUFIXO)
+
+
+def avisos_do_estilo(estilo, render, linha_tempo):
+    """O que o estilo escolhido le pior a 15 metros do que o de hoje: [aviso]. Nao muda nada.
+
+    A LETRA E O CORPO. Cada letra de data/fontes.json traz o corpo_minimo, o corpo a partir do
+    qual separa as letras a 15 m, medido como na decisao 084 (Arial Bold 58, scripts/
+    medir_corpo_minimo.py). Le-se como hoje quando o corpo esta para o minimo da letra como o de
+    hoje esta para o do Arial Bold: uma legenda numa letra de minimo 70 precisa de 46 x 70 / 58,
+    56, para se ler como a de 46 em Arial Bold.
+
+    AS CORES. O texto do contador contra o fundo dele, e a legenda contra a faixa escura posta
+    sobre uma foto branca, que e o pior caso: com o fundo mais transparente a faixa clareia e o
+    texto deixa de se destacar. A regra do texto e 4,5 para 1, a dos tracos 3 para 1.
+    """
+    avisos = []
+    if not estilo:
+        return avisos
+    letras = render.letras_da_mesa()
+    omissao = render.estilo_omissao()
+    for parte_letra, parte, chave, hoje, quem in LEITURA_DE_HOJE:
+        if chave not in estilo.get(parte, {}) and "fonte" not in estilo.get(parte_letra, {}):
+            continue
+        ident = estilo.get(parte_letra, {}).get("fonte", render.LETRA_OMISSAO)
+        corpo = estilo.get(parte, {}).get(chave, omissao[parte][chave])
+        entrada = letras.get(ident) or {}
+        nome_letra = entrada.get("nome") or ident
+        # UMA LETRA QUE A MESA OFERECE E AINDA NAO ESTA EM DISCO (as "a_descarregar" do convite)
+        # sai no Arial Bold, com aviso do render; diz-se aqui, antes de ele esperar o render.
+        if ident != render.LETRA_OMISSAO and not os.path.exists(entrada.get("ficheiro") or ""):
+            aviso = ("estilo: a letra %s nao esta em disco (%s): %s sai em Arial Bold ate ela estar"
+                     % (nome_letra, entrada.get("ficheiro") or "sem ficheiro", quem))
+            if aviso not in avisos:
+                avisos.append(aviso)
+            continue
+        minimo = entrada.get("corpo_minimo")
+        if not minimo:
+            avisos.append("estilo: %s em %s ainda nao tem o corpo minimo medido, nao sei dizer se se le "
+                          "a 15 metros (py -3.11 scripts/medir_corpo_minimo.py)" % (quem, nome_letra))
+            continue
+        como = corpo * CORPO_MINIMO_ARIAL / float(minimo)
+        if como < hoje - 0.5:
+            precisa = int(math.ceil(hoje * float(minimo) / CORPO_MINIMO_ARIAL - 1e-9))
+            avisos.append("estilo: %s em %s a %d le-se a 15 metros como o Arial Bold a %d, e hoje e %d; "
+                          "para se ler como hoje precisa de %d" % (quem, nome_letra, corpo,
+                                                                    int(math.floor(como + 0.5)), hoje, precisa))
+    # TODAS AS CORES DO CONTADOR QUE A MESA DEIXA MUDAR (revisao de 2 de outubro): a linha, os tracos
+    # grandes da regua e os anos ao lado tambem, que sao as "linhas" que a Clara pediu para mudar. Uma
+    # linha da cor do fundo desaparecia sem aviso. A linha (2,5 para 1) e os anos ao lado (3,3) ja
+    # hoje ficam abaixo da regra, de proposito: sao discretos para o ano aceso e o ponteiro se verem.
+    # Para eles o aviso e ficar abaixo da regra E pior do que hoje; para os outros, abaixo da regra.
+    contador = estilo.get("contador", {})
+    fundo = linha_tempo.FUNDO
+    for chave, regra, quem in (("regua_texto", CONTRASTE_TEXTO, "os nomes da regua"),
+                               ("marco_texto", CONTRASTE_TEXTO, "o texto dos marcos"),
+                               ("ano", CONTRASTE_TEXTO, "o ano aceso"),
+                               ("ano_longe", CONTRASTE_TEXTO, "os anos ao lado"),
+                               ("nascimento", CONTRASTE_TEXTO, "os nascimentos da fita de 1995"),
+                               ("ponteiro", CONTRASTE_TRACO, "o ponteiro"),
+                               ("marco", CONTRASTE_TRACO, "o risco dos marcos"),
+                               ("linha", CONTRASTE_TRACO, "a linha"),
+                               ("regua", CONTRASTE_TRACO, "os tracos grandes da regua")):
+        if chave not in contador:
+            continue
+        c = linha_tempo.contraste(render.cor_rgb(contador[chave]), fundo)
+        hoje = linha_tempo.contraste(render.cor_rgb(omissao["contador"][chave]), fundo)
+        fica = "ficam" if quem.startswith("os ") else "fica"
+        if hoje < regra:
+            # a folga de 0,05 e para a cor de hoje escrita a mao nao avisar contra si propria
+            if c < hoje - 0.05:
+                avisos.append("estilo: no contador, %s a %s %s a %.1f para 1 contra o fundo, menos do que "
+                              "os %.1f de hoje, que ja sao discretos de proposito"
+                              % (quem, contador[chave], fica, c, hoje))
+        elif c < regra:
+            avisos.append("estilo: no contador, %s a %s %s a %.1f para 1 contra o fundo, abaixo dos "
+                          "%.1f que se leem a 15 metros" % (quem, contador[chave], fica, c, regra))
+    # A LEGENDA NOS DOIS EXTREMOS DA FOTO (revisao de 2 de outubro). A faixa a alfa sobre uma foto
+    # branca fica cinzenta, e sobre uma foto escura fica preta: uma legenda clara perde na primeira e
+    # uma escura na segunda. So se via a branca, e uma legenda #202020 sem faixa passava calada e no
+    # render saia cinzento-escuro por cima da foto.
+    legenda = estilo.get("legenda", {})
+    if "cor" in legenda or "fundo" in legenda:
+        alfa = render.alfa_do_fundo(legenda["fundo"]) if "fundo" in legenda else render.LEGENDA_ALFA
+        cinza = int(round(255 - alfa))          # a faixa a alfa sobre uma foto branca
+        cor = legenda.get("cor", omissao["legenda"]["cor"])
+        for onde, por_tras in (("clara", (cinza, cinza, cinza)), ("escura", (0, 0, 0))):
+            c = linha_tempo.contraste(render.cor_rgb(cor), por_tras)
+            if c < CONTRASTE_TEXTO:
+                avisos.append("estilo: a legenda %s sobre a faixa a %d%% fica a %.1f para 1 numa foto %s, "
+                              "abaixo dos %.1f que se leem a 15 metros"
+                              % (cor, int(round(100 * alfa / 255.0)), c, onde, CONTRASTE_TEXTO))
+    # O LETREIRO DA INTRO, quando fica solido: as letras contra o fundo. Hoje e branco sobre o
+    # vermelho, 8,3 para 1.
+    intro = estilo.get("intro", {})
+    if "letra" in intro or "fundo" in intro:
+        letra = intro.get("letra", omissao["intro"]["letra"])
+        fundo_intro = intro.get("fundo", omissao["intro"]["fundo"])
+        c = linha_tempo.contraste(render.cor_rgb(letra), render.cor_rgb(fundo_intro))
+        if c < CONTRASTE_TEXTO:
+            avisos.append("estilo: na intro, as letras %s sobre o fundo %s ficam a %.1f para 1, abaixo dos "
+                          "%.1f que se leem a 15 metros" % (letra, fundo_intro, c, CONTRASTE_TEXTO))
+    # A LINHA DE CIMA DO LETREIRO acompanha o corpo dele (intro_flipbook.letreiro, 0,19 do corpo, em
+    # Arial Bold): com o letreiro a 288 fica a 54, e mais pequeno o letreiro, mais pequena ela.
+    if "tamanho" in intro and intro["tamanho"] < omissao["intro"]["tamanho"]:
+        pequena = max(20, int(intro["tamanho"] * 0.19))
+        hoje_pequena = max(20, int(omissao["intro"]["tamanho"] * 0.19))
+        avisos.append("estilo: com o letreiro da intro a %d, a linha «A HISTÓRIA DE» fica a %d px, contra os %d "
+                      "de hoje e os %d a que o Arial Bold se le a 15 metros"
+                      % (intro["tamanho"], pequena, hoje_pequena, CORPO_MINIMO_ARIAL))
+    # A LETRA DO LETREIRO (2 de outubro, a noite). So chegam aqui as oferecidas em data/fontes_intro.json,
+    # e todas separam as letras a 15 m em qualquer tamanho da Mesa (o corpo dela a 132 nao fica abaixo do
+    # corpo_minimo). O aviso e para o dia em que uma medida nova o deixe de ser.
+    if "fonte" in intro:
+        e = render.letras_da_intro().get(intro["fonte"])
+        if e and e.get("corpo_minimo"):
+            tam = intro.get("tamanho", omissao["intro"]["tamanho"])
+            corpo = render.corpo_da_letra_da_intro(e, tam)
+            if corpo < e["corpo_minimo"]:
+                avisos.append("estilo: o letreiro da intro em %s a %d fica no corpo %d, abaixo dos %d a que essa "
+                              "letra separa as letras a 15 metros" % (e.get("nome") or intro["fonte"], tam, corpo,
+                                                                     e["corpo_minimo"]))
+    cartao = estilo.get("cartao", {})
+    if "quente" in cartao:
+        c = linha_tempo.contraste(render.cor_rgb(cartao["quente"]), (0, 0, 0))
+        if c < CONTRASTE_TEXTO:
+            avisos.append("estilo: o letreiro dos cartoes comeca em %s, a %.1f para 1 contra o preto, abaixo "
+                          "dos %.1f que se leem a 15 metros" % (cartao["quente"], c, CONTRASTE_TEXTO))
+    # e acaba no claro, que e a cor em que fica a ser lido
+    if "claro" in cartao:
+        c = linha_tempo.contraste(render.cor_rgb(cartao["claro"]), (0, 0, 0))
+        if c < CONTRASTE_TEXTO:
+            avisos.append("estilo: o letreiro dos cartoes acaba em %s, a %.1f para 1 contra o preto, abaixo "
+                          "dos %.1f que se leem a 15 metros" % (cartao["claro"], c, CONTRASTE_TEXTO))
+    return avisos
+
+
+def avisos_dos_creditos(estado, estilo):
+    """Os textos dos creditos que nao cabem com a letra do estilo: [aviso]. Nao muda nada.
+
+    PORQUE AQUI (revisao de 2 de outubro). O painel dos creditos da Mesa mede os textos em Arial,
+    e os creditos do filme (scripts/discussao/ponto5_creditos.py) usam a letra do cartao nos
+    titulos e a da legenda nos subtitulos e nos cargos. Um titulo de grupo que em Arial cabe nos
+    920 px do painel pode nao caber em Georgia ("AMIGOS DO MESTRADO": 893 px em Arial, 961 em
+    Georgia), e o --master do ponto5 so o descobre depois do render, quando para com "nada foi
+    desenhado". O montar corre antes do render e ja tem o estilo a valer: mede com a mesma conta do
+    ponto5 (textos_que_nao_cabem), e diz ja o que encurtar. A Mesa avisa, nao corrige (083), e
+    aqui tambem.
+
+    O TITULO DE UM GRUPO JA NAO PARA (2 de outubro, mais tarde): o ponto5 encolhe-o ate caber no
+    painel (corpo_do_titulo). O aviso continua, agora com o corpo a que fica (titulos_que_encolhem);
+    os cargos, o titulo final, a data e os subtitulos continuam a parar o --master.
+
+    E OS CARACTERES QUE A LETRA NAO TEM (corretor, 2 de outubro), pelo caracteres_que_faltam() do
+    ponto5: desde a tarde de 2 de outubro so os que nem a letra nem a de emojis tem (caixa vazia) e
+    os emojis de varios caracteres que esta Pillow nao junta. Um emoji simples sai a cores. Nao param
+    nada.
+
+    OS CARGOS DELE (contrato dos cargos, 2 de outubro a noite): de 1 a 8 cargos, cada um com 1 a 4
+    pessoas, e os cargos primeiro. O que se perde avisa pelo textos_dos_creditos() do ponto5 (mais de 8
+    cargos, mais de 4 pessoas num cargo, um cargos_primeiro que nao e true); as pessoas de um cargo que
+    nao cabem na zona segura encolhem todas juntas e avisam pelo quem_que_encolhe(), com o corpo a que
+    vao e, abaixo do corpo minimo da letra do cartao, que nao se le a 15 m. Nao param o --master.
+
+    So mede quando ha alguma coisa a medir: textos dele (est.creditos) ou uma letra do estilo.
+    Os nomes dos convidados nao entram: os grupos medem-se pelo titulo e pelo subtitulo.
+    """
+    if not isinstance(estado.get("creditos"), dict) and not any(
+            (estilo.get(parte) or {}).get("fonte") for parte in ("legenda", "cartao")):
+        return []
+    # O ponto5 vive em scripts/discussao e o comum dele muda a pasta de trabalho para o repositorio;
+    # a pasta volta a ser a de antes, para quem montar de outro sitio.
+    antes = os.getcwd()
+    try:
+        sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "discussao"))
+        import ponto5_creditos as p5
+    except (ImportError, OSError, SystemExit) as erro:
+        return ["creditos: nao consegui medir os textos dos creditos com a letra do estilo (%s)" % erro]
+    finally:
+        os.chdir(antes)
+    avisos = []
+    textos = p5.textos_dos_creditos(estado, avisos)
+    blocos = []
+    for etiqueta, titulo, sub in p5.GRUPOS:
+        titulo, sub = textos["grupos"].get(etiqueta, (titulo, sub))
+        blocos.append((titulo, sub, []))
+    avisos = ["creditos: %s" % a for a in avisos]
+    # UM TITULO DE GRUPO QUE NAO CABE JA NAO PARA O --master (2 de outubro): encolhe ate caber
+    # (ponto5.corpo_do_titulo). Avisa-se aqui, antes do render, com o corpo a que vai.
+    for a in p5.titulos_que_encolhem(blocos):
+        avisos.append("creditos: %s; o --master nao para por isso" % a)
+    # AS PESSOAS DE UM CARGO QUE NAO CABEM ENCOLHEM TODAS JUNTAS (contrato dos cargos, 2 de outubro a
+    # noite), como o titulo de um grupo: avisa-se antes do render, com o corpo a que vao
+    for a in p5.quem_que_encolhe(textos):
+        avisos.append("creditos: %s; o --master nao para por isso" % a)
+    for p in p5.textos_que_nao_cabem(textos, blocos):
+        avisos.append("creditos: %s; com esta letra o ponto5 --master para sem desenhar nada" % p)
+    # UM CARACTER QUE NEM A LETRA NEM A DE EMOJIS TEM sai como uma caixa vazia, e a Mesa mostra-o com
+    # outra letra (corretor, 2 de outubro): diz-se antes do render, com os emojis que esta Pillow nao
+    # junta. Os hifens especiais ja vem trocados, e um emoji simples sai a cores.
+    for a in p5.caracteres_que_faltam(textos, blocos):
+        avisos.append("creditos: %s; o --master nao para por isso" % a)
+    return avisos
+
+
+def escrever_estilo(estilo, nome):
+    """Escreve <nome>.estilo.json com o estilo limpo, ou apaga o de antes se nada difere. Devolve o caminho ou None."""
+    caminho = caminho_do_estilo(nome)
+    if estilo:
+        with open(caminho, "w", encoding="utf-8", newline="\n") as fh:
+            json.dump(estilo, fh, ensure_ascii=False, indent=1, sort_keys=True)
+            fh.write("\n")
+        return caminho
+    if os.path.exists(caminho):
+        os.remove(caminho)
+    return None
+
+
+# ------------------------------------------------------------------ a intro de outras cores
+# A Clara, a 2 de outubro, pelo Tiago: o vermelho da intro "parece demasiado Marvel". A Mesa traz
+# em est.estilo.intro o fundo, as pontas do duotone (papel e tinta), a cor das letras e o corpo do
+# letreiro. O render nao desenha a intro: cola o ficheiro que a linha da fanfarra nomeia. POR ISSO
+# A TROCA E AQUI, e nao no render:
+#   - a duracao de um video mede-se no montar (duracao_do_video, ffprobe), e o som do corpo e
+#     posto pelo relogio que comeca onde a fanfarra acaba; trocado no render, o CSV, o som.csv e
+#     a Mesa (som_para_mesa) falavam de um ficheiro e o filme tinha outro;
+#   - o CSV diz qual e a intro que vai ao filme, e e isso que se le para saber o que la esta;
+#   - o render corre em sete fatias, e fazer uma intro la dentro era um passo de tres minutos
+#     no meio do render, que e precisamente a parte que ele quer curta.
+# Cada paleta faz-se UMA VEZ: o intro_flipbook.py com as fotos da intro 5 (FOTOS_DA_INTRO_5) e
+# sem o preto do fim (097) quando a da Mesa e a "sem preto", e o igualar_abertura.py com ganho
+# directo (084). Fica em gerados\ com nome novo por paleta, e a seguir so se usa.
+#
+# A LETRA DO LETREIRO (2 de outubro, a noite) e mais uma parte da paleta: est.estilo.intro.fonte, um
+# id de data/fontes_intro.json que o render.normalizar_estilo() ja validou. O nome da intro leva o id
+# a seguir aos 6 hex (intro_clara_tiago_5 sem preto_<6 hex>_<id>.mp4), e a familia aceita-o; os nomes
+# de antes continuam a ser da familia, iguais.
+INTRO_DA_FAMILIA = re.compile(r"^intro_clara_tiago_5( sem preto)?(_[0-9a-f]{6}(?:_[a-z0-9]+)?)?( igualado)?\.mp4$",
+                              re.IGNORECASE)
+CORES_DA_INTRO = ("fundo", "papel", "tinta", "letra")
+
+
+def variante_da_intro(ficheiro):
+    """True para a intro 5 "sem preto" (097), False para a de 14,44 s, None se nao e a intro 5.
+
+    As de outras cores contam como a sua variante, para uma Mesa que ja aponte para uma delas
+    poder mudar outra vez de cores.
+
+    A PALAVRA DEPOIS DOS 6 HEX TEM DE SER UMA LETRA OFERECIDA (corretor, 2 de outubro a noite). A
+    familia aceita qualquer _<palavra>, e um rascunho do intro_flipbook.py (--escala, que acaba em
+    "_rascunho") passava a ser a intro 5 e era trocado pela intro da paleta; antes ficava como estava,
+    com aviso. O padrao fica igual ao da Mesa (ESTILO_INTRO_FAMILIA, que o teste dela compara), e a
+    palavra confere-se aqui contra o render.letras_da_intro().
+    """
+    m = INTRO_DA_FAMILIA.match((ficheiro or "").strip())
+    if not m:
+        return None
+    sufixo = m.group(2) or ""
+    if len(sufixo) > 7:
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        import render
+        if sufixo[8:].lower() not in render.letras_da_intro():
+            return None
+    return bool(m.group(1))
+
+
+def paleta_do_ficheiro(caminho):
+    """O comentario dos metadados do video (onde o intro_flipbook.py escreve a paleta), ou ""."""
+    import subprocess
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import render
+    pr = os.path.join(os.path.dirname(render.ffmpeg()), "ffprobe.exe")
+    try:
+        r = subprocess.run([pr, "-v", "error", "-show_entries", "format_tags=comment",
+                            "-of", "default=nw=1:nk=1", caminho],
+                           capture_output=True, text=True, encoding="utf-8", errors="replace")
+        return (r.stdout or "").strip()
+    except OSError:
+        return ""
+
+
+def intro_da_paleta(clips, estilo, avisos, fazer=True):
+    """Os clips da Mesa com a intro da fanfarra trocada pela das cores e da letra de est.estilo.intro.
+
+    So mexe nos videos do bloco inicial (a fanfarra, render.partir_em_fanfarra_e_corpo) que
+    sejam a intro 5; sem estilo.intro devolve os clips como vieram. Se a intro destas cores ja
+    existe igualada, usa-a; se nao, faz-a (com fazer=False so avisa). O ficheiro so se usa se os
+    metadados disserem esta paleta: dois resumos de 6 hex iguais para paletas diferentes eram a
+    intro errada sem queixa. O que nao se conseguir fazer fica na intro de sempre, com aviso.
+    """
+    import subprocess
+    import time
+    pedido = (estilo or {}).get("intro") or {}
+    if not pedido:
+        return clips
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import render
+    import intro_flipbook
+    import igualar_abertura
+    cores = {k: render.cor_rgb(pedido[k]) for k in CORES_DA_INTRO if k in pedido}
+    tamanho = pedido.get("tamanho")
+    # A LETRA (2 de outubro, a noite). O estilo do montar ja vem limpo pelo render.normalizar_estilo(),
+    # que so guarda uma letra oferecida e que abre; volta-se a perguntar para quem chamar isto com um
+    # estilo escrito a mao. A que nao vale fica no Impact, com aviso, e o Impact vale entao para tudo:
+    # o desenho, o resumo e o nome.
+    fonte = None
+    if intro_flipbook.com_letra(pedido.get("fonte")):
+        proprios = []
+        entrada = render.letra_da_intro(pedido.get("fonte"), proprios)
+        avisos.extend("estilo: %s" % a for a in proprios)
+        fonte = entrada["id"] if entrada else None
+    texto = intro_flipbook.resumo_da_paleta(cores, tamanho, fonte)[1]
+    # como se diz ao Tiago o que e esta intro: as cores, a letra, ou as duas
+    letra_nome = (render.letras_da_intro().get(fonte) or {}).get("nome") or fonte
+    if fonte and intro_flipbook.tem_paleta(cores, tamanho):
+        do_estilo = "com as cores e a letra %s da Mesa" % letra_nome
+    elif fonte:
+        do_estilo = "com a letra %s da Mesa" % letra_nome
+    else:
+        do_estilo = "com as cores da Mesa"
+    saida = [dict(c) for c in clips]
+    for k, c in enumerate(saida):
+        if c.get("t", "foto") != "video":
+            break
+        ficheiro = (c.get("f") or "").strip()
+        sem_preto = variante_da_intro(ficheiro)
+        if sem_preto is None:
+            if ficheiro.lower().startswith("intro_clara_tiago"):
+                avisos.append("estilo: a intro da Mesa e %s, que o intro_flipbook.py nao refaz; as cores "
+                              "%sda intro so valem para a intro 5, e esta fica como esta"
+                              % (ficheiro, "e a letra " if fonte else ""))
+            continue
+        if not intro_flipbook.tem_paleta(cores, tamanho, fonte):
+            continue
+        nome = intro_flipbook.nome_da_intro(cores, tamanho, sem_preto, fonte)
+        igualado = igualar_abertura.nome_igualado(nome)
+        caminho = os.path.join(igualar_abertura.DESTINO, igualado)
+        if not os.path.exists(caminho):
+            if not fazer:
+                avisos.append("estilo: a intro %s (%s) ainda nao existe; fica a de sempre"
+                              % (do_estilo, igualado))
+                continue
+            inicio = time.time()
+            bruto = os.path.join(intro_flipbook.DESTINO, nome)
+            print("A fazer a intro %s (%s), uma vez so: uns tres minutos..." % (do_estilo, texto))
+            if not os.path.exists(bruto):
+                cmd = [sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                                    "intro_flipbook.py"),
+                       "--fotos-da-5", "--nome", nome]
+                cmd += ["--sem-preto"] if sem_preto else []
+                for chave, rgb in sorted(cores.items()):
+                    cmd += ["--" + chave, render.cor_hex(rgb)]
+                if tamanho is not None:
+                    cmd += ["--tamanho", str(int(tamanho))]
+                if fonte:
+                    cmd += ["--fonte", fonte]
+                r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8",
+                                   errors="replace")
+                if r.returncode != 0 or not os.path.exists(bruto):
+                    avisos.append("estilo: a intro %s nao se fez, fica a de sempre: %s"
+                                  % (do_estilo, " ".join(((r.stderr or "") + (r.stdout or "")).split()[-30:])))
+                    continue
+            try:
+                igualar_abertura.igualar(nome, origem=bruto)
+            except (RuntimeError, SystemExit) as erro:
+                avisos.append("estilo: a intro %s nao se igualou, fica a de sempre: %s" % (do_estilo, erro))
+                continue
+            print("  feita em %.0f s: %s" % (time.time() - inicio, caminho))
+        if paleta_do_ficheiro(caminho) != intro_flipbook.comentario_da_paleta(cores, tamanho, True, fonte):
+            avisos.append("estilo: %s existe mas nao e desta paleta com as fotos da intro 5 (%s); fica a "
+                          "de sempre" % (igualado, texto))
+            continue
+        saida[k] = dict(c, f=igualado)
+    return saida
 
 
 def tamanho_da_letra(tt):
@@ -222,7 +632,7 @@ def opcoes_dos_textos(c, tipo, ordem, avisos):
     escrita que caisse em silencio era um texto a sair de outra maneira sem ninguem saber
     porque. O tamanho ausente, vazio ou 46 e a omissao sem aviso.
     """
-    o = dict(OPCOES_OMISSAO)
+    o = dict(OPCOES_OMISSAO, tamanho=TAMANHO_DOS_TEXTOS)
     vm = c.get("vm")
     if vm in (None, ""):
         pass
@@ -237,7 +647,7 @@ def opcoes_dos_textos(c, tipo, ordem, avisos):
         if n is None:
             avisos.append("%s com tamanho da letra %r, tem de ser inteiro entre %d e %d, fica %d (clip %d)"
                           % (tipo, tt, TEXTO_FOTO_TAMANHOS[0], TEXTO_FOTO_TAMANHOS[1],
-                             TEXTO_FOTO_TAMANHO, ordem))
+                             TAMANHO_DOS_TEXTOS, ordem))
         else:
             o["tamanho"] = n
     vt = c.get("vt")
@@ -260,7 +670,7 @@ def coluna_das_opcoes(opcoes, tipo):
     o = {}
     if opcoes["modo"] != OPCOES_OMISSAO["modo"]:
         o["modo"] = opcoes["modo"]
-    if opcoes["tamanho"] != OPCOES_OMISSAO["tamanho"]:
+    if opcoes["tamanho"] != TAMANHO_DOS_TEXTOS:
         o["tamanho"] = opcoes["tamanho"]
     if tipo == "pilha" and opcoes["modo"] == "foto" and opcoes["tapadas"] != OPCOES_OMISSAO["tapadas"]:
         o["tapadas"] = opcoes["tapadas"]
@@ -296,11 +706,13 @@ def legendas_curtas_da_linha(linha, entra, sai, render):
     return render.legendas_curtas(mostra, tempos)
 
 
-def linhas_na_legenda(texto, tamanho):
-    """Quantas linhas o texto leva na legenda de baixo, pela conta do render com a letra escolhida."""
+def linhas_na_legenda(texto, tamanho, uma_linha=False):
+    """Quantas linhas o texto leva na legenda de baixo, pela conta do render com a letra escolhida.
+
+    `uma_linha` e o clip.x1 (3 de outubro): uma linha, se couber."""
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
     import render
-    return len(render.linhas_legenda(texto, tamanho)[1])
+    return len(render.linhas_legenda(texto, tamanho, uma_linha=uma_linha)[1])
 
 
 def textos_e_opcoes(c, n, tipo, ordem, avisos):
@@ -345,7 +757,7 @@ def textos_das_fotos(c, n, tipo, ordem, avisos, opcoes=None):
     """
     if tipo not in TIPOS_COM_TEXTOS or c.get("vf") is not True:
         return ""
-    opcoes = opcoes or OPCOES_OMISSAO
+    opcoes = opcoes or dict(OPCOES_OMISSAO, tamanho=TAMANHO_DOS_TEXTOS)
     xf = c.get("xf")
     if not isinstance(xf, list):
         return ""              # grupo de antes dos textos: vale todos vazios
@@ -377,7 +789,7 @@ def textos_das_fotos(c, n, tipo, ordem, avisos, opcoes=None):
         # quatro fotos encolhiam, tambem nas que tinham "Natal" ou nada. Diz-se, com a
         # conta do render para a letra escolhida.
         for k, t in enumerate(textos):
-            n_linhas = linhas_na_legenda(t, opcoes["tamanho"]) if t else 0
+            n_linhas = linhas_na_legenda(t, opcoes["tamanho"], c.get("x1") is True) if t else 0
             if n_linhas > 1:
                 avisos.append("%s, texto da foto %d leva %d linhas na legenda de baixo, e a faixa fica com "
                               "essa altura durante o clip inteiro: as fotos de todo o clip encolhem: %r (clip %d)"
@@ -395,6 +807,185 @@ def textos_das_fotos(c, n, tipo, ordem, avisos, opcoes=None):
         avisos.append("pilha com textos nas fotos: cada texto so se le enquanto a sua foto "
                       "esta por cima (clip %d)" % ordem)
     return json.dumps(textos, ensure_ascii=False)
+
+
+# AS OPCOES DO CLIP, coluna opcoes_clip (contrato de 3 de outubro). O Tiago: "Na foto na posicao 10,
+# meter a legenda numa so linha, sem alterar o tamanho da letra" (x1), "permite-me ajustar o
+# posicionamento das legendas, cima, baixo, direita, esquerda" (lp, que se soma ao
+# est.estilo.legenda.posicao) e, no lado a lado, "esta a focar em excesso, acabando por cortar
+# pessoas" (li, as fotos inteiras). O que o render faz com elas esta em render.ler_opcoes_clip().
+TIPOS_COM_LEGENDA = ("foto", "video", "lado", "colagem", "pilha")
+
+
+def coluna_das_opcoes_clip(c, tipo, ordem, avisos, render):
+    """A coluna opcoes_clip de um clip: JSON so com o que difere da omissao, ou "".
+
+    Valida-se aqui, que e onde ha uma lista de avisos para o Tiago ler; o render le a mesma coluna e
+    cai na mesma omissao. x1 e li so contam com true (false, null e "" sao "como esta"); o lp e
+    {dx, dy} em pixeis inteiros a 1080, dentro de render.LP_DX e render.LP_DY, e um valor que nao
+    presta fica 0 com aviso. Num clip que nao tem legenda de baixo (cartao, contador, fita) o x1 e o
+    lp ficam de fora com aviso, e o li so o lado a lado o leva.
+    """
+    o = {}
+    x1 = c.get("x1")
+    if x1 is True:
+        if tipo in TIPOS_COM_LEGENDA:
+            o["x1"] = True
+        else:
+            avisos.append("o clip %d e %s e tem a legenda numa linha: so as legendas de baixo a levam, "
+                          "fica de fora" % (ordem, tipo))
+    elif x1 not in (None, False, ""):
+        avisos.append("o clip %d tem a legenda numa linha %r: tem de ser true ou false, fica como esta"
+                      % (ordem, x1))
+    lp = c.get("lp")
+    if lp not in (None, "", {}):
+        if not isinstance(lp, dict):
+            avisos.append("o clip %d tem a posicao da legenda %r, que nao e {dx, dy}: fica a de todas"
+                          % (ordem, lp))
+        else:
+            limpo = {}
+            for chave, (baixo, alto) in (("dx", render.LP_DX), ("dy", render.LP_DY)):
+                bruto = lp.get(chave)
+                if bruto in (None, ""):
+                    continue
+                n = render._inteiro_com_sinal(bruto)
+                if n is None or not baixo <= n <= alto:
+                    avisos.append("o clip %d tem a posicao da legenda com %s=%r: tem de ser inteiro entre %d e "
+                                  "%d, fica 0" % (ordem, chave, bruto, baixo, alto))
+                    continue
+                if n:
+                    limpo[chave] = n
+            for chave in lp:
+                if chave not in ("dx", "dy"):
+                    avisos.append("o clip %d tem a posicao da legenda com a chave %r, que nao existe, "
+                                  "ignorada" % (ordem, chave))
+            if limpo and tipo not in TIPOS_COM_LEGENDA:
+                avisos.append("o clip %d e %s e tem posicao da legenda: so as legendas de baixo a levam, "
+                              "fica de fora" % (ordem, tipo))
+            elif limpo:
+                o["lp"] = limpo
+    li = c.get("li")
+    if li is True:
+        if tipo == "lado":
+            o["li"] = True
+        else:
+            avisos.append("o clip %d e %s e tem as fotos inteiras: so o lado a lado as leva, fica de fora"
+                          % (ordem, tipo))
+    elif li not in (None, False, ""):
+        avisos.append("o clip %d tem as fotos inteiras %r: tem de ser true ou false, fica como esta"
+                      % (ordem, li))
+    return json.dumps(o, ensure_ascii=False, sort_keys=True) if o else ""
+
+
+# A ZONA DE DESTAQUE, clip.zd (contrato de 2 de outubro). O Tiago: "Permite-me dentro de uma foto
+# marcar uma zona para ter mais detalhe, por exemplo eu tenho umas fotos de equipa que se eu nao
+# assinalar quem eu sou as pessoas podem nao perceber." Vai na coluna destaque, em JSON, so nas
+# fotos soltas e so com o que difere da omissao; a coluna so entra no CSV quando algum clip a tem,
+# pela regra das colunas novas, e sem ela o CSV sai igual ao byte. O que o render faz com ela esta
+# em render.destacar().
+DESTAQUE_MAX_PALAVRAS = 3          # "Texto no ecra: poucas palavras, datas e nomes, nunca frases"
+DESTAQUE_CORTE_SILENCIOSO = 0.005  # o que passa da foto por arredondamento de quem arrasta, sem aviso
+
+
+def coluna_do_destaque(c, tipo, ordem, avisos):
+    """A coluna destaque de um clip: JSON com x, y, w, h e o que difere da omissao, ou "".
+
+    VALIDA-SE AQUI e diz-se ao montar, que e onde ha uma lista de avisos para o Tiago ler; o render
+    volta a ver (render.ler_destaque()) e cai na mesma omissao. Uma zona que nao se le fica de fora
+    com aviso. Uma zona que passa da foto e cortada pela borda, com aviso quando passa mais do que
+    um arredondamento: a Mesa so a deixa desenhar dentro da foto. Forma, escurecer e texto que nao
+    servem ficam na omissao, com aviso. Nos grupos nao ha destaque (contrato): um clip que era foto
+    e passou a colagem pode trazer o zd de antes, e diz-se que fica de fora.
+    """
+    zd = c.get("zd")
+    if zd in (None, "", {}):
+        return ""
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import render
+    if tipo != "foto":
+        avisos.append("o clip %d e %s e tem zona de destaque: so as fotos soltas a levam, fica de fora"
+                      % (ordem, tipo))
+        return ""
+    try:
+        bruto = [zd[k] for k in ("x", "y", "w", "h")]
+        if any(isinstance(v, bool) for v in bruto):
+            raise TypeError("booleano")
+        x, y, w, h = (float(v) for v in bruto)
+        if not all(math.isfinite(v) for v in (x, y, w, h)):
+            raise ValueError("infinito")
+    except (KeyError, TypeError, ValueError):
+        avisos.append("zona de destaque do clip %d que nao se le, %r: fica sem destaque"
+                      % (ordem, zd))
+        return ""
+    x0, y0 = max(0.0, x), max(0.0, y)
+    x1, y1 = min(1.0, x + w), min(1.0, y + h)
+    if x1 - x0 < render.DESTAQUE_LADO_MIN or y1 - y0 < render.DESTAQUE_LADO_MIN:
+        avisos.append("zona de destaque do clip %d sem tamanho dentro da foto (%s x %s da foto): "
+                      "fica sem destaque" % (ordem, numero(max(0.0, x1 - x0)), numero(max(0.0, y1 - y0))))
+        return ""
+    if max(x0 - x, y0 - y, x + w - x1, y + h - y1) > DESTAQUE_CORTE_SILENCIOSO:
+        avisos.append("zona de destaque do clip %d passa da borda da foto: fica cortada pela borda"
+                      % ordem)
+    o = {"x": round(x0, 4), "y": round(y0, 4), "w": round(x1 - x0, 4), "h": round(y1 - y0, 4)}
+    forma = zd.get("forma")
+    if forma not in (None, "") + render.DESTAQUE_FORMAS:
+        avisos.append("zona de destaque do clip %d com forma %r, que nao existe: fica %s"
+                      % (ordem, forma, render.DESTAQUE_FORMAS[0]))
+    elif forma and forma != render.DESTAQUE_FORMAS[0]:
+        o["forma"] = forma
+    esc = zd.get("escurecer")
+    if esc is not None:
+        if isinstance(esc, bool) or not isinstance(esc, (int, float)) or not 0.0 <= esc <= 1.0:
+            avisos.append("zona de destaque do clip %d com escurecer %r, fora de 0 a 1: fica %s"
+                          % (ordem, esc, numero(render.DESTAQUE_ESCURECER)))
+        elif abs(float(esc) - render.DESTAQUE_ESCURECER) > 1e-9:
+            o["escurecer"] = round(float(esc), 3)
+    texto = texto_de_xf(zd.get("texto"))
+    if texto:
+        o["texto"] = texto
+        if len(texto.split()) > DESTAQUE_MAX_PALAVRAS:
+            avisos.append("o nome do destaque do clip %d tem %d palavras: no ecra, nomes e nao frases, "
+                          "a 15 metros le-se um nome curto: %r" % (ordem, len(texto.split()), texto))
+        tam = render.legenda_tamanho()
+        # a medida do render: um emoji a cores conta com a largura dele (texto_emojis)
+        largura = render.texto_emojis.largura(texto, render.letra("legenda", tam)) + 36
+        if largura > render.L - 2 * render.DESTAQUE_TEXTO_BORDA:
+            avisos.append("o nome do destaque do clip %d nao cabe no ecra (%d px de %d), sai cortado "
+                          "dos lados: %r" % (ordem, largura, render.L, texto))
+    return json.dumps(o, ensure_ascii=False)
+
+
+def avisos_do_tempo_do_destaque(corpo, render):
+    """Os destaques que ficam acesos menos do que render.LEGENDA_MINIMO_S, com a foto sozinha no ecra.
+
+    O destaque so acende depois de a foto assentar (render.destaque_janela()), e num clip curto ou
+    numa rajada fica aceso pouco ou entra ja aceso com a foto. Abaixo do minimo da legenda nao se
+    encontra uma cara numa foto de equipa a 15 metros: diz-se, com a duracao que chega. Nao se
+    muda a duracao: a Mesa avisa e nao corrige (decisao 083), e o montar tambem nao.
+    """
+    avisos = []
+    for l, (entra, sai) in zip(corpo, render.encadeados_do_corpo(corpo)):
+        if not l.get("destaque"):
+            continue
+        dura = float(l["duracao_s"])
+        aceso = render.destaque_tempo_aceso(dura, entra, sai)
+        if aceso >= render.LEGENDA_MINIMO_S - 1e-9:
+            continue
+        if l["tratamento"] == "rajada":
+            # NA RAJADA A DURACAO NAO E DELE, e da mecanica (decisoes 017 a 021): sugerir 2 s era
+            # sugerir desfazer a rajada sem o dizer. Diz-se o que e.
+            avisos.append("a zona de destaque do clip %d esta numa rajada: a foto passa em %s s e o "
+                          "destaque nao se chega a ler a 15 metros; para se ler, a foto sai da rajada"
+                          % (l["ordem"], numero(dura)))
+            continue
+        chega = dura
+        while render.destaque_tempo_aceso(chega, entra, sai) < render.LEGENDA_MINIMO_S - 1e-9:
+            chega = round(chega + 0.1, 2)
+        avisos.append("a zona de destaque do clip %d fica inteira so %s s com a foto sozinha no ecra, "
+                      "pouco para encontrar uma cara a 15 metros; com %s s ou mais fica %s s"
+                      % (l["ordem"], numero(round(aceso, 2)), numero(chega),
+                         numero(render.LEGENDA_MINIMO_S)))
+    return avisos
 
 
 def resolve_musica(nome, mus):
@@ -763,6 +1354,28 @@ def contadores_seguidos(texto_anterior, texto):
     return (para1.year if t1 == "datas" else para1) == (de2.year if t2 == "datas" else de2)
 
 
+def fita_continua_o_contador(texto_contador, texto_fita):
+    """A fita abre no ano onde o contador de anos acaba, a partir de janeiro.
+
+    E o caso do contador numa so peca (est.estilo.contador.continuo, 2 de outubro): o primeiro
+    fotograma desta fita e o ultimo do contador, pixel a pixel, e entre os dois nao ha nada para
+    encadear. Um contador por datas acaba com a data grande e nao com o ano, e nao conta; o
+    preparar do render troca por anos os de mais de tres anos, e esses contam.
+    """
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import linha_tempo
+    try:
+        tipo, de, para, _m = linha_tempo.ler_contador(texto_contador or "")
+        ano, _marcas, troco, abre = linha_tempo.ler_meses(texto_fita or "")
+    except (ValueError, AttributeError, TypeError):
+        return False
+    if tipo == "datas":
+        if abs((para - de).days) <= linha_tempo.DIAS_MAXIMOS_DATAS:
+            return False
+        para = para.year
+    return para == ano and abre and troco[0] <= 1e-4
+
+
 def video_tem_som(caminho):
     """Este ficheiro de video tem stream de audio? A pergunta e a do render, uma so."""
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -966,6 +1579,19 @@ def main():
 
     import linha_tempo
 
+    # O ESTILO DA MESA PASSA A VALER JA, no render deste processo: as contas que o montar lhe pede
+    # (as linhas de um texto na legenda de baixo, a altura da legenda no mergulho) sao feitas com a
+    # letra e o corpo que o filme vai ter. Sem estilo volta o de sempre, mesmo que este processo
+    # tenha montado antes outra versao com estilo. O ficheiro escreve-se no fim, com o CSV.
+    global TAMANHO_DOS_TEXTOS
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import render
+    avisos_estilo = []
+    estilo_mesa = render.aplicar_estilo(estado.get("estilo"), avisos_estilo)
+    TAMANHO_DOS_TEXTOS = render.texto_foto_tamanho()
+    avisos_estilo = [a if a.startswith("estilo") else "estilo: %s" % a for a in avisos_estilo] \
+        + avisos_do_estilo(estilo_mesa, render, linha_tempo) + avisos_dos_creditos(estado, estilo_mesa)
+
     def _acende(linhas, desvio0, quem, com_linha=False):
         """Instante, no corpo, em que o nascimento de `quem` e anunciado.
 
@@ -1116,6 +1742,10 @@ def main():
         return "nasce" in x or "nascimento" in x
 
     clips = [dict(c) for c in versao.get("clips", [])]
+    # A INTRO COM AS CORES DA MESA troca-se antes das duas passagens, que medem o mesmo ficheiro.
+    trocadas = intro_da_paleta(clips, estilo_mesa, avisos_estilo)
+    intros_trocadas = [(a.get("f"), b.get("f")) for a, b in zip(clips, trocadas) if a.get("f") != b.get("f")]
+    clips = trocadas
 
     # OS AVISOS SAO DE CADA PASSAGEM. A lista era uma so para as duas, e tudo o que se
     # queixava na primeira voltava a queixar-se na segunda: o Tiago lia cada aviso
@@ -1308,6 +1938,15 @@ def main():
                               "os dois numeros sobrepostos"
                               % (len(linhas), len(linhas) + 1, segundos(trans)))
             trans = 0.0
+        # E A FITA DE 1995 NUMA SO PECA COM O CONTADOR (2 de outubro), pela mesma regra: o primeiro
+        # fotograma dela e o ultimo do contador, e um encadeado punha o "1996" a sair pela direita
+        # por cima do "1996" parado. So com o estilo continuo; sem ele fica o encadeado que vier.
+        if (tipo == "marcos" and trans > 0 and (estilo_mesa.get("contador") or {}).get("continuo")
+                and linhas and linhas[-1]["tipo"] == "contador"
+                and fita_continua_o_contador(linhas[-1]["texto_ecra"], c.get("x", ""))):
+            avisos.append("a fita do clip %d continua o contador do clip %d numa so peca: entra com "
+                          "corte seco, sem o encadeado de %s s" % (len(linhas) + 1, len(linhas), segundos(trans)))
+            trans = 0.0
         # A FITA PARADA NO FIM (decisao 089), so num clip da fita que a conta dos foguetes
         # segurou: a duracao cresce e o texto leva "~segundos", que o render le. Sem
         # paragem a linha sai como sempre, ao byte.
@@ -1340,6 +1979,15 @@ def main():
                    textos_txt,
                    opcoes_txt, dentro=troco),
         linhas[-1]["_k"] = k_clip
+        # A ZONA DE DESTAQUE vai depois de o clip estar na lista: o numero no aviso e o dele, mesmo
+        # quando o nome do bebe entrou antes. So fica na linha quando ha o que escrever.
+        destaque_txt = coluna_do_destaque(c, tipo, linhas[-1]["ordem"], avisos)
+        if destaque_txt:
+            linhas[-1]["destaque"] = destaque_txt
+        # AS OPCOES DO CLIP (3 de outubro), pela mesma regra: so ficam na linha quando ha o que escrever.
+        opcoes_clip_txt = coluna_das_opcoes_clip(c, tipo, linhas[-1]["ordem"], avisos, render)
+        if opcoes_clip_txt:
+            linhas[-1][COLUNA_OPCOES_CLIP] = opcoes_clip_txt
         # O SOM DE UM VIDEO DO CORPO E UMA FAIXA COMO AS OUTRAS. A fanfarra leva o seu som
         # colado com a imagem, pelo concat; um video do meio nao passa por ai, e sem isto
         # saia mudo. O `vzm` diz o que a musica por baixo faz, como nas vozes do pedido.
@@ -1481,7 +2129,8 @@ def main():
                 # quando ele cabe inteiro em 8,2. Abaixo da duracao_minima_mergulho() o encher e
                 # a espera ja estao no minimo e e o proprio mergulho que fica apressado. A
                 # legenda conta: com ela a grelha e mais baixa e o mergulho dura outro tanto.
-                _alt, cobre = render.mergulho_do_texto(n_fotos, l["texto_ecra"])
+                _alt, cobre = render.mergulho_do_texto(n_fotos, l["texto_ecra"],
+                                                       render.ler_opcoes_clip(l.get(COLUNA_OPCOES_CLIP)))
                 minimo = render.duracao_minima_mergulho(n_fotos, entra, sai, cobre)
                 if l["duracao_s"] < minimo - 0.005:
                     avisos.append("colagem em mergulho de %d fotos com %s s e curta: precisa de pelo "
@@ -1519,10 +2168,34 @@ def main():
                                   "para ler a 15 metros: %r (clip %d)"
                                   % (l["tipo"], kk + 1, dura, t, l["ordem"]))
 
+    # OS TEXTOS QUE NAO SAEM COMO ESTAO ESCRITOS (2 de outubro). Os emojis saem a cores, na letra de
+    # emojis, e os hifens especiais como o hifen de sempre; diz-se o resto: um caracter que nem a letra
+    # nem a de emojis tem (sai uma caixa vazia) e um emoji de varios caracteres que esta Pillow nao
+    # junta (o tom de pele, o ZWJ, as bandeiras), com o que sai. A conta e a do render
+    # (render.avisos_dos_textos), que o repete ao arrancar; o numero do clip e o da Mesa.
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import render
+    avisos.extend(numera(a) for a in render.avisos_dos_textos(corpo_m))
+    # A LEGENDA NUMA LINHA QUE NAO CABE, e a posicao que nao chega onde foi pedida (3 de outubro): a conta
+    # e a do render (render.avisos_das_legendas), que o repete ao arrancar.
+    avisos.extend(numera(a) for a in render.avisos_das_legendas(corpo_m))
+
+    # A ZONA DE DESTAQUE ACESA POUCO TEMPO, com os encadeados que o render vai usar. O numero do
+    # clip passa pelo numera(), como os avisos das passagens: e o da Mesa, onde ele o procura.
+    if any(l.get("destaque") for l in corpo_m):
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        import render
+        avisos.extend(numera(a) for a in avisos_do_tempo_do_destaque(corpo_m, render))
+
     caminho = os.path.join(DESTINO, nome + ".csv")
     colunas = list(COLUNAS)
     if any(l["in_s"] != "" for l in linhas):
         colunas[colunas.index("duracao_s") + 1:colunas.index("duracao_s") + 1] = COLUNAS_TROCO
+    # A COLUNA DESTAQUE so entra quando algum clip a tem, no fim: e a regra das colunas novas.
+    if any(l.get("destaque") for l in linhas):
+        colunas.append(COLUNA_DESTAQUE)
+    if any(l.get(COLUNA_OPCOES_CLIP) for l in linhas):
+        colunas.append(COLUNA_OPCOES_CLIP)
     with open(caminho, "w", encoding="utf-8-sig", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=colunas, extrasaction="ignore")
         w.writeheader()
@@ -1991,6 +2664,8 @@ def main():
         w = csv.DictWriter(fh, fieldnames=COLUNAS_SOM + extra, extrasaction="ignore")
         w.writeheader()
         w.writerows(faixas)
+    caminho_estilo = escrever_estilo(estilo_mesa, nome)
+    avisos += avisos_estilo
 
     total = max(l["fim_s"] for l in linhas)
     print("Montagem %r, a partir da Mesa (%s)" % (nome, versao.get("nome", qual)))
@@ -2013,6 +2688,13 @@ def main():
         for txt, antes, depois in esticados:
             nome = txt if txt.startswith("fita de 1995") else "cartao " + '"' + txt + '"'
             print("   %-53s %.1f s -> %.1f s" % (nome, antes, depois))
+    if estilo_mesa:
+        print()
+        print("  ESTILO DA MESA, o que difere de hoje:")
+        for parte in sorted(estilo_mesa):
+            print("   %-9s %s" % (parte, ", ".join("%s %s" % (k, v) for k, v in sorted(estilo_mesa[parte].items()))))
+        for antes, depois in intros_trocadas:
+            print("   a intro %s passa a %s" % (antes, depois))
     if avisos:
         print()
         print("  AVISOS")
@@ -2020,6 +2702,11 @@ def main():
             print("   %s" % a)
     print()
     print("Escrito: %s" % caminho)
+    if caminho_estilo:
+        print("Estilo:  %s" % caminho_estilo)
+    # O render deste processo volta ao de sempre: quem o usar a seguir (os testes, outro script)
+    # nao fica com o estilo desta montagem. O render de verdade le-o do ficheiro.
+    render.aplicar_estilo({})
 
 
 if __name__ == "__main__":

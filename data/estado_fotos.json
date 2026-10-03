@@ -1,12 +1,12 @@
 {
- "build": "20261001-224011",
- "gerado": "2026-10-01 22:40",
- "total": 719,
- "prontas": 719,
+ "build": "20261003-050017",
+ "gerado": "2026-10-03 05:00",
+ "total": 741,
+ "prontas": 741,
  "espera": [],
  "origens": {
-  "lanczos": 186,
-  "original": 533
+  "lanczos": 188,
+  "original": 553
  },
  "por_registar": 0,
  "por_registar_lista": []

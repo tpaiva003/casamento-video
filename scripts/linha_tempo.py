@@ -37,6 +37,10 @@ import re
 
 from PIL import Image, ImageDraw, ImageFont
 
+# Os emojis a cores e os sinais equivalentes nos textos dos marcos (2 de outubro): a mesma maneira de
+# medir e de desenhar do render. Sem emojis nem sinais equivalentes, o desenho de sempre ao byte.
+import texto_emojis
+
 FONTE = r"C:\Windows\Fonts\arialbd.ttf"
 # A LETRA FINA JA NAO DESENHA NADA NO FILME, desde a decisao 084: era a dos meses da fita de
 # 1995 e passou a negrito, como a regua do contador. Fica porque o teste dos meses da regua a
@@ -109,6 +113,96 @@ REGUA_TEXTO = (176, 164, 172)
 # leitura e volta do outro lado, que e o que se ve numa regua de verdade atras de um cursor.
 NOME_PERTO = 12
 NOME_LONGE = 48
+
+# A FITA DE 1995 TEM TRES CORES SUAS, escritas no meio do meses() ate 2 de outubro: a linha do
+# centro, quase apagada (1,27 para 1, como era o ponteiro antes de 18 de setembro), a data de uma
+# marca pequena e o ano que encolhe para o alto, que vai do cinzento 246 ao 150. Ficam aqui com
+# nome para o estilo da Mesa as poder seguir; sem estilo sao as de sempre, ao byte.
+GUIA_MESES = (38, 30, 36)
+DATA_MARCA = (214, 182, 196)
+
+# ------------------------------------------------- as cores que a Mesa deixa mudar
+# O Tiago, a 2 de outubro: "A Clara pediu-me para alterarmos o vermelho que esta na intro da
+# Marvel, pois diz que parece demasiado Marvel, permite que isto seja customizavel (cor tamanho
+# estilos) na mesa, incluindo as linhas e os contornos que aparecem no contador do tempo". As
+# cores do contador e da fita de 1995 vem do estilo da Mesa (est.estilo.contador); o render le o
+# estilo.json da montagem e poe-nas aqui com aplicar_cores() antes de desenhar, no pai e em cada
+# fatia. Sem estilo ficam as de cima, e nenhum pixel muda.
+#
+# CADA NOME DO CONTRATO MANDA NUMA CONSTANTE, e as que hoje sao a cor da linha continuam a ser:
+# os tracos de fora da viagem (REGUA_FORA) e os tracos pequenos (REGUA_MENOR) seguem a "linha".
+# As tres cores proprias da fita de 1995 seguem a sua vizinha so quando ela muda: a linha do
+# centro a "ponteiro", a data da marca pequena a "marco_texto", e o ano a "ano".
+CORES_DO_ESTILO = {"linha": "LINHA", "regua": "REGUA_MAIOR", "regua_texto": "REGUA_TEXTO",
+                   "ponteiro": "PONTEIRO", "marco": "MARCO", "marco_texto": "MARCO_TEXTO",
+                   "ano": "ANO_PERTO", "ano_longe": "ANO_LONGE", "nascimento": "NASC_COR"}
+_CORES_DE_SEMPRE = {k: globals()[k] for k in list(CORES_DO_ESTILO.values()) + ["REGUA_FORA", "REGUA_MENOR"]}
+_ESTILIZADAS = frozenset()
+GUIA_FRACAO = 0.2           # a linha do centro da fita de 1995: do fundo ao ponteiro, a um quinto
+DATA_MARCA_FRACAO = 0.83    # a data da marca pequena: a cor do texto do marco, mais apagada
+ANO_FITA_APAGA = 150 / 246.0   # o ano da fita de 1995 acaba a esta fracao da cor com que comeca
+
+# O CONTADOR NUMA SO PECA, est.estilo.contador.continuo (contrato de 2 de outubro, 1b). Ver
+# _meses_numa_peca(). Falso e "como esta", e e a omissao: a fita de 1995 desenha-se como sempre.
+CONTINUO = False
+
+# A DATA DO NASCIMENTO AFASTADA DOS MESES, est.estilo.contador.data_afastada (2 de outubro). O
+# pedido dele: "separa com um pouco mais de espaco entre a data '12 de Setembro de 1995' e a
+# abreviatura do 'SET'". Numa so peca isso ja vem com o desenho (a data passa para baixo do texto,
+# a 180 px dos meses); esta chave da o espaco tambem na fita de duas pecas, a de sempre, e so a
+# ela. Falso e "como esta", a omissao: a data a 14 px dos meses, ao byte.
+#
+# QUANTO: NASC_DATA_AFASTA px mais abaixo, e a medida e a do proprio fotograma. Na fita de sempre
+# o texto do nascimento fica 55 px acima da bola do risco (da linha de base das letras, fila 471,
+# ao topo da bola, fila 526); com a data 40 px mais abaixo ela fica 54 px abaixo dos meses (das
+# filas 650 a 704, contra 650 a 664). E a mesma folga dos dois lados da linha: o texto por cima da
+# bola, a data por baixo da regua. Os meses ficam a 20 px da linha, e a 54 px a data deixa de se
+# ler como uma terceira fila da regua. So os dois nascimentos: as datas dos marcos pequenos ficam
+# onde estao. Os 40 sao a 1080; noutra altura vao na mesma proporcao.
+DATA_AFASTADA = False
+NASC_DATA_AFASTA = 40
+
+
+def aplicar_cores(cores=None, continuo=False, data_afastada=False):
+    """Poe as cores do estilo da Mesa, {nome do contrato: (r, g, b)}; sem nada, voltam as de sempre.
+
+    Comeca sempre pelas de sempre: um processo que faz duas montagens seguidas (os testes, o
+    montar e o render no mesmo Python) nao fica com as cores da primeira na segunda. O mesmo vale
+    para o `continuo`, o contador numa so peca, e para a `data_afastada`: sem eles volta a fita de
+    sempre.
+    """
+    global _ESTILIZADAS, CONTINUO, DATA_AFASTADA
+    g = globals()
+    g.update(_CORES_DE_SEMPRE)
+    cores = {k: v for k, v in (cores or {}).items() if k in CORES_DO_ESTILO and v is not None}
+    for chave, cor in cores.items():
+        g[CORES_DO_ESTILO[chave]] = tuple(int(v) for v in cor[:3])
+    if "linha" in cores:
+        g["REGUA_FORA"] = g["REGUA_MENOR"] = g["LINHA"]
+    _ESTILIZADAS = frozenset(cores)
+    CONTINUO = continuo is True
+    DATA_AFASTADA = data_afastada is True
+
+
+def _cor_da_guia():
+    """A linha do centro da fita de 1995: a de sempre, ou o ponteiro do estilo muito apagado."""
+    if "ponteiro" not in _ESTILIZADAS:
+        return GUIA_MESES
+    return tuple(int(FUNDO[i] + (PONTEIRO[i] - FUNDO[i]) * GUIA_FRACAO) for i in range(3))
+
+
+def _cor_do_ano_da_fita(entrada):
+    """O "1995" da fita, que apaga enquanto sobe: do cinzento 246 ao 150, ou da cor do ano do estilo."""
+    if "ano" not in _ESTILIZADAS:
+        return tuple(int(246 + (150 - 246) * entrada) for _ in range(1)) * 3
+    return tuple(int(c + (c * ANO_FITA_APAGA - c) * entrada) for c in ANO_PERTO)
+
+
+def _cor_da_data_da_marca():
+    """A data de uma marca pequena da fita de 1995: a de sempre, ou a do texto do marco apagada."""
+    if "marco_texto" not in _ESTILIZADAS:
+        return DATA_MARCA
+    return tuple(int(c * DATA_MARCA_FRACAO) for c in MARCO_TEXTO)
 
 
 def contraste(a, b):
@@ -281,11 +375,17 @@ def imagem_da_marca(nome, alt_alvo):
     return im
 
 
-def _texto(d, txt, fonte, x, y, cor, centro=True):
-    caixa = d.textbbox((0, 0), txt, font=fonte)
+def _texto(d, txt, fonte, x, y, cor, centro=True, alfa=1.0):
+    """O texto centrado (ou a comecar) em x e ao meio da caixa da tinta em y.
+
+    Um emoji vai a cores, na letra de emojis, e os equivalentes trocam-se (texto_emojis, 2 de outubro).
+    `alfa` e o quanto o texto ja acendeu: as letras acendem pela `cor`, que quem chama ja escureceu, e o
+    emoji, que tem as cores dele, desvanece com este alfa. Sem emojis e o desenho de sempre.
+    """
+    caixa = texto_emojis.caixa(txt, fonte, desenho=d)
     w, h = caixa[2] - caixa[0], caixa[3] - caixa[1]
     px = x - w / 2.0 if centro else x
-    d.text((px - caixa[0], y - h / 2.0 - caixa[1]), txt, font=fonte, fill=cor)
+    texto_emojis.escrever(d, (px - caixa[0], y - h / 2.0 - caixa[1]), txt, fonte, cor, alfa=alfa)
     return w
 
 
@@ -528,7 +628,7 @@ def anos(L, A, ano_de, ano_para, marcos, t_rel, duracao):
             alfa = perto ** 1.2 * aceso
             _risco_do_marco(tela, d, x0, y_linha, alfa)
             _texto(d, txt, f_marco, x0, y_linha + int(A * Y_ROTULO),
-                   tuple(int(MARCO_TEXTO[i] * alfa) for i in range(3)))
+                   tuple(int(MARCO_TEXTO[i] * alfa) for i in range(3)), alfa=alfa)
     return tela
 
 
@@ -679,49 +779,24 @@ def datas(L, A, de, para, marcos, t_rel, duracao):
             alfa = perto ** 1.2 * aceso
             _risco_do_marco(tela, d, x0, y_linha, alfa)
             _texto(d, txt, f_marco, x0, y_linha + int(A * Y_ROTULO),
-                   tuple(int(MARCO_TEXTO[i] * alfa) for i in range(3)))
+                   tuple(int(MARCO_TEXTO[i] * alfa) for i in range(3)), alfa=alfa)
     return tela
 
 
-def meses(L, A, ano, marcas, t_rel, duracao, troco=(0.0, 1.0), abre=True):
-    """A fita de um ano so, mes a mes, com acontecimentos marcados.
+def _fracao_do_ano(dia, mes):
+    """Onde cai um dia na fita de um ano, de 0 a 1: doze meses iguais, cada um com 31 dias."""
+    return ((mes - 1) + (dia - 1) / 31.0) / 12.0
 
-    `marcas` e uma lista de (dia, mes, texto, grande). Os grandes sao os dois
-    nascimentos, e sao os unicos que param a fita a serio. Esta fita anda no
-    sentido NORMAL do tempo, da esquerda para a direita, porque aqui ja nao
-    estamos a recuar: chegamos a 1995 e seguimos o ano.
+
+def _andamento_da_fita(marcas, t_rel, duracao, troco, abre):
+    """(posicao na fita, marca a acender ou None, quanto esta acesa) no instante t_rel.
+
+    E A CONTA DO TEMPO DA FITA, e so ela: a mesma para a fita de sempre e para a fita numa so
+    peca (2 de outubro), porque e dela que dependem os foguetes dos nascimentos (decisoes 088 a
+    091), a fita parada na data acesa e o som. Mudar o desenho nao pode mudar um instante.
     """
     p = max(0.0, min(1.0, t_rel / duracao if duracao else 0.0))
-
-    # ENTRADA COM ZOOM, e a razao e uma queixa do Tiago: "o movimento nao esta
-    # natural na passagem da timeline por anos para a timeline por meses".
-    #
-    # Antes, a fita dos anos acabava com 1995 grande ao centro e a dos meses
-    # comecava logo na escala do mes, ou seja mudava de escala num corte sem
-    # nada que explicasse a mudanca. Agora o primeiro segundo e meio abre a
-    # escala do ano ate a do mes, como quem se aproxima de um ponto da fita.
-    # Os meses e a linha aparecem a medida que ha espaco para eles.
-    # A ENTRADA SO NO PRIMEIRO CLIP DA FITA.
-    #
-    # O Tiago viu: "ha um efeito estranho apos o abre a sapo em aveiro". Eram
-    # DOIS "1995" sobrepostos, um pequeno no topo e outro grande por cima da
-    # imagem do SAPO. A causa: cada clip de fita recomecava a entrada com zoom,
-    # portanto o clip seguinte desenhava outra vez o ano grande e em baixo,
-    # enquanto o anterior ainda estava no ecra a desvanecer.
-    #
-    # Num clip que CONTINUA a fita onde o anterior a deixou, nao ha nada para
-    # abrir: a escala ja e a do mes. Marca-se com um "c" no fim do intervalo.
-    T_ENTRADA = 1.5 if abre else 0.0
-    entrada = 1.0 if not abre else suave(min(1.0, t_rel / T_ENTRADA))
-    largura_ano = (L * 0.30) + (L * 2.4 - L * 0.30) * entrada
-    # OS MESES SAO OS MESMOS DA REGUA DO CONTADOR, decisao 084 (sistema A do letreiro).
-    # Esta fita tinha a sua propria lista em minusculas, e a regua do contador que passa
-    # segundos antes ja usa a MESES_CURTOS em maiusculas desde 18 de setembro, precisamente
-    # porque "na sala nao ha leitura de perto". Eram duas grafias do mesmo mes em duas pecas
-    # vizinhas do mesmo bloco, e uma delas o projecto ja tinha declarado ilegivel.
-
-    def fracao(dia, mes):
-        return ((mes - 1) + (dia - 1) / 31.0) / 12.0
+    fracao = _fracao_do_ano
 
     # TROCO DO ANO A PERCORRER, e a lista de paragens feita a mao.
     #
@@ -754,12 +829,58 @@ def meses(L, A, ano, marcas, t_rel, duracao, troco=(0.0, 1.0), abre=True):
     atual = passos[qual][1] if qual is not None and 0 <= qual < len(passos) else None
     # Aparece e desaparece nas pontas da paragem, para nao piscar no corte.
     aceso = min(1.0, dentro / 0.18) * min(1.0, (1.0 - dentro) / 0.18) if atual else 0.0
+    return pos, atual, aceso
+
+
+def meses(L, A, ano, marcas, t_rel, duracao, troco=(0.0, 1.0), abre=True):
+    """A fita de um ano so, mes a mes, com acontecimentos marcados.
+
+    `marcas` e uma lista de (dia, mes, texto, grande). Os grandes sao os dois
+    nascimentos, e sao os unicos que param a fita a serio. Esta fita anda no
+    sentido NORMAL do tempo, da esquerda para a direita, porque aqui ja nao
+    estamos a recuar: chegamos a 1995 e seguimos o ano.
+
+    Com o estilo `continuo` da Mesa desenha-se a mesma fita como o contador, ver _meses_numa_peca().
+    Com a `data_afastada` a data de um nascimento desce NASC_DATA_AFASTA px; numa so peca ja esta
+    longe dos meses, e a chave nao muda nada.
+    """
+    if CONTINUO:
+        return _meses_numa_peca(L, A, ano, marcas, t_rel, duracao, troco, abre)
+
+    # ENTRADA COM ZOOM, e a razao e uma queixa do Tiago: "o movimento nao esta
+    # natural na passagem da timeline por anos para a timeline por meses".
+    #
+    # Antes, a fita dos anos acabava com 1995 grande ao centro e a dos meses
+    # comecava logo na escala do mes, ou seja mudava de escala num corte sem
+    # nada que explicasse a mudanca. Agora o primeiro segundo e meio abre a
+    # escala do ano ate a do mes, como quem se aproxima de um ponto da fita.
+    # Os meses e a linha aparecem a medida que ha espaco para eles.
+    # A ENTRADA SO NO PRIMEIRO CLIP DA FITA.
+    #
+    # O Tiago viu: "ha um efeito estranho apos o abre a sapo em aveiro". Eram
+    # DOIS "1995" sobrepostos, um pequeno no topo e outro grande por cima da
+    # imagem do SAPO. A causa: cada clip de fita recomecava a entrada com zoom,
+    # portanto o clip seguinte desenhava outra vez o ano grande e em baixo,
+    # enquanto o anterior ainda estava no ecra a desvanecer.
+    #
+    # Num clip que CONTINUA a fita onde o anterior a deixou, nao ha nada para
+    # abrir: a escala ja e a do mes. Marca-se com um "c" no fim do intervalo.
+    T_ENTRADA = 1.5 if abre else 0.0
+    entrada = 1.0 if not abre else suave(min(1.0, t_rel / T_ENTRADA))
+    largura_ano = (L * 0.30) + (L * 2.4 - L * 0.30) * entrada
+    # OS MESES SAO OS MESMOS DA REGUA DO CONTADOR, decisao 084 (sistema A do letreiro).
+    # Esta fita tinha a sua propria lista em minusculas, e a regua do contador que passa
+    # segundos antes ja usa a MESES_CURTOS em maiusculas desde 18 de setembro, precisamente
+    # porque "na sala nao ha leitura de perto". Eram duas grafias do mesmo mes em duas pecas
+    # vizinhas do mesmo bloco, e uma delas o projecto ja tinha declarado ilegivel.
+    fracao = _fracao_do_ano
+    pos, atual, aceso = _andamento_da_fita(marcas, t_rel, duracao, troco, abre)
 
     tela = Image.new("RGB", (L, A), FUNDO)
     d = ImageDraw.Draw(tela)
     y_linha = int(A * 0.56)
     d.line([(0, y_linha), (L, y_linha)], fill=LINHA, width=2)
-    d.line([(L // 2, y_linha - 230), (L // 2, y_linha + 150)], fill=(38, 30, 36), width=3)
+    d.line([(L // 2, y_linha - 230), (L // 2, y_linha + 150)], fill=_cor_da_guia(), width=3)
 
     f_ano = ImageFont.truetype(FONTE, int(A * 0.13))
     # 38 E NAO OS 46 DA REGUA, e a razao e a folga por baixo: os meses sao centrados em
@@ -778,7 +899,7 @@ def meses(L, A, ano, marcas, t_rel, duracao, troco=(0.0, 1.0), abre=True):
     corpo_ano = int(A * (0.17 - 0.04 * entrada))
     y_ano = int(y_linha - A * 0.14 + (A * 0.16 - (y_linha - A * 0.14)) * entrada)
     _texto(d, str(ano), ImageFont.truetype(FONTE, corpo_ano), L / 2.0, y_ano,
-           tuple(int(246 + (150 - 246) * entrada) for _ in range(1)) * 3)
+           _cor_do_ano_da_fita(entrada))
 
     desvio = L / 2.0 - pos * largura_ano
     for m in range(12):
@@ -826,12 +947,262 @@ def meses(L, A, ano, marcas, t_rel, duracao, troco=(0.0, 1.0), abre=True):
                         [cx - 2, cy - 2, cx + miniatura.width + 1,
                          cy + miniatura.height + 1],
                         outline=tuple(int(c * aceso) for c in MARCO), width=3)
-        _texto(d, txt, fonte, x, y_txt, claro)
+        _texto(d, txt, fonte, x, y_txt, claro, alfa=aceso)
+        # a data de um nascimento desce mais NASC_DATA_AFASTA com a data_afastada da Mesa, contados a
+        # 1080 (a 540 sao 20, para nao sair do ecra nas resolucoes dos testes); sem ela a conta e a
+        # de sempre, ao byte
+        afasta = int(round(NASC_DATA_AFASTA * A / 1080.0)) if DATA_AFASTADA else 0
+        desce = (NASC_DATA_DESCE + afasta) if grande else 0
         _texto(d, "%d de %s" % (dia, ["janeiro", "fevereiro", "março", "abril", "maio",
                                       "junho", "julho", "agosto", "setembro", "outubro",
                                       "novembro", "dezembro"][mes - 1]),
-               (f_data_nasc if grande else f_data), x, y_linha + 64 + (NASC_DATA_DESCE if grande else 0),
-               tuple(int(c * aceso) for c in (NASC_COR if grande else (214, 182, 196))))
+               (f_data_nasc if grande else f_data), x, y_linha + 64 + desce,
+               tuple(int(c * aceso) for c in (NASC_COR if grande else _cor_da_data_da_marca())))
+    return tela
+
+
+# ------------------------------------------------- a fita de 1995 numa so peca com o contador
+# O Tiago, a 2 de outubro: "No contador inicial melhora, pois nos comecamos em 2026 e no dia, mas
+# depois quando chegamos a 1995, e como se fosse um contador diferente em vez de so mexer de forma
+# similar como em Outubro de 2026". E as 02:23: "o movimentar em 1995 que nao pode parecer outra
+# peca", com "como esta" sempre a mao (est.estilo.contador.continuo, contrato 1b).
+#
+# O QUE MUDAVA NA PASSAGEM, medido no render de 1 de outubro (v3_2026-10-01_2311, aos 42,3 s), do
+# ultimo fotograma do contador para os primeiros da fita:
+#   - a linha subia 44 px (0,60 para 0,56 da altura);
+#   - o ponteiro com os dois bicos (150,138,146), a 6 para 1, dava lugar a um risco de 3 px a
+#     (38,30,36), 1,27 para 1: o unico ponto fixo do ecra desaparecia;
+#   - o "1995" saltava 45 px para cima, encolhia de 183 para 140 px e apagava ate ao cinzento 150;
+#     o "1996" ao lado sumia de um fotograma para o outro;
+#   - a regua mudava de desenho: tracos para baixo da linha passavam a cruzar a linha, os nomes
+#     dos meses de 46 px a 58 px da linha para 38 px a 34 px, e os riscos vermelhos de todos os
+#     marcos acendiam de uma vez;
+#   - o texto de um marco ia para cima da linha e a data para baixo, colada aos meses: o "12 de
+#     setembro" a 58 px ficava a 14 px do "SET".
+# Tudo isto no mesmo corte, e o ponteiro, o unico ponto fixo, deixa de existir: le-se como outra peca.
+#
+# NUMA SO PECA, a fita de 1995 e o contador visto de mais perto, como o de datas ja era: a mesma
+# linha a 0,60, o mesmo ponteiro, o mesmo "1995" grande no mesmo sitio, na mesma cor, do primeiro
+# ao ultimo fotograma da fita. O primeiro fotograma e o ultimo do contador, pixel a pixel (o
+# teste_contador_numa_peca_sem_salto mede-o), e a entrada com zoom de sempre (1,5 s) faz o resto
+# a vista: os tracos pequenos dos meses crescem ate serem os tracos grandes da regua, os nomes
+# acendem por baixo deles no corpo e na altura dos do contador, o "1996" sai pela direita e os
+# riscos dos marcos acendem. E o contador que chega ao ano a RECUAR, o do filme: um que chegasse
+# a avancar ("1990>1995") tem o 1994 a esquerda e nao o 1996, e ai a passagem nao e igual ao pixel.
+#
+# CADA MARCO ACENDE ONDE O CONTADOR ACENDE O SEU, por baixo da linha: o texto logo abaixo do bico
+# de baixo do ponteiro (onde estava o "4 de outubro de 2026") e a data por baixo do texto. A
+# imagem fica por cima do "1995". O texto, a data e a imagem sao os dele, nos corpos e nas cores
+# de sempre (58 e 40, e os nascimentos a 66 e 58 na cor quente, decisoes 092 e 093).
+#
+# A DATA DO NASCIMENTO DEIXA DE ESTAR COLADA AOS MESES: o "SET" fica na regua e a data duas
+# linhas abaixo, depois do texto. E o pedido dele do mesmo dia: "separa com um pouco mais de
+# espaco entre a data '12 de Setembro de 1995' e a abreviatura do 'SET'".
+#
+# O TEMPO NAO MUDA. A conta das paragens e a do _andamento_da_fita(), a mesma da fita de sempre:
+# os foguetes, a fita parada e o som continuam onde estavam, e nenhuma duracao muda.
+PECA_FOLGA_TEXTO = 18     # do bico de baixo do ponteiro ao topo das maiusculas do texto, px a 1080
+PECA_FOLGA_DATA = 14      # do fim das pernas do texto ao topo da data; o nascimento leva mais NASC_DATA_DESCE
+PECA_FOLGA_IMAGEM = 28    # do fundo da imagem do marco ao topo do "1995"
+PECA_RISCO = 26           # meia altura do risco de um marco, a do contador (_risco_do_marco)
+PECA_RISCO_NASC = 44      # o de um nascimento sobe ate aqui acima da linha, com a bola
+PECA_BOLA = 12            # o raio da bola do nascimento
+PECA_RISCO_LARGO = 6      # a grossura do risco do contador; o de um nascimento leva 9
+PECA_RISCO_ACENDE = 0.4   # a fracao da entrada em que os riscos dos marcos acabam de acender
+PECA_VIZINHO = 60         # px de folga em que o ano vizinho ("1996") se apaga junto do grande
+TEXTO_MARCA_CORPO = 58    # o texto de um marco pequeno, como na fita de sempre
+DATA_MARCA_CORPO = 40     # e a sua data
+MESES_POR_EXTENSO = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto",
+                     "setembro", "outubro", "novembro", "dezembro"]
+
+
+def _mistura(a, b, f):
+    """A cor a uma fracao f do caminho de a para b."""
+    return tuple(int(a[i] + (b[i] - a[i]) * f) for i in range(3))
+
+
+def _risco_misturado(tela, x, cima, baixo, largura, cor, alfa):
+    """Um risco vertical a acender POR CIMA do que la esta, como o _risco_do_marco().
+
+    Pintado a subir do preto, um risco a 5% de alfa abria um buraco escuro na linha e na regua; o
+    _risco_do_marco() explica o caso do ponteiro, que e o mesmo aqui. Aceso por inteiro e uma linha.
+    """
+    if alfa <= 0.0:
+        return
+    if alfa >= 1.0:
+        ImageDraw.Draw(tela).line([(x, cima), (x, baixo)], fill=cor, width=largura)
+        return
+    x_esq, y_cima = int(math.floor(x)) - largura, int(cima) - 4
+    w, h = 2 * largura + 1, int(baixo - cima) + 9
+    mascara = Image.new("L", (w, h), 0)
+    ImageDraw.Draw(mascara).line([(x - x_esq, cima - y_cima), (x - x_esq, baixo - y_cima)],
+                                 fill=int(round(255 * alfa)), width=largura)
+    tela.paste(cor, (x_esq, y_cima, x_esq + w, y_cima + h), mascara)
+
+
+def _bola_misturada(tela, x, y, raio, cor, alfa):
+    """A bola do risco de um nascimento, a acender por cima do que la esta."""
+    if alfa <= 0.0:
+        return
+    if alfa >= 1.0:
+        ImageDraw.Draw(tela).ellipse([x - raio, y - raio, x + raio, y + raio], fill=cor)
+        return
+    x0, y0 = int(math.floor(x - raio)) - 1, int(math.floor(y - raio)) - 1
+    lado = 2 * raio + 4
+    mascara = Image.new("L", (lado, lado), 0)
+    ImageDraw.Draw(mascara).ellipse([x - raio - x0, y - raio - y0, x + raio - x0, y + raio - y0],
+                                    fill=int(round(255 * alfa)))
+    tela.paste(cor, (x0, y0, x0 + lado, y0 + lado), mascara)
+
+
+def _texto_pelo_topo(d, txt, fonte, x, topo, cor, alfa=1.0):
+    """O texto centrado em x com o topo das maiusculas em `topo`. Devolve a linha de base.
+
+    PELO TOPO DAS MAIUSCULAS E NAO PELO MEIO DA CAIXA, como o _texto(): a caixa de "Nasce o 2o
+    filho da Graca" desce com o c cedilhado e a de "Sai o Windows 95" nao, e pelo meio da caixa
+    cada marco ficava a sua altura. Assim a folga ao ponteiro e a mesma em todos.
+
+    E O EMOJI DE UM MARCO (2 de outubro) vai a cores na mesma linha de base, como no _texto(), e
+    desvanece com o `alfa`.
+    """
+    maiuscula = -fonte.getbbox("H", anchor="ls")[1]
+    base = topo + maiuscula
+    caixa = texto_emojis.caixa(txt, fonte, anchor="ls", desenho=d)
+    texto_emojis.escrever(d, (x - (caixa[0] + caixa[2]) / 2.0, base), txt, fonte, cor, anchor="ls", alfa=alfa)
+    return base
+
+
+def _regua_do_ano(d, L, A, y_linha, ano, desvio, largura, entrada):
+    """A regua da fita numa so peca: a do contador de anos a abrir ate ser a dos meses.
+
+    Com `entrada` a 0 e EXATAMENTE a regua do contador parado num ano (_regua() do anos()): um
+    traco grande em cada janeiro, que e um ano, e tracos pequenos de mes a mes, os que caem
+    debaixo do ponteiro tapados por ele. A abrir, os tracos dos meses do ano crescem ate ao
+    tamanho e a cor dos grandes, e os nomes acendem por baixo, no corpo e a altura dos nomes da
+    regua do contador; os meses dos outros anos ficam na cor da linha, sem nome, porque ali nao
+    ha nada para contar, como os anos de fora da viagem no contador.
+    """
+    mes_px = largura / 12.0
+    k = int(math.floor((-mes_px - desvio) / mes_px))
+    while True:
+        x = desvio + k * mes_px
+        k += 1
+        if x > L + mes_px:
+            break
+        if (k - 1) % 12 == 0:
+            continue                      # os janeiros sao os anos, desenhados a seguir
+        alvo = REGUA_MAIOR if 0 <= k - 1 < 12 else REGUA_FORA
+        if entrada < 0.5 and _tapado_pelo_ponteiro(x, L, 1.0):
+            continue
+        alto = REGUA_MENOR_ALTO + (REGUA_MAIOR_ALTO - REGUA_MENOR_ALTO) * entrada
+        d.line([(x, y_linha + 1), (x, y_linha + alto)], fill=_mistura(REGUA_MENOR, alvo, entrada),
+               width=2 if entrada < 0.5 else 3)
+    # Os janeiros. No contador que chega a este ano, o proprio ano e os seguintes estao dentro da
+    # viagem e os de antes fora; na fita so o ano dela esta dentro.
+    for k in range(-3, 4):
+        x = desvio + k * largura
+        if x < -mes_px or x > L + mes_px:
+            continue
+        no_contador = REGUA_MAIOR if k >= 0 else REGUA_FORA
+        na_fita = REGUA_MAIOR if k == 0 else REGUA_FORA
+        d.line([(x, y_linha + 1), (x, y_linha + REGUA_MAIOR_ALTO)],
+               fill=_mistura(no_contador, na_fita, entrada), width=3)
+    # Os nomes acendem no fim da entrada, como na fita de sempre, e apagam-se junto do ponteiro
+    # como os do contador (NOME_PERTO e NOME_LONGE).
+    acende = max(0.0, min(1.0, (entrada - 0.25) / 0.75))
+    if acende <= 0.0:
+        return
+    f_mes = ImageFont.truetype(FONTE, CORPO_ROTULO)
+    for m in range(12):
+        x = desvio + m * mes_px
+        if x < -mes_px or x > L + mes_px:
+            continue
+        caixa = d.textbbox((0, 0), MESES_CURTOS[m], font=f_mes)
+        vao = abs(x - L / 2.0) - (caixa[2] - caixa[0]) / 2.0 - PONTEIRO_LARGURA / 2.0
+        aceso = acende * min(1.0, max(0.0, (vao - NOME_PERTO) / float(NOME_LONGE - NOME_PERTO)))
+        if aceso > 0.0:
+            _texto(d, MESES_CURTOS[m], f_mes, x, y_linha + Y_REGUA_TEXTO, _mistura(FUNDO, REGUA_TEXTO, aceso))
+
+
+def _meses_numa_peca(L, A, ano, marcas, t_rel, duracao, troco=(0.0, 1.0), abre=True):
+    """A fita de um ano desenhada como o contador que chega a ele. Ver o comentario de cima."""
+    e = A / 1080.0
+    pos, atual, aceso = _andamento_da_fita(marcas, t_rel, duracao, troco, abre)
+    # A MESMA ENTRADA COM ZOOM da fita de sempre, a partir do passo de um ano do contador
+    # (int(L * 0,30), como no anos(), para o primeiro fotograma ser o ultimo dele ao pixel).
+    passo = int(L * 0.30)
+    entrada = 1.0 if not abre else suave(min(1.0, t_rel / 1.5))
+    largura = passo + (L * 2.4 - passo) * entrada
+    desvio = L / 2.0 - pos * largura
+
+    tela = Image.new("RGB", (L, A), FUNDO)
+    d = ImageDraw.Draw(tela)
+    y_linha = int(A * 0.60)
+    d.line([(0, y_linha), (L, y_linha)], fill=LINHA, width=2)
+    _ponteiro(d, L, A, y_linha)
+    _regua_do_ano(d, L, A, y_linha, ano, desvio, largura, entrada)
+
+    # O ANO GRANDE, onde e como o contador o deixou, e o vizinho de cima a sair pela direita. O
+    # vizinho so existe se no contador se veria sem tocar no grande: num troco que abre a meio do
+    # ano (a fita da Clara, depois das fotos do Tiago) estaria em cima dele, e nao se desenha.
+    f_grande = ImageFont.truetype(FONTE, int(A * CORPO_NUMERO))
+    y_ano = y_linha - int(A * 0.14)
+    _texto(d, str(ano), f_grande, L / 2.0, y_ano, ANO_PERTO)
+    if abre:
+        f_medio = ImageFont.truetype(FONTE, int(A * 0.10))
+        larg_grande = d.textbbox((0, 0), str(ano), font=f_grande)
+        larg_vizinho = d.textbbox((0, 0), str(ano + 1), font=f_medio)
+        folga = passo * (1.0 - pos) - (larg_grande[2] - larg_grande[0]) / 2.0 \
+            - (larg_vizinho[2] - larg_vizinho[0]) / 2.0
+        vizinho = max(0.0, min(1.0, folga / (PECA_VIZINHO * e)))
+        x_viz = desvio + largura
+        if vizinho > 0.0 and -passo < x_viz < L + passo:
+            _texto(d, str(ano + 1), f_medio, x_viz, y_ano, _mistura(FUNDO, ANO_LONGE, vizinho))
+
+    # Os riscos de todos os marcos, como na fita de sempre ("e isso que da a sensacao de um ano
+    # cheio"), com o desenho do risco do contador; acendem durante a entrada.
+    risco = max(0.0, min(1.0, entrada / PECA_RISCO_ACENDE))
+    meio = int(round(PECA_RISCO * e))
+    for dia, mes, _txt, grande, _img in marcas:
+        fr = _fracao_do_ano(dia, mes)
+        x = desvio + fr * largura
+        if x < -L or x > 2 * L:
+            continue
+        base = 0.28 + 0.72 * max(0.0, 1.0 - abs(fr - pos) * 9.0)
+        cor = tuple(int(c * base) for c in MARCO)
+        if grande:
+            cima = y_linha - int(round(PECA_RISCO_NASC * e))
+            _risco_misturado(tela, x, cima, y_linha + meio, max(1, int(round(9 * e))), cor, risco)
+            _bola_misturada(tela, x, cima, max(1, int(round(PECA_BOLA * e))), cor, risco)
+        else:
+            _risco_misturado(tela, x, y_linha - meio, y_linha + meio,
+                             max(1, int(round(PECA_RISCO_LARGO * e))), cor, risco)
+
+    if atual and aceso > 0.02:
+        dia, mes, txt, grande, img = atual
+        x = desvio + _fracao_do_ano(dia, mes) * largura
+        f_txt = ImageFont.truetype(FONTE, max(1, int(round((NASC_CORPO if grande else TEXTO_MARCA_CORPO) * e))))
+        f_data = ImageFont.truetype(FONTE, max(1, int(round((NASC_DATA_CORPO if grande else DATA_MARCA_CORPO) * e))))
+        topo = y_linha + int(A * PONTEIRO_BAIXO) + int(round(PECA_FOLGA_TEXTO * e))
+        base = _texto_pelo_topo(d, txt, f_txt, x, topo,
+                                tuple(int(c * aceso) for c in (NASC_COR if grande else MARCO_TEXTO)), alfa=aceso)
+        folga = PECA_FOLGA_DATA + (NASC_DATA_DESCE if grande else 0)
+        _texto_pelo_topo(d, "%d de %s" % (dia, MESES_POR_EXTENSO[mes - 1]), f_data, x,
+                         base + f_txt.getmetrics()[1] + int(round(folga * e)),
+                         tuple(int(c * aceso) for c in (NASC_COR if grande else _cor_da_data_da_marca())))
+        if img:
+            miniatura = imagem_da_marca(img, int(A * 0.20))
+            if miniatura is not None:
+                caixa = d.textbbox((0, 0), str(ano), font=f_grande)
+                topo_ano = y_ano - (caixa[3] - caixa[1]) / 2.0
+                cx = int(x - miniatura.width / 2)
+                cy = int(topo_ano - int(round(PECA_FOLGA_IMAGEM * e)) - miniatura.height)
+                if -miniatura.width < cx < L and cy > 0:
+                    vinheta = Image.new("RGB", miniatura.size, FUNDO)
+                    tela.paste(Image.blend(vinheta, miniatura, aceso), (cx, cy))
+                    ImageDraw.Draw(tela).rectangle(
+                        [cx - 2, cy - 2, cx + miniatura.width + 1, cy + miniatura.height + 1],
+                        outline=tuple(int(c * aceso) for c in MARCO), width=3)
     return tela
 
 

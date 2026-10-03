@@ -27,7 +27,11 @@ import re
 import subprocess
 import sys
 
-sys.stdout.reconfigure(encoding="utf-8")
+# SO SE HA CONSOLA OU FICHEIRO (revisao de 2 de outubro): o montar_da_mesa.intro_da_paleta() importa
+# isto so quando a Mesa traz cores para a intro, e quem montar com o stdout num StringIO (os testes
+# que montam calados) rebentava aqui com AttributeError, porque o StringIO nao tem reconfigure.
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import render      # noqa: E402
 
@@ -55,37 +59,59 @@ def medir(ff, caminho):
     return float(d["input_i"]), float(d["input_tp"])
 
 
+def nome_igualado(nome):
+    """"intro.mp4" -> "intro igualado.mp4": o nome da copia, ao lado de onde o render a procura."""
+    base, ext = os.path.splitext(nome)
+    return base + SUFIXO + ext
+
+
+def igualar(nome, origem=None, alvo=ALVO, ff=None):
+    """Escreve a copia igualada de UM video em DESTINO e devolve o caminho dela.
+
+    E o que o main() fazia a cada um dos NOMES, posto numa funcao a 2 de outubro para o
+    montar_da_mesa.py igualar uma intro de outras cores sem passar pelos outros: a mesma
+    medida, o mesmo ganho directo, o mesmo travao do true peak, e nunca por cima. Um erro
+    levanta RuntimeError e nao escreve nada.
+    """
+    ff = ff or render.ffmpeg()
+    if origem is None:
+        origem, _arranque = render.caminho_de_video(nome)
+    if not origem or not os.path.exists(origem):
+        raise RuntimeError("Nao encontrei o video %s" % nome)
+    os.makedirs(DESTINO, exist_ok=True)
+    saida = os.path.join(DESTINO, nome_igualado(nome))
+    lufs, tp = medir(ff, origem)
+    ganho = alvo - lufs
+    print(nome)
+    print("  medido: %.2f LUFS, true peak %.2f dBTP" % (lufs, tp))
+    print("  ganho para %.1f LUFS: %+.2f dB, true peak previsto %.2f dBTP"
+          % (alvo, ganho, tp + ganho))
+    if tp + ganho > -0.5:
+        raise RuntimeError("  O true peak passaria de -0,5 dBTP e ia clipar. Nao escrevi nada.")
+    if os.path.exists(saida):
+        print("  ja existe, nao escrevi por cima:", saida)
+        return saida
+    r = subprocess.run(
+        [ff, "-hide_banner", "-y", "-i", origem, "-map", "0:v:0", "-map", "0:a:0",
+         "-c:v", "copy", "-af", "volume=%.2fdB" % ganho,
+         "-c:a", "aac", "-b:a", "192k", saida],
+        capture_output=True, text=True, encoding="utf-8", errors="replace")
+    if r.returncode != 0:
+        raise RuntimeError("ffmpeg falhou em %s:\n%s" % (nome, (r.stderr or "")[-900:]))
+    lufs2, tp2 = medir(ff, saida)
+    print("  depois:  %.2f LUFS, true peak %.2f dBTP" % (lufs2, tp2))
+    print("  escrito:", saida)
+    return saida
+
+
 def main():
     alvo = float(sys.argv[sys.argv.index("--alvo") + 1]) if "--alvo" in sys.argv else ALVO
     ff = render.ffmpeg()
-    os.makedirs(DESTINO, exist_ok=True)
     for nome in NOMES:
-        origem, _arranque = render.caminho_de_video(nome)
-        if not origem:
-            sys.exit("Nao encontrei o video %s" % nome)
-        base, ext = os.path.splitext(nome)
-        saida = os.path.join(DESTINO, base + SUFIXO + ext)
-        lufs, tp = medir(ff, origem)
-        ganho = alvo - lufs
-        print(nome)
-        print("  medido: %.2f LUFS, true peak %.2f dBTP" % (lufs, tp))
-        print("  ganho para %.1f LUFS: %+.2f dB, true peak previsto %.2f dBTP"
-              % (alvo, ganho, tp + ganho))
-        if tp + ganho > -0.5:
-            sys.exit("  O true peak passaria de -0,5 dBTP e ia clipar. Nao escrevi nada.")
-        if os.path.exists(saida):
-            print("  ja existe, nao escrevi por cima:", saida)
-            continue
-        r = subprocess.run(
-            [ff, "-hide_banner", "-y", "-i", origem, "-map", "0:v:0", "-map", "0:a:0",
-             "-c:v", "copy", "-af", "volume=%.2fdB" % ganho,
-             "-c:a", "aac", "-b:a", "192k", saida],
-            capture_output=True, text=True, encoding="utf-8", errors="replace")
-        if r.returncode != 0:
-            sys.exit("ffmpeg falhou em %s:\n%s" % (nome, (r.stderr or "")[-900:]))
-        lufs2, tp2 = medir(ff, saida)
-        print("  depois:  %.2f LUFS, true peak %.2f dBTP" % (lufs2, tp2))
-        print("  escrito:", saida)
+        try:
+            igualar(nome, alvo=alvo, ff=ff)
+        except RuntimeError as erro:
+            sys.exit(str(erro))
 
 
 # SO CORRE QUANDO E CHAMADO PELO NOME. Sem esta guarda, importar o modulo corria o

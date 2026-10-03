@@ -18,6 +18,7 @@ Um unico ficheiro nao tem como chegar meio.
 Uso:  py -3.11 scripts/gerar_mesa.py
 """
 import io
+import re
 import os
 import sys
 
@@ -257,6 +258,346 @@ def musicas_do_projeto():
         return []
 
 
+# AS LETRAS DO ESTILO (2 de outubro). O Tiago, para o dia com a Clara: "tamanho da letra" e "tipo
+# da letra". O painel Estilo da Mesa oferece as letras de data/fontes.json, e a amostra e a
+# pre-visualizacao desenham-nas no browser com a familia `web`; as que nao vem com o Windows pedem-se
+# ao Google Fonts pelo `web_google`. O render nao usa nada disto: abre o `ficheiro` de cada letra.
+FONTES = os.path.join(REPO, "data", "fontes.json")
+# so o que a pagina usa; o caminho do ficheiro fica no PC, e a Mesa so precisa de saber se ele la esta
+# hastes_finas (opcional): a letra de traco fino que se perde a 15 m antes do espaco entre as letras;
+# sem o campo, a Mesa conta as manuscritas e o Cormorant e o Playfair (estiloHastesFinas)
+CAMPOS_DA_LETRA = ("id", "nome", "web", "web_google", "peso_css", "estilo_css", "so_maiusculas",
+                   "corpo_minimo", "do_convite", "manuscrita", "a_descarregar", "hastes_finas")
+# O LETREIRO DA INTRO E EM IMPACT POR OMISSAO (decisao 084), «como esta». Desde 2 de outubro, a noite, a
+# letra pode trocar-se, mas so pelas de data/fontes_intro.json com oferecida true, e a amostra dessas
+# desenha-se com as mascaras do proprio letreiro do render (fontes_intro_para_mesa). O Anton fica SO para a
+# amostra do Impact: os telemoveis nao tem o Impact, e ela caia numa letra fina qualquer; e o mais parecido
+# que o Google Fonts tem. O filme continua no Impact, ou na letra escolhida.
+PARECIDA_COM_IMPACT = "Anton"
+GOOGLE_FONTS = "https://fonts.googleapis.com/css2?"
+
+
+def familias_google(pedidos):
+    """Os pedidos `web_google` ("Cinzel:wght@700", "Cormorant+Garamond:ital,wght@1,400") -> as partes
+    family= do endereco css2, UMA POR FAMILIA.
+
+    PORQUE SE JUNTAM: o Cormorant Garamond e pedido tres vezes (700, 400 e o italico do convite) e o
+    Cinzel duas. O css2 quer cada familia uma vez, com os pares (italico, peso) por ordem, e um
+    endereco com a familia repetida arrisca vir recusado inteiro: era a Mesa sem nenhuma letra do
+    Google, e as amostras todas no Arial sem ninguem perceber porque.
+    """
+    pares, ordem = {}, []
+    for pedido in pedidos:
+        if not pedido:
+            continue
+        nome, _, eixos = pedido.partition(":")
+        if nome not in pares:
+            pares[nome] = set()
+            ordem.append(nome)
+        if not eixos:
+            pares[nome].add((0, 400))
+            continue
+        nomes, _, valores = eixos.partition("@")
+        nomes = nomes.split(",")
+        for tuplo in valores.split(";"):
+            v = dict(zip(nomes, tuplo.split(",")))
+            pares[nome].add((int(v.get("ital", 0)), int(v.get("wght", 400))))
+    partes = []
+    for nome in ordem:
+        t = sorted(pares[nome])
+        if t == [(0, 400)]:
+            partes.append("family=" + nome)
+        elif any(i for i, _p in t):
+            partes.append("family=%s:ital,wght@%s" % (nome, ";".join("%d,%d" % x for x in t)))
+        else:
+            partes.append("family=%s:wght@%s" % (nome, ";".join(str(p) for _i, p in t)))
+    return partes
+
+
+def fontes_para_mesa():
+    """{omissao, fontes, css} para o window.FONTES, ou None sem data/fontes.json.
+
+    `em_disco` diz se o ficheiro que o render abre esta neste PC: uma letra que la nao esteja sai em
+    Arial Bold no filme (o render avisa), e a Mesa diz isso antes de ele esperar meia hora. `css` e o
+    endereco do Google Fonts com as letras que o Windows nao tem, mais o Anton da amostra da intro.
+    """
+    import json
+    try:
+        with io.open(FONTES, encoding="utf-8") as fh:
+            dados = json.load(fh)
+    except (OSError, ValueError) as erro:
+        print("  AVISO: nao li %s (%s): o painel Estilo so oferece o Arial Bold" % (FONTES, erro))
+        return None
+    fontes = []
+    for e in dados.get("fontes") or []:
+        if not isinstance(e, dict) or not isinstance(e.get("id"), str):
+            continue
+        x = {k: e[k] for k in CAMPOS_DA_LETRA if e.get(k) not in (None, False, "")}
+        if "corpo_minimo" not in x:
+            x["corpo_minimo"] = None          # null quer dizer "por medir", e a Mesa diz isso
+        x["em_disco"] = bool(e.get("ficheiro")) and os.path.exists(e["ficheiro"])
+        fontes.append(x)
+    pedidos = [f.get("web_google") for f in fontes] + [PARECIDA_COM_IMPACT]
+    return {"omissao": dados.get("omissao") or "arial_bold", "fontes": fontes,
+            "css": GOOGLE_FONTS + "&".join(familias_google(pedidos)) + "&display=swap"}
+
+
+# A LETRA DO LETREIRO DA INTRO (2 de outubro, a noite). O Tiago pediu para a mudar no Estilo, e ficou
+# combinado: «Impact (como esta)» por omissao, e so as letras grossas o suficiente, cada uma com quanto da
+# foto se ve por dentro dela. A medida e a lista estao em data/fontes_intro.json, e quem as le e o
+# render.letras_da_intro() (so as oferecidas): a Mesa recebe as mesmas, pela `ordem` da medida.
+#
+# A AMOSTRA E O DESENHO DO RENDER. O browser nao tem a Bernard, a Showcard ou a Bahnschrift Condensed num
+# telemovel, e a forma da letra e o que se esta a escolher: cada letra leva a mascara do letreiro feita pelo
+# intro_flipbook.letreiro(), a mesma funcao que desenha a intro, a 1920 x 1080 e no tamanho de omissao (288),
+# que tem de dar ao pixel a area_px medida. Vai a meio tamanho, branca com o alfa da mascara (PNG LA), como
+# data URI dentro da pagina: oito imagens de uns 20 KB, nenhum ficheiro novo na publicacao. A Mesa encolhe-a
+# ou estica-a a volta do centro para os outros tamanhos (a conta do letreiro e proporcional ao corpo do
+# Impact). Uma mascara que nao da a area medida (a letra saiu do PC, e o letreiro caiu no Impact) nao vai, e a
+# letra diz que nao esta no PC do render.
+CAMPOS_DA_LETRA_DA_INTRO = ("id", "nome", "ordem", "pct_impact", "corpo_que_cabe", "corpo_minimo",
+                            "tamanho_mesa_minimo", "area_px")
+
+
+def mascara_da_letra_da_intro(ident):
+    """(data URI, area) da mascara do letreiro na letra `ident`, como o intro_flipbook a desenha a 288.
+
+    A area e a do letreiro inteiro a 1920 x 1080 (pixeis acima de 128), para se comparar com a area_px da
+    medida; a imagem e a meio tamanho, branca, com a mascara no alfa.
+    """
+    import base64
+    import contextlib
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import intro_flipbook
+    from PIL import Image
+    with contextlib.redirect_stdout(io.StringIO()):
+        m = intro_flipbook.letreiro(int(intro_flipbook.L * 0.86), None, ident)
+    area = sum(m.histogram()[129:])
+    meia = m.resize((intro_flipbook.L // 2, intro_flipbook.A // 2), Image.LANCZOS)
+    la = Image.merge("LA", (Image.new("L", meia.size, 255), meia))
+    buf = io.BytesIO()
+    la.save(buf, "PNG", optimize=True)
+    return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode("ascii"), area
+
+
+def fontes_intro_para_mesa(mascaras=True):
+    """{limiar_pct, letras} para o window.FONTES_INTRO, ou None sem data/fontes_intro.json.
+
+    `letras` sao as oferecidas, pela `ordem` da medida (o Impact primeiro), cada uma com os campos de
+    CAMPOS_DA_LETRA_DA_INTRO, `em_disco` (o ficheiro dela abre neste PC: o render.letra_da_intro() aceita-a) e,
+    com mascaras=True, `mascara` (data URI) e `area_mascara`. Sem o ficheiro, ou com ele vazio, a Mesa so tem o
+    Impact, como o render.
+    """
+    import json
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    try:
+        import render
+        letras = render.letras_da_intro()
+        with io.open(render.FONTES_DA_INTRO, encoding="utf-8") as fh:
+            limiar = json.load(fh).get("limiar_pct")
+    except Exception as erro:  # noqa: BLE001 - uma Mesa sem a lista continua a servir, so com o Impact
+        print("  AVISO: nao li as letras da intro (%s): a aba Intro so oferece o Impact" % erro)
+        return None
+    if not letras:
+        print("  AVISO: data/fontes_intro.json sem letras oferecidas: a aba Intro so oferece o Impact")
+        return None
+    saida = []
+    for e in sorted(letras.values(), key=lambda x: (x.get("ordem") or 999, x["id"])):
+        x = {k: e.get(k) for k in CAMPOS_DA_LETRA_DA_INTRO}
+        avisos = []
+        x["em_disco"] = e["id"] == render.INTRO_FONTE or render.letra_da_intro(e["id"], avisos) is not None
+        if mascaras:
+            try:
+                uri, area = mascara_da_letra_da_intro(e["id"])
+            except Exception as erro:  # noqa: BLE001 - sem a mascara a Mesa diz que nao tem a amostra
+                print("  AVISO: nao fiz a mascara da letra %s (%s)" % (e["id"], erro))
+                uri, area = None, None
+            if area != e.get("area_px"):
+                print("  AVISO: a mascara da letra %s tem %s px e a medida %s: fica sem amostra%s"
+                      % (e["id"], area, e.get("area_px"), (" (%s)" % "; ".join(avisos)) if avisos else ""))
+                uri = None
+            x["mascara"], x["area_mascara"] = uri, area
+        saida.append(x)
+    return {"limiar_pct": limiar, "letras": saida}
+
+
+# O QUE O RENDER JA SABE FAZER COM O QUE A MESA GRAVA (corretor, 2 de outubro). A Mesa grava os
+# creditos (est.creditos) e o "uma so peca" do contador (est.estilo.contador.continuo) desde hoje, e a
+# outra equipa liga o render a eles ao mesmo tempo. Ate estar ligado, a Mesa dizia "A ordem e a tua,
+# feita aqui" e "Uma so peca ve-se no render", e um render feito a seguir saia com a ordem pelo numero
+# da Mesa, os textos de hoje e o contador de sempre, sem ninguem saber. Pergunta-se ao codigo, na hora
+# de montar a Mesa, em vez de o escrever a mao: quando a outra equipa acabar, a Mesa seguinte deixa de
+# avisar sozinha.
+PONTO5 = os.path.join(REPO, "scripts", "discussao", "ponto5_creditos.py")
+
+
+def le_a_musica_dos_creditos(texto):
+    """O ponto5_creditos.py (o texto dele) ja le o est.creditos.musica? (2 de outubro, a tarde)
+
+    O contrato (seccao 6 do saida/discussao/contrato_mesa_1002.md) diz como: o ponto5 chama o
+    musica_creditos.faixas_dos_creditos() com o (leitura.get("creditos") or {}).get("musica"). Conta
+    qualquer das duas coisas escrita como codigo: a chamada, ou a chave "musica" lida com .get( ou [.
+    Desde o ponto5 de 2 de outubro as 14:59 ha as duas (o som_dos_creditos chama o faixas_dos_creditos),
+    e a Mesa deixou de dizer que a escolha nao chega ao filme. Se o ponto5 deixar de a ler, a Mesa montada
+    a seguir volta a dize-lo sozinha, como nos creditos e no contador.
+    """
+    import re
+    return bool(re.search(r"faixas_dos_creditos\s*\(", texto)
+                or re.search(r"""(\.get\(\s*|\[\s*)["']musica["']""", texto))
+
+
+def le_os_cargos_dos_creditos(texto):
+    """O ponto5_creditos.py (o texto dele) ja le os cargos dele? (2 de outubro, a noite; contrato dos cargos e decisao 109)
+
+    {cargos_primeiro, cargos_varios, cargos_max, pessoas_max}:
+    - `cargos_primeiro`: le a chave est.creditos.cargos_primeiro (com .get( ou [), que poe os cargos antes do rolo;
+    - `cargos_varios`: tem os limites da lista (CARGOS_MAX, PESSOAS_MAX = 8, 4) e desenha cada cargo pela
+      geometria_do_cargo(), com as pessoas umas por baixo das outras: le de 1 a 8 cargos e de 1 a 4 pessoas por cargo;
+    - `cargos_max` e `pessoas_max`: esses limites, para a Mesa deixar escrever o mesmo (None sem eles).
+    Pelo texto, como os outros: importar o ponto5 corre o comum.py. Hoje (ponto5 das 22:16) da tudo True, 8 e 4. Se o
+    ponto5 deixar de os ler, a Mesa montada a seguir volta a dizer que ainda nao chegam ao filme.
+    """
+    import re
+    limites = re.search(r"^CARGOS_MAX,\s*PESSOAS_MAX\s*=\s*(\d+),\s*(\d+)", texto, re.M)
+    return {"cargos_primeiro": bool(re.search(r"""(\.get\(\s*|\[\s*)["']cargos_primeiro["']""", texto)),
+            "cargos_varios": bool(limites and re.search(r"^def geometria_do_cargo\(", texto, re.M)),
+            "cargos_max": int(limites.group(1)) if limites else None,
+            "pessoas_max": int(limites.group(2)) if limites else None}
+
+
+def o_que_o_render_le():
+    """{creditos, continuo, destaque, creditos_musica, data_afastada}: True se o render ja os le, False se
+    nao, None se nao se conseguiu ver.
+
+    `continuo`: o render.normalizar_estilo() guarda o contador.continuo (hoje deita-o fora com aviso).
+    `data_afastada`: o mesmo para o contador.data_afastada, a data do nascimento mais longe do "SET" na
+    fita de duas pecas (render.ESCOLHAS_DO_CONTADOR desde 2 de outubro).
+    `creditos`: o ponto5_creditos.py le o campo "creditos" do estado da Mesa (est.get("creditos") ou
+    est["creditos"]). E uma leitura do texto do ficheiro, porque importa-lo le a folha de convidados.
+    `destaque`: a zona de destaque das fotos (clip.zd) chega ao filme, o montar escreve-a na coluna
+    destaque (coluna_do_destaque) e o render le essa coluna (ler_destaque). O montar le-se como texto,
+    porque importa-lo mexe no sys.stdout.
+    `creditos_musica`: o ponto5 ja toca nos creditos a musica que ele escolheu no painel Creditos
+    (est.creditos.musica, ver le_a_musica_dos_creditos), tambem pelo texto do ficheiro.
+    `intro_fonte`: o render.normalizar_estilo() guarda a letra do letreiro da intro (est.estilo.intro.fonte, uma
+    das de data/fontes_intro.json; 2 de outubro, a noite). Um render que nao a conhece deita-a fora com aviso.
+    `cargos_primeiro`, `cargos_varios`, `cargos_max`, `pessoas_max`: os cargos dos creditos (2 de outubro, a noite),
+    ver le_os_cargos_dos_creditos. Com False a Mesa diz «ainda não chega ao filme» no painel dos Creditos.
+    """
+    import re
+    le = {"creditos": None, "continuo": None, "destaque": None, "creditos_musica": None, "data_afastada": None,
+          "intro_fonte": None, "cargos_primeiro": None, "cargos_varios": None, "cargos_max": None, "pessoas_max": None}
+    try:
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        import render
+        limpo = render.normalizar_estilo({"contador": {"continuo": True}}, [])
+        le["continuo"] = bool((limpo.get("contador") or {}).get("continuo"))
+        # A DATA DO NASCIMENTO AFASTADA (2 de outubro, a tarde): a mesma pergunta. Um render que nao a conhece
+        # deita-a fora com aviso e devolve {}; o de hoje guarda-a (render.ESCOLHAS_DO_CONTADOR)
+        limpo = render.normalizar_estilo({"contador": {"data_afastada": True}}, [])
+        le["data_afastada"] = bool((limpo.get("contador") or {}).get("data_afastada"))
+    except Exception as erro:  # noqa: BLE001 - so serve para a Mesa avisar, nunca para a geracao
+        print("  AVISO: nao consegui perguntar ao render pelo contador continuo (%s)" % erro)
+    try:
+        # A LETRA DA INTRO: com uma das oferecidas (a primeira que nao e o Impact), o render guarda-a?
+        import render
+        outra = next((k for k in sorted(render.letras_da_intro(), key=lambda k: (render.letras_da_intro()[k].get("ordem") or 999, k))
+                      if k != render.INTRO_FONTE), None)
+        if outra:
+            limpo = render.normalizar_estilo({"intro": {"fonte": outra}}, [])
+            le["intro_fonte"] = bool((limpo.get("intro") or {}).get("fonte"))
+        else:
+            le["intro_fonte"] = False
+    except Exception as erro:  # noqa: BLE001 - so serve para a Mesa avisar
+        print("  AVISO: nao consegui perguntar ao render pela letra da intro (%s)" % erro)
+    try:
+        import render
+        montar = io.open(os.path.join(REPO, "scripts", "montar_da_mesa.py"), encoding="utf-8").read()
+        le["destaque"] = bool(callable(getattr(render, "ler_destaque", None))
+                              and re.search(r"^def coluna_do_destaque\(", montar, re.M))
+    except Exception as erro:  # noqa: BLE001 - so serve para a Mesa avisar
+        print("  AVISO: nao consegui perguntar ao render pela zona de destaque (%s)" % erro)
+    try:
+        texto = io.open(PONTO5, encoding="utf-8").read()
+        le["creditos"] = bool(re.search(r"""(\.get\(\s*|\[\s*)["']creditos["']""", texto))
+        le["creditos_musica"] = le_a_musica_dos_creditos(texto)
+        le.update(le_os_cargos_dos_creditos(texto))
+    except OSError as erro:
+        print("  AVISO: nao li %s (%s)" % (PONTO5, erro))
+    return le
+
+
+# A MUSICA DOS CREDITOS (2 de outubro, a tarde). O Tiago: "gostava de tambem poder alterar a musica que
+# toca nos creditos ... na propria Mesa ... gostava de voltar ao Taking care of business". A Mesa precisa
+# de saber onde cada musica se cala, para a escolha "para acabar com o fim da musica" e para dizer quando
+# ela acaba antes dos creditos: e o musica_creditos.para_a_mesa(), sobre o indice do som que o
+# audio_para_mesa ja fez (os silencios de cada copia), sem ler nenhum ficheiro de som. A mesma funcao que o
+# render vai usar, por isso a Mesa e o render dao o mesmo segundo. Junta-se, das musicas que foram
+# analisadas (data/discussao/musicas_batidas.json, o metodo da 095), onde comeca cada frase, para a Mesa
+# dizer a mais perto da entrada como proposta; nunca a usa sozinha (083).
+#
+# E OS FINS DE LINHA DA VOZ (2 de outubro, a noite). O Tiago escolheu alongar o ultimo clip do filme para o corte
+# dos creditos cair no fim de uma frase da musica que sai (a saida C), e a Mesa diz quanto falta. Os fins de frase
+# verificados (data/fins_de_frase.csv) sao poucos, e os inicios de frase da 095 caem a meio das linhas cantadas: por
+# isso vao tambem, de cada musica, os fins de linha da voz pela conta do scripts/discussao/juncao_creditos.py
+# (musica_creditos.linhas_para_a_mesa: [fim, linha nova]). Medem-se nos originais uma vez, uns 6 s por musica, e
+# guardam-se em saida/audio/fins_de_linha.json; MESA_SOM=ler so le o que esta guardado. Uns 60 KB na pagina, 0
+# ficheiros na publicacao.
+def musica_fim_para_mesa(audio):
+    """{ficheiro: {fim, acaba, desvanece[, frases][, linhas]}} para o window.MUSICA_FIM, ou None sem o indice do som."""
+    if not audio:
+        return None
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    try:
+        import musica_creditos
+        fora = musica_creditos.para_a_mesa(audio)
+        for f, m in fora.items():
+            frases = musica_creditos.frases_medidas(f)
+            if frases:
+                m["frases"] = [[t, forca] for t, forca in frases]
+    except Exception as erro:  # noqa: BLE001 - uma Mesa sem isto continua a servir (a pagina conta pelo indice)
+        print("  AVISO: sem o fim das musicas para os creditos (%s): a Mesa conta-o pelo indice do som" % erro)
+        return None
+    try:
+        import render
+        efeitos = tuple(render.EFEITOS_SOM)
+        nomes = [f for f in fora if not (audio.get(f) or {}).get("gerado") and not f.startswith(efeitos)]
+        linhas = musica_creditos.linhas_para_a_mesa(nomes, fazer=os.environ.get("MESA_SOM") != "ler")
+        for f, ls in linhas.items():
+            if f in fora and ls:
+                fora[f]["linhas"] = ls
+    except Exception as erro:  # noqa: BLE001 - sem os fins de linha a Mesa diz que nao tem as frases medidas
+        print("  AVISO: sem os fins de linha da voz (%s): a passagem dos creditos so conta com os fins verificados" % erro)
+    return fora
+
+
+# AS INTROS DE OUTRAS CORES QUE JA ESTAO FEITAS (2 de outubro). O montar_da_mesa.intro_da_paleta() faz
+# uma intro nova, uns 3 minutos, quando as cores e o tamanho da intro do est.estilo nao tem ficheiro; e
+# so usa um ficheiro cujo comentario dos metadados seja o da paleta com as fotos da intro 5. A Mesa diz
+# "ja feita" ou "custa cerca de 3 minutos" a partir disto, lido dos mesmos ficheiros e do mesmo
+# comentario, para nunca dizer feita uma que o montar nao aceita. A conta vive no audio_para_mesa.py, que
+# faz tambem as copias delas para o palco (revisor de 2 de outubro): uma regra so, nos dois sitios.
+def intros_feitas(pasta=None):
+    """[{fundo, papel, tinta, letra, tamanho, sem_preto, f}] das intros de outras cores ja igualadas, ou
+    None se nao se conseguiu ver (sem a pasta ou sem o ffprobe): a Mesa cai entao nas quatro propostas.
+    Ver audio_para_mesa.intros_feitas(). So le, nunca escreve na pasta dos media."""
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import audio_para_mesa
+    return audio_para_mesa.intros_feitas(pasta)
+
+
+def letras_render_para_mesa():
+    """{letras, emojis, escuros, minimo, sem_emojis} para o window.LETRAS_RENDER, ou None se nao se conseguiu medir
+    (o Validar usa entao a regra de reserva). Ver caracteres_para_mesa.letras_do_render()."""
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    try:
+        import caracteres_para_mesa
+        return caracteres_para_mesa.letras_do_render()
+    except Exception as erro:  # noqa: BLE001 - uma Mesa sem isto continua a servir, com a regra de reserva
+        print("  AVISO: sem o que cada letra do render desenha (%s): o Validar usa a regra de reserva" % erro)
+        return None
+
+
 def main():
     base = io.open(BASE, encoding="utf-8").read()
 
@@ -320,6 +661,83 @@ def main():
            json.dumps(musicas, ensure_ascii=False)),
         1)
 
+    # OS CREDITOS (2 de outubro): os grupos de nomes, os textos de omissao e as medidas do
+    # ponto5_creditos.py, para o painel Creditos da Mesa os mostrar a correr e deixar mudar a
+    # ordem das fotos e os textos (ver scripts/creditos_para_mesa.py). OS NOMES DOS CONVIDADOS SO
+    # ENTRAM AQUI, no saida/mesa.html montado, que nao vai para o Git: nunca num ficheiro de data/,
+    # scripts/ ou docs/. Vai num <script> proprio, antes do script da pagina, e nao no bloco de cima,
+    # para esta parte nao mexer nas linhas dos outros dados.
+    import creditos_para_mesa
+    creditos = creditos_para_mesa.creditos_para_mesa()
+    INICIO_PAGINA = '<script>\n(function(){\n"use strict";'
+    if corpo.count(INICIO_PAGINA) != 1:
+        sys.exit("O inicio do script da Mesa aparece %d vezes em editor_base.html. "
+                 "Tem de aparecer uma." % corpo.count(INICIO_PAGINA))
+    # "</" escapa-se: um nome com "</script>" fechava o bloco a meio (nao ha nenhum, mas a folha e dele)
+    corpo = corpo.replace(
+        INICIO_PAGINA,
+        "<script>\nwindow.CREDITOS_NOMES = %s;\n</script>\n%s"
+        % (json.dumps(creditos, ensure_ascii=False).replace("</", "<\\/"), INICIO_PAGINA), 1)
+
+    # O FILME PARA O PALCO E O SOM (2 de outubro): os tempos de cada clip como o render os desenha, com o
+    # nome do bebe e a fita parada que o montar poe, as imagens dos marcos da fita de 1995 (palco_para_mesa),
+    # e uma copia leve de cada som que a Mesa pode tocar, com a sonoridade medida (audio_para_mesa). O som
+    # FAZ-SE AQUI, mas so o que falta: cada copia chama-se pelo conteudo do original, e uma Mesa sem musicas
+    # novas nao demora mais do que ler o indice (a primeira vez leva uns minutos). MESA_SOM=ler so le.
+    # window.AUDIO e o mapa do contrato (ficheiro -> url, ganho_db, duracao, e as medidas); window.AUDIO_INFO
+    # tem os lotes da publicacao e as regras do render que o palco imita.
+    # Num <script> proprio antes do da pagina, como as letras; vai antes do delas, que o teste das letras
+    # quer o window.FONTES encostado ao script da pagina.
+    import palco_para_mesa
+    import audio_para_mesa
+    palco = palco_para_mesa.palco_para_mesa()
+    try:
+        som_mesa = audio_para_mesa.preparar(fazer=os.environ.get("MESA_SOM") != "ler")
+    except (SystemExit, Exception) as erro:   # noqa: BLE001 - uma Mesa sem som continua a servir
+        print("  AVISO: sem o som da Mesa (%s)" % erro)
+        som_mesa = None
+    # e onde cada musica se cala, para a musica dos creditos (musica_fim_para_mesa): no mesmo <script> do
+    # window.AUDIO, de onde vem
+    musica_fim = musica_fim_para_mesa(som_mesa["audio"] if som_mesa else None)
+    corpo = corpo.replace(
+        INICIO_PAGINA,
+        "<script>\nwindow.PALCO = %s;\nwindow.AUDIO = %s;\nwindow.AUDIO_INFO = %s;\nwindow.MUSICA_FIM = %s;\n</script>\n%s"
+        % (json.dumps(palco, ensure_ascii=False).replace("</", "<\\/"),
+           json.dumps(som_mesa["audio"] if som_mesa else None, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/"),
+           json.dumps(som_mesa["info"] if som_mesa else None, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/"),
+           json.dumps(musica_fim, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/"),
+           INICIO_PAGINA), 1)
+
+    # O QUE CADA LETRA DO RENDER DESENHA (2 de outubro, a noite), para o Validar avisar dos caracteres como o
+    # render.caracteres_sem_letra(): os emojis saem a cores, e so e caixa vazia o que nem a letra nem a de emojis
+    # tem (ver caracteres_para_mesa.py). Uns 15 KB na pagina, 0 ficheiros na publicacao. Sem a medida, a Mesa usa
+    # a regra de reserva do Validar e diz-se aqui.
+    letras_render = letras_render_para_mesa()
+    corpo = corpo.replace(
+        INICIO_PAGINA,
+        "<script>\nwindow.LETRAS_RENDER = %s;\n</script>\n%s"
+        % (json.dumps(letras_render, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/"), INICIO_PAGINA), 1)
+
+    # AS LETRAS DO LETREIRO DA INTRO (2 de outubro, a noite), com a mascara de cada uma, num <script> proprio
+    # antes do das letras do Estilo, que o teste das letras quer encostado ao script da pagina
+    fontes_intro = fontes_intro_para_mesa()
+    corpo = corpo.replace(
+        INICIO_PAGINA,
+        "<script>\nwindow.FONTES_INTRO = %s;\n</script>\n%s"
+        % (json.dumps(fontes_intro, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/"), INICIO_PAGINA), 1)
+
+    # AS LETRAS DO PAINEL ESTILO (2 de outubro), no mesmo sitio e pela mesma razao dos creditos: um
+    # <script> proprio antes do da pagina, que nao mexe nas linhas dos outros dados. A pagina poe o
+    # <link> do Google Fonts sozinha, a partir do window.FONTES.css.
+    fontes = fontes_para_mesa()
+    le = o_que_o_render_le()
+    # e as intros de outras cores que ja estao feitas, para a aba Intro dizer o que custa (ver acima)
+    le["intros_feitas"] = intros_feitas()
+    corpo = corpo.replace(
+        INICIO_PAGINA,
+        "<script>\nwindow.FONTES = %s;\nwindow.RENDER_LE = %s;\n</script>\n%s"
+        % (json.dumps(fontes, ensure_ascii=False).replace("</", "<\\/"), json.dumps(le), INICIO_PAGINA), 1)
+
     os.makedirs(os.path.dirname(SAIDA), exist_ok=True)
     io.open(SAIDA, "w", encoding="utf-8", newline="\n").write(corpo)
 
@@ -333,6 +751,54 @@ def main():
     if espera:
         print("  por decidir %8d na 01-NOVAS, so para ele ver na Mesa" % len(espera))
     print("  musicas     %8d em disco, para confirmar os nomes" % len(musicas))
+    print("  creditos    %s" % creditos_para_mesa.resumo(creditos))
+    falta = [n for n, k in (("os creditos da Mesa", "creditos"), ("o contador numa so peca", "continuo"),
+                            ("a zona de destaque", "destaque"), ("a musica dos creditos", "creditos_musica"),
+                            ("a data do nascimento afastada", "data_afastada"), ("a letra da intro", "intro_fonte"),
+                            ("os cargos antes dos convidados", "cargos_primeiro"),
+                            ("mais cargos e mais pessoas nos creditos", "cargos_varios"))
+             if le[k] is False]
+    if falta:
+        print("  render      ainda nao le %s: a Mesa avisa" % " nem ".join(falta))
+    if fontes:
+        fora = [f["nome"] for f in fontes["fontes"] if not f["em_disco"]]
+        print("  letras      %8d no painel Estilo%s" % (len(fontes["fontes"]),
+              (", %d ainda nao estao no PC: %s" % (len(fora), ", ".join(fora))) if fora else ""))
+    if le.get("intros_feitas") is not None:
+        print("  intros      %8d de outras cores ou de outra letra ja feitas, a Mesa diz o que custa cada uma"
+              % len(le["intros_feitas"]))
+    if fontes_intro:
+        com = [x for x in fontes_intro["letras"] if x.get("mascara")]
+        fora = [x["nome"] for x in fontes_intro["letras"] if not x.get("em_disco")]
+        print("  letra intro %8d letras para o letreiro, %d com a mascara (%.1f KB na pagina)%s"
+              % (len(fontes_intro["letras"]), len(com), sum(len(x["mascara"]) for x in com) / 1024.0,
+                 (", %d fora do PC: %s" % (len(fora), ", ".join(fora))) if fora else ""))
+    if musica_fim is not None:
+        print("  creditos    onde se cala cada uma das %d musicas, para a musica dos creditos (%d com as frases medidas, "
+              "%d com os fins de linha da voz)"
+              % (len(musica_fim), sum(1 for m in musica_fim.values() if m.get("frases")),
+                 sum(1 for m in musica_fim.values() if m.get("linhas"))))
+    try:
+        import caracteres_para_mesa
+        print("  caracteres  %s" % caracteres_para_mesa.resumo(letras_render))
+    except ImportError:
+        print("  caracteres  sem o caracteres_para_mesa.py: o Validar usa a regra de reserva")
+    print("  palco       %s" % palco_para_mesa.resumo(palco))
+    print("  som         %s" % audio_para_mesa.resumo(som_mesa))
+    if som_mesa and som_mesa["info"]["lotes"]:
+        # O QUE SE PUBLICA, alem da pagina e das folhas das previas (que ja levam uns 47 MB da primeira
+        # publicacao): o som e os videos, em publicacoes seguintes para o MESMO endereco, cada uma com
+        # `files` e root saida. Os ficheiros que uma publicacao nao leva ficam la; os nomes sao pelo
+        # conteudo, por isso depois da primeira vez so vao os novos, e os tirados saem com null.
+        info = som_mesa["info"]
+        for k, lote in enumerate(info["lotes"]):
+            print("  publicar    lote %d de som e video: %d ficheiros, %.1f MB" % (k + 1, len(lote["ficheiros"]), lote["bytes"] / 1048576.0))
+        if info["tiradas"]:
+            # juntadas desde a ultima publicacao (audio_para_mesa: por_tirar); so os null dos que estao no endereco
+            print("  publicar    tirar com null: %s" % ", ".join(info["tiradas"][:8]) + (" ..." if len(info["tiradas"]) > 8 else ""))
+            print("  publicar    (so os que a listagem do endereco mostrar; depois: py -3.11 scripts/audio_para_mesa.py --publicado)")
+        if info["grandes"]:
+            print("  AVISO: acima de 15 MB por ficheiro: %s" % ", ".join(info["grandes"]))
     print("  total       %8.1f KB" % (len(corpo) / 1024.0))
     if len(corpo.encode("utf-8")) > 15 * 1024 * 1024:
         print("  AVISO: acima de 15 MB, o limite de publicacao e 16.")

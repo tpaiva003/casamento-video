@@ -216,7 +216,9 @@ está dentro do troço dos foguetes (`Candidato a vereador.mp3` a partir de 2:53
 uma vez, no letreiro da intro, a 288 px. Tudo o que é para ler é Arial Bold. A regra não é de
 gosto, é medida: o Arial Bold separa as letras a partir do corpo 58 e o Impact só a partir do 106,
 ou seja precisa de quase o dobro do tamanho para se ler igual a 15 metros. Nada de Impact abaixo
-de 132 px, e nada de trocar a letra do letreiro: o efeito da intro é a fotografia aparecer por
+de 132 px, e o Impact é a omissão do letreiro; outra letra só entra se for das oferecidas em
+`data/fontes_intro.json`, que mostram pelo menos dois terços da área do Impact (decisão 107):
+o efeito da intro é a fotografia aparecer por
 dentro das letras, e a máscara em Impact tem 250.835 pixéis contra 105.607 em Arial Bold.
 
 **O som dos vídeos de abertura é igualado à música, decisão 084.** A demo_v3 usa as cópias

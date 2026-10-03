@@ -31,6 +31,15 @@ expressoes do render.desenhar(), escritas aqui ao lado de onde vem:
   mergulho             cobre a celula da grelha, mais MERGULHO_RESPIRA; a foto onde se
                        mergulha cobre o ecra, mais MERGULHO_FICA_ZOOM (medidas_do_mergulho)
 
+A ZONA DE DESTAQUE NAO MUDA ESTAS CONTAS (2 de outubro). O Tiago pediu-a para as fotos de equipa e
+disse logo que nao era com zoom: "nem sempre e possivel com zoom, pois a qualidade da foto pode nao
+ser otima e precisamos de outra forma de realcar". O render.destacar() escurece o que esta fora da
+zona e desenha um contorno a volta dela, por cima da foto ja composta: a foto vai ao ecra no mesmo
+tamanho, com o mesmo enquadramento, e dentro da zona com os mesmos pixeis. Uma foto com destaque
+estica exatamente o que esticava sem ele, e por isso nao ha medida nova. Se a zona tiver gente
+pequena de mais para se reconhecer, o remedio e o de sempre, o enquadramento, e esse ja esta medido
+acima. A auditoria so os conta, para ele saber que foram vistos.
+
 Acima de 1,00 o render estica pixeis do ficheiro da FINAIS. A proposta e sempre o enquadramento
 mais apertado que fica dentro da TOLERANCIA, com os nomes que a Mesa mostra. O numero do clip e a
 posicao na Mesa: e igual a ordem do CSV da montagem, clip a clip (verificado a 25 de setembro).
@@ -326,6 +335,15 @@ def main():
                  x["ficheiro"][:34], aviso))
     if not enchem:
         print("  nenhum mergulho na montagem")
+    # A ZONA DE DESTAQUE: so se diz quando a montagem a tem, e diz-se porque nao muda nada acima.
+    com_destaque = [int(c["ordem"]) for c in clips if (c.get("destaque") or "").strip()]
+    if com_destaque:
+        print()
+        print("COM ZONA DE DESTAQUE: %d foto%s (clip%s %s)"
+              % (len(com_destaque), "" if len(com_destaque) == 1 else "s",
+                 "" if len(com_destaque) == 1 else "s", ", ".join(str(k) for k in com_destaque)))
+        print("  o destaque escurece a volta e contorna, sem aproximar: estas fotos esticam o mesmo")
+        print("  que sem ele, e ja estao contadas acima com o enquadramento que tem")
     for x in casos:
         x.pop("cobre", None)
         # so a foto que enche o ecra leva o campo: sem mergulho o json sai como antes

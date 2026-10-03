@@ -92,15 +92,44 @@ que a montagem usa hoje, e e dela que vem o som. Esta sai com outro nome, na
 pasta gerados\\intro_marvel, e o script recusa escrever por cima de um ficheiro
 que ja exista.
 
+AS CORES E O TAMANHO DO LETREIRO, desde 2 de outubro. A Clara: o vermelho "parece demasiado
+Marvel". A Mesa passa a escolher o fundo, as duas pontas do duotone (papel e tinta), a cor das
+letras quando o letreiro fica solido e o corpo do letreiro, nunca abaixo de 132. Sem nenhuma destas
+opcoes o video e o de sempre, ao byte: as cores de omissao sao as constantes de antes e o caminho
+das contas e o mesmo. Com elas, o ficheiro leva no nome um resumo das cores
+(intro_clara_tiago_5 sem preto_<6 hex>.mp4) e a paleta escrita nos metadados, e nunca escreve por
+cima. Quem as pede e o montar_da_mesa.py, ver intro_da_paleta().
+
+A LETRA DO LETREIRO, desde 2 de outubro a noite. O Tiago pediu para a poder mudar, e a decisao 084
+abriu-se nos termos dela: o Impact (como esta) por omissao, e so as letras de data/fontes_intro.json
+com oferecida true, que mostram pelo menos dois tercos da foto que o Impact mostra por dentro das
+letras e separam as letras a 15 m no minimo da Mesa. --fonte <id>; a letra vai ao corpo que poe o
+nome na caixa do nome em Impact ao mesmo tamanho (letreiro()), e a linha "A HISTORIA DE" nao muda.
+O nome leva o id a seguir aos 6 hex (intro_clara_tiago_5 sem preto_<6 hex>_<id>.mp4), e os
+metadados " fonte <id>" a seguir ao tamanho.
+
+AS FOTOS DA INTRO 5 (--fotos-da-5). A lista que se escolhe hoje ja nao e a de 22 de setembro: a
+Mesa mudou desde entao, e uma intro nova com outras cores saia tambem com outras fotos. Uma intro
+de outra cor tem de ser a mesma intro, por isso a lista que o Tiago aprovou ficou escrita em
+FOTOS_DA_INTRO_5, reconstruida a 2 de outubro e provada contra o ficheiro, fotograma a fotograma.
+O ficheiro de cada foto continua a ser o do data/finais.csv de hoje (decisao 090).
+
 Uso:  py -3.11 scripts/intro_flipbook.py
       py -3.11 scripts/intro_flipbook.py --escala 0.5      rascunho rapido
       py -3.11 scripts/intro_flipbook.py --so-lista        so a lista, sem video
       py -3.11 scripts/intro_flipbook.py --nome outro.mp4  outro nome de saida
       py -3.11 scripts/intro_flipbook.py --versao v1c      fotos de outra montagem
       py -3.11 scripts/intro_flipbook.py --pouso f0123     outra foto para acabar
+      py -3.11 scripts/intro_flipbook.py --fundo "#5A1A2B" --papel "#F3E3C8" --tinta "#2A0E14"
+                                         --letra "#E8CFA0" --tamanho 288
+                                                           as cores (#RRGGBB) e o corpo do letreiro
+      py -3.11 scripts/intro_flipbook.py --fonte bernard   a letra do letreiro (data/fontes_intro.json)
+      py -3.11 scripts/intro_flipbook.py --sem-preto       acaba aos 13,20 s, sem o preto (097)
+      py -3.11 scripts/intro_flipbook.py --fotos-da-5      as fotos da intro 5, e nao as de hoje
 """
 import bisect
 import csv
+import hashlib
 import json
 import math
 import os
@@ -114,7 +143,11 @@ from PIL import Image, ImageDraw, ImageEnhance, ImageFont, ImageOps
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import render
 
-sys.stdout.reconfigure(encoding="utf-8")
+# SO SE HA CONSOLA OU FICHEIRO (revisao de 2 de outubro): o montar_da_mesa.intro_da_paleta() importa
+# isto so quando a Mesa traz cores para a intro, e quem montar com o stdout num StringIO (os testes
+# que montam calados) rebentava aqui com AttributeError, porque o StringIO nao tem reconfigure.
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 INVENTARIO = os.path.join(REPO, "data", "inventario.csv")
@@ -159,6 +192,27 @@ T_PAUSA = 1.0              # preto e silencio depois do fim, antes do rebobinar
 VERMELHO = (150, 22, 28)
 PAPEL = (247, 233, 210)
 TINTA = (46, 14, 16)
+# A cor das letras quando o letreiro fica solido. Era o branco escrito no desenhar().
+LETRA = (252, 250, 250)
+
+# AS CORES COM QUE SE DESENHA, desde 2 de outubro: as de cima, a nao ser que o main() receba
+# outras. As constantes ficam como omissao, que e o que o render e a Mesa leem como "a de hoje".
+CORES = {"fundo": VERMELHO, "papel": PAPEL, "tinta": TINTA, "letra": LETRA}
+# O corpo do letreiro: o de hoje sai da procura pela largura (letreiro()), e da 288 a 1920.
+TAMANHO = 288
+# NUNCA ABAIXO DE 132 (decisao 084): o Impact so separa as letras a 15 m a partir do 106, e o
+# efeito da intro e a fotografia por dentro das letras, que precisa de area.
+TAMANHO_MIN = 132
+# E NUNCA MAIS LARGO DO QUE 93% DO QUADRO, a zona segura de acao: um projetor que corte as bordas
+# nao come o C nem o O. Medido a 2 de outubro: o Impact a 309 da 1782 px, a 310 ja da 1789,
+# mais do que os 1785 de 93% de 1920. O contrato da Mesa dizia ate 400, que dava 2308 px, o nome
+# cortado nas duas pontas. O render.ESTILO_CORPOS diz o mesmo, e um teste compara os dois.
+ZONA_SEGURA = 0.93
+TAMANHO_MAX = 309
+
+# SEM O PRETO DO FIM, decisao 097: a intro acaba no ultimo fotograma com imagem, aos 13,20 s,
+# e nao aos 14,44 com o segundo de pausa. E esta que a montagem usa desde 30 de setembro.
+T_SEM_PRETO = 13.20
 
 NOME_PEQUENO = "A HISTÓRIA DE"
 FONTE_PEQUENA = r"C:\Windows\Fonts\arialbd.ttf"
@@ -200,6 +254,26 @@ FOLGA_POUSO = 1.25
 # esta ao meio, tapava o estadio e nao o casal. Se o Tiago marcar um ponto de foco
 # para a foto na Mesa, e esse que manda.
 FOCOS_POUSO = {"f0286": (0.55, 0.56)}
+
+# AS FOTOS DA INTRO 5, pela ordem do ecra, e a ultima e a de pouso. Sao as que a montagem usa
+# desde 22 de setembro (gerados\intro_marvel\intro_clara_tiago_5.mp4, e o "sem preto" cortado
+# dela). Reconstruidas a 2 de outubro: a escolha() de hoje sobre o data/mesa_estado.json do
+# commit 315965e (23 de setembro) da esta lista, e desenhada da o _5 fotograma a fotograma, com
+# a diferenca media maxima de 3,6 niveis em 255 (de 0 a 3,0 s) e menos de 0,5 no resto. Uma
+# foto diferente da 50 a 100. Os 3,6 sao as sete primeiras (f0041, f0153, f0105, f0125, f0106,
+# f0013 e f0107), que em setembro vinham da rede neuronal e hoje vem do Lanczos, decisao 090.
+# A escolha sobre a Mesa de 2 de outubro ja da outra lista (25 das 77 fotos sao outras, e 50 das
+# 77 posicoes mudam), e por isso uma intro de outra cor usa esta: tem de ser a mesma intro, com
+# outras cores.
+FOTOS_DA_INTRO_5 = (
+    "f0041", "f0153", "f0105", "f0175", "f0125", "f0106", "f0013", "f0107", "f0039", "f0008",
+    "f0021", "f0137", "f0218", "f0119", "f0213", "f0131", "f0159", "f0279", "f0231", "f0122",
+    "f0234", "f0306", "f0058", "f0141", "f0061", "f0140", "f0082", "f0135", "f0040", "f0124",
+    "f0085", "f0083", "f0111", "f0284", "f0132", "f0156", "f0194", "f0193", "f0197", "f0201",
+    "f0202", "f0204", "f0205", "f0208", "f0209", "f0239", "f0164", "f0250", "f0247", "f0188",
+    "f0244", "f0269", "f0325", "f0327", "f0354", "f0328", "f0243", "f0355", "f0189", "f0166",
+    "f0329", "f0275", "f0281", "f0192", "f0198", "f0276", "f0271", "f0330", "f0331", "f0196",
+    "f0199", "f0037", "f0051", "f0206", "f0294", "f0261", "f0286")
 
 
 def fotos_do_filme(estado, versao):
@@ -528,6 +602,134 @@ def selecao(versao=VERSAO, pouso=POUSO):
     return lista, avisos
 
 
+def selecao_da_5(ids=FOTOS_DA_INTRO_5):
+    """A lista da intro 5 (FOTOS_DA_INTRO_5), no formato da selecao(), e avisos. Sem escolher nada.
+
+    A ordem, os segundos de cada posicao e a foto de pouso sao os de 22 de setembro; o ficheiro
+    de cada foto e o do data/finais.csv de hoje, como no resto do filme (decisao 090), e o foco
+    da de pouso e o de sempre: o da Mesa, se ele o marcar, ou o FOCOS_POUSO. A classe so serve
+    para o que se imprime. Uma foto que ele tenha excluido da Mesa depois de 22 de setembro
+    continua (e a intro aprovada), mas diz-se.
+    """
+    with open(ESTADO_MESA, encoding="utf-8") as fh:
+        estado = json.load(fh)
+    with open(INVENTARIO, encoding="utf-8-sig", newline="") as fh:
+        inv_por_id = {r["id"]: r for r in csv.DictReader(fh)}
+    ids = list(ids)
+    caminho_de, sem_indice = caminhos_das_finais(ids, inv_por_id)
+    avisos = []
+    sem_ficheiro = [i for i in ids if not caminho_de.get(i) or lado_menor(caminho_de[i]) is None]
+    if sem_ficheiro:
+        raise ValueError("fotos da intro 5 sem ficheiro que abra: %s" % ", ".join(sem_ficheiro))
+    excluidas = {k for k, sim in (estado.get("excluidas") or {}).items() if sim}
+    for i in ids:
+        if i in excluidas:
+            avisos.append("%s esta excluida na Mesa desde a intro 5, e continua nela" % i)
+    for f in sorted(set(sem_indice)):
+        r = next((r for r in inv_por_id.values() if r["ficheiro"] == f), None)
+        if r and r["id"] in ids:
+            avisos.append("%s sem entrada no data/finais.csv, vai o original" % r["id"])
+    folhear, pouso = ids[:-1], ids[-1]
+    segundos = segundos_por_posicao(len(folhear))
+    lista = [{"id": i, "classe": classe_da_foto(i, estado, inv_por_id) or "",
+              "caminho": caminho_de[i], "segundos": segundos[k]} for k, i in enumerate(folhear)]
+    foco = (estado.get("focos") or {}).get(pouso) or FOCOS_POUSO.get(pouso)
+    lista.append({"id": pouso, "classe": classe_da_foto(pouso, estado, inv_por_id) or "",
+                  "caminho": caminho_de[pouso], "segundos": T_FIM - inicio_do_pouso(len(folhear)),
+                  "pouso": True, "foco": tuple(foco) if foco else None})
+    return lista, avisos
+
+
+# ---------------------------------------------------------------- as cores, desde 2 de outubro
+def cor_hex(rgb):
+    return "#%02X%02X%02X" % tuple(int(v) for v in rgb[:3])
+
+
+def cores_de_omissao():
+    """As cores de hoje, {fundo, papel, tinta, letra}, em tuplos RGB."""
+    return {"fundo": VERMELHO, "papel": PAPEL, "tinta": TINTA, "letra": LETRA}
+
+
+def com_letra(fonte):
+    """A letra pedida e outra que nao o Impact? (None, "" e "impact" sao o Impact de sempre.)
+
+    So olha para o id: quem decide se ele vale e o render.letra_da_intro(), antes de chegar aqui.
+    """
+    return fonte not in (None, "", render.INTRO_FONTE)
+
+
+def tem_paleta(cores=None, tamanho=None, fonte=None):
+    """Estas cores, este tamanho ou esta letra diferem dos de hoje?"""
+    omissao = cores_de_omissao()
+    cores = dict(omissao, **(cores or {}))
+    return any(tuple(cores[k]) != tuple(omissao[k]) for k in omissao) \
+        or (tamanho is not None and int(tamanho) != TAMANHO) or com_letra(fonte)
+
+
+def resumo_da_paleta(cores=None, tamanho=None, fonte=None):
+    """(6 hex, texto) de uma paleta: o texto vai nos metadados do ficheiro, os 6 hex no nome.
+
+    Os 6 hex sao o md5 do texto, que leva as quatro cores e o corpo: duas paletas que so
+    difiram no papel, ou so no tamanho, dao nomes diferentes. O texto e o que o montar le
+    do ficheiro antes de o usar, para nunca pegar numa intro de outras cores com o mesmo nome.
+
+    A LETRA (2 de outubro, a noite) entra no fim, " fonte <id>", e so quando nao e o Impact: sem
+    ela o texto, os 6 hex e o nome das intros ja feitas ficam os de antes, ao byte.
+    """
+    cores = dict(cores_de_omissao(), **(cores or {}))
+    texto = "paleta fundo %s papel %s tinta %s letra %s tamanho %d" % (
+        cor_hex(cores["fundo"]), cor_hex(cores["papel"]), cor_hex(cores["tinta"]),
+        cor_hex(cores["letra"]), int(tamanho if tamanho is not None else TAMANHO))
+    if com_letra(fonte):
+        texto += " fonte %s" % fonte
+    return hashlib.md5(texto.encode("ascii")).hexdigest()[:6], texto
+
+
+def comentario_da_paleta(cores=None, tamanho=None, fotos_da_5=True, fonte=None):
+    """O que vai nos metadados de uma intro de outras cores: a paleta, e de onde vem a lista.
+
+    O montar so usa uma intro cujo comentario seja exatamente este com as fotos da intro 5: uma
+    feita a mao com a mesma paleta e as fotos de hoje tem o mesmo nome e outras fotos.
+    """
+    return resumo_da_paleta(cores, tamanho, fonte)[1] + ("; fotos da intro 5" if fotos_da_5 else "; fotos de hoje")
+
+
+def nome_da_intro(cores=None, tamanho=None, sem_preto=False, fonte=None):
+    """O nome do ficheiro da intro: o de sempre sem paleta, e com ela o resumo no fim.
+
+    intro_clara_tiago_5.mp4, intro_clara_tiago_5 sem preto.mp4, e com outras cores
+    intro_clara_tiago_5 sem preto_<6 hex>.mp4. Com outra letra, o id dela a seguir aos 6 hex,
+    intro_clara_tiago_5 sem preto_<6 hex>_<id>.mp4, para se ver no nome que letra la esta. A copia
+    igualada leva " igualado" a seguir.
+    """
+    base = os.path.splitext(NOME_SAIDA)[0] + (" sem preto" if sem_preto else "")
+    if not tem_paleta(cores, tamanho, fonte):
+        return base + ".mp4"
+    return "%s_%s%s.mp4" % (base, resumo_da_paleta(cores, tamanho, fonte)[0],
+                            "_" + fonte if com_letra(fonte) else "")
+
+
+def tamanho_que_cabe(largura=1920):
+    """O maior corpo do letreiro com o nome dentro de ZONA_SEGURA da largura."""
+    corpo = TAMANHO_MIN
+    while True:
+        f = ImageFont.truetype(FONTE, corpo + 1)
+        caixa = f.getbbox(NOME)
+        if caixa[2] - caixa[0] > largura * ZONA_SEGURA:
+            return corpo
+        corpo += 1
+
+
+def cor_do_argumento(nome, omissao):
+    v = argumento(nome, None)
+    if v is None:
+        return omissao
+    rgb = render.cor_rgb(v)
+    if rgb is None:
+        sys.exit("ERRO: %s %r nao e uma cor #RRGGBB" % (nome, v))
+    return rgb
+
+
 def ffmpeg(nome="ffmpeg.exe"):
     p = os.path.join(os.environ.get("LOCALAPPDATA", ""),
                      r"Microsoft\WinGet\Packages"
@@ -571,11 +773,12 @@ def duotone(im):
     """
     g = ImageEnhance.Contrast(im.convert("L")).enhance(1.55)
     g = ImageEnhance.Brightness(g).enhance(1.06)
+    tinta, papel = CORES["tinta"], CORES["papel"]
     paleta = []
     for i in range(256):
         f = i / 255.0
         f = f ** 0.85
-        paleta += [int(TINTA[k] + (PAPEL[k] - TINTA[k]) * f) for k in range(3)]
+        paleta += [int(tinta[k] + (papel[k] - tinta[k]) * f) for k in range(3)]
     saida = g.convert("RGB")
     saida.putdata([tuple(paleta[3 * v:3 * v + 3]) for v in list(g.getdata())])
     return saida
@@ -635,22 +838,45 @@ def preparar(caminhos, folga=1.22, foco=None):
     return prontas
 
 
-def letreiro(largura_alvo):
+def letreiro(largura_alvo, tamanho=None, fonte=None):
     """A mascara do letreiro: "A HISTORIA DE" pequeno por cima, o nome grande.
 
     O Tiago pediu "algo como a historia de Clara e Tiago, mantendo este texto
     igual ao video original". O nome grande fica exatamente como estava, que e
     o que faz a citacao funcionar; a linha de cima e pequena e espacada, e
     entra como um subtitulo por cima do letreiro.
+
+    COM UM TAMANHO (o corpo a 1080, desde 2 de outubro) o corpo e esse, a escala do quadro;
+    sem ele e a procura pela largura de sempre, que a 1920 da 288. A linha de cima segue o
+    corpo, como sempre seguiu.
+
+    COM UMA LETRA (o id de data/fontes_intro.json, desde 2 de outubro a noite). O corpo do Impact
+    sai da conta de sempre, e a letra vai ao corpo que poe o nome dentro da caixa do nome em Impact
+    a esse corpo (render.corpo_da_letra_da_intro): o tamanho da Mesa continua a querer dizer a altura
+    do Impact. A linha "A HISTORIA DE" fica fora da troca, em Arial Bold ao corpo do IMPACT, e so se
+    encosta ao nome da letra. Sem letra, ou com "impact", e o desenho de sempre, ao byte. Um id que
+    nao vale (desconhecido, nao oferecido, ou que nao abre) desenha o Impact e diz porque.
     """
-    corpo = 40
-    while corpo < 900:
+    if tamanho is not None:
+        corpo = max(1, int(round(tamanho * A / 1080.0)))
+    else:
+        corpo = 40
+        while corpo < 900:
+            f = ImageFont.truetype(FONTE, corpo)
+            w = f.getbbox(NOME)[2] - f.getbbox(NOME)[0]
+            if w >= largura_alvo:
+                break
+            corpo += 4
+    entrada = None
+    if com_letra(fonte):
+        avisos = []
+        entrada = render.letra_da_intro(fonte, avisos)
+        for a in avisos:
+            print("  AVISO: %s" % a)
+    if entrada is None:
         f = ImageFont.truetype(FONTE, corpo)
-        w = f.getbbox(NOME)[2] - f.getbbox(NOME)[0]
-        if w >= largura_alvo:
-            break
-        corpo += 4
-    f = ImageFont.truetype(FONTE, corpo)
+    else:
+        f = render.abrir_letra_da_intro(entrada, render.corpo_da_letra_da_intro(entrada, corpo))
     caixa = f.getbbox(NOME)
     alt_nome = caixa[3] - caixa[1]
     m = Image.new("L", (L, A), 0)
@@ -736,19 +962,19 @@ def desenhar(t, fotos, pouso, mascara):
     if t < T_LETRAS:
         return quadro
 
-    # As letras entram por cima: o fundo passa a vermelho e a foto de pouso so
-    # se ve por dentro do nome.
+    # As letras entram por cima: o fundo passa a vermelho (ou a cor do fundo da paleta) e a
+    # foto de pouso so se ve por dentro do nome.
     k = suave((t - T_LETRAS) / max(0.001, T_SOLIDO - T_LETRAS))
-    fundo = Image.new("RGB", (L, A), VERMELHO)
+    fundo = Image.new("RGB", (L, A), CORES["fundo"])
     fundo_misto = Image.blend(quadro, fundo, k)
     dentro = Image.composite(quadro, fundo_misto, mascara)
 
     if t < T_SOLIDO:
         return dentro
 
-    # O letreiro solidifica.
+    # O letreiro solidifica, branco ou na cor das letras da paleta.
     s = suave((t - T_SOLIDO) / max(0.001, T_FIM - T_SOLIDO))
-    branco = Image.new("RGB", (L, A), (252, 250, 250))
+    branco = Image.new("RGB", (L, A), CORES["letra"])
     solido = Image.composite(branco, fundo, mascara)
     saida = Image.blend(dentro, solido, min(1.0, s * 1.6))
 
@@ -794,15 +1020,59 @@ def main():
         print("Rascunho a %dx%d" % (L, A))
     versao = argumento("--versao", VERSAO)
     pouso = argumento("--pouso", POUSO)
+
+    # AS CORES E O TAMANHO, desde 2 de outubro. Sem eles o CORES fica o de sempre e o letreiro
+    # sai da procura de sempre: o video e o mesmo, ao byte.
+    for chave, opcao in (("fundo", "--fundo"), ("papel", "--papel"), ("tinta", "--tinta"),
+                         ("letra", "--letra")):
+        CORES[chave] = cor_do_argumento(opcao, CORES[chave])
+    tamanho = argumento("--tamanho", None)
+    if tamanho is not None:
+        if not tamanho.strip().isdigit():
+            sys.exit("ERRO: --tamanho %r tem de ser um inteiro" % tamanho)
+        tamanho = int(tamanho)
+        if tamanho < TAMANHO_MIN:
+            sys.exit("ERRO: o letreiro a %d nao se le a 15 metros; nunca abaixo de %d (decisao 084)"
+                     % (tamanho, TAMANHO_MIN))
+        if tamanho > TAMANHO_MAX:
+            sys.exit("ERRO: o letreiro a %d nao cabe no quadro; o maior e %d (o nome dentro de %d%% "
+                     "da largura)" % (tamanho, TAMANHO_MAX, int(ZONA_SEGURA * 100)))
+        if tamanho == TAMANHO:
+            tamanho = None
+    # A LETRA, desde 2 de outubro a noite: um id de data/fontes_intro.json com oferecida true. Um
+    # que nao vale fica no Impact, com aviso, e o Impact vale entao para tudo: o desenho, o resumo
+    # e o nome do ficheiro. Sem --fonte, ou com "impact", e o video de sempre.
+    fonte = argumento("--fonte", None)
+    if com_letra(fonte):
+        avisos_letra = []
+        entrada = render.letra_da_intro(fonte, avisos_letra)
+        for a in avisos_letra:
+            print("AVISO: %s" % a)
+        fonte = entrada["id"] if entrada else None
+        if entrada:
+            print("Letra: %s (corpo %d no tamanho %d; mostra %.1f%% da foto que o Impact mostra)"
+                  % (entrada.get("nome") or fonte,
+                     render.corpo_da_letra_da_intro(entrada, tamanho if tamanho is not None else TAMANHO),
+                     tamanho if tamanho is not None else TAMANHO, float(entrada.get("pct_impact") or 0)))
+    else:
+        fonte = None
+    paleta = tem_paleta(CORES, tamanho, fonte)
+    sem_preto = "--sem-preto" in sys.argv
+    da_5 = "--fotos-da-5" in sys.argv
+    if paleta:
+        print("Paleta: %s" % resumo_da_paleta(CORES, tamanho, fonte)[1])
+
     # Um rascunho nao pode ocupar o nome da versao final: a seguinte recusava.
-    omissao = NOME_SAIDA.replace(".mp4", "_rascunho.mp4") if escala else NOME_SAIDA
+    omissao = nome_da_intro(CORES, tamanho, sem_preto, fonte)
+    if escala:
+        omissao = omissao.replace(".mp4", "_rascunho.mp4")
     final = os.path.join(DESTINO, argumento("--nome", omissao))
 
     try:
-        lista, avisos = selecao(versao, pouso)
+        lista, avisos = selecao_da_5() if da_5 else selecao(versao, pouso)
     except ValueError as e:
         sys.exit("ERRO: %s" % e)
-    print("Fotografias da %s, pela ordem do ecra:" % versao)
+    print("Fotografias da %s, pela ordem do ecra:" % ("intro 5" if da_5 else versao))
     imprimir(lista, avisos)
     if "--so-lista" in sys.argv:
         return
@@ -822,7 +1092,7 @@ def main():
     fotos = preparar([f["caminho"] for f in folhear])
     pouso_pronta = preparar([lista[-1]["caminho"]], folga=FOLGA_POUSO,
                             foco=lista[-1].get("foco"))[0]
-    mascara = letreiro(int(L * 0.86))
+    mascara = letreiro(int(L * 0.86), tamanho, fonte)
 
     # O video intermedio fica numa pasta temporaria do sistema, fora da media.
     tmp = tempfile.mkdtemp(prefix="intro_marvel_")
@@ -835,7 +1105,8 @@ def main():
              "-c:v", "libx264", "-crf", "19", "-preset", "veryfast",
              "-pix_fmt", "yuv420p", corpo], stdin=subprocess.PIPE)
 
-        duracao = T_TOTAL + T_PAUSA
+        # SEM O PRETO (097) acaba no ultimo fotograma com imagem, e o som com ele.
+        duracao = T_SEM_PRETO if sem_preto else T_TOTAL + T_PAUSA
         total = int(round(duracao * FPS))
         for q in range(total):
             proc.stdin.write(desenhar(q / float(FPS), fotos, pouso_pronta, mascara).tobytes())
@@ -850,14 +1121,20 @@ def main():
         # intro, para um som de origem mais comprido nao tocar por cima da pausa;
         # o apad enche o resto de silencio e o -t fecha tudo na duracao certa. O
         # nivel nao se mexe.
+        # COM OUTRAS CORES, a paleta vai escrita nos metadados (e o igualar_abertura.py copia-os):
+        # e por ela que o montar confirma que o ficheiro com este nome e mesmo desta paleta. Sem
+        # paleta nao se escreve nada, e o ficheiro e o de sempre.
+        etiqueta = []
+        if paleta:
+            etiqueta = ["-metadata", "comment=" + comentario_da_paleta(CORES, tamanho, da_5, fonte)]
         juntado = os.path.join(tmp, "intro.mp4")
         r = subprocess.run([ff, "-hide_banner", "-loglevel", "error", "-y",
                             "-i", corpo, "-i", som,
                             "-map", "0:v", "-map", "1:a",
                             "-c:v", "copy",
                             "-af", "atrim=end=%.2f,apad" % T_TOTAL,
-                            "-c:a", "aac", "-b:a", "192k",
-                            "-t", "%.2f" % duracao, juntado],
+                            "-c:a", "aac", "-b:a", "192k"] + etiqueta +
+                           ["-t", "%.2f" % duracao, juntado],
                            capture_output=True, text=True)
         if r.returncode != 0 or not os.path.exists(juntado):
             sys.exit("ERRO ao juntar o som: %s" % (r.stderr or "")[-300:])

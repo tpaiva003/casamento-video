@@ -777,6 +777,280 @@ um vídeo incluindo os créditos."* Pela ordem:
   - cinco são pares novos, por causa da ordem dele e da troca Steppenwolf e Fome de Viagem, e
     cruzam-se como antes da 096.
 
+**O pedido de 2 de outubro, a Mesa para o dia com a Clara:** *"Agora precisa de aprofundar o que podemos
+fazer na nossa Mesa, pois amanhã vou ter um dia em cheio com a Clara e quero sermos capazes de com ela
+ajustar ao máximo diretamente na Mesa e depois darmos só ordem para fazer render."*
+
+Na Mesa, nas palavras dele:
+- o tamanho da letra e o tipo da letra;
+- ajustar a ordem das fotos dos créditos "de forma simples e prática enquanto os nomes movem";
+- pré-visualizar "da forma mais realista possível", para não ter de fazer render só para analisar;
+- o vermelho da intro: *"A Clara pediu-me para alterarmos o vermelho que está na intro da Marvel, pois
+  diz que parece demasiado Marvel"*. Quer a cor, o tamanho e o estilo personalizáveis na Mesa,
+  "incluindo as linhas e os contornos que aparecem no contador do tempo";
+- ouvir a música no tempo certo durante a pré-visualização;
+- editar os textos do fim dos créditos;
+- personalizar os textos dos cartões, porque a Clara pode querer mudá-los.
+
+Fora da Mesa:
+- marcar numa foto uma zona com mais destaque (*"umas fotos de equipa que se eu não assinalar quem eu
+  sou as pessoas podem não perceber"*);
+- o contador inicial: começa em 2026 dia a dia, mas *"quando chegamos a 1995, é como se fosse um contador
+  diferente"*;
+- mais espaço entre a data "12 de setembro de 1995" e o "SET" da régua.
+
+A pergunta dele: se no teste do projetor for preciso ajustar as legendas, ter o projeto no DaVinci
+Resolve, *"pois acredito que fosse mais rápido"*. *"Isto é possível e se sim como e a que custos?"*
+
+**O que ele acrescentou às 02:23:**
+- *"We should always be able to keep it as is, e.g. the contador."* Cada opção nova tem «Como está»,
+  que é a omissão.
+- *"Confirma que tens as fotos todas que estão na pasta final."* As 719 do índice estão todas na
+  FINAIS. Há lá 44 ficheiros a mais: 33 sobras antigas e 11 cópias «- Copy», das quais 5 têm conteúdo
+  diferente (a `DSC02954 - Copy.JPG` é de 1 de outubro). Não se mexe, regra 4.
+- *"Em termos de fontes inclui estas pelo menos."* Mandou as letras dos convites. Candidatas
+  acrescentadas a `data/fontes.json`: Great Vibes, Pinyon Script, Cormorant Garamond normal e itálica,
+  Cinzel normal e Playfair Display.
+- *"O marcar-me numa foto de equipa nem sempre é possível com zoom (...) precisamos de outra forma de
+  realçar."* O destaque escurece à volta e desenha um contorno, sem zoom.
+- *"No contador o que refiro é o movimentar em 1995 que não pode parecer outra peça."*
+- O teste do projetor: *"Será no próprio dia, mas também há possibilidade de passar para um pc antigo
+  com placa NVIDIA (...) será que se passasse o Claude para lá conseguiria melhores resultados?"*
+
+**As respostas dele, às 02:33:**
+- *"Sim, descarrega as quatro."* Descarregadas para `C:\casamento-video-media\gerados\fontes\`, do
+  repositório do Google Fonts (OFL): Great Vibes, Pinyon Script, Cormorant Garamond itálica e
+  Playfair Display.
+- *"O meu comentário sobre o HP Pavilion de há 6 anos não é para projetar, mas sim para perceber se o
+  render seria mais rápido e bom."*
+- *"E se para já trabalharmos na Mesa, mas também colocarmos a opção a certa altura de criar o ficheiro
+  como falaste para o DaVinci, assim se começar a apertar, mudo para o DaVinci de forma mais fácil."*
+  Fica o pacote do DaVinci (`davinci_pacote.py`): o filme sem as legendas de baixo, as legendas num
+  `.srt` e um guia. Constrói-se depois de a equipa do render libertar o `render.py`, com o contador
+  contínuo como escolha e o destaque completo (`scratchpad/render_parte2.js`).
+
+**A norma de cor, 2 de outubro de manhã.** O corpo do filme é gravado com a receita de cor antiga
+(a das televisões normais) e o ficheiro diz que é a da alta definição; um leitor mostra as cores um
+pouco desviadas (no render de 1 de outubro às 23:11: até 4% mais carregadas, vermelhos para laranja,
+pele mais amarela). Imagens em `saida/discussao/cor/`. Ele: *"Sim, corrige, mas apenas se tiveres a
+certeza"* e *"E se tiveres a certeza que é necessário."*
+- Os critérios fixaram-se antes de medir. **Certa:** com a correção, o erro desce ao da compressão e
+  nenhuma peça fica pior nem desencontrada. **Necessária:** uma cor escolhida na Mesa sai com
+  ΔE2000 de 3 ou mais, ou a pele com mediana de 2 ou mais. Sem isso, não se mexe.
+- Cuidado já visto: se os vídeos do meio do corpo forem lidos com o mesmo erro, os dois anulam-se
+  hoje, e corrigir só a gravação estragava-os. O mesmo com a intro já gravada.
+- A verificação corre só a ler (workflow `norma-de-cor-certeza-e-necessidade`). A mudança, se passar,
+  só depois de a equipa do render libertar o `render.py`.
+- **O veredicto (15:00): necessária sim, certa não, à letra.**
+  - Necessária: o vermelho da intro, #96161C, sai #A1221B. São 3,6 a 3,8 de ΔE2000, conforme o
+    descodificador, medido no próprio filme de 1/10, no Chromium e no leitor do Windows. O Vinho dá
+    3,1 a 3,7. A pele não decide (1,2 a 2,3, conforme a definição).
+  - Certa, à letra, não: nas fotos a correção baixa a mediana de 1,83 para 0,81, e nas 36 fotos fica
+    melhor em todas. Mas nas bordas das letras cor de champanhe dos cartões e dos nomes fica
+    ligeiramente pior: +0,09 de mediana em 12 de 13 textos, até +0,19. É invisível, mas falha o "nada
+    pior". A razão está provada: hoje o erro de matriz satura as letras quentes, e isso compensa
+    por acaso o croma que a compressão lava nas bordas.
+  - A correção completa não é só uma linha: o encoder do corpo, a leitura dos vídeos do meio
+    (sem ela o Homer piorava de 0,75 para 2,29), a fanfarra por RGB (converte as intros já feitas),
+    o encoder dos créditos e a carta do projetor. Nunca opções de cor na junção pelo concat, que
+    decide pela primeira parte e converteria tudo. Plano e provas em `scratchpad/cor_wf/`.
+  - Pela regra dele ("só se tiveres a certeza"), não se aplica sem ele decidir.
+
+**A música dos créditos, 2 de outubro de manhã.** Ele: *"Gostava de também poder alterar a música que
+toca nos créditos, sendo que idealmente gostava de também a conseguir editar na própria Mesa. Neste
+momento temos os Queen a vir dos amigos, mas acho que gostava de voltar ao Taking care of business."*
+- Hoje os créditos continuam a última música do filme (os Queen) de onde o filme a deixa.
+- O Taking Care of Business já toca no filme, no bloco do trabalho, dos 60,8 aos 103 s do ficheiro
+  (296 s). Tocado do início nos créditos, repetia essa parte uns três minutos depois.
+- Na Mesa, no painel dos créditos, entra a escolha `est.creditos.musica = {ficheiro, inicio}` com
+  `inicio` em `"fim"` (acaba com os créditos), `"inicio"` ou um segundo, para ouvir na Mesa. Sem ela
+  fica "Como está". Contrato em `saida/discussao/contrato_mesa_1002.md`. O render dos créditos
+  (`ponto5_creditos.py`) lê-a depois de a equipa do render o libertar.
+- Ele: *"Mete já o Taking Care."* Escrito na base às 11:52 (versão 1388 para 1389, rev 1389):
+  `{ficheiro: "Bachman Turner Overdrive-Taking care of business_62s.mp3", inicio: "fim"}`. O resto da
+  montagem ficou igual (só mudaram `creditos`, `rev` e `quando`). A Mesa publicada (v51) guarda o
+  campo sem o mostrar; o painel novo mostra-o.
+
+**Caracteres que a letra do filme não tem (2 de outubro).** Ao ler a base apareceram dois textos dele
+que o Arial Bold desenha como um quadrado vazio (imagem em `saida/discussao/caracteres_em_falta.png`):
+- o emoji no fim de *"E porque não ganhar uns € como modelo?"* (demo_v3, clip 72, foto f0108), que
+  já estava no render de 1 de outubro;
+- o hífen inseparável (U+2011) em *"Audio‑Visual Operations Maestro"*, o terceiro cargo dos créditos.
+- Proposta: o render desenha o hífen inseparável como o hífen normal (é o mesmo sinal, o texto não
+  muda), e a Mesa passa a avisar de qualquer carácter que a letra do filme não tenha. O emoji é
+  decisão dele.
+- Ele: *"Prefiro que faça o render de emojis se incluirmos."* O render passa a desenhar os emojis a
+  cores, com a letra de emojis do Windows (`C:\Windows\Fonts\seguiemj.ttf`, que a Pillow 12.3 com o
+  FreeType 2.14.3 desenha a cores com `embedded_color=True`; provado). Vale para todos os textos do
+  filme: legendas, textos das fotos dos grupos, cartões, nomes e créditos. Amostra em
+  `saida/discussao/emoji_a_cores_exemplo.png`. No telemóvel, a Mesa mostra os emojis com o desenho do
+  próprio telemóvel, que é diferente do do Windows.
+
+**As fotos da pilha, 2 de outubro à tarde.** Ele: *"As fotos da pilha estão agora muito pequenas, gostava
+delas maiores como já estiveram antes, porque assim ficam quase impercetíveis, mas também o texto que
+elas têm fica ilegível."*
+- No filme não mudaram: as pilhas dos renders de 23 e 30 de setembro e de 1 de outubro às 23:11 têm o
+  mesmo tamanho. Cada foto ocupa cerca de 48% da largura (caixa `render.PILHA_LARG` 0,50 por
+  `PILHA_ALT` 0,64), e o texto lê-se. Fotogramas em `saida/discussao/pilha/`.
+- Quem encolheu foi a Mesa. A pré-visualização desenha os grupos com o `mostraQuadro()`. A peça tem
+  `min(W, H) × 0,52` (× 0,80 com legenda), cerca de 23 a 29% da largura, metade do filme. E desde a
+  manhã de 2 de outubro a peça tem a forma da foto, em vez de um quadrado, o que a encolheu ainda mais.
+- A correção é só na Mesa: os grupos na pré-visualização com a geometria do render (pilha em monte e
+  em leque, colagem, lado a lado) e o texto das fotos no tamanho do render.
+- Ele: *"Mas e quando fica a Mesa concluída? Nota que eu e a Clara temos de trabalhar ainda hoje no
+  vídeo."* Fez-se logo um remendo só da pilha em monte, fora das equipas: `pilhaMonteDoRender()` no
+  `editor_base.html` (o `render.pilha_disposicao()` com o `encaixar_grupo()`, os ângulos da Pillow
+  com o sinal trocado para o CSS). Aplicado à página publicada de manhã e publicado às 15:00 como
+  versão 52 da Mesa, com o mesmo retrato das fotos (nenhuma foto mudou desde a manhã). Visto no
+  browser com a montagem dele: a pilha de 5 e a de 15 ficam do tamanho do filme. O leque e a
+  colagem ficam para a equipa seguinte. Remendo em `scratchpad/hotfix_pilha/remendo.py`.
+- Depois de publicar, a leitura da base para confirmar a montagem foi recusada pela ferramenta. Fica
+  por confirmar que a montagem continua lá; pediu-se-lhe que confirme ao recarregar.
+
+**A Mesa de 2 de outubro às 16:47 (versão 53).**
+- **Fotos novas:** 5 na `01-NOVAS/02.10.2026`, deixadas por ele às 11:33. Duas são iguais pelo
+  conteúdo (hash) a fotos que já existiam: `IMG_4073.JPG` (a mesma que está no vídeo da mãe) e
+  `DSC07282.JPG` (a mesma que já estava na `01-NOVAS`). Só se reporta, nada se apagou. O
+  `atualizar_fotos.py` deixou 724 prontas.
+- **Publicado:** a página e as 46 folhas das prévias. A página traz a música dos créditos no painel,
+  os créditos com os tempos do render, a data afastada, os avisos do estilo, o destaque igual ao do
+  render, a guarda das duas gravações no mesmo instante (campos `gravacao` e `cadeia`) e o remendo
+  das pilhas. A `montagem/publicacao` foi escrita: build `20261002-164356`, 724 fotos.
+- **A base depois de publicar:** rev 1435, 169 clips na demo_v3, o Taking Care of Business mantido,
+  34 fotos nos créditos. Ele e a Clara escolheram a intro Preto e dourado.
+- Com o Preto e dourado, o desvio de cor da intro fica pequeno (fundo 0,6 e letra 1,4 de ΔE2000). O
+  vermelho dos riscos da fita (#C83E56) continua a sair com 5,4 a 5,8.
+- O texto da decisão da Mesa (música dos créditos, duas gravações) está guardado. Entra no
+  DECISOES.md como 108, depois da 106 e da 107 da equipa do render que está a trabalhar.
+
+**A passagem dos Queen para o Taking Care of Business (2 de outubro, 18:40).** Os 95,00 s da manhã
+eram do fim do filme de 1/10, porque o `v3.csv` ainda é o de 1/10 às 22:40. Com a Mesa de hoje, o
+filme acaba 21,5 s mais cedo, e no corte dos créditos os Queen estão aos 68,70 s do ficheiro, a meio
+de uma linha. Hoje a linha nova ouve-se cerca de 1 s por baixo do Taking Care of Business. As saídas:
+- **(A) trocar no corte:** no fim de hoje corta a linha a meio.
+- **(B) os Queen acabam a linha:** o Taking Care of Business entra 2,7 s depois da imagem. Foge à
+  regra de a música mudar com o bloco. Chave `est.creditos.musica.passagem = "frase"`, que o
+  ponto5 já lê; a Mesa recebe a escolha na parte 4.
+- **(C) alongar o último clip 2,7 s:** o corte cai no fim da linha, imagem e música mudam juntas.
+  Mede-se outra vez quando o fim estiver fechado.
+- Recomendação da equipa: a C, ou a B se ele não quiser mexer na imagem. Medido com dois métodos;
+  a verificação por um segundo agente (096) faz-se no fecho, com o fim decidido. Cópias para ouvir
+  em `saida/discussao/juncao_creditos/`. Script: `scripts/discussao/juncao_creditos.py`.
+- Ele, às 18:47: *"c"*. Fica a (C). A Mesa passa a dizer, na aba Música dos créditos, quantos
+  segundos faltam ao último clip para o corte cair no fim da frase. Avisa, não corrige: é ele que
+  muda a duração. Antes do render final mede-se outra vez (096).
+
+**Tirar fotos dos créditos (2 de outubro, 18:46).** Ele: *"Torna simples também na zona de editar os
+créditos de remover fotos que já estão incluídas neste momento como sendo marcadas para crédito."*
+Hoje uma foto dos créditos é uma foto com a etiqueta «Créditos» ou na versão «Créditos», e tirá-la
+obriga a ir à foto. Vai um «Tirar dos créditos» em cada foto do painel. Tira a etiqueta, tira a foto
+da versão «Créditos» e tira-a da ordem, com Anular. A foto continua no filme.
+
+**Trocar uma foto por um recorte dele (2 de outubro, 19:30).** Ele: *"Quero também trocar esta:
+IMG_20260922_192900 por esta IMG_20260922_192900 - Copy."*
+- A original é a f0719 (`01-NOVAS/IMG_20260922_192900.jpg`, 2304 x 4096). É uma foto de uma foto, com o
+  monitor e a barra do Windows em cima. Está na demo_v3, no clip 15.
+- O recorte dele está em `FINAIS/IMG_20260922_192900 - Copy.jpg`, 2304 x 3375, deixado às 19:28. Corta
+  o monitor. A `FINAIS` não é uma fonte: o filme só lê o que o `finais.csv` escolhe.
+- O caminho: copiar o recorte para a `01-NOVAS` (ficheiro novo, nada se move nem apaga) e correr o
+  `atualizar_fotos.py` depois de a equipa do render acabar os testes. Na Mesa publicada depois, troca-se
+  a f0719 pela foto nova no clip 15, com escrita na base. A f0719 fica na biblioteca, não usada.
+- A escrita na base só depois de a Mesa nova estar publicada. A Mesa de agora não conhece a foto nova,
+  e um clip com uma foto que ela não conhece podia perder-se ao gravar.
+- **3 de outubro, 01:00.** O recorte foi copiado para `01-NOVAS/IMG_20260922_192900 - Copy.jpg` (o
+  mesmo hash) e registado como f0726. O `atualizar_fotos.py` encontrou também uma foto nova dele, a
+  `01-NOVAS/5-3.jpg` (f0725, 592 x 911, digitalização). Ficam 726 fotos.
+- **A Mesa versão 54, publicada à 01:06,** traz: a página da equipa da Mesa da noite (decisão 110),
+  as cópias da intro Bernard e as 46 folhas. Build `20261003-010326`. Depois de publicar, a base
+  estava na rev 1653, com 152 clips na demo_v3 (eles tiraram clips à noite). O Taking Care of
+  Business, as 34 fotos dos créditos e o estilo com Playfair nas legendas e nos cartões estavam lá.
+- A troca f0719 → f0726 no clip 15 foi recusada pela guarda (`version_mismatch`): a base passou de
+  1653 a 1661 em dois minutos, porque eles estavam a gravar. Não se forçou. Faz-se quando pararem.
+
+**Os cargos dos créditos (2 de outubro, 19:33).** Ele: *"Nos créditos permite-nos testar a
+possibilidade de aparecer primeiro os tais cargos nos vídeos, permite também acrescentar mais cargos e
+mais pessoas e depois as nossas pessoas com os convidados e fotos."* E: *"refiro-me a poder testar
+naquele menu dos créditos que criámos."*
+- Contrato em `saida/discussao/contrato_creditos_cargos.md`: `cargos_primeiro`, 1 a 8 cargos, e 1 a
+  4 pessoas por cargo, separadas por mudança de linha.
+- A Mesa faz o painel e a pré-visualização (acrescentado à equipa da Mesa desta noite, como etapa
+  `cargos`). O render (`ponto5_creditos.py`) faz o mesmo a seguir à equipa que está a fechar.
+
+**Os pedidos de 3 de outubro, de madrugada (04:50 e 05:05).** Uma lista longa, com a imagem do título
+final dos créditos. Contrato em `saida/discussao/contrato_1003.md`, com as palavras dele em cada ponto:
+- a letra do contador, com as letras das legendas;
+- a legenda do clip 10 numa só linha;
+- a posição das legendas, global e por clip, e a legenda do clip 69 (insígnias);
+- o lado a lado com fotos inteiras;
+- nos créditos: o título «CLARA & TIAGO» antes do rolo, os cargos removidos por inteiro (*"quero mesmo
+  poder remover integralmente"*), os nomes corridos sem os grupos e a velocidade dos nomes e das
+  fotos;
+- o contador do fim de 2023 a 4 de outubro de 2026, parado mais 3 s;
+- um contador até à data em que se conheceram. A data pergunta-se: a 011 diz 2009/2010 para se
+  conhecerem e 20 de maio de 2012 para ficarem juntos;
+- a música de todas as músicas novas, pela regra (094 a 096);
+- 15 fotos trocadas por versões novas: o recorte do polícia, Veneza, Dubrovnik, Terceira, Iguaçu, o
+  10-5, o 21-23, o 21-3, o 21-28 e as 82-x, mais o 1031. A `2016_tIAGO_AMIGOS_FACULDADE_2...` foi
+  atualizada no mesmo sítio.
+- **A data do contador, decidida:** *"Ensure also that we can conheceram-se em 2011 e o contador para em
+  maio de 2012 onde começaram a namorar."* O contador vai de 1995 a 20/05/2012, com «Clara e Tiago
+  conhecem-se» em 2011 e um texto de início de namoro no fim. **Muda a decisão 011**, que tinha «não se
+  conheceram em 2011» confirmado por ele a 10 de setembro. Disse-se-lhe isto explicitamente.
+- **Fica para depois, palavras dele:** «trocar a foto x por 5-3» (*"vamos vigiar, mas para já
+  ignora"*). A `01-NOVAS/5-3.jpg` é igual à original (f0009), que já está no clip 24.
+- As fotos de 04:29 a 04:31 estavam nas Transferências e foram copiadas para a `01-NOVAS`, sem mexer
+  nas originais. A `04.15.49` está na `01-NOVAS` mas não está na lista dele: fica registada e não se
+  usa.
+- **Feito às 05:07.**
+  - **Fotos:** `atualizar_fotos.py`, 741 fotos, build `20261003-050017`.
+  - **Mesa versão 55:** publicada com a página, as 47 folhas e as cópias das 4 músicas novas (Billy
+    Joel, Edward Sharpe, Olivia Dean, Vance Joy).
+  - **Trocas:** escritas na base às 05:06 (versão 2373 para 2374). Mudaram as 15 fotos, em 12 clips
+    da demo_v3: 16, 73 (Veneza, Dubrovnik, Terceira e Iguaçu), 99, 107, 122, 123, 124, 136, 137,
+    138, 140 e 141.
+    - As outras versões, os créditos e o estilo ficaram iguais.
+    - As etiquetas passaram para as fotos novas; o ponto de foco não. A Terceira e o Iguaçu tinham
+      foco e ficam sem ele.
+    - A `21-28` é `21-28.jpeg`.
+    - A `10-5` do filme é a f0004. A f0017, com o mesmo nome, é das versões da mãe e não se mexeu.
+  - **A `2016_tIAGO_AMIGOS_FACULDADE_2...` (f0310):**
+    - O inventário apanhou o conteúdo novo pelo mesmo caminho: 581 x 580, hash `8fc2e812`.
+    - A versão Lanczos antiga (do conteúdo velho) foi recusada pela guarda das caras (2,39), e o
+      filme usa o original novo.
+    - É pequena, 581 x 580: o render amplia-a na hora.
+
+**A letra da intro, 2 de outubro à tarde.** Ele: *"E já agora é possível alterar o tipo de letra da
+intro da Marvel nos estilos como criaste?"* Mexe na 084 (e na 104), que diz que o Impact não se troca:
+a foto vê-se por dentro das letras, e a máscara em Impact tem 250.835 pixéis contra 105.607 em Arial
+Bold. Pergunta-se se ele quer abrir isto.
+- Proposta: no Estilo, aba da intro, uma escolha de letra com «Impact (como está)» por omissão. Cada
+  letra mostra quanto da foto se vê por dentro dela, medido como em setembro. Só se oferecem letras
+  grossas o suficiente, e cada letra nova custa uns 3 minutos na montagem seguinte.
+- Ele: *"Sim, abre a escolha da letra nesses termos."* Isto muda a 084 e a 104 (o Impact continua a
+  ser a omissão, mas deixa de ser a única). A medida das letras que estão no PC corre já, só a ler
+  (workflow `letra-da-intro-medir`, que propõe o limiar, a lista e o `data/fontes_intro.json`). A
+  Mesa e o render ligam-se depois de as equipas que lá estão libertarem os ficheiros. Nada se
+  descarrega sem ele dizer.
+- **A medida (15:20).** 397 faces lidas, 124 candidatas medidas na caixa do nome em Impact a 288
+  (1662 x 237 px). A medida de setembro reproduz-se ao píxel (250.835 e 105.607). O que decide é a
+  letra ser estreita, não o peso: as pretas largas (Arial Black 44,9%, Segoe UI Black 52,9%) descem
+  de corpo para caberem na largura.
+- **O limiar:** dois terços da área do Impact (66,7%). Além disso, separar as maiúsculas a 15 m no
+  mínimo da Mesa (132) e caber no máximo (309). A medida da 084 estendeu-se às maiúsculas (pares
+  NN, HH e II), o que tira a Haettenschweiler (86%, mas só se lê a partir de 200).
+- **As oito oferecidas:** Impact (como está), Bernard MT Condensed 80,9%, Showcard Gothic 78,7%,
+  Gill Sans Ultra Bold Condensed 74,6%, Bahnschrift Bold Condensed 73,2%, Playbill 71,9%, Agency FB
+  Bold 70,4% e Rockwell Condensed 68,2%. A Bebas Neue (67,4%) fica de fora pelo máximo de oito, e o
+  & dela parece um E. Todas as medidas estão em `data/fontes_intro.json` (ficheiro novo, 124 letras).
+  Folhas em `saida/discussao/intro/letras_oferecidas.jpg` e `letras_recusadas.jpg`.
+- **O contrato** (para a construção): `est.estilo.intro.fonte = "<id>"`. Ausente ou `"impact"` é
+  como está, igual ao byte. O tamanho da Mesa passa a querer dizer a altura do Impact a esse corpo,
+  e cada letra vai a `round(corpo × corpo_que_cabe / 288)`. A linha «A HISTÓRIA DE» fica em Arial
+  Bold, fora da troca. O nome da intro ganha `_<id>`, e as expressões que reconhecem as intros
+  mudam em quatro sítios. A Mesa mostra a amostra por máscaras PNG feitas pelo próprio letreiro,
+  porque o telemóvel não tem as letras do Windows. Pormenor em
+  `scratchpad/letra_intro/proposta/`.
+
 **O render de 1 de outubro, 23:11, o que ele pediu "depois de tudo":**
 - **O filme:** `C:\casamento-video-media\saida\v3_2026-10-01_2311.mp4`, em resolução cheia, com
   `--fatias 6`.

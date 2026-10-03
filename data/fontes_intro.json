@@ -1,0 +1,4061 @@
+{
+ "limiar_pct": 66.7,
+ "metodo": "Medido a 2 de outubro de 2026 com Pillow 12.3.0 e FreeType 2.14.3, pelo método de setembro (decisão 084) com as correções do cético. A área é a da máscara do letreiro da intro a 1920 x 1080, píxeis acima de 128, e a percentagem é contra a do Impact a 288, 250.835 px. Cada letra vai ao maior corpo inteiro com o nome «CLARA & TIAGO» dentro da caixa do nome em Impact a 288 pela getbbox, 1662 x 237 px (corpo_que_cabe). A linha «A HISTÓRIA DE» fica fora da troca, em Arial Bold a 0,19 do corpo do Impact (54 px). Com outro tamanho T da Mesa, a letra vai ao corpo round(T x corpo_que_cabe / 288), sempre na caixa do Impact a T. corpo_minimo é o pior de quatro pares, nn (o da 084), NN, HH e II, pelas funções do scripts/medir_corpo_minimo.py sem as mudar (calibração: Arial Bold 58, Impact 106); tamanho_mesa_minimo é o menor tamanho da Mesa em que a letra chega a esse corpo. Oferece-se uma letra que: mostra pelo menos 66,7% da área do Impact (dois terços: a janela por onde a foto se vê não perde mais de um terço; o Arial Bold perdia 58%); separa as letras a 15 m no mínimo da Mesa, 132; e a 309, o máximo, cabe nos 93% do quadro. Entre letras da mesma família fica a que mostra mais foto, e a lista leva no máximo 8, o Impact primeiro e as outras pela área. As 124 candidatas são as letras de C:\\Windows\\Fonts, de gerados\\fontes (pesos 700, 800 e 900) e de data/fontes.json com todos os glifos do letreiro; ficaram de fora antes de medir 101 de peso normal, 94 itálicas, 63 de outras escritas com o latim emprestado e 15 sem glifos ou que não abrem, e das que se mediram mesmo assim nenhuma passa de 57,6%. Nada foi descarregado.",
+ "letras": [
+  {
+   "id": "impact",
+   "nome": "Impact (como está)",
+   "ficheiro": "C:\\Windows\\Fonts\\impact.ttf",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 250835,
+   "pct_impact": 100.0,
+   "corpo_que_cabe": 288,
+   "corpo_minimo": 106,
+   "oferecida": true,
+   "porque": "A de hoje, a omissão: «Impact (como está)». É a medida de setembro, 250.835 px, e separa as letras a 15 m a partir do 106, abaixo do mínimo 132 da Mesa.",
+   "ordem": 1,
+   "pct_so_nome": 100.0,
+   "caixa_px": [
+    1662,
+    237
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 106,
+    "NN": 86,
+    "HH": 82,
+    "II": 86
+   },
+   "tamanho_mesa_minimo": 106,
+   "corpo_a_132": 132,
+   "corpo_a_309": 309,
+   "largura_a_309": 1782,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "bernard",
+   "nome": "Bernard MT Condensed",
+   "ficheiro": "C:\\Windows\\Fonts\\BERNHC.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 203016,
+   "pct_impact": 80.94,
+   "corpo_que_cabe": 288,
+   "corpo_minimo": 90,
+   "oferecida": true,
+   "porque": "Oferecida: mostra 80,9% da foto que o Impact mostra (a linha é 66,7%), cabe na mesma caixa a corpo 288 e separa as letras a 15 m a partir do tamanho 90 da Mesa, abaixo do mínimo 132.",
+   "ordem": 2,
+   "pct_so_nome": 80.39,
+   "caixa_px": [
+    1661,
+    235
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 90,
+    "NN": 70,
+    "HH": 70,
+    "II": 74
+   },
+   "tamanho_mesa_minimo": 90,
+   "corpo_a_132": 132,
+   "corpo_a_309": 309,
+   "largura_a_309": 1784,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "showcard",
+   "nome": "Showcard Gothic",
+   "ficheiro": "C:\\Windows\\Fonts\\SHOWG.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 197345,
+   "pct_impact": 78.68,
+   "corpo_que_cabe": 235,
+   "corpo_minimo": 86,
+   "oferecida": true,
+   "porque": "Oferecida: mostra 78,7% da foto que o Impact mostra (a linha é 66,7%), cabe na mesma caixa a corpo 235 e separa as letras a 15 m a partir do tamanho 105 da Mesa, abaixo do mínimo 132.",
+   "ordem": 3,
+   "pct_so_nome": 78.07,
+   "caixa_px": [
+    1662,
+    194
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 78,
+    "NN": 78,
+    "HH": 70,
+    "II": 86
+   },
+   "tamanho_mesa_minimo": 105,
+   "corpo_a_132": 108,
+   "corpo_a_309": 252,
+   "largura_a_309": 1778,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "gillultra",
+   "nome": "Gill Sans Ultra Bold Condensed",
+   "ficheiro": "C:\\Windows\\Fonts\\GILLUBCD.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 187210,
+   "pct_impact": 74.63,
+   "corpo_que_cabe": 240,
+   "corpo_minimo": 98,
+   "oferecida": true,
+   "porque": "Oferecida: mostra 74,6% da foto que o Impact mostra (a linha é 66,7%), cabe na mesma caixa a corpo 240 e separa as letras a 15 m a partir do tamanho 117 da Mesa, abaixo do mínimo 132.",
+   "ordem": 4,
+   "pct_so_nome": 73.91,
+   "caixa_px": [
+    1653,
+    185
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 98,
+    "NN": 66,
+    "HH": 74,
+    "II": 78
+   },
+   "tamanho_mesa_minimo": 117,
+   "corpo_a_132": 110,
+   "corpo_a_309": 258,
+   "largura_a_309": 1783,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "bahncond",
+   "nome": "Bahnschrift Bold Condensed",
+   "ficheiro": "C:\\Windows\\Fonts\\bahnschrift.ttf",
+   "indice": 0,
+   "variacao": "wght=700,wdth=75",
+   "eixos": [
+    700.0,
+    75.0
+   ],
+   "area_px": 183719,
+   "pct_impact": 73.24,
+   "corpo_que_cabe": 326,
+   "corpo_minimo": 122,
+   "oferecida": true,
+   "porque": "Oferecida: mostra 73,2% da foto que o Impact mostra (a linha é 66,7%), cabe na mesma caixa a corpo 326 e separa as letras a 15 m a partir do tamanho 108 da Mesa, abaixo do mínimo 132.",
+   "ordem": 5,
+   "pct_so_nome": 72.48,
+   "caixa_px": [
+    1594,
+    237
+   ],
+   "limita": "altura",
+   "corpo_minimo_pares": {
+    "nn": 90,
+    "NN": 94,
+    "HH": 94,
+    "II": 122
+   },
+   "tamanho_mesa_minimo": 108,
+   "corpo_a_132": 149,
+   "corpo_a_309": 350,
+   "largura_a_309": 1713,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "playbill",
+   "nome": "Playbill",
+   "ficheiro": "C:\\Windows\\Fonts\\PLAYBILL.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 180346,
+   "pct_impact": 71.9,
+   "corpo_que_cabe": 344,
+   "corpo_minimo": 130,
+   "oferecida": true,
+   "porque": "Oferecida: mostra 71,9% da foto que o Impact mostra (a linha é 66,7%), cabe na mesma caixa a corpo 344 e separa as letras a 15 m a partir do tamanho 109 da Mesa, abaixo do mínimo 132.",
+   "ordem": 6,
+   "pct_so_nome": 71.1,
+   "caixa_px": [
+    1421,
+    237
+   ],
+   "limita": "altura",
+   "corpo_minimo_pares": {
+    "nn": 130,
+    "NN": 90,
+    "HH": 82,
+    "II": 98
+   },
+   "tamanho_mesa_minimo": 109,
+   "corpo_a_132": 158,
+   "corpo_a_309": 369,
+   "largura_a_309": 1526,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "agency",
+   "nome": "Agency FB Bold",
+   "ficheiro": "C:\\Windows\\Fonts\\AGENCYB.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 176490,
+   "pct_impact": 70.36,
+   "corpo_que_cabe": 310,
+   "corpo_minimo": 98,
+   "oferecida": true,
+   "porque": "Oferecida: mostra 70,4% da foto que o Impact mostra (a linha é 66,7%), cabe na mesma caixa a corpo 310 e separa as letras a 15 m a partir do tamanho 91 da Mesa, abaixo do mínimo 132.",
+   "ordem": 7,
+   "pct_so_nome": 69.52,
+   "caixa_px": [
+    1579,
+    237
+   ],
+   "limita": "altura",
+   "corpo_minimo_pares": {
+    "nn": 94,
+    "NN": 94,
+    "HH": 90,
+    "II": 98
+   },
+   "tamanho_mesa_minimo": 91,
+   "corpo_a_132": 142,
+   "corpo_a_309": 333,
+   "largura_a_309": 1697,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "rockcond",
+   "nome": "Rockwell Condensed",
+   "ficheiro": "C:\\Windows\\Fonts\\ROCC____.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 171106,
+   "pct_impact": 68.21,
+   "corpo_que_cabe": 314,
+   "corpo_minimo": 82,
+   "oferecida": true,
+   "porque": "Oferecida: mostra 68,2% da foto que o Impact mostra (a linha é 66,7%), cabe na mesma caixa a corpo 314 e separa as letras a 15 m a partir do tamanho 75 da Mesa, abaixo do mínimo 132.",
+   "ordem": 8,
+   "pct_so_nome": 67.31,
+   "caixa_px": [
+    1649,
+    237
+   ],
+   "limita": "altura",
+   "corpo_minimo_pares": {
+    "nn": 82,
+    "NN": 58,
+    "HH": 62,
+    "II": 74
+   },
+   "tamanho_mesa_minimo": 75,
+   "corpo_a_132": 144,
+   "corpo_a_309": 337,
+   "largura_a_309": 1768,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "haetten",
+   "nome": "Haettenschweiler",
+   "ficheiro": "C:\\Windows\\Fonts\\HATTEN.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 216074,
+   "pct_impact": 86.14,
+   "corpo_que_cabe": 332,
+   "corpo_minimo": 230,
+   "oferecida": false,
+   "porque": "Recusada: é a que mais foto mostra depois do Impact (86,1%), mas as maiúsculas só se separam a 15 m a partir do tamanho 200 da Mesa (o par II pede corpo 230) e a Mesa deixa descer até 132; só se podia oferecer com um mínimo próprio de 200, e o & desenha-se quase como um E.",
+   "ordem": null,
+   "pct_so_nome": 85.75,
+   "caixa_px": [
+    1483,
+    237
+   ],
+   "limita": "altura",
+   "corpo_minimo_pares": {
+    "nn": 146,
+    "NN": 190,
+    "HH": 218,
+    "II": 230
+   },
+   "tamanho_mesa_minimo": 200,
+   "corpo_a_132": 152,
+   "corpo_a_309": 356,
+   "largura_a_309": 1594,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "bebas",
+   "nome": "Bebas Neue",
+   "ficheiro": "C:\\casamento-video-media\\gerados\\fontes\\BebasNeue-Regular.ttf",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 169107,
+   "pct_impact": 67.42,
+   "corpo_que_cabe": 328,
+   "corpo_minimo": 110,
+   "oferecida": false,
+   "porque": "Recusada: passa a linha (67,4%, só o nome 66,5%) e lê-se, mas é a 9.ª e a lista leva no máximo 8: fica de fora a que mostra menos foto; o & desenha-se quase como um E; já está na Mesa para as legendas e os cartões.",
+   "ordem": null,
+   "pct_so_nome": 66.49,
+   "caixa_px": [
+    1449,
+    237
+   ],
+   "limita": "altura",
+   "corpo_minimo_pares": {
+    "nn": 98,
+    "NN": 98,
+    "HH": 102,
+    "II": 110
+   },
+   "tamanho_mesa_minimo": 97,
+   "corpo_a_132": 150,
+   "corpo_a_309": 352,
+   "largura_a_309": 1555,
+   "origem": "data/fontes.json"
+  },
+  {
+   "id": "rockcondbold",
+   "nome": "Rockwell Condensed Bold",
+   "ficheiro": "C:\\Windows\\Fonts\\ROCCB___.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 165384,
+   "pct_impact": 65.93,
+   "corpo_que_cabe": 258,
+   "corpo_minimo": 70,
+   "oferecida": false,
+   "porque": "Recusada: mostra 65,9% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 258, com letras de 187 px de altura contra 237; da família da Rockwell Condensed, que é oferecida e mostra mais foto.",
+   "ordem": null,
+   "pct_so_nome": 64.96,
+   "caixa_px": [
+    1658,
+    187
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 70,
+    "NN": 58,
+    "HH": 62,
+    "II": 58
+   },
+   "tamanho_mesa_minimo": 78,
+   "corpo_a_132": 118,
+   "corpo_a_309": 277,
+   "largura_a_309": 1783,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "twcenxbold",
+   "nome": "Tw Cen MT Condensed Extra Bold",
+   "ficheiro": "C:\\Windows\\Fonts\\TCCEB.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 165349,
+   "pct_impact": 65.92,
+   "corpo_que_cabe": 289,
+   "corpo_minimo": 82,
+   "oferecida": false,
+   "porque": "Recusada: mostra 65,9% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 289, com letras de 198 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 64.95,
+   "caixa_px": [
+    1662,
+    198
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 82,
+    "NN": 58,
+    "HH": 62,
+    "II": 66
+   },
+   "tamanho_mesa_minimo": 82,
+   "corpo_a_132": 132,
+   "corpo_a_309": 310,
+   "largura_a_309": 1785,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "franklingothicdemicond",
+   "nome": "Franklin Gothic Demi Cond",
+   "ficheiro": "C:\\Windows\\Fonts\\FRADMCN.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 160794,
+   "pct_impact": 64.1,
+   "corpo_que_cabe": 282,
+   "corpo_minimo": 86,
+   "oferecida": false,
+   "porque": "Recusada: mostra 64,1% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 282, com letras de 194 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 63.08,
+   "caixa_px": [
+    1657,
+    194
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 86,
+    "NN": 74,
+    "HH": 70,
+    "II": 78
+   },
+   "tamanho_mesa_minimo": 88,
+   "corpo_a_132": 129,
+   "corpo_a_309": 303,
+   "largura_a_309": 1782,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "berlinsansfbbold",
+   "nome": "Berlin Sans FB Bold",
+   "ficheiro": "C:\\Windows\\Fonts\\BRLNSB.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 160753,
+   "pct_impact": 64.09,
+   "corpo_que_cabe": 215,
+   "corpo_minimo": 90,
+   "oferecida": false,
+   "porque": "Recusada: mostra 64,1% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 215, com letras de 157 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 63.06,
+   "caixa_px": [
+    1662,
+    157
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 90,
+    "NN": 70,
+    "HH": 70,
+    "II": 78
+   },
+   "tamanho_mesa_minimo": 120,
+   "corpo_a_132": 99,
+   "corpo_a_309": 231,
+   "largura_a_309": 1783,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "bauhaus93",
+   "nome": "Bauhaus 93",
+   "ficheiro": "C:\\Windows\\Fonts\\BAUHS93.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 159565,
+   "pct_impact": 63.61,
+   "corpo_que_cabe": 239,
+   "corpo_minimo": 74,
+   "oferecida": false,
+   "porque": "Recusada: mostra 63,6% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 239, com letras de 167 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 62.58,
+   "caixa_px": [
+    1656,
+    167
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 74,
+    "NN": 74,
+    "HH": 62,
+    "II": 62
+   },
+   "tamanho_mesa_minimo": 89,
+   "corpo_a_132": 110,
+   "corpo_a_309": 256,
+   "largura_a_309": 1778,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "bahnsemicond",
+   "nome": "Bahnschrift Bold SemiCondensed",
+   "ficheiro": "C:\\Windows\\Fonts\\bahnschrift.ttf",
+   "indice": 0,
+   "variacao": "wght=700,wdth=87.5",
+   "eixos": [
+    700.0,
+    87.5
+   ],
+   "area_px": 152963,
+   "pct_impact": 60.98,
+   "corpo_que_cabe": 280,
+   "corpo_minimo": 90,
+   "oferecida": false,
+   "porque": "Recusada: mostra 61,0% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 280, com letras de 203 px de altura contra 237; da família da Bahnschrift Bold Condensed, que é oferecida e mostra mais foto.",
+   "ordem": null,
+   "pct_so_nome": 59.87,
+   "caixa_px": [
+    1654,
+    203
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 82,
+    "NN": 78,
+    "HH": 74,
+    "II": 90
+   },
+   "tamanho_mesa_minimo": 93,
+   "corpo_a_132": 128,
+   "corpo_a_309": 300,
+   "largura_a_309": 1773,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "franklingothicheavy",
+   "nome": "Franklin Gothic Heavy",
+   "ficheiro": "C:\\Windows\\Fonts\\FRAHV.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 149767,
+   "pct_impact": 59.71,
+   "corpo_que_cabe": 231,
+   "corpo_minimo": 78,
+   "oferecida": false,
+   "porque": "Recusada: mostra 59,7% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 231, com letras de 158 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 58.56,
+   "caixa_px": [
+    1657,
+    158
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 78,
+    "NN": 62,
+    "HH": 66,
+    "II": 74
+   },
+   "tamanho_mesa_minimo": 97,
+   "corpo_a_132": 106,
+   "corpo_a_309": 248,
+   "largura_a_309": 1780,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "twcencondbold",
+   "nome": "Tw Cen MT Condensed Bold",
+   "ficheiro": "C:\\Windows\\Fonts\\TCCB____.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 147782,
+   "pct_impact": 58.92,
+   "corpo_que_cabe": 302,
+   "corpo_minimo": 94,
+   "oferecida": false,
+   "porque": "Recusada: mostra 58,9% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 302, com letras de 192 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 57.74,
+   "caixa_px": [
+    1658,
+    192
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 94,
+    "NN": 74,
+    "HH": 74,
+    "II": 74
+   },
+   "tamanho_mesa_minimo": 90,
+   "corpo_a_132": 138,
+   "corpo_a_309": 324,
+   "largura_a_309": 1780,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "gloucesterxcond",
+   "nome": "Gloucester MT Extra Condensed",
+   "ficheiro": "C:\\Windows\\Fonts\\GLECB.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 145300,
+   "pct_impact": 57.93,
+   "corpo_que_cabe": 304,
+   "corpo_minimo": 122,
+   "oferecida": false,
+   "porque": "Recusada: mostra 57,9% da foto do Impact, abaixo dos 66,7%: a janela por onde a foto se vê perde mais de um terço.",
+   "ordem": null,
+   "pct_so_nome": 56.73,
+   "caixa_px": [
+    1451,
+    237
+   ],
+   "limita": "altura",
+   "corpo_minimo_pares": {
+    "nn": 122,
+    "NN": 82,
+    "HH": 94,
+    "II": 94
+   },
+   "tamanho_mesa_minimo": 116,
+   "corpo_a_132": 139,
+   "corpo_a_309": 326,
+   "largura_a_309": 1556,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "berlinsansfbdemibold",
+   "nome": "Berlin Sans FB Demi Bold",
+   "ficheiro": "C:\\Windows\\Fonts\\BRLNSDB.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 143044,
+   "pct_impact": 57.03,
+   "corpo_que_cabe": 225,
+   "corpo_minimo": 78,
+   "oferecida": false,
+   "porque": "Recusada: mostra 57,0% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 225, com letras de 162 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 55.8,
+   "caixa_px": [
+    1658,
+    162
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 78,
+    "NN": 74,
+    "HH": 70,
+    "II": 78
+   },
+   "tamanho_mesa_minimo": 100,
+   "corpo_a_132": 103,
+   "corpo_a_309": 241,
+   "largura_a_309": 1776,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "bodonicondbold",
+   "nome": "Bodoni MT Condensed Bold",
+   "ficheiro": "C:\\Windows\\Fonts\\BOD_CB.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 141364,
+   "pct_impact": 56.36,
+   "corpo_que_cabe": 339,
+   "corpo_minimo": 86,
+   "oferecida": false,
+   "porque": "Recusada: mostra 56,4% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 339, com letras de 220 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 55.11,
+   "caixa_px": [
+    1659,
+    220
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 86,
+    "NN": 54,
+    "HH": 82,
+    "II": 82
+   },
+   "tamanho_mesa_minimo": 73,
+   "corpo_a_132": 155,
+   "corpo_a_309": 364,
+   "largura_a_309": 1781,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "segoeuiblack",
+   "nome": "Segoe UI Black",
+   "ficheiro": "C:\\Windows\\Fonts\\seguibl.ttf",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 139901,
+   "pct_impact": 55.77,
+   "corpo_que_cabe": 211,
+   "corpo_minimo": 74,
+   "oferecida": false,
+   "porque": "Recusada: mostra 55,8% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 211, com letras de 153 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 54.51,
+   "caixa_px": [
+    1661,
+    153
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 74,
+    "NN": 58,
+    "HH": 58,
+    "II": 62
+   },
+   "tamanho_mesa_minimo": 101,
+   "corpo_a_132": 97,
+   "corpo_a_309": 226,
+   "largura_a_309": 1781,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "gillsansultrabold",
+   "nome": "Gill Sans Ultra Bold",
+   "ficheiro": "C:\\Windows\\Fonts\\GILSANUB.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 138471,
+   "pct_impact": 55.2,
+   "corpo_que_cabe": 169,
+   "corpo_minimo": 66,
+   "oferecida": false,
+   "porque": "Recusada: mostra 55,2% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 169, com letras de 130 px de altura contra 237; da família da Gill Sans Ultra Bold Condensed, que é oferecida e mostra mais foto.",
+   "ordem": null,
+   "pct_so_nome": 53.93,
+   "caixa_px": [
+    1660,
+    130
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 66,
+    "NN": 46,
+    "HH": 54,
+    "II": 50
+   },
+   "tamanho_mesa_minimo": 112,
+   "corpo_a_132": 77,
+   "corpo_a_309": 181,
+   "largura_a_309": 1779,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "gillsanscond",
+   "nome": "Gill Sans MT Condensed",
+   "ficheiro": "C:\\Windows\\Fonts\\GILC____.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 138284,
+   "pct_impact": 55.13,
+   "corpo_que_cabe": 346,
+   "corpo_minimo": 106,
+   "oferecida": false,
+   "porque": "Recusada: mostra 55,1% da foto do Impact, abaixo dos 66,7%: a janela por onde a foto se vê perde mais de um terço.",
+   "ordem": null,
+   "pct_so_nome": 53.85,
+   "caixa_px": [
+    1558,
+    237
+   ],
+   "limita": "altura",
+   "corpo_minimo_pares": {
+    "nn": 106,
+    "NN": 78,
+    "HH": 82,
+    "II": 94
+   },
+   "tamanho_mesa_minimo": 88,
+   "corpo_a_132": 159,
+   "corpo_a_309": 371,
+   "largura_a_309": 1675,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "franklingothicmedcond",
+   "nome": "Franklin Gothic Medium Cond",
+   "ficheiro": "C:\\Windows\\Fonts\\FRAMDCN.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 137115,
+   "pct_impact": 54.66,
+   "corpo_que_cabe": 292,
+   "corpo_minimo": 90,
+   "oferecida": false,
+   "porque": "Recusada: mostra 54,7% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 292, com letras de 203 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 53.37,
+   "caixa_px": [
+    1659,
+    203
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 82,
+    "NN": 90,
+    "HH": 78,
+    "II": 82
+   },
+   "tamanho_mesa_minimo": 89,
+   "corpo_a_132": 134,
+   "corpo_a_309": 313,
+   "largura_a_309": 1780,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "leaguespartan900",
+   "nome": "League Spartan 900",
+   "ficheiro": "C:\\casamento-video-media\\gerados\\fontes\\LeagueSpartan[wght].ttf",
+   "indice": 0,
+   "variacao": "wght=900",
+   "eixos": [
+    900
+   ],
+   "area_px": 136762,
+   "pct_impact": 54.52,
+   "corpo_que_cabe": 219,
+   "corpo_minimo": 82,
+   "oferecida": false,
+   "porque": "Recusada: mostra 54,5% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 219, com letras de 151 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 53.23,
+   "caixa_px": [
+    1656,
+    151
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 78,
+    "NN": 82,
+    "HH": 74,
+    "II": 74
+   },
+   "tamanho_mesa_minimo": 108,
+   "corpo_a_132": 100,
+   "corpo_a_309": 235,
+   "largura_a_309": 1773,
+   "origem": "gerados\\fontes"
+  },
+  {
+   "id": "franklingothicdemi",
+   "nome": "Franklin Gothic Demi",
+   "ficheiro": "C:\\Windows\\Fonts\\FRADM.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 136350,
+   "pct_impact": 54.36,
+   "corpo_que_cabe": 241,
+   "corpo_minimo": 74,
+   "oferecida": false,
+   "porque": "Recusada: mostra 54,4% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 241, com letras de 167 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 53.06,
+   "caixa_px": [
+    1661,
+    167
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 74,
+    "NN": 66,
+    "HH": 66,
+    "II": 74
+   },
+   "tamanho_mesa_minimo": 88,
+   "corpo_a_132": 110,
+   "corpo_a_309": 259,
+   "largura_a_309": 1784,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "twcencond",
+   "nome": "Tw Cen MT Condensed",
+   "ficheiro": "C:\\Windows\\Fonts\\TCCM____.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 136348,
+   "pct_impact": 54.36,
+   "corpo_que_cabe": 365,
+   "corpo_minimo": 106,
+   "oferecida": false,
+   "porque": "Recusada: mostra 54,4% da foto do Impact, abaixo dos 66,7%: a janela por onde a foto se vê perde mais de um terço.",
+   "ordem": null,
+   "pct_so_nome": 53.06,
+   "caixa_px": [
+    1661,
+    234
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 106,
+    "NN": 86,
+    "HH": 86,
+    "II": 82
+   },
+   "tamanho_mesa_minimo": 84,
+   "corpo_a_132": 167,
+   "corpo_a_309": 392,
+   "largura_a_309": 1785,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "britannicbold",
+   "nome": "Britannic Bold",
+   "ficheiro": "C:\\Windows\\Fonts\\BRITANIC.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 135648,
+   "pct_impact": 54.08,
+   "corpo_que_cabe": 248,
+   "corpo_minimo": 78,
+   "oferecida": false,
+   "porque": "Recusada: mostra 54,1% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 248, com letras de 172 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 52.77,
+   "caixa_px": [
+    1661,
+    172
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 78,
+    "NN": 66,
+    "HH": 70,
+    "II": 70
+   },
+   "tamanho_mesa_minimo": 90,
+   "corpo_a_132": 114,
+   "corpo_a_309": 266,
+   "largura_a_309": 1784,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "montserrat900",
+   "nome": "Montserrat 900",
+   "ficheiro": "C:\\casamento-video-media\\gerados\\fontes\\Montserrat[wght].ttf",
+   "indice": 0,
+   "variacao": "wght=900",
+   "eixos": [
+    900
+   ],
+   "area_px": 133492,
+   "pct_impact": 53.22,
+   "corpo_que_cabe": 195,
+   "corpo_minimo": 70,
+   "oferecida": false,
+   "porque": "Recusada: mostra 53,2% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 195, com letras de 144 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 51.88,
+   "caixa_px": [
+    1661,
+    144
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 66,
+    "NN": 62,
+    "HH": 62,
+    "II": 70
+   },
+   "tamanho_mesa_minimo": 103,
+   "corpo_a_132": 89,
+   "corpo_a_309": 209,
+   "largura_a_309": 1779,
+   "origem": "gerados\\fontes"
+  },
+  {
+   "id": "arialnarrowbold",
+   "nome": "Arial Narrow Bold",
+   "ficheiro": "C:\\Windows\\Fonts\\ARIALNB.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 133001,
+   "pct_impact": 53.02,
+   "corpo_que_cabe": 255,
+   "corpo_minimo": 86,
+   "oferecida": false,
+   "porque": "Recusada: mostra 53,0% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 255, com letras de 191 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 51.68,
+   "caixa_px": [
+    1662,
+    191
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 70,
+    "NN": 74,
+    "HH": 74,
+    "II": 86
+   },
+   "tamanho_mesa_minimo": 97,
+   "corpo_a_132": 117,
+   "corpo_a_309": 274,
+   "largura_a_309": 1782,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "rockwellxbold",
+   "nome": "Rockwell Extra Bold",
+   "ficheiro": "C:\\Windows\\Fonts\\ROCKEB.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 132000,
+   "pct_impact": 52.62,
+   "corpo_que_cabe": 186,
+   "corpo_minimo": 58,
+   "oferecida": false,
+   "porque": "Recusada: mostra 52,6% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 186, com letras de 131 px de altura contra 237; a 309, o máximo da Mesa, o nome tem 1786 px e passa dos 1785 da zona segura.",
+   "ordem": null,
+   "pct_so_nome": 51.27,
+   "caixa_px": [
+    1661,
+    131
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 58,
+    "NN": 50,
+    "HH": 46,
+    "II": 50
+   },
+   "tamanho_mesa_minimo": 90,
+   "corpo_a_132": 85,
+   "corpo_a_309": 200,
+   "largura_a_309": 1786,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "leaguespartan800",
+   "nome": "League Spartan 800",
+   "ficheiro": "C:\\casamento-video-media\\gerados\\fontes\\LeagueSpartan[wght].ttf",
+   "indice": 0,
+   "variacao": "wght=800",
+   "eixos": [
+    800
+   ],
+   "area_px": 131850,
+   "pct_impact": 52.56,
+   "corpo_que_cabe": 224,
+   "corpo_minimo": 82,
+   "oferecida": false,
+   "porque": "Recusada: mostra 52,6% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 224, com letras de 154 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 51.21,
+   "caixa_px": [
+    1661,
+    154
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 74,
+    "NN": 82,
+    "HH": 70,
+    "II": 74
+   },
+   "tamanho_mesa_minimo": 105,
+   "corpo_a_132": 103,
+   "corpo_a_309": 240,
+   "largura_a_309": 1781,
+   "origem": "gerados\\fontes"
+  },
+  {
+   "id": "gillsansextcondbold",
+   "nome": "Gill Sans MT Ext Condensed Bold",
+   "ficheiro": "C:\\Windows\\Fonts\\GLSNECB.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 131385,
+   "pct_impact": 52.38,
+   "corpo_que_cabe": 293,
+   "corpo_minimo": 158,
+   "oferecida": false,
+   "porque": "Recusada: mostra 52,4% da foto do Impact, abaixo dos 66,7%: a janela por onde a foto se vê perde mais de um terço; só separa as letras a 15 m a partir do tamanho 155 da Mesa (o par nn pede corpo 158), e a Mesa deixa descer até 132.",
+   "ordem": null,
+   "pct_so_nome": 51.02,
+   "caixa_px": [
+    1024,
+    237
+   ],
+   "limita": "altura",
+   "corpo_minimo_pares": {
+    "nn": 158,
+    "NN": 126,
+    "HH": 138,
+    "II": 154
+   },
+   "tamanho_mesa_minimo": 155,
+   "corpo_a_132": 134,
+   "corpo_a_309": 314,
+   "largura_a_309": 1095,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "stencil",
+   "nome": "Stencil",
+   "ficheiro": "C:\\Windows\\Fonts\\STENCIL.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 131081,
+   "pct_impact": 52.26,
+   "corpo_que_cabe": 233,
+   "corpo_minimo": 54,
+   "oferecida": false,
+   "porque": "Recusada: mostra 52,3% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 233, com letras de 163 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 50.9,
+   "caixa_px": [
+    1655,
+    163
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 38,
+    "NN": 38,
+    "HH": 46,
+    "II": 54
+   },
+   "tamanho_mesa_minimo": 67,
+   "corpo_a_132": 107,
+   "corpo_a_309": 250,
+   "largura_a_309": 1780,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "tahomabold",
+   "nome": "Tahoma Bold",
+   "ficheiro": "C:\\Windows\\Fonts\\tahomabd.ttf",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 128510,
+   "pct_impact": 51.23,
+   "corpo_que_cabe": 207,
+   "corpo_minimo": 62,
+   "oferecida": false,
+   "porque": "Recusada: mostra 51,2% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 207, com letras de 158 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 49.84,
+   "caixa_px": [
+    1656,
+    158
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 62,
+    "NN": 54,
+    "HH": 58,
+    "II": 42
+   },
+   "tamanho_mesa_minimo": 86,
+   "corpo_a_132": 95,
+   "corpo_a_309": 222,
+   "largura_a_309": 1774,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "forte",
+   "nome": "Forte",
+   "ficheiro": "C:\\Windows\\Fonts\\FORTE.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 126008,
+   "pct_impact": 50.24,
+   "corpo_que_cabe": 229,
+   "corpo_minimo": 86,
+   "oferecida": false,
+   "porque": "Recusada: mostra 50,2% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 229, com letras de 197 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 48.82,
+   "caixa_px": [
+    1653,
+    197
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 86,
+    "NN": 38,
+    "HH": 58,
+    "II": 38
+   },
+   "tamanho_mesa_minimo": 108,
+   "corpo_a_132": 105,
+   "corpo_a_309": 246,
+   "largura_a_309": 1775,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "bahnschriftbold",
+   "nome": "Bahnschrift Bold",
+   "ficheiro": "C:\\Windows\\Fonts\\bahnschrift.ttf",
+   "indice": 0,
+   "variacao": "wght=700,wdth=100",
+   "eixos": [
+    700.0,
+    100.0
+   ],
+   "area_px": 123574,
+   "pct_impact": 49.27,
+   "corpo_que_cabe": 236,
+   "corpo_minimo": 74,
+   "oferecida": false,
+   "porque": "Recusada: mostra 49,3% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 236, com letras de 172 px de altura contra 237; da família da Bahnschrift Bold Condensed, que é oferecida e mostra mais foto.",
+   "ordem": null,
+   "pct_so_nome": 47.82,
+   "caixa_px": [
+    1658,
+    172
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 70,
+    "NN": 66,
+    "HH": 62,
+    "II": 74
+   },
+   "tamanho_mesa_minimo": 90,
+   "corpo_a_132": 108,
+   "corpo_a_309": 253,
+   "largura_a_309": 1779,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "segoeuivarbolddisp",
+   "nome": "Segoe UI Variable Bold Display",
+   "ficheiro": "C:\\Windows\\Fonts\\SegUIVar.ttf",
+   "indice": 0,
+   "variacao": "wght=700,opsz=36",
+   "eixos": [
+    700.0,
+    36.0
+   ],
+   "area_px": 122432,
+   "pct_impact": 48.81,
+   "corpo_que_cabe": 218,
+   "corpo_minimo": 66,
+   "oferecida": false,
+   "porque": "Recusada: mostra 48,8% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 218, com letras de 159 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 47.35,
+   "caixa_px": [
+    1658,
+    159
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 62,
+    "NN": 66,
+    "HH": 58,
+    "II": 66
+   },
+   "tamanho_mesa_minimo": 87,
+   "corpo_a_132": 100,
+   "corpo_a_309": 234,
+   "largura_a_309": 1784,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "calibribold",
+   "nome": "Calibri Bold",
+   "ficheiro": "C:\\Windows\\Fonts\\calibrib.ttf",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 122345,
+   "pct_impact": 48.78,
+   "corpo_que_cabe": 253,
+   "corpo_minimo": 74,
+   "oferecida": false,
+   "porque": "Recusada: mostra 48,8% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 253, com letras de 171 px de altura contra 237; já está na Mesa para as legendas e os cartões.",
+   "ordem": null,
+   "pct_so_nome": 47.31,
+   "caixa_px": [
+    1658,
+    171
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 70,
+    "NN": 74,
+    "HH": 66,
+    "II": 74
+   },
+   "tamanho_mesa_minimo": 84,
+   "corpo_a_132": 116,
+   "corpo_a_309": 271,
+   "largura_a_309": 1778,
+   "origem": "data/fontes.json"
+  },
+  {
+   "id": "montserrat800",
+   "nome": "Montserrat 800",
+   "ficheiro": "C:\\casamento-video-media\\gerados\\fontes\\Montserrat[wght].ttf",
+   "indice": 0,
+   "variacao": "wght=800",
+   "eixos": [
+    800
+   ],
+   "area_px": 121839,
+   "pct_impact": 48.57,
+   "corpo_que_cabe": 199,
+   "corpo_minimo": 62,
+   "oferecida": false,
+   "porque": "Recusada: mostra 48,6% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 199, com letras de 146 px de altura contra 237; a 309, o máximo da Mesa, o nome tem 1789 px e passa dos 1785 da zona segura.",
+   "ordem": null,
+   "pct_so_nome": 47.11,
+   "caixa_px": [
+    1661,
+    146
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 58,
+    "NN": 54,
+    "HH": 54,
+    "II": 62
+   },
+   "tamanho_mesa_minimo": 90,
+   "corpo_a_132": 91,
+   "corpo_a_309": 214,
+   "largura_a_309": 1789,
+   "origem": "gerados\\fontes"
+  },
+  {
+   "id": "leaguespartanbold",
+   "nome": "League Spartan Bold",
+   "ficheiro": "C:\\casamento-video-media\\gerados\\fontes\\LeagueSpartan[wght].ttf",
+   "indice": 0,
+   "variacao": "wght=700",
+   "eixos": [
+    700
+   ],
+   "area_px": 121638,
+   "pct_impact": 48.49,
+   "corpo_que_cabe": 229,
+   "corpo_minimo": 82,
+   "oferecida": false,
+   "porque": "Recusada: mostra 48,5% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 229, com letras de 157 px de altura contra 237; já está na Mesa para as legendas e os cartões.",
+   "ordem": null,
+   "pct_so_nome": 47.02,
+   "caixa_px": [
+    1659,
+    157
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 66,
+    "NN": 82,
+    "HH": 74,
+    "II": 78
+   },
+   "tamanho_mesa_minimo": 103,
+   "corpo_a_132": 105,
+   "corpo_a_309": 246,
+   "largura_a_309": 1779,
+   "origem": "data/fontes.json"
+  },
+  {
+   "id": "cooperblack",
+   "nome": "Cooper Black",
+   "ficheiro": "C:\\Windows\\Fonts\\COOPBL.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 120991,
+   "pct_impact": 48.24,
+   "corpo_que_cabe": 191,
+   "corpo_minimo": 70,
+   "oferecida": false,
+   "porque": "Recusada: mostra 48,2% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 191, com letras de 136 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 46.76,
+   "caixa_px": [
+    1656,
+    136
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 70,
+    "NN": 46,
+    "HH": 50,
+    "II": 50
+   },
+   "tamanho_mesa_minimo": 105,
+   "corpo_a_132": 88,
+   "corpo_a_309": 205,
+   "largura_a_309": 1776,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "snap",
+   "nome": "Snap ITC",
+   "ficheiro": "C:\\Windows\\Fonts\\SNAP____.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 120243,
+   "pct_impact": 47.94,
+   "corpo_que_cabe": 174,
+   "corpo_minimo": 70,
+   "oferecida": false,
+   "porque": "Recusada: mostra 47,9% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 174, com letras de 140 px de altura contra 237; a 309, o máximo da Mesa, o nome tem 1786 px e passa dos 1785 da zona segura.",
+   "ordem": null,
+   "pct_so_nome": 46.45,
+   "caixa_px": [
+    1662,
+    140
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 70,
+    "NN": 42,
+    "HH": 42,
+    "II": 38
+   },
+   "tamanho_mesa_minimo": 116,
+   "corpo_a_132": 80,
+   "corpo_a_309": 187,
+   "largura_a_309": 1786,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "arialblack",
+   "nome": "Arial Black",
+   "ficheiro": "C:\\Windows\\Fonts\\ariblk.ttf",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 120222,
+   "pct_impact": 47.93,
+   "corpo_que_cabe": 187,
+   "corpo_minimo": 66,
+   "oferecida": false,
+   "porque": "Recusada: mostra 47,9% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 187, com letras de 138 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 46.44,
+   "caixa_px": [
+    1660,
+    138
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 66,
+    "NN": 54,
+    "HH": 54,
+    "II": 54
+   },
+   "tamanho_mesa_minimo": 101,
+   "corpo_a_132": 86,
+   "corpo_a_309": 201,
+   "largura_a_309": 1784,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "erasbold",
+   "nome": "Eras Bold ITC",
+   "ficheiro": "C:\\Windows\\Fonts\\ERASBD.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 120067,
+   "pct_impact": 47.87,
+   "corpo_que_cabe": 200,
+   "corpo_minimo": 66,
+   "oferecida": false,
+   "porque": "Recusada: mostra 47,9% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 200, com letras de 139 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 46.38,
+   "caixa_px": [
+    1657,
+    139
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 62,
+    "NN": 62,
+    "HH": 62,
+    "II": 66
+   },
+   "tamanho_mesa_minimo": 95,
+   "corpo_a_132": 92,
+   "corpo_a_309": 215,
+   "largura_a_309": 1782,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "segoeuibold",
+   "nome": "Segoe UI Bold",
+   "ficheiro": "C:\\Windows\\Fonts\\segoeuib.ttf",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 119520,
+   "pct_impact": 47.65,
+   "corpo_que_cabe": 216,
+   "corpo_minimo": 62,
+   "oferecida": false,
+   "porque": "Recusada: mostra 47,6% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 216, com letras de 157 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 46.16,
+   "caixa_px": [
+    1659,
+    157
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 62,
+    "NN": 62,
+    "HH": 58,
+    "II": 62
+   },
+   "tamanho_mesa_minimo": 82,
+   "corpo_a_132": 99,
+   "corpo_a_309": 232,
+   "largura_a_309": 1780,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "archivoblack",
+   "nome": "Archivo Black",
+   "ficheiro": "C:\\casamento-video-media\\gerados\\fontes\\ArchivoBlack-Regular.ttf",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 118490,
+   "pct_impact": 47.24,
+   "corpo_que_cabe": 187,
+   "corpo_minimo": 62,
+   "oferecida": false,
+   "porque": "Recusada: mostra 47,2% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 187, com letras de 131 px de altura contra 237; já está na Mesa para as legendas e os cartões.",
+   "ordem": null,
+   "pct_so_nome": 45.73,
+   "caixa_px": [
+    1660,
+    131
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 62,
+    "NN": 50,
+    "HH": 54,
+    "II": 54
+   },
+   "tamanho_mesa_minimo": 95,
+   "corpo_a_132": 86,
+   "corpo_a_309": 201,
+   "largura_a_309": 1784,
+   "origem": "data/fontes.json"
+  },
+  {
+   "id": "rockwellbold",
+   "nome": "Rockwell Bold",
+   "ficheiro": "C:\\Windows\\Fonts\\ROCKB.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 117957,
+   "pct_impact": 47.03,
+   "corpo_que_cabe": 198,
+   "corpo_minimo": 62,
+   "oferecida": false,
+   "porque": "Recusada: mostra 47,0% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 198, com letras de 138 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 45.52,
+   "caixa_px": [
+    1655,
+    138
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 62,
+    "NN": 46,
+    "HH": 46,
+    "II": 46
+   },
+   "tamanho_mesa_minimo": 90,
+   "corpo_a_132": 91,
+   "corpo_a_309": 212,
+   "largura_a_309": 1771,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "segoeuivarboldtext",
+   "nome": "Segoe UI Variable Bold Text",
+   "ficheiro": "C:\\Windows\\Fonts\\SegUIVar.ttf",
+   "indice": 0,
+   "variacao": "wght=700,opsz=10.5",
+   "eixos": [
+    700.0,
+    10.5
+   ],
+   "area_px": 117482,
+   "pct_impact": 46.84,
+   "corpo_que_cabe": 216,
+   "corpo_minimo": 62,
+   "oferecida": false,
+   "porque": "Recusada: mostra 46,8% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 216, com letras de 157 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 45.32,
+   "caixa_px": [
+    1661,
+    157
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 62,
+    "NN": 62,
+    "HH": 58,
+    "II": 62
+   },
+   "tamanho_mesa_minimo": 82,
+   "corpo_a_132": 99,
+   "corpo_a_309": 232,
+   "largura_a_309": 1781,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "fraunces900",
+   "nome": "Fraunces 900",
+   "ficheiro": "C:\\casamento-video-media\\gerados\\fontes\\Fraunces[SOFT,WONK,opsz,wght].ttf",
+   "indice": 0,
+   "variacao": "opsz=9,wght=900,SOFT=0,WONK=1",
+   "eixos": [
+    9,
+    900,
+    0,
+    1
+   ],
+   "area_px": 116826,
+   "pct_impact": 46.57,
+   "corpo_que_cabe": 188,
+   "corpo_minimo": 58,
+   "oferecida": false,
+   "porque": "Recusada: mostra 46,6% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 188, com letras de 153 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 45.05,
+   "caixa_px": [
+    1658,
+    153
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 58,
+    "NN": 42,
+    "HH": 38,
+    "II": 42
+   },
+   "tamanho_mesa_minimo": 89,
+   "corpo_a_132": 86,
+   "corpo_a_309": 202,
+   "largura_a_309": 1779,
+   "origem": "gerados\\fontes"
+  },
+  {
+   "id": "franklingothicmed",
+   "nome": "Franklin Gothic Medium",
+   "ficheiro": "C:\\Windows\\Fonts\\framd.ttf",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 114235,
+   "pct_impact": 45.54,
+   "corpo_que_cabe": 245,
+   "corpo_minimo": 70,
+   "oferecida": false,
+   "porque": "Recusada: mostra 45,5% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 245, com letras de 167 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 43.99,
+   "caixa_px": [
+    1661,
+    167
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 66,
+    "NN": 66,
+    "HH": 66,
+    "II": 70
+   },
+   "tamanho_mesa_minimo": 82,
+   "corpo_a_132": 112,
+   "corpo_a_309": 263,
+   "largura_a_309": 1785,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "onyx",
+   "nome": "Onyx",
+   "ficheiro": "C:\\Windows\\Fonts\\ONYX.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 113883,
+   "pct_impact": 45.4,
+   "corpo_que_cabe": 317,
+   "corpo_minimo": 130,
+   "oferecida": false,
+   "porque": "Recusada: mostra 45,4% da foto do Impact, abaixo dos 66,7%: a janela por onde a foto se vê perde mais de um terço.",
+   "ordem": null,
+   "pct_so_nome": 43.84,
+   "caixa_px": [
+    1190,
+    237
+   ],
+   "limita": "altura",
+   "corpo_minimo_pares": {
+    "nn": 130,
+    "NN": 70,
+    "HH": 102,
+    "II": 102
+   },
+   "tamanho_mesa_minimo": 118,
+   "corpo_a_132": 145,
+   "corpo_a_309": 340,
+   "largura_a_309": 1274,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "segoeuivarboldsmall",
+   "nome": "Segoe UI Variable Bold Small",
+   "ficheiro": "C:\\Windows\\Fonts\\SegUIVar.ttf",
+   "indice": 0,
+   "variacao": "wght=700,opsz=8",
+   "eixos": [
+    700.0,
+    8.0
+   ],
+   "area_px": 113824,
+   "pct_impact": 45.38,
+   "corpo_que_cabe": 214,
+   "corpo_minimo": 62,
+   "oferecida": false,
+   "porque": "Recusada: mostra 45,4% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 214, com letras de 156 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 43.82,
+   "caixa_px": [
+    1660,
+    156
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 58,
+    "NN": 58,
+    "HH": 54,
+    "II": 62
+   },
+   "tamanho_mesa_minimo": 83,
+   "corpo_a_132": 98,
+   "corpo_a_309": 230,
+   "largura_a_309": 1780,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "bodonicond",
+   "nome": "Bodoni MT Condensed",
+   "ficheiro": "C:\\Windows\\Fonts\\BOD_CR.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 113712,
+   "pct_impact": 45.33,
+   "corpo_que_cabe": 363,
+   "corpo_minimo": 98,
+   "oferecida": false,
+   "porque": "Recusada: mostra 45,3% da foto do Impact, abaixo dos 66,7%: a janela por onde a foto se vê perde mais de um terço.",
+   "ordem": null,
+   "pct_so_nome": 43.77,
+   "caixa_px": [
+    1542,
+    237
+   ],
+   "limita": "altura",
+   "corpo_minimo_pares": {
+    "nn": 98,
+    "NN": 58,
+    "HH": 86,
+    "II": 90
+   },
+   "tamanho_mesa_minimo": 78,
+   "corpo_a_132": 166,
+   "corpo_a_309": 389,
+   "largura_a_309": 1653,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "bodonipostercompr",
+   "nome": "Bodoni MT Poster Compressed",
+   "ficheiro": "C:\\Windows\\Fonts\\BOD_PSTC.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 113670,
+   "pct_impact": 45.32,
+   "corpo_que_cabe": 317,
+   "corpo_minimo": 130,
+   "oferecida": false,
+   "porque": "Recusada: mostra 45,3% da foto do Impact, abaixo dos 66,7%: a janela por onde a foto se vê perde mais de um terço.",
+   "ordem": null,
+   "pct_so_nome": 43.76,
+   "caixa_px": [
+    1190,
+    237
+   ],
+   "limita": "altura",
+   "corpo_minimo_pares": {
+    "nn": 130,
+    "NN": 70,
+    "HH": 102,
+    "II": 102
+   },
+   "tamanho_mesa_minimo": 118,
+   "corpo_a_132": 145,
+   "corpo_a_309": 340,
+   "largura_a_309": 1274,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "twcenbold",
+   "nome": "Tw Cen MT Bold",
+   "ficheiro": "C:\\Windows\\Fonts\\TCB_____.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 113027,
+   "pct_impact": 45.06,
+   "corpo_que_cabe": 237,
+   "corpo_minimo": 82,
+   "oferecida": false,
+   "porque": "Recusada: mostra 45,1% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 237, com letras de 158 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 43.49,
+   "caixa_px": [
+    1656,
+    158
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 78,
+    "NN": 74,
+    "HH": 66,
+    "II": 82
+   },
+   "tamanho_mesa_minimo": 100,
+   "corpo_a_132": 109,
+   "corpo_a_309": 254,
+   "largura_a_309": 1777,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "niagarasolid",
+   "nome": "Niagara Solid",
+   "ficheiro": "C:\\Windows\\Fonts\\NIAGSOL.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 111977,
+   "pct_impact": 44.64,
+   "corpo_que_cabe": 333,
+   "corpo_minimo": 142,
+   "oferecida": false,
+   "porque": "Recusada: mostra 44,6% da foto do Impact, abaixo dos 66,7%: a janela por onde a foto se vê perde mais de um terço.",
+   "ordem": null,
+   "pct_so_nome": 43.06,
+   "caixa_px": [
+    1139,
+    237
+   ],
+   "limita": "altura",
+   "corpo_minimo_pares": {
+    "nn": 142,
+    "NN": 86,
+    "HH": 118,
+    "II": 122
+   },
+   "tamanho_mesa_minimo": 123,
+   "corpo_a_132": 153,
+   "corpo_a_309": 357,
+   "largura_a_309": 1219,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "candarabold",
+   "nome": "Candara Bold",
+   "ficheiro": "C:\\Windows\\Fonts\\Candarab.ttf",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 111763,
+   "pct_impact": 44.56,
+   "corpo_que_cabe": 245,
+   "corpo_minimo": 70,
+   "oferecida": false,
+   "porque": "Recusada: mostra 44,6% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 245, com letras de 163 px de altura contra 237; já está na Mesa para as legendas e os cartões.",
+   "ordem": null,
+   "pct_so_nome": 42.98,
+   "caixa_px": [
+    1655,
+    163
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 62,
+    "NN": 66,
+    "HH": 62,
+    "II": 70
+   },
+   "tamanho_mesa_minimo": 82,
+   "corpo_a_132": 112,
+   "corpo_a_309": 263,
+   "largura_a_309": 1778,
+   "origem": "data/fontes.json"
+  },
+  {
+   "id": "berlinsansfb",
+   "nome": "Berlin Sans FB",
+   "ficheiro": "C:\\Windows\\Fonts\\BRLNSR.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 111473,
+   "pct_impact": 44.44,
+   "corpo_que_cabe": 236,
+   "corpo_minimo": 86,
+   "oferecida": false,
+   "porque": "Recusada: mostra 44,4% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 236, com letras de 169 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 42.86,
+   "caixa_px": [
+    1657,
+    169
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 62,
+    "NN": 82,
+    "HH": 78,
+    "II": 86
+   },
+   "tamanho_mesa_minimo": 105,
+   "corpo_a_132": 108,
+   "corpo_a_309": 253,
+   "largura_a_309": 1776,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "centurygothicbold",
+   "nome": "Century Gothic Bold",
+   "ficheiro": "C:\\Windows\\Fonts\\GOTHICB.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 111468,
+   "pct_impact": 44.44,
+   "corpo_que_cabe": 217,
+   "corpo_minimo": 70,
+   "oferecida": false,
+   "porque": "Recusada: mostra 44,4% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 217, com letras de 164 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 42.85,
+   "caixa_px": [
+    1659,
+    164
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 58,
+    "NN": 58,
+    "HH": 62,
+    "II": 70
+   },
+   "tamanho_mesa_minimo": 93,
+   "corpo_a_132": 99,
+   "corpo_a_309": 233,
+   "largura_a_309": 1779,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "verdanabold",
+   "nome": "Verdana Bold",
+   "ficheiro": "C:\\Windows\\Fonts\\verdanab.ttf",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 110578,
+   "pct_impact": 44.08,
+   "corpo_que_cabe": 186,
+   "corpo_minimo": 58,
+   "oferecida": false,
+   "porque": "Recusada: mostra 44,1% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 186, com letras de 141 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 42.49,
+   "caixa_px": [
+    1658,
+    141
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 58,
+    "NN": 46,
+    "HH": 50,
+    "II": 38
+   },
+   "tamanho_mesa_minimo": 90,
+   "corpo_a_132": 85,
+   "corpo_a_309": 200,
+   "largura_a_309": 1778,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "fraunces800",
+   "nome": "Fraunces 800",
+   "ficheiro": "C:\\casamento-video-media\\gerados\\fontes\\Fraunces[SOFT,WONK,opsz,wght].ttf",
+   "indice": 0,
+   "variacao": "opsz=9,wght=800,SOFT=0,WONK=1",
+   "eixos": [
+    9,
+    800,
+    0,
+    1
+   ],
+   "area_px": 110304,
+   "pct_impact": 43.97,
+   "corpo_que_cabe": 190,
+   "corpo_minimo": 58,
+   "oferecida": false,
+   "porque": "Recusada: mostra 44,0% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 190, com letras de 154 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 42.38,
+   "caixa_px": [
+    1658,
+    154
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 58,
+    "NN": 42,
+    "HH": 42,
+    "II": 46
+   },
+   "tamanho_mesa_minimo": 88,
+   "corpo_a_132": 87,
+   "corpo_a_309": 204,
+   "largura_a_309": 1778,
+   "origem": "gerados\\fontes"
+  },
+  {
+   "id": "arialbold",
+   "nome": "Arial Bold",
+   "ficheiro": "C:\\Windows\\Fonts\\arialbd.ttf",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 110224,
+   "pct_impact": 43.94,
+   "corpo_que_cabe": 209,
+   "corpo_minimo": 74,
+   "oferecida": false,
+   "porque": "Recusada: mostra 43,9% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 209, com letras de 156 px de altura contra 237; é a referência recusada em setembro (105.607 px, 42,1%, na procura de setembro); já está na Mesa para as legendas e os cartões.",
+   "ordem": null,
+   "pct_so_nome": 42.34,
+   "caixa_px": [
+    1662,
+    156
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 58,
+    "NN": 62,
+    "HH": 62,
+    "II": 74
+   },
+   "tamanho_mesa_minimo": 102,
+   "corpo_a_132": 96,
+   "corpo_a_309": 224,
+   "largura_a_309": 1780,
+   "origem": "data/fontes.json"
+  },
+  {
+   "id": "trebuchetbold",
+   "nome": "Trebuchet MS Bold",
+   "ficheiro": "C:\\Windows\\Fonts\\trebucbd.ttf",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 110186,
+   "pct_impact": 43.93,
+   "corpo_que_cabe": 229,
+   "corpo_minimo": 74,
+   "oferecida": false,
+   "porque": "Recusada: mostra 43,9% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 229, com letras de 170 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 42.33,
+   "caixa_px": [
+    1661,
+    170
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 58,
+    "NN": 66,
+    "HH": 66,
+    "II": 74
+   },
+   "tamanho_mesa_minimo": 93,
+   "corpo_a_132": 105,
+   "corpo_a_309": 246,
+   "largura_a_309": 1784,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "agencyfb",
+   "nome": "Agency FB",
+   "ficheiro": "C:\\Windows\\Fonts\\AGENCYR.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 108554,
+   "pct_impact": 43.28,
+   "corpo_que_cabe": 309,
+   "corpo_minimo": 94,
+   "oferecida": false,
+   "porque": "Recusada: mostra 43,3% da foto do Impact, abaixo dos 66,7%: a janela por onde a foto se vê perde mais de um terço; da família da Agency FB Bold, que é oferecida e mostra mais foto.",
+   "ordem": null,
+   "pct_so_nome": 41.66,
+   "caixa_px": [
+    1433,
+    237
+   ],
+   "limita": "altura",
+   "corpo_minimo_pares": {
+    "nn": 86,
+    "NN": 86,
+    "HH": 90,
+    "II": 94
+   },
+   "tamanho_mesa_minimo": 88,
+   "corpo_a_132": 142,
+   "corpo_a_309": 332,
+   "largura_a_309": 1539,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "montserratbold",
+   "nome": "Montserrat Bold",
+   "ficheiro": "C:\\casamento-video-media\\gerados\\fontes\\Montserrat[wght].ttf",
+   "indice": 0,
+   "variacao": "wght=700",
+   "eixos": [
+    700
+   ],
+   "area_px": 108055,
+   "pct_impact": 43.08,
+   "corpo_que_cabe": 202,
+   "corpo_minimo": 62,
+   "oferecida": false,
+   "porque": "Recusada: mostra 43,1% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 202, com letras de 147 px de altura contra 237; já está na Mesa para as legendas e os cartões.",
+   "ordem": null,
+   "pct_so_nome": 41.45,
+   "caixa_px": [
+    1659,
+    147
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 54,
+    "NN": 54,
+    "HH": 54,
+    "II": 62
+   },
+   "tamanho_mesa_minimo": 88,
+   "corpo_a_132": 93,
+   "corpo_a_309": 217,
+   "largura_a_309": 1781,
+   "origem": "data/fontes.json"
+  },
+  {
+   "id": "bookmanoldstylebold",
+   "nome": "Bookman Old Style Bold",
+   "ficheiro": "C:\\Windows\\Fonts\\BOOKOSB.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 107850,
+   "pct_impact": 43.0,
+   "corpo_que_cabe": 196,
+   "corpo_minimo": 54,
+   "oferecida": false,
+   "porque": "Recusada: mostra 43,0% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 196, com letras de 141 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 41.37,
+   "caixa_px": [
+    1662,
+    141
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 54,
+    "NN": 42,
+    "HH": 46,
+    "II": 50
+   },
+   "tamanho_mesa_minimo": 79,
+   "corpo_a_132": 90,
+   "corpo_a_309": 210,
+   "largura_a_309": 1779,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "arialroundedbold",
+   "nome": "Arial Rounded MT Bold",
+   "ficheiro": "C:\\Windows\\Fonts\\ARLRDBD.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 105831,
+   "pct_impact": 42.19,
+   "corpo_que_cabe": 207,
+   "corpo_minimo": 66,
+   "oferecida": false,
+   "porque": "Recusada: mostra 42,2% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 207, com letras de 154 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 40.54,
+   "caixa_px": [
+    1657,
+    154
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 58,
+    "NN": 62,
+    "HH": 62,
+    "II": 66
+   },
+   "tamanho_mesa_minimo": 92,
+   "corpo_a_132": 95,
+   "corpo_a_309": 222,
+   "largura_a_309": 1779,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "gillsansbold",
+   "nome": "Gill Sans MT Bold",
+   "ficheiro": "C:\\Windows\\Fonts\\GILB____.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 105743,
+   "pct_impact": 42.16,
+   "corpo_que_cabe": 196,
+   "corpo_minimo": 66,
+   "oferecida": false,
+   "porque": "Recusada: mostra 42,2% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 196, com letras de 138 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 40.51,
+   "caixa_px": [
+    1655,
+    138
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 66,
+    "NN": 58,
+    "HH": 58,
+    "II": 62
+   },
+   "tamanho_mesa_minimo": 97,
+   "corpo_a_132": 90,
+   "corpo_a_309": 210,
+   "largura_a_309": 1774,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "cambriabold",
+   "nome": "Cambria Bold",
+   "ficheiro": "C:\\Windows\\Fonts\\cambriab.ttf",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 105263,
+   "pct_impact": 41.97,
+   "corpo_que_cabe": 229,
+   "corpo_minimo": 66,
+   "oferecida": false,
+   "porque": "Recusada: mostra 42,0% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 229, com letras de 157 px de altura contra 237; já está na Mesa para as legendas e os cartões.",
+   "ordem": null,
+   "pct_so_nome": 40.31,
+   "caixa_px": [
+    1658,
+    157
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 66,
+    "NN": 50,
+    "HH": 54,
+    "II": 54
+   },
+   "tamanho_mesa_minimo": 83,
+   "corpo_a_132": 105,
+   "corpo_a_309": 246,
+   "largura_a_309": 1783,
+   "origem": "data/fontes.json"
+  },
+  {
+   "id": "frauncesbold",
+   "nome": "Fraunces Bold",
+   "ficheiro": "C:\\casamento-video-media\\gerados\\fontes\\Fraunces[SOFT,WONK,opsz,wght].ttf",
+   "indice": 0,
+   "variacao": "opsz=9,wght=700,SOFT=0,WONK=1",
+   "eixos": [
+    9,
+    700,
+    0,
+    1
+   ],
+   "area_px": 104310,
+   "pct_impact": 41.59,
+   "corpo_que_cabe": 193,
+   "corpo_minimo": 58,
+   "oferecida": false,
+   "porque": "Recusada: mostra 41,6% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 193, com letras de 156 px de altura contra 237; já está na Mesa para as legendas e os cartões.",
+   "ordem": null,
+   "pct_so_nome": 39.92,
+   "caixa_px": [
+    1657,
+    156
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 58,
+    "NN": 42,
+    "HH": 46,
+    "II": 46
+   },
+   "tamanho_mesa_minimo": 86,
+   "corpo_a_132": 88,
+   "corpo_a_309": 207,
+   "largura_a_309": 1782,
+   "origem": "data/fontes.json"
+  },
+  {
+   "id": "corbelbold",
+   "nome": "Corbel Bold",
+   "ficheiro": "C:\\Windows\\Fonts\\corbelb.ttf",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 104148,
+   "pct_impact": 41.52,
+   "corpo_que_cabe": 235,
+   "corpo_minimo": 70,
+   "oferecida": false,
+   "porque": "Recusada: mostra 41,5% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 235, com letras de 159 px de altura contra 237; já está na Mesa para as legendas e os cartões.",
+   "ordem": null,
+   "pct_so_nome": 39.85,
+   "caixa_px": [
+    1662,
+    159
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 62,
+    "NN": 70,
+    "HH": 58,
+    "II": 70
+   },
+   "tamanho_mesa_minimo": 86,
+   "corpo_a_132": 108,
+   "corpo_a_309": 252,
+   "largura_a_309": 1784,
+   "origem": "data/fontes.json"
+  },
+  {
+   "id": "bodoniblack",
+   "nome": "Bodoni MT Black",
+   "ficheiro": "C:\\Windows\\Fonts\\BOD_BLAR.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 104032,
+   "pct_impact": 41.47,
+   "corpo_que_cabe": 186,
+   "corpo_minimo": 58,
+   "oferecida": false,
+   "porque": "Recusada: mostra 41,5% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 186, com letras de 132 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 39.81,
+   "caixa_px": [
+    1659,
+    132
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 58,
+    "NN": 30,
+    "HH": 42,
+    "II": 42
+   },
+   "tamanho_mesa_minimo": 90,
+   "corpo_a_132": 85,
+   "corpo_a_309": 200,
+   "largura_a_309": 1783,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "comicsansbold",
+   "nome": "Comic Sans MS Bold",
+   "ficheiro": "C:\\Windows\\Fonts\\comicbd.ttf",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 103373,
+   "pct_impact": 41.21,
+   "corpo_que_cabe": 201,
+   "corpo_minimo": 70,
+   "oferecida": false,
+   "porque": "Recusada: mostra 41,2% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 201, com letras de 163 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 39.54,
+   "caixa_px": [
+    1658,
+    163
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 70,
+    "NN": 70,
+    "HH": 66,
+    "II": 38
+   },
+   "tamanho_mesa_minimo": 100,
+   "corpo_a_132": 92,
+   "corpo_a_309": 216,
+   "largura_a_309": 1781,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "lucidasanstypewriterbold",
+   "nome": "Lucida Sans Typewriter Bold",
+   "ficheiro": "C:\\Windows\\Fonts\\LTYPEB.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 101691,
+   "pct_impact": 40.54,
+   "corpo_que_cabe": 211,
+   "corpo_minimo": 86,
+   "oferecida": false,
+   "porque": "Recusada: mostra 40,5% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 211, com letras de 160 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 38.85,
+   "caixa_px": [
+    1651,
+    160
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 62,
+    "NN": 78,
+    "HH": 86,
+    "II": 34
+   },
+   "tamanho_mesa_minimo": 117,
+   "corpo_a_132": 97,
+   "corpo_a_309": 226,
+   "largura_a_309": 1768,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "segoeuisemib",
+   "nome": "Segoe UI Semibold",
+   "ficheiro": "C:\\Windows\\Fonts\\seguisb.ttf",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 101044,
+   "pct_impact": 40.28,
+   "corpo_que_cabe": 227,
+   "corpo_minimo": 66,
+   "oferecida": false,
+   "porque": "Recusada: mostra 40,3% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 227, com letras de 165 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 38.58,
+   "caixa_px": [
+    1656,
+    165
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 58,
+    "NN": 62,
+    "HH": 58,
+    "II": 66
+   },
+   "tamanho_mesa_minimo": 84,
+   "corpo_a_132": 104,
+   "corpo_a_309": 244,
+   "largura_a_309": 1784,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "playfairdisp900",
+   "nome": "Playfair Display 900",
+   "ficheiro": "C:\\casamento-video-media\\gerados\\fontes\\PlayfairDisplay[wght].ttf",
+   "indice": 0,
+   "variacao": "wght=900",
+   "eixos": [
+    900
+   ],
+   "area_px": 100821,
+   "pct_impact": 40.19,
+   "corpo_que_cabe": 201,
+   "corpo_minimo": 66,
+   "oferecida": false,
+   "porque": "Recusada: mostra 40,2% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 201, com letras de 148 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 38.49,
+   "caixa_px": [
+    1653,
+    148
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 66,
+    "NN": 38,
+    "HH": 46,
+    "II": 54
+   },
+   "tamanho_mesa_minimo": 94,
+   "corpo_a_132": 92,
+   "corpo_a_309": 216,
+   "largura_a_309": 1780,
+   "origem": "gerados\\fontes"
+  },
+  {
+   "id": "erasdemi",
+   "nome": "Eras Demi ITC",
+   "ficheiro": "C:\\Windows\\Fonts\\ERASDEMI.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 100343,
+   "pct_impact": 40.0,
+   "corpo_que_cabe": 213,
+   "corpo_minimo": 70,
+   "oferecida": false,
+   "porque": "Recusada: mostra 40,0% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 213, com letras de 147 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 38.29,
+   "caixa_px": [
+    1653,
+    147
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 54,
+    "NN": 70,
+    "HH": 62,
+    "II": 70
+   },
+   "tamanho_mesa_minimo": 94,
+   "corpo_a_132": 98,
+   "corpo_a_309": 229,
+   "largura_a_309": 1778,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "consolasbold",
+   "nome": "Consolas Bold",
+   "ficheiro": "C:\\Windows\\Fonts\\consolab.ttf",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 100056,
+   "pct_impact": 39.89,
+   "corpo_que_cabe": 231,
+   "corpo_minimo": 106,
+   "oferecida": false,
+   "porque": "Recusada: mostra 39,9% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 231, com letras de 161 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 38.17,
+   "caixa_px": [
+    1651,
+    161
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 66,
+    "NN": 106,
+    "HH": 94,
+    "II": 34
+   },
+   "tamanho_mesa_minimo": 132,
+   "corpo_a_132": 106,
+   "corpo_a_309": 248,
+   "largura_a_309": 1768,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "sitkabannerbold",
+   "nome": "Sitka Banner Bold",
+   "ficheiro": "C:\\Windows\\Fonts\\SitkaVF.ttf",
+   "indice": 0,
+   "variacao": "opsz=27.5,wght=700",
+   "eixos": [
+    27.5,
+    700.0
+   ],
+   "area_px": 98341,
+   "pct_impact": 39.21,
+   "corpo_que_cabe": 247,
+   "corpo_minimo": 74,
+   "oferecida": false,
+   "porque": "Recusada: mostra 39,2% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 247, com letras de 159 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 37.47,
+   "caixa_px": [
+    1657,
+    159
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 74,
+    "NN": 54,
+    "HH": 58,
+    "II": 62
+   },
+   "tamanho_mesa_minimo": 86,
+   "corpo_a_132": 113,
+   "corpo_a_309": 265,
+   "largura_a_309": 1776,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "scriptbold",
+   "nome": "Script MT Bold",
+   "ficheiro": "C:\\Windows\\Fonts\\SCRIPTBL.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 98336,
+   "pct_impact": 39.2,
+   "corpo_que_cabe": 214,
+   "corpo_minimo": 90,
+   "oferecida": false,
+   "porque": "Recusada: mostra 39,2% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 214, com letras de 203 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 37.47,
+   "caixa_px": [
+    1662,
+    203
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 90,
+    "NN": 30,
+    "HH": 30,
+    "II": 34
+   },
+   "tamanho_mesa_minimo": 121,
+   "corpo_a_132": 98,
+   "corpo_a_309": 230,
+   "largura_a_309": 1785,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "lucidasansdemib",
+   "nome": "Lucida Sans Demibold Roman",
+   "ficheiro": "C:\\Windows\\Fonts\\LSANSD.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 97963,
+   "pct_impact": 39.05,
+   "corpo_que_cabe": 203,
+   "corpo_minimo": 62,
+   "oferecida": false,
+   "porque": "Recusada: mostra 39,0% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 203, com letras de 154 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 37.32,
+   "caixa_px": [
+    1656,
+    154
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 62,
+    "NN": 54,
+    "HH": 58,
+    "II": 62
+   },
+   "tamanho_mesa_minimo": 88,
+   "corpo_a_132": 93,
+   "corpo_a_309": 218,
+   "largura_a_309": 1781,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "sitkadispbold",
+   "nome": "Sitka Display Bold",
+   "ficheiro": "C:\\Windows\\Fonts\\SitkaVF.ttf",
+   "indice": 0,
+   "variacao": "opsz=24.6303,wght=700",
+   "eixos": [
+    24.630294799804688,
+    700.0
+   ],
+   "area_px": 97801,
+   "pct_impact": 38.99,
+   "corpo_que_cabe": 240,
+   "corpo_minimo": 70,
+   "oferecida": false,
+   "porque": "Recusada: mostra 39,0% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 240, com letras de 156 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 37.25,
+   "caixa_px": [
+    1662,
+    156
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 70,
+    "NN": 50,
+    "HH": 54,
+    "II": 58
+   },
+   "tamanho_mesa_minimo": 84,
+   "corpo_a_132": 110,
+   "corpo_a_309": 258,
+   "largura_a_309": 1784,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "sitkaheadingbold",
+   "nome": "Sitka Heading Bold",
+   "ficheiro": "C:\\Windows\\Fonts\\SitkaVF.ttf",
+   "indice": 0,
+   "variacao": "opsz=21.0434,wght=700",
+   "eixos": [
+    21.04339599609375,
+    700.0
+   ],
+   "area_px": 96938,
+   "pct_impact": 38.65,
+   "corpo_que_cabe": 233,
+   "corpo_minimo": 66,
+   "oferecida": false,
+   "porque": "Recusada: mostra 38,6% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 233, com letras de 153 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 36.9,
+   "caixa_px": [
+    1661,
+    153
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 66,
+    "NN": 46,
+    "HH": 54,
+    "II": 54
+   },
+   "tamanho_mesa_minimo": 81,
+   "corpo_a_132": 107,
+   "corpo_a_309": 250,
+   "largura_a_309": 1783,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "instrumentserif",
+   "nome": "Instrument Serif",
+   "ficheiro": "C:\\casamento-video-media\\gerados\\fontes\\InstrumentSerif-Regular.ttf",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 96324,
+   "pct_impact": 38.4,
+   "corpo_que_cabe": 303,
+   "corpo_minimo": 74,
+   "oferecida": false,
+   "porque": "Recusada: mostra 38,4% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 303, com letras de 226 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 36.64,
+   "caixa_px": [
+    1655,
+    226
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 74,
+    "NN": 50,
+    "HH": 70,
+    "II": 74
+   },
+   "tamanho_mesa_minimo": 70,
+   "corpo_a_132": 139,
+   "corpo_a_309": 325,
+   "largura_a_309": 1778,
+   "origem": "gerados\\fontes"
+  },
+  {
+   "id": "sitkasubheadingbold",
+   "nome": "Sitka Subheading Bold",
+   "ficheiro": "C:\\Windows\\Fonts\\SitkaVF.ttf",
+   "indice": 0,
+   "variacao": "opsz=16.7391,wght=700",
+   "eixos": [
+    16.739105224609375,
+    700.0
+   ],
+   "area_px": 95710,
+   "pct_impact": 38.16,
+   "corpo_que_cabe": 222,
+   "corpo_minimo": 62,
+   "oferecida": false,
+   "porque": "Recusada: mostra 38,2% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 222, com letras de 148 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 36.39,
+   "caixa_px": [
+    1658,
+    148
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 62,
+    "NN": 46,
+    "HH": 46,
+    "II": 50
+   },
+   "tamanho_mesa_minimo": 80,
+   "corpo_a_132": 102,
+   "corpo_a_309": 238,
+   "largura_a_309": 1779,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "cinzel900",
+   "nome": "Cinzel 900",
+   "ficheiro": "C:\\casamento-video-media\\gerados\\fontes\\Cinzel[wght].ttf",
+   "indice": 0,
+   "variacao": "wght=900",
+   "eixos": [
+    900
+   ],
+   "area_px": 95503,
+   "pct_impact": 38.07,
+   "corpo_que_cabe": 191,
+   "corpo_minimo": 54,
+   "oferecida": false,
+   "porque": "Recusada: mostra 38,1% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 191, com letras de 142 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 36.31,
+   "caixa_px": [
+    1659,
+    142
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 54,
+    "NN": 46,
+    "HH": 46,
+    "II": 50
+   },
+   "tamanho_mesa_minimo": 81,
+   "corpo_a_132": 88,
+   "corpo_a_309": 205,
+   "largura_a_309": 1782,
+   "origem": "gerados\\fontes"
+  },
+  {
+   "id": "playfairdisp800",
+   "nome": "Playfair Display 800",
+   "ficheiro": "C:\\casamento-video-media\\gerados\\fontes\\PlayfairDisplay[wght].ttf",
+   "indice": 0,
+   "variacao": "wght=800",
+   "eixos": [
+    800
+   ],
+   "area_px": 94922,
+   "pct_impact": 37.84,
+   "corpo_que_cabe": 205,
+   "corpo_minimo": 66,
+   "oferecida": false,
+   "porque": "Recusada: mostra 37,8% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 205, com letras de 152 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 36.07,
+   "caixa_px": [
+    1654,
+    152
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 66,
+    "NN": 38,
+    "HH": 50,
+    "II": 50
+   },
+   "tamanho_mesa_minimo": 93,
+   "corpo_a_132": 94,
+   "corpo_a_309": 220,
+   "largura_a_309": 1779,
+   "origem": "gerados\\fontes"
+  },
+  {
+   "id": "sitkatextbold",
+   "nome": "Sitka Text Bold",
+   "ficheiro": "C:\\Windows\\Fonts\\SitkaVF.ttf",
+   "indice": 0,
+   "variacao": "opsz=11,wght=700",
+   "eixos": [
+    11.0,
+    700.0
+   ],
+   "area_px": 93966,
+   "pct_impact": 37.46,
+   "corpo_que_cabe": 212,
+   "corpo_minimo": 58,
+   "oferecida": false,
+   "porque": "Recusada: mostra 37,5% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 212, com letras de 141 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 35.68,
+   "caixa_px": [
+    1657,
+    141
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 58,
+    "NN": 42,
+    "HH": 46,
+    "II": 46
+   },
+   "tamanho_mesa_minimo": 79,
+   "corpo_a_132": 97,
+   "corpo_a_309": 227,
+   "largura_a_309": 1780,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "sitkasmallbold",
+   "nome": "Sitka Small Bold",
+   "ficheiro": "C:\\Windows\\Fonts\\SitkaVF.ttf",
+   "indice": 0,
+   "variacao": "opsz=6,wght=700",
+   "eixos": [
+    6.0,
+    700.0
+   ],
+   "area_px": 93129,
+   "pct_impact": 37.13,
+   "corpo_que_cabe": 199,
+   "corpo_minimo": 54,
+   "oferecida": false,
+   "porque": "Recusada: mostra 37,1% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 199, com letras de 137 px de altura contra 237; a 309, o máximo da Mesa, o nome tem 1791 px e passa dos 1785 da zona segura.",
+   "ordem": null,
+   "pct_so_nome": 35.33,
+   "caixa_px": [
+    1662,
+    137
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 54,
+    "NN": 38,
+    "HH": 42,
+    "II": 42
+   },
+   "tamanho_mesa_minimo": 78,
+   "corpo_a_132": 91,
+   "corpo_a_309": 214,
+   "largura_a_309": 1791,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "bodonibold",
+   "nome": "Bodoni MT Bold",
+   "ficheiro": "C:\\Windows\\Fonts\\BOD_B.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 91381,
+   "pct_impact": 36.43,
+   "corpo_que_cabe": 223,
+   "corpo_minimo": 70,
+   "oferecida": false,
+   "porque": "Recusada: mostra 36,4% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 223, com letras de 152 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 34.62,
+   "caixa_px": [
+    1662,
+    152
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 70,
+    "NN": 38,
+    "HH": 50,
+    "II": 50
+   },
+   "tamanho_mesa_minimo": 90,
+   "corpo_a_132": 102,
+   "corpo_a_309": 239,
+   "largura_a_309": 1780,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "georgiabold",
+   "nome": "Georgia Bold",
+   "ficheiro": "C:\\Windows\\Fonts\\georgiab.ttf",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 91111,
+   "pct_impact": 36.32,
+   "corpo_que_cabe": 194,
+   "corpo_minimo": 58,
+   "oferecida": false,
+   "porque": "Recusada: mostra 36,3% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 194, com letras de 142 px de altura contra 237; já está na Mesa para as legendas e os cartões.",
+   "ordem": null,
+   "pct_so_nome": 34.51,
+   "caixa_px": [
+    1656,
+    142
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 58,
+    "NN": 34,
+    "HH": 42,
+    "II": 42
+   },
+   "tamanho_mesa_minimo": 86,
+   "corpo_a_132": 89,
+   "corpo_a_309": 208,
+   "largura_a_309": 1778,
+   "origem": "data/fontes.json"
+  },
+  {
+   "id": "lucidafaxdemib",
+   "nome": "Lucida Fax Demibold",
+   "ficheiro": "C:\\Windows\\Fonts\\LFAXD.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 90984,
+   "pct_impact": 36.27,
+   "corpo_que_cabe": 196,
+   "corpo_minimo": 54,
+   "oferecida": false,
+   "porque": "Recusada: mostra 36,3% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 196, com letras de 150 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 34.46,
+   "caixa_px": [
+    1659,
+    150
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 54,
+    "NN": 50,
+    "HH": 46,
+    "II": 50
+   },
+   "tamanho_mesa_minimo": 79,
+   "corpo_a_132": 90,
+   "corpo_a_309": 210,
+   "largura_a_309": 1781,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "constantiabold",
+   "nome": "Constantia Bold",
+   "ficheiro": "C:\\Windows\\Fonts\\constanb.ttf",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 90440,
+   "pct_impact": 36.06,
+   "corpo_que_cabe": 214,
+   "corpo_minimo": 58,
+   "oferecida": false,
+   "porque": "Recusada: mostra 36,1% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 214, com letras de 154 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 34.23,
+   "caixa_px": [
+    1653,
+    154
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 58,
+    "NN": 38,
+    "HH": 46,
+    "II": 50
+   },
+   "tamanho_mesa_minimo": 78,
+   "corpo_a_132": 98,
+   "corpo_a_309": 230,
+   "largura_a_309": 1780,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "cinzel800",
+   "nome": "Cinzel 800",
+   "ficheiro": "C:\\casamento-video-media\\gerados\\fontes\\Cinzel[wght].ttf",
+   "indice": 0,
+   "variacao": "wght=800",
+   "eixos": [
+    800
+   ],
+   "area_px": 88683,
+   "pct_impact": 35.36,
+   "corpo_que_cabe": 195,
+   "corpo_minimo": 54,
+   "oferecida": false,
+   "porque": "Recusada: mostra 35,4% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 195, com letras de 144 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 33.51,
+   "caixa_px": [
+    1662,
+    144
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 54,
+    "NN": 46,
+    "HH": 46,
+    "II": 50
+   },
+   "tamanho_mesa_minimo": 80,
+   "corpo_a_132": 89,
+   "corpo_a_309": 209,
+   "largura_a_309": 1781,
+   "origem": "gerados\\fontes"
+  },
+  {
+   "id": "copperplategothicbold",
+   "nome": "Copperplate Gothic Bold",
+   "ficheiro": "C:\\Windows\\Fonts\\COPRGTB.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 88545,
+   "pct_impact": 35.3,
+   "corpo_que_cabe": 189,
+   "corpo_minimo": 62,
+   "oferecida": false,
+   "porque": "Recusada: mostra 35,3% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 189, com letras de 138 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 33.45,
+   "caixa_px": [
+    1661,
+    138
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 62,
+    "NN": 58,
+    "HH": 54,
+    "II": 58
+   },
+   "tamanho_mesa_minimo": 94,
+   "corpo_a_132": 87,
+   "corpo_a_309": 203,
+   "largura_a_309": 1784,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "playfairdisp700",
+   "nome": "Playfair Display 700",
+   "ficheiro": "C:\\casamento-video-media\\gerados\\fontes\\PlayfairDisplay[wght].ttf",
+   "indice": 0,
+   "variacao": "wght=700",
+   "eixos": [
+    700
+   ],
+   "area_px": 87867,
+   "pct_impact": 35.03,
+   "corpo_que_cabe": 208,
+   "corpo_minimo": 66,
+   "oferecida": false,
+   "porque": "Recusada: mostra 35,0% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 208, com letras de 155 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 33.18,
+   "caixa_px": [
+    1653,
+    155
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 66,
+    "NN": 38,
+    "HH": 46,
+    "II": 50
+   },
+   "tamanho_mesa_minimo": 91,
+   "corpo_a_132": 95,
+   "corpo_a_309": 223,
+   "largura_a_309": 1778,
+   "origem": "gerados\\fontes"
+  },
+  {
+   "id": "couriernewbold",
+   "nome": "Courier New Bold",
+   "ficheiro": "C:\\Windows\\Fonts\\courbd.ttf",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 85633,
+   "pct_impact": 34.14,
+   "corpo_que_cabe": 212,
+   "corpo_minimo": 66,
+   "oferecida": false,
+   "porque": "Recusada: mostra 34,1% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 212, com letras de 132 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 32.26,
+   "caixa_px": [
+    1651,
+    132
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 66,
+    "NN": 66,
+    "HH": 58,
+    "II": 34
+   },
+   "tamanho_mesa_minimo": 89,
+   "corpo_a_132": 97,
+   "corpo_a_309": 227,
+   "largura_a_309": 1768,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "lucidabrightdemib",
+   "nome": "Lucida Bright Demibold",
+   "ficheiro": "C:\\Windows\\Fonts\\LBRITED.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 84708,
+   "pct_impact": 33.77,
+   "corpo_que_cabe": 197,
+   "corpo_minimo": 58,
+   "oferecida": false,
+   "porque": "Recusada: mostra 33,8% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 197, com letras de 149 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 31.88,
+   "caixa_px": [
+    1659,
+    149
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 58,
+    "NN": 46,
+    "HH": 54,
+    "II": 54
+   },
+   "tamanho_mesa_minimo": 85,
+   "corpo_a_132": 90,
+   "corpo_a_309": 211,
+   "largura_a_309": 1777,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "calistobold",
+   "nome": "Calisto MT Bold",
+   "ficheiro": "C:\\Windows\\Fonts\\CALISTB.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 83864,
+   "pct_impact": 33.43,
+   "corpo_que_cabe": 194,
+   "corpo_minimo": 66,
+   "oferecida": false,
+   "porque": "Recusada: mostra 33,4% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 194, com letras de 140 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 31.54,
+   "caixa_px": [
+    1654,
+    140
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 66,
+    "NN": 42,
+    "HH": 46,
+    "II": 50
+   },
+   "tamanho_mesa_minimo": 98,
+   "corpo_a_132": 89,
+   "corpo_a_309": 208,
+   "largura_a_309": 1776,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "segoeprintbold",
+   "nome": "Segoe Print Bold",
+   "ficheiro": "C:\\Windows\\Fonts\\segoeprb.ttf",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 83385,
+   "pct_impact": 33.24,
+   "corpo_que_cabe": 192,
+   "corpo_minimo": 62,
+   "oferecida": false,
+   "porque": "Recusada: mostra 33,2% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 192, com letras de 165 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 31.34,
+   "caixa_px": [
+    1655,
+    165
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 54,
+    "NN": 50,
+    "HH": 54,
+    "II": 62
+   },
+   "tamanho_mesa_minimo": 93,
+   "corpo_a_132": 88,
+   "corpo_a_309": 206,
+   "largura_a_309": 1775,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "magnetobold",
+   "nome": "Magneto Bold",
+   "ficheiro": "C:\\Windows\\Fonts\\MAGNETOB.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 82750,
+   "pct_impact": 32.99,
+   "corpo_que_cabe": 155,
+   "corpo_minimo": 74,
+   "oferecida": false,
+   "porque": "Recusada: mostra 33,0% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 155, com letras de 127 px de altura contra 237; só separa as letras a 15 m a partir do tamanho 137 da Mesa (o par II pede corpo 74), e a Mesa deixa descer até 132.",
+   "ordem": null,
+   "pct_so_nome": 31.08,
+   "caixa_px": [
+    1658,
+    127
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 54,
+    "NN": 30,
+    "HH": 54,
+    "II": 74
+   },
+   "tamanho_mesa_minimo": 137,
+   "corpo_a_132": 71,
+   "corpo_a_309": 166,
+   "largura_a_309": 1774,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "perpetuatitlingbold",
+   "nome": "Perpetua Titling MT Bold",
+   "ficheiro": "C:\\Windows\\Fonts\\PERTIBD.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 80716,
+   "pct_impact": 32.18,
+   "corpo_que_cabe": 191,
+   "corpo_minimo": 54,
+   "oferecida": false,
+   "porque": "Recusada: mostra 32,2% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 191, com letras de 142 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 30.24,
+   "caixa_px": [
+    1654,
+    142
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 34,
+    "NN": 34,
+    "HH": 46,
+    "II": 54
+   },
+   "tamanho_mesa_minimo": 81,
+   "corpo_a_132": 88,
+   "corpo_a_309": 205,
+   "largura_a_309": 1777,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "garamondbold",
+   "nome": "Garamond Bold",
+   "ficheiro": "C:\\Windows\\Fonts\\GARABD.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 80555,
+   "pct_impact": 32.11,
+   "corpo_que_cabe": 210,
+   "corpo_minimo": 66,
+   "oferecida": false,
+   "porque": "Recusada: mostra 32,1% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 210, com letras de 142 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 30.18,
+   "caixa_px": [
+    1656,
+    142
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 66,
+    "NN": 42,
+    "HH": 46,
+    "II": 50
+   },
+   "tamanho_mesa_minimo": 90,
+   "corpo_a_132": 96,
+   "corpo_a_309": 225,
+   "largura_a_309": 1775,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "cinzelbold",
+   "nome": "Cinzel Bold",
+   "ficheiro": "C:\\casamento-video-media\\gerados\\fontes\\Cinzel[wght].ttf",
+   "indice": 0,
+   "variacao": "wght=700",
+   "eixos": [
+    700
+   ],
+   "area_px": 80549,
+   "pct_impact": 32.11,
+   "corpo_que_cabe": 198,
+   "corpo_minimo": 58,
+   "oferecida": false,
+   "porque": "Recusada: mostra 32,1% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 198, com letras de 148 px de altura contra 237; já está na Mesa para as legendas e os cartões.",
+   "ordem": null,
+   "pct_so_nome": 30.18,
+   "caixa_px": [
+    1661,
+    148
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 58,
+    "NN": 50,
+    "HH": 46,
+    "II": 50
+   },
+   "tamanho_mesa_minimo": 84,
+   "corpo_a_132": 91,
+   "corpo_a_309": 212,
+   "largura_a_309": 1775,
+   "origem": "data/fontes.json"
+  },
+  {
+   "id": "centuryschoolbookbold",
+   "nome": "Century Schoolbook Bold",
+   "ficheiro": "C:\\Windows\\Fonts\\SCHLBKB.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 80153,
+   "pct_impact": 31.95,
+   "corpo_que_cabe": 187,
+   "corpo_minimo": 54,
+   "oferecida": false,
+   "porque": "Recusada: mostra 31,9% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 187, com letras de 141 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 30.01,
+   "caixa_px": [
+    1655,
+    141
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 54,
+    "NN": 34,
+    "HH": 42,
+    "II": 42
+   },
+   "tamanho_mesa_minimo": 83,
+   "corpo_a_132": 86,
+   "corpo_a_309": 201,
+   "largura_a_309": 1779,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "palatinolinotypebold",
+   "nome": "Palatino Linotype Bold",
+   "ficheiro": "C:\\Windows\\Fonts\\palab.ttf",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 79771,
+   "pct_impact": 31.8,
+   "corpo_que_cabe": 197,
+   "corpo_minimo": 62,
+   "oferecida": false,
+   "porque": "Recusada: mostra 31,8% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 197, com letras de 150 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 29.86,
+   "caixa_px": [
+    1659,
+    150
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 62,
+    "NN": 42,
+    "HH": 50,
+    "II": 50
+   },
+   "tamanho_mesa_minimo": 90,
+   "corpo_a_132": 90,
+   "corpo_a_309": 211,
+   "largura_a_309": 1780,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "timesnewbold",
+   "nome": "Times New Roman Bold",
+   "ficheiro": "C:\\Windows\\Fonts\\timesbd.ttf",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 79382,
+   "pct_impact": 31.65,
+   "corpo_que_cabe": 201,
+   "corpo_minimo": 66,
+   "oferecida": false,
+   "porque": "Recusada: mostra 31,6% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 201, com letras de 140 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 29.7,
+   "caixa_px": [
+    1650,
+    140
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 66,
+    "NN": 38,
+    "HH": 50,
+    "II": 50
+   },
+   "tamanho_mesa_minimo": 94,
+   "corpo_a_132": 92,
+   "corpo_a_309": 216,
+   "largura_a_309": 1776,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "bookantiquabold",
+   "nome": "Book Antiqua Bold",
+   "ficheiro": "C:\\Windows\\Fonts\\ANTQUAB.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 78999,
+   "pct_impact": 31.49,
+   "corpo_que_cabe": 197,
+   "corpo_minimo": 62,
+   "oferecida": false,
+   "porque": "Recusada: mostra 31,5% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 197, com letras de 139 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 29.54,
+   "caixa_px": [
+    1661,
+    139
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 62,
+    "NN": 42,
+    "HH": 50,
+    "II": 50
+   },
+   "tamanho_mesa_minimo": 90,
+   "corpo_a_132": 90,
+   "corpo_a_309": 211,
+   "largura_a_309": 1782,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "perpetuabold",
+   "nome": "Perpetua Bold",
+   "ficheiro": "C:\\Windows\\Fonts\\PERB____.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 78626,
+   "pct_impact": 31.35,
+   "corpo_que_cabe": 227,
+   "corpo_minimo": 66,
+   "oferecida": false,
+   "porque": "Recusada: mostra 31,4% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 227, com letras de 139 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 29.39,
+   "caixa_px": [
+    1659,
+    139
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 66,
+    "NN": 46,
+    "HH": 50,
+    "II": 54
+   },
+   "tamanho_mesa_minimo": 84,
+   "corpo_a_132": 104,
+   "corpo_a_309": 244,
+   "largura_a_309": 1785,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "segoescriptbold",
+   "nome": "Segoe Script Bold",
+   "ficheiro": "C:\\Windows\\Fonts\\segoescb.ttf",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 75648,
+   "pct_impact": 30.16,
+   "corpo_que_cabe": 181,
+   "corpo_minimo": 62,
+   "oferecida": false,
+   "porque": "Recusada: mostra 30,2% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 181, com letras de 153 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 28.17,
+   "caixa_px": [
+    1652,
+    153
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 54,
+    "NN": 42,
+    "HH": 50,
+    "II": 62
+   },
+   "tamanho_mesa_minimo": 98,
+   "corpo_a_132": 83,
+   "corpo_a_309": 194,
+   "largura_a_309": 1773,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "bellbold",
+   "nome": "Bell MT Bold",
+   "ficheiro": "C:\\Windows\\Fonts\\BELLB.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 75434,
+   "pct_impact": 30.07,
+   "corpo_que_cabe": 205,
+   "corpo_minimo": 70,
+   "oferecida": false,
+   "porque": "Recusada: mostra 30,1% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 205, com letras de 139 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 28.08,
+   "caixa_px": [
+    1655,
+    139
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 70,
+    "NN": 38,
+    "HH": 50,
+    "II": 50
+   },
+   "tamanho_mesa_minimo": 98,
+   "corpo_a_132": 94,
+   "corpo_a_309": 220,
+   "largura_a_309": 1779,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "goudyoldstylebold",
+   "nome": "Goudy Old Style Bold",
+   "ficheiro": "C:\\Windows\\Fonts\\GOUDOSB.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 71686,
+   "pct_impact": 28.58,
+   "corpo_que_cabe": 210,
+   "corpo_minimo": 70,
+   "oferecida": false,
+   "porque": "Recusada: mostra 28,6% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 210, com letras de 144 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 26.54,
+   "caixa_px": [
+    1658,
+    144
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 70,
+    "NN": 46,
+    "HH": 50,
+    "II": 54
+   },
+   "tamanho_mesa_minimo": 96,
+   "corpo_a_132": 96,
+   "corpo_a_309": 225,
+   "largura_a_309": 1772,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "blackadder",
+   "nome": "Blackadder ITC",
+   "ficheiro": "C:\\Windows\\Fonts\\ITCBLKAD.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 71558,
+   "pct_impact": 28.53,
+   "corpo_que_cabe": 196,
+   "corpo_minimo": 82,
+   "oferecida": false,
+   "porque": "Recusada: mostra 28,5% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 196, com letras de 207 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 26.49,
+   "caixa_px": [
+    1655,
+    207
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 82,
+    "NN": 34,
+    "HH": 50,
+    "II": 46
+   },
+   "tamanho_mesa_minimo": 120,
+   "corpo_a_132": 90,
+   "corpo_a_309": 210,
+   "largura_a_309": 1773,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "californianfbbold",
+   "nome": "Californian FB Bold",
+   "ficheiro": "C:\\Windows\\Fonts\\CALIFB.TTF",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 68852,
+   "pct_impact": 27.45,
+   "corpo_que_cabe": 209,
+   "corpo_minimo": 66,
+   "oferecida": false,
+   "porque": "Recusada: mostra 27,4% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 209, com letras de 150 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 25.38,
+   "caixa_px": [
+    1658,
+    150
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 66,
+    "NN": 42,
+    "HH": 50,
+    "II": 54
+   },
+   "tamanho_mesa_minimo": 91,
+   "corpo_a_132": 96,
+   "corpo_a_309": 224,
+   "largura_a_309": 1776,
+   "origem": "C:\\Windows\\Fonts"
+  },
+  {
+   "id": "cormorantgaramond700ital",
+   "nome": "Cormorant Garamond 700 Itálico",
+   "ficheiro": "C:\\casamento-video-media\\gerados\\fontes\\CormorantGaramond-Italic[wght].ttf",
+   "indice": 0,
+   "variacao": "wght=700",
+   "eixos": [
+    700
+   ],
+   "area_px": 67512,
+   "pct_impact": 26.91,
+   "corpo_que_cabe": 238,
+   "corpo_minimo": 78,
+   "oferecida": false,
+   "porque": "Recusada: mostra 26,9% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 238, com letras de 167 px de altura contra 237.",
+   "ordem": null,
+   "pct_so_nome": 24.83,
+   "caixa_px": [
+    1656,
+    167
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 78,
+    "NN": 38,
+    "HH": 58,
+    "II": 58
+   },
+   "tamanho_mesa_minimo": 94,
+   "corpo_a_132": 109,
+   "corpo_a_309": 255,
+   "largura_a_309": 1773,
+   "origem": "gerados\\fontes"
+  },
+  {
+   "id": "cormorantgaramondbold",
+   "nome": "Cormorant Garamond Bold",
+   "ficheiro": "C:\\casamento-video-media\\gerados\\fontes\\CormorantGaramond[wght].ttf",
+   "indice": 0,
+   "variacao": "wght=700",
+   "eixos": [
+    700
+   ],
+   "area_px": 64364,
+   "pct_impact": 25.66,
+   "corpo_que_cabe": 214,
+   "corpo_minimo": 70,
+   "oferecida": false,
+   "porque": "Recusada: mostra 25,7% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 214, com letras de 144 px de altura contra 237; já está na Mesa para as legendas e os cartões.",
+   "ordem": null,
+   "pct_so_nome": 23.54,
+   "caixa_px": [
+    1652,
+    144
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 70,
+    "NN": 38,
+    "HH": 46,
+    "II": 58
+   },
+   "tamanho_mesa_minimo": 94,
+   "corpo_a_132": 98,
+   "corpo_a_309": 230,
+   "largura_a_309": 1778,
+   "origem": "data/fontes.json"
+  },
+  {
+   "id": "playfairdisp",
+   "nome": "Playfair Display",
+   "ficheiro": "C:\\casamento-video-media\\gerados\\fontes\\PlayfairDisplay[wght].ttf",
+   "indice": 0,
+   "variacao": "wght=400",
+   "eixos": [
+    400
+   ],
+   "area_px": 63578,
+   "pct_impact": 25.35,
+   "corpo_que_cabe": 219,
+   "corpo_minimo": 62,
+   "oferecida": false,
+   "porque": "Recusada: mostra 25,4% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 219, com letras de 162 px de altura contra 237; já está na Mesa para as legendas e os cartões.",
+   "ordem": null,
+   "pct_so_nome": 23.22,
+   "caixa_px": [
+    1658,
+    162
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 62,
+    "NN": 38,
+    "HH": 50,
+    "II": 54
+   },
+   "tamanho_mesa_minimo": 81,
+   "corpo_a_132": 100,
+   "corpo_a_309": 235,
+   "largura_a_309": 1776,
+   "origem": "data/fontes.json"
+  },
+  {
+   "id": "greatvibes",
+   "nome": "Great Vibes (manuscrita do convite)",
+   "ficheiro": "C:\\casamento-video-media\\gerados\\fontes\\GreatVibes-Regular.ttf",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 62935,
+   "pct_impact": 25.09,
+   "corpo_que_cabe": 184,
+   "corpo_minimo": 114,
+   "oferecida": false,
+   "porque": "Recusada: mostra 25,1% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 184, com letras de 225 px de altura contra 237; só separa as letras a 15 m a partir do tamanho 178 da Mesa (o par nn pede corpo 114), e a Mesa deixa descer até 132; já está na Mesa para as legendas e os cartões.",
+   "ordem": null,
+   "pct_so_nome": 22.95,
+   "caixa_px": [
+    1660,
+    225
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 114,
+    "NN": 38,
+    "HH": 30,
+    "II": 30
+   },
+   "tamanho_mesa_minimo": 178,
+   "corpo_a_132": 84,
+   "corpo_a_309": 197,
+   "largura_a_309": 1779,
+   "origem": "data/fontes.json"
+  },
+  {
+   "id": "cinzel",
+   "nome": "Cinzel (maiúsculas do convite)",
+   "ficheiro": "C:\\casamento-video-media\\gerados\\fontes\\Cinzel[wght].ttf",
+   "indice": 0,
+   "variacao": "wght=400",
+   "eixos": [
+    400
+   ],
+   "area_px": 51980,
+   "pct_impact": 20.72,
+   "corpo_que_cabe": 211,
+   "corpo_minimo": 54,
+   "oferecida": false,
+   "porque": "Recusada: mostra 20,7% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 211, com letras de 156 px de altura contra 237; já está na Mesa para as legendas e os cartões.",
+   "ordem": null,
+   "pct_so_nome": 18.46,
+   "caixa_px": [
+    1662,
+    156
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 54,
+    "NN": 54,
+    "HH": 50,
+    "II": 50
+   },
+   "tamanho_mesa_minimo": 74,
+   "corpo_a_132": 97,
+   "corpo_a_309": 226,
+   "largura_a_309": 1780,
+   "origem": "data/fontes.json"
+  },
+  {
+   "id": "cormorantgaramonditalo",
+   "nome": "Cormorant Garamond Itálico (o & do convite)",
+   "ficheiro": "C:\\casamento-video-media\\gerados\\fontes\\CormorantGaramond-Italic[wght].ttf",
+   "indice": 0,
+   "variacao": "wght=400",
+   "eixos": [
+    400
+   ],
+   "area_px": 47926,
+   "pct_impact": 19.11,
+   "corpo_que_cabe": 242,
+   "corpo_minimo": 74,
+   "oferecida": false,
+   "porque": "Recusada: mostra 19,1% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 242, com letras de 164 px de altura contra 237; já está na Mesa para as legendas e os cartões.",
+   "ordem": null,
+   "pct_so_nome": 16.8,
+   "caixa_px": [
+    1661,
+    164
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 74,
+    "NN": 42,
+    "HH": 58,
+    "II": 58
+   },
+   "tamanho_mesa_minimo": 88,
+   "corpo_a_132": 111,
+   "corpo_a_309": 260,
+   "largura_a_309": 1782,
+   "origem": "data/fontes.json"
+  },
+  {
+   "id": "cormorantgaramondcomono",
+   "nome": "Cormorant Garamond (como no convite)",
+   "ficheiro": "C:\\casamento-video-media\\gerados\\fontes\\CormorantGaramond[wght].ttf",
+   "indice": 0,
+   "variacao": "wght=400",
+   "eixos": [
+    400
+   ],
+   "area_px": 45816,
+   "pct_impact": 18.27,
+   "corpo_que_cabe": 218,
+   "corpo_minimo": 70,
+   "oferecida": false,
+   "porque": "Recusada: mostra 18,3% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 218, com letras de 145 px de altura contra 237; já está na Mesa para as legendas e os cartões.",
+   "ordem": null,
+   "pct_so_nome": 15.93,
+   "caixa_px": [
+    1661,
+    145
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 70,
+    "NN": 46,
+    "HH": 46,
+    "II": 54
+   },
+   "tamanho_mesa_minimo": 92,
+   "corpo_a_132": 100,
+   "corpo_a_309": 234,
+   "largura_a_309": 1778,
+   "origem": "data/fontes.json"
+  },
+  {
+   "id": "pinyonscript",
+   "nome": "Pinyon Script (manuscrita do convite)",
+   "ficheiro": "C:\\casamento-video-media\\gerados\\fontes\\PinyonScript-Regular.ttf",
+   "indice": 0,
+   "variacao": null,
+   "eixos": null,
+   "area_px": 43225,
+   "pct_impact": 17.23,
+   "corpo_que_cabe": 199,
+   "corpo_minimo": 82,
+   "oferecida": false,
+   "porque": "Recusada: mostra 17,2% da foto do Impact, abaixo dos 66,7%: é mais larga do que o Impact e, para caber nos 1662 px, desce para corpo 199, com letras de 175 px de altura contra 237; a 309, o máximo da Mesa, o nome tem 1786 px e passa dos 1785 da zona segura; já está na Mesa para as legendas e os cartões.",
+   "ordem": null,
+   "pct_so_nome": 14.87,
+   "caixa_px": [
+    1662,
+    175
+   ],
+   "limita": "largura",
+   "corpo_minimo_pares": {
+    "nn": 82,
+    "NN": 30,
+    "HH": 34,
+    "II": 38
+   },
+   "tamanho_mesa_minimo": 118,
+   "corpo_a_132": 91,
+   "corpo_a_309": 214,
+   "largura_a_309": 1786,
+   "origem": "data/fontes.json"
+  }
+ ]
+}

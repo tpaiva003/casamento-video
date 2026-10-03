@@ -14,6 +14,7 @@ Uso:  py -3.11 scripts/troco_da_montagem.py v3 173 <pasta_destino> <nome_novo>
 """
 import csv
 import os
+import shutil
 import sys
 
 sys.stdout.reconfigure(encoding="utf-8")
@@ -52,6 +53,23 @@ def main():
         w.writeheader()
         for c in fica:
             w.writerow(c)
+
+    # O ESTILO DA MESA VAI COM O TROCO (revisao de 2 de outubro). O render le-o pelo nome da
+    # montagem, <nome>.estilo.json ao lado do CSV, e um troco com outro nome saia em silencio com
+    # a letra, os tamanhos e as cores de sempre: o fim do filme mostrado ao Tiago nao era o que a
+    # Clara escolheu. Sem estilo nao ha ficheiro, e um de um troco de antes com o mesmo nome sai
+    # (nunca dentro da pasta dos media, regra 3: ai so se avisa).
+    estilo = os.path.join(MONTAGENS, nome + ".estilo.json")
+    estilo_novo = os.path.join(destino, novo + ".estilo.json")
+    if os.path.exists(estilo):
+        shutil.copyfile(estilo, estilo_novo)
+        print("com o estilo da Mesa (%s.estilo.json)" % nome)
+    elif os.path.exists(estilo_novo):
+        if os.path.abspath(estilo_novo).lower().startswith(r"c:\casamento-video-media"):
+            print("AVISO: %s e de um troco de antes e o render vai le-lo; a montagem ja nao tem estilo"
+                  % estilo_novo)
+        else:
+            os.remove(estilo_novo)
 
     caminho_som = os.path.join(MONTAGENS, nome + ".som.csv")
     if not os.path.exists(caminho_som):
