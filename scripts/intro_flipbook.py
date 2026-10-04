@@ -216,6 +216,24 @@ T_SEM_PRETO = 13.20
 
 NOME_PEQUENO = "A HISTÓRIA DE"
 FONTE_PEQUENA = r"C:\Windows\Fonts\arialbd.ttf"
+# A LINHA DE CIMA EM INGLES (4 de outubro), para o filme dos convidados que nao leem portugues. Segue
+# a FILME_LINGUA, lida no linha_tempo.lingua() como no montar e no render: com "en" a linha de cima e
+# esta, e TUDO o resto e a intro de sempre (as fotos, as cores, a letra, a duracao e o som). O nome do
+# ficheiro leva "_en" no fim e os metadados "; lingua en", para o montar nunca pegar na de outra
+# lingua. Sem a variavel, o texto, o nome e os metadados sao os de sempre, ao byte.
+NOME_PEQUENO_EN = "THE STORY OF"
+SUFIXO_DA_LINGUA = {"en": "_en"}
+
+
+def lingua_da_intro():
+    """"en" com FILME_LINGUA=en, "" sem ela: a leitura e a do linha_tempo, uma so."""
+    import linha_tempo
+    return linha_tempo.lingua()
+
+
+def linha_de_cima():
+    """O texto pequeno por cima do nome, na lingua do filme."""
+    return NOME_PEQUENO_EN if lingua_da_intro() == "en" else NOME_PEQUENO
 
 # DE ONDE VEM CADA FOTOGRAFIA, desde 21 de setembro.
 #
@@ -691,7 +709,9 @@ def comentario_da_paleta(cores=None, tamanho=None, fotos_da_5=True, fonte=None):
     O montar so usa uma intro cujo comentario seja exatamente este com as fotos da intro 5: uma
     feita a mao com a mesma paleta e as fotos de hoje tem o mesmo nome e outras fotos.
     """
-    return resumo_da_paleta(cores, tamanho, fonte)[1] + ("; fotos da intro 5" if fotos_da_5 else "; fotos de hoje")
+    lingua = lingua_da_intro()
+    return (resumo_da_paleta(cores, tamanho, fonte)[1] + ("; fotos da intro 5" if fotos_da_5 else "; fotos de hoje")
+            + ("; lingua %s" % lingua if lingua else ""))
 
 
 def nome_da_intro(cores=None, tamanho=None, sem_preto=False, fonte=None):
@@ -703,10 +723,12 @@ def nome_da_intro(cores=None, tamanho=None, sem_preto=False, fonte=None):
     igualada leva " igualado" a seguir.
     """
     base = os.path.splitext(NOME_SAIDA)[0] + (" sem preto" if sem_preto else "")
+    # em ingles (FILME_LINGUA=en) o nome acaba em "_en": nunca e o ficheiro da portuguesa
+    lingua = SUFIXO_DA_LINGUA.get(lingua_da_intro(), "")
     if not tem_paleta(cores, tamanho, fonte):
-        return base + ".mp4"
-    return "%s_%s%s.mp4" % (base, resumo_da_paleta(cores, tamanho, fonte)[0],
-                            "_" + fonte if com_letra(fonte) else "")
+        return base + lingua + ".mp4"
+    return "%s_%s%s%s.mp4" % (base, resumo_da_paleta(cores, tamanho, fonte)[0],
+                              "_" + fonte if com_letra(fonte) else "", lingua)
 
 
 def tamanho_que_cabe(largura=1920):
@@ -885,7 +907,7 @@ def letreiro(largura_alvo, tamanho=None, fonte=None):
     d.text(((L - (caixa[2] - caixa[0])) / 2 - caixa[0], y_nome - caixa[1]),
            NOME, font=f, fill=255)
 
-    espacado = " ".join(NOME_PEQUENO)
+    espacado = " ".join(linha_de_cima())
     fp = ImageFont.truetype(FONTE_PEQUENA, max(20, int(corpo * 0.19)))
     cp = fp.getbbox(espacado)
     d.text(((L - (cp[2] - cp[0])) / 2 - cp[0],
@@ -1061,6 +1083,8 @@ def main():
     da_5 = "--fotos-da-5" in sys.argv
     if paleta:
         print("Paleta: %s" % resumo_da_paleta(CORES, tamanho, fonte)[1])
+    if lingua_da_intro():
+        print("Lingua: %s, a linha de cima diz \"%s\"" % (lingua_da_intro(), linha_de_cima()))
 
     # Um rascunho nao pode ocupar o nome da versao final: a seguinte recusava.
     omissao = nome_da_intro(CORES, tamanho, sem_preto, fonte)
@@ -1125,7 +1149,8 @@ def main():
         # e por ela que o montar confirma que o ficheiro com este nome e mesmo desta paleta. Sem
         # paleta nao se escreve nada, e o ficheiro e o de sempre.
         etiqueta = []
-        if paleta:
+        if paleta or lingua_da_intro():
+            # em ingles (FILME_LINGUA=en) a lingua vai sempre escrita, mesmo com as cores de sempre
             etiqueta = ["-metadata", "comment=" + comentario_da_paleta(CORES, tamanho, da_5, fonte)]
         juntado = os.path.join(tmp, "intro.mp4")
         r = subprocess.run([ff, "-hide_banner", "-loglevel", "error", "-y",

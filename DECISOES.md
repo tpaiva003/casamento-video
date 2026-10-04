@@ -4601,6 +4601,25 @@ que está acima. Sem commits.
 
 **Quem:** o Tiago trocou a foto e pediu a validação; o Claude renderizou e remendou o som; seis agentes validaram.
 
+### 2026-10-04 | 118 | O filme em inglês: o mesmo filme, com os textos traduzidos
+
+**O que ele disse (11:37 a 12:10):** *"Agora cria-me um, mas traduz-me todos os textos que estão em português para Inglês. Quero também a melhor qualidade possível"*; e depois *"Eu precisava tipo o mais rápido possível, pois eu daqui a pouco vou sair para a minha mãe."*
+
+**O que se decidiu:** o filme inglês é o filme da sala (decisão 117, revisão 2766 da base) com outra língua, e mais nada. As fotos, a ordem, as durações e o som são os mesmos: o `v3_en.som.csv` e o `v3_en.estilo.json` saem iguais ao byte aos portugueses, e o `v3_en.csv` só difere nos textos (82 linhas de `texto_ecra`, 6 de `textos_fotos`) e no ficheiro da intro.
+
+**Como se fez:**
+- **Os textos dele** (87 clips com texto) foram traduzidos por um agente e revistos por outro, que mudou nove para caberem no tempo de leitura e na largura de cada foto. O estado traduzido fica à parte, em `saida/discussao/final_1004/en/mesa_estado_en.json`; o `data/mesa_estado.json` e a base da Mesa não foram tocados. O `scripts/compor_estado_en.py` pára sem escrever nada se um texto do estado já não for o que foi traduzido.
+- **Os textos do programa** seguem a variável de ambiente `FILME_LINGUA=en`, lida só em `linha_tempo.lingua()`: os meses da régua e da fita, as datas por extenso ("25 December 2025"), o nome do bebé sem artigo ("TIAGO", "CLARA"), a linha de cima da intro ("THE STORY OF", ficheiro novo com `_en` no nome) e a data dos créditos ("4 OCTOBER 2026"). O título por cima dos nomes passa a "Guests". Sem a variável tudo sai em português, ao byte: é o `teste_filme_em_ingles_so_muda_os_textos_do_programa` que o guarda.
+- **O montar ganhou `--estado <caminho>`**, para ler um estado que não é o `data/mesa_estado.json`.
+- **Inglês britânico** ("mum", "on holiday", "Where's Wally?"). O «Trauteando...» da foto do clip 108 está escrito dentro da própria imagem e fica em português: mexer numa fotografia não se faz sem ele dizer.
+- **O buraco de som da colagem dos créditos** (117) tapou-se da mesma maneira, com o `scripts/remendar_som_creditos.py`.
+
+**O ficheiro:** `C:\casamento-video-media\saida\v3_en_2026-10-04_1241_com_creditos_FINAL.mp4`, 900,88 s, 1920x1080, 329 MB. O português da sala continua a ser o `v3_2026-10-04_0243_com_creditos_FINAL.mp4`.
+
+**Por ele decidir, se quiser:** as oito escolhas de tradução listadas no fim de `saida/discussao/final_1004/en/traducao_final.md` (o trocadilho do clip 20, «SÉC XVIII», «praxe», os padrinhos, britânico ou americano).
+
+**Quem:** o Tiago pediu; o Claude montou e renderizou; três agentes fizeram o código, a tradução e a revisão.
+
 ## Em aberto
 
 Não assumir nenhuma destas sem decisão explícita do Tiago.

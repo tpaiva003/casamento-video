@@ -20446,6 +20446,119 @@ def teste_avisos_do_parado_fora_do_contador_e_da_peca_que_acaba_acesa():
              "o cp numa foto diz que fica de fora; a peca avisa so quando o desenho difere")
 
 
+def teste_filme_em_ingles_so_muda_os_textos_do_programa():
+    """FILME_LINGUA=en escreve em ingles o que o programa escreve sozinho, e mais nada muda.
+
+    O PEDIDO (4 de outubro, o dia do casamento, com o filme da sala ja fechado): "cria-me um, mas
+    traduz-me todos os textos que estao em portugues para Ingles". Os textos dele vem de um estado
+    traduzido; os do programa (os meses da regua e da fita de 1995, as datas por extenso, o nome do
+    bebe, a linha de cima da intro e a data dos creditos) seguem a variavel de ambiente FILME_LINGUA,
+    lida no linha_tempo.lingua().
+
+    O QUE GUARDA, e porque cada um:
+    - SEM A VARIAVEL (ou com outra coisa) E O PORTUGUES DE SEMPRE: o filme da sala nao pode mudar, e
+      uma variavel esquecida numa consola nao pode por o filme portugues a escrever "OCT".
+    - COM "en" SAI O INGLES combinado: "4 OCT 2026", "25 December 2025" (sem "of" nem virgulas),
+      "12 September", "TIAGO" e "CLARA" sem artigo, "THE STORY OF", e a intro com outro nome e outros
+      metadados (nunca o ficheiro da portuguesa).
+    - QUEM NASCE NA FITA E O MESMO NAS DUAS LINGUAS, e os foguetes caem no mesmo segundo: a banda
+      sonora inteira (o som.csv) sai igual ao byte, com os textos dos marcos em portugues ou
+      traduzidos, e a montagem so difere no texto dos dois clips "nome". Um marco traduzido nao traz
+      "Nasce" nem o nome: reconhece-se pela data, que nao tem lingua (decisao 088).
+    """
+    import datetime
+    import re as _re
+    import intro_flipbook
+    import montar_da_mesa as M
+    lt = linha_tempo
+    var = lt.LINGUA_VARIAVEL
+    guardada = os.environ.get(var)
+    intro_de_sempre = M.intro_da_paleta
+    # a intro em ingles faz-se uma vez, em tres minutos, para a pasta da media: um teste nao a faz
+    M.intro_da_paleta = lambda clips, *_a, **_k: clips
+    problemas = []
+    d1, d2 = datetime.date(2026, 10, 4), datetime.date(2025, 12, 25)
+    cores = {"fundo": (12, 11, 9)}
+    fita_pt = "1995@0.6-0.72|04/09 Fundação do SAPO;*12/09 Nasce o 2.º filho;*24/11 Nasce a 1.ª filha"
+    fita_en = "1995@0.6-0.72|04/09 SAPO is founded;*12/09 A second son is born;*24/11 A first daughter is born"
+
+    def em(valor):
+        if valor is None:
+            os.environ.pop(var, None)
+        else:
+            os.environ[var] = valor
+
+    def textos():
+        return (lt.lingua(), lt.texto_da_data(d1), lt.data_por_extenso(d2), lt.dia_e_mes(12, 9),
+                lt.meses_curtos()[9], M.nome_do_bebe("Tiago"), M.nome_do_bebe("Clara"),
+                intro_flipbook.linha_de_cima(), lt.chegada_do_contador("2023>25/12/2025|25/12/2025=x"))
+
+    def traduz(clips):
+        clips = _sem_cartoes_de_nascimento(clips)
+        for c in clips:
+            if c.get("t") == "marcos":
+                c["x"] = _re.sub(r"\*(12/09|24/11) Nasce [^;@|~]*", r"*\1 A child is born", c.get("x") or "")
+        return clips
+
+    try:
+        pt = ("", "4 OUT 2026", "25 de dezembro de 2025", "12 de setembro", "OUT", "O TIAGO", "A CLARA",
+              "A HISTÓRIA DE", ["25 de dezembro de 2025", "x"])
+        en = ("en", "4 OCT 2026", "25 December 2025", "12 September", "OCT", "TIAGO", "CLARA",
+              "THE STORY OF", ["25 December 2025", "x"])
+        for valor in (None, "", "pt", "ingles"):
+            em(valor)
+            if textos() != pt:
+                problemas.append("com %s=%r nao e o portugues de sempre: %r" % (var, valor, textos()))
+        nome_pt = intro_flipbook.nome_da_intro(cores, None, True)
+        coment_pt = intro_flipbook.comentario_da_paleta(cores, None, True)
+        nasce_pt = (M.quem_nasce_na_fita(fita_pt), M.quem_nasce_na_fita(fita_en))
+        quadro_pt = lt.meses(960, 540, 1995, lt.ler_meses(fita_pt)[1], 4.0, 8.0).tobytes()
+        ref_pt = _montar_referencia(_sem_cartoes_de_nascimento)
+        for valor in ("en", " EN "):
+            em(valor)
+            if textos() != en:
+                problemas.append("com %s=%r nao e o ingles: %r" % (var, valor, textos()))
+        nome_en = intro_flipbook.nome_da_intro(cores, None, True)
+        coment_en = intro_flipbook.comentario_da_paleta(cores, None, True)
+        if nome_en != nome_pt[:-4] + "_en.mp4" or coment_en != coment_pt + "; lingua en":
+            problemas.append("a intro em ingles chama-se %r com %r" % (nome_en, coment_en))
+        if intro_flipbook.nome_da_intro(None, None, True) != "intro_clara_tiago_5 sem preto_en.mp4":
+            problemas.append("sem cores, a intro em ingles ficava com o nome da portuguesa")
+        nasce_en = (M.quem_nasce_na_fita(fita_pt), M.quem_nasce_na_fita(fita_en))
+        if nasce_pt != ("Tiago", "Tiago") or nasce_en != nasce_pt:
+            problemas.append("quem nasce na fita: %r em portugues, %r em ingles" % (nasce_pt, nasce_en))
+        if lt.meses(960, 540, 1995, lt.ler_meses(fita_pt)[1], 4.0, 8.0).tobytes() == quadro_pt:
+            problemas.append("a fita de 1995 desenha-se igual nas duas linguas")
+        ref_en = _montar_referencia(_sem_cartoes_de_nascimento)
+        ref_trad = _montar_referencia(traduz)
+        if ref_pt is None or ref_en is None or ref_trad is None:
+            salta("o filme em ingles: os foguetes no mesmo segundo", "sem a copia congelada da Mesa")
+        else:
+            nomes = [[l["texto_ecra"] for l in r[0] if l["tipo"] == "nome"] for r in (ref_pt, ref_en, ref_trad)]
+            if nomes != [["O TIAGO", "A CLARA"], ["TIAGO", "CLARA"], ["TIAGO", "CLARA"]]:
+                problemas.append("os nomes dos bebes: %r" % (nomes,))
+            fog = [[x["quando_s"] for x in r[1] if x["nota"].startswith("foguetes")] for r in (ref_pt, ref_en, ref_trad)]
+            if len(fog[0]) != 2 or fog[1] != fog[0] or fog[2] != fog[0]:
+                problemas.append("os foguetes: %r" % (fog,))
+            if ref_en[1] != ref_pt[1] or ref_trad[1] != ref_pt[1]:
+                problemas.append("o som.csv muda com a lingua")
+
+            def sem_textos(linhas, so_nomes):
+                return [{k: v for k, v in l.items()
+                         if not (k == "texto_ecra" and (l["tipo"] == "nome" or (not so_nomes and l["tipo"] == "marcos")))}
+                        for l in linhas]
+            if sem_textos(ref_en[0], True) != sem_textos(ref_pt[0], True):
+                problemas.append("a montagem em ingles difere da portuguesa fora do texto dos nomes")
+            if sem_textos(ref_trad[0], False) != sem_textos(ref_pt[0], False):
+                problemas.append("com os marcos traduzidos a montagem difere fora dos textos dos marcos e dos nomes")
+    finally:
+        M.intro_da_paleta = intro_de_sempre
+        em(guardada)
+    verifica("o filme em ingles so muda os textos do programa", not problemas,
+             "; ".join(problemas)[:400] if problemas else
+             "sem a variavel e o portugues; com en, meses, datas, nomes e intro em ingles; os foguetes no mesmo segundo")
+
+
 def main():
     rapido = "--rapido" in sys.argv
     print("TESTES DE REGRESSAO")
@@ -20704,6 +20817,8 @@ def main():
     teste_avisos_medem_na_letra_do_contador_e_a_margem_de_uma_linha()
     print("o fecho de 3 de outubro: os dois avisos que a revisao pediu")
     teste_avisos_do_parado_fora_do_contador_e_da_peca_que_acaba_acesa()
+    print("o filme em ingles, 4 de outubro")
+    teste_filme_em_ingles_so_muda_os_textos_do_programa()
     print()
     print("%d passaram, %d falharam%s"
           % (len(PASSOU), len(FALHAS),

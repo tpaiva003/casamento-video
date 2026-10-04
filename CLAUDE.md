@@ -335,6 +335,25 @@ uma aproximação e usa a montagem da última publicação da Mesa. Antes de um 
   O ficheiro da sala é o `--master` do `ponto5_creditos.py`, com `--estado data/mesa_estado.json` e
   `--filme` com o render do filme; o estado tem de ser o mesmo com que o montar fez o filme.
 
+**O filme em inglês é o mesmo filme com outra língua (decisão 118).** Só os textos mudam: as fotos,
+a ordem, as durações e o som ficam iguais (`v3_en.som.csv` e `v3_en.estilo.json` saem iguais ao byte
+aos `v3.*`).
+- **Os textos dele** vêm de um estado traduzido à parte, `saida/discussao/final_1004/en/mesa_estado_en.json`,
+  composto pelo `scripts/compor_estado_en.py` a partir de `traducao_final.json`. O `data/mesa_estado.json`
+  e a base não se tocam. A tradução fica em `saida/`, fora do Git. Se um texto da montagem portuguesa
+  mudar, o compor pára sem escrever nada, e traduz-se outra vez esse texto.
+- **Os textos do programa** (os meses da régua, as datas por extenso, o nome do bebé sem artigo, a linha
+  de cima da intro, a data dos créditos) seguem a variável de ambiente `FILME_LINGUA=en`, lida só em
+  `linha_tempo.lingua()`. Vai em **cada** comando: o montar, o render e o `ponto5_creditos.py`. Sem ela
+  sai tudo em português, ao byte.
+- **A ordem:** `montar_da_mesa.py demo_v3 --nome v3_en --estado <estado traduzido>`, depois
+  `render.py v3_en --sem-copias --fatias 6`, depois o `--master` do `ponto5_creditos.py` com
+  `--estado <estado traduzido>` e `--filme` com o render `v3_en_...`.
+- **A intro inglesa** («THE STORY OF») é outro ficheiro, com `_en` no nome e `; lingua en` nos
+  metadados. O montar troca-a sozinho, e o `intro_flipbook.py` faz-a com a mesma variável.
+- **O som da colagem dos créditos** tem um buraco de 52 ms (decisão 117) em qualquer língua: depois do
+  `--master` corre-se `py -3.11 scripts/remendar_som_creditos.py <com_creditos.mp4> <filme.mp4> <FINAL.mp4>`.
+
 **A pilha vai até 60 em monte, e só até 24 em leque** (decisões 091 e 102): desenhado a sério, o
 leque deixa de mostrar 20% de cada foto de baixo a partir de 25. O montar põe em monte um leque
 maior.

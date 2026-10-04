@@ -1119,6 +1119,9 @@ final dos créditos. Contrato em `saida/discussao/contrato_1003.md`, com as pala
     qualidade"*; *"feito. já troquei"*; *"Faz testes de validação [...] mantendo sempre real a pessoa, as
     feições. [...] este vai ser o vídeo que vai ficar na cabeça de 131 no nosso casamento."* O ficheiro
     da sala é o `v3_2026-10-04_0243_com_creditos_FINAL.mp4`.
+  - **4 de outubro, 11:37, o filme em inglês (decisão 118).** *"Agora cria-me um, mas traduz-me todos os
+    textos que estão em português para Inglês. Quero também a melhor qualidade possível"*. É o filme da
+    sala com os textos traduzidos; o ficheiro é o `v3_en_2026-10-04_1241_com_creditos_FINAL.mp4`.
 - **Fica para depois, palavras dele:** «trocar a foto x por 5-3» (*"vamos vigiar, mas para já
   ignora"*). A `01-NOVAS/5-3.jpg` é igual à original (f0009), que já está no clip 24.
 - As fotos de 04:29 a 04:31 estavam nas Transferências e foram copiadas para a `01-NOVAS`, sem mexer

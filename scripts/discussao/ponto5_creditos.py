@@ -152,6 +152,13 @@ FILME_APAGA = 0.7
 VEL_FOTOS_LIMITES, VEL_NOMES_LIMITES = (60.0, 300.0), (30.0, 200.0)
 FOTO_INTEIRA_MIN, LER_CPS = 2.0, 12.0
 TITULO, DATA = "CLARA & TIAGO", "4 DE OUTUBRO DE 2026"
+# O FILME EM INGLES (4 de outubro, FILME_LINGUA=en, ver linha_tempo.lingua()): a data de omissao do titulo
+# dos creditos vai em ingles. Um est.creditos.data escrito por ele continua a mandar, nas duas linguas; os
+# outros textos dos creditos (titulo_nomes, cargos, grupos) sao dele e vem do estado traduzido. Sem a
+# variavel a DATA e a de cima, ao byte.
+DATA_EN = "4 OCTOBER 2026"
+if C.linha_tempo.lingua() == "en":
+    DATA = DATA_EN
 VELOCIDADE_NOMES = 150.0      # px/s: cada linha fica ~7 s no ecra, e o filme fica abaixo dos 900 s
 # A COLUNA DAS FOTOS NAO PASSA DISTO. Com as 11 fotos de 30/09 subia a 108 px/s; com as 27 de 1/10
 # subia a 286 px/s, e cada foto ficava 1,5 s inteira no ecra. Ele gosta da coluna, por isso fica a
@@ -1626,6 +1633,14 @@ def main():
     renders = sorted(glob.glob(r"C:\casamento-video-media\saida\v3_*[0-9].mp4"), key=os.path.getmtime)
     # um filme sem legendas (o do DaVinci) nunca e o filme da sala, nem com um _2 no fim do nome
     renders = [r for r in renders if "_sem_legendas" not in os.path.basename(r)]
+    # O FILME EM INGLES (v3_en_..., 4 de outubro) TAMBEM CABE NO PADRAO DE CIMA: sem o --filme, o mais recente
+    # passava a ser ele, e os creditos portugueses colavam-se ao filme ingles. Por omissao so se escolhe um filme
+    # da lingua deste processo (FILME_LINGUA); com o --filme vale o que for dito.
+    em_ingles = C.linha_tempo.lingua() == "en"
+    renders = [r for r in renders if os.path.basename(r).startswith("v3_en_") == em_ingles]
+    if "--filme" not in sys.argv and not renders:
+        raise SystemExit("Nao ha nenhum render do filme %s em C:\\casamento-video-media\\saida; diz qual com o --filme"
+                         % ("em ingles (v3_en_...)" if em_ingles else "(v3_...)"))
     # --filme <caminho> escolhe o render; sem ele, o mais recente com nome de filme inteiro. Um render
     # a meia resolucao (--escala) chama-se ..._parcial.mp4 e so entra pelo --filme.
     final = sys.argv[sys.argv.index("--filme") + 1] if "--filme" in sys.argv else renders[-1]

@@ -164,6 +164,31 @@ NASCIMENTO_NA_FITA = {"Tiago": (12, 9), "Clara": (24, 11)}
 # que so existe aqui e no render: a Mesa nao o tem, e o montar poe-no entre a fita do nascimento e a
 # primeira foto (ou grupo de fotos) que vem logo a seguir. Com um cartao pelo meio nao se poe.
 NOME_DO_BEBE = {"Tiago": "O TIAGO", "Clara": "A CLARA"}
+# O FILME EM INGLES (4 de outubro, FILME_LINGUA=en, ver linha_tempo.lingua()): o nome sem artigo. Sem
+# a variavel fica o de cima, ao byte. A chave ("Tiago", "Clara") e a de sempre nas duas linguas: e por
+# ela, e pela data do marco, que se sabe quem nasce, nunca pelo texto que vai ao ecra.
+NOME_DO_BEBE_EN = {"Tiago": "TIAGO", "Clara": "CLARA"}
+# AS PALAVRAS POR QUE SE RECONHECE UM CARTAO DE NASCIMENTO (e_nascimento e o recurso do _acende). Em
+# ingles juntam-se as do estado traduzido as de sempre, para um cartao traduzido ser esticado como o
+# portugues era; sem a variavel sao so as de sempre.
+CARTAO_NASCE = ("nasce", "nascimento")
+CARTAO_NASCE_EN = ("born", "birth")
+CARTAO_BEBE = "bebe"
+CARTAO_BEBE_EN = "baby"
+
+
+def filme_em_ingles():
+    """True com FILME_LINGUA=en. A leitura e a do linha_tempo.lingua(), uma so para o montar e o render."""
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import linha_tempo
+    return linha_tempo.lingua() == "en"
+
+
+def nome_do_bebe(quem):
+    """O nome que nasce no preto, na lingua do filme: "O TIAGO", ou "TIAGO" em ingles."""
+    return (NOME_DO_BEBE_EN if filme_em_ingles() else NOME_DO_BEBE)[quem]
+
+
 NOME_ANTES_DO_FIM_DOS_FOGUETES = 1.0   # o nome nasce no ultimo segundo dos foguetes
 NOME_ATE_A_FOTO = 1.6                  # e a foto comeca a subir 1,6 s depois
 NOME_ENCADEADO = 0.7                   # a fita escurece para o nome em 0,7 s
@@ -552,7 +577,12 @@ def intro_da_paleta(clips, estilo, avisos, fazer=True):
     import subprocess
     import time
     pedido = (estilo or {}).get("intro") or {}
-    if not pedido:
+    # EM INGLES (FILME_LINGUA=en, 4 de outubro) a intro troca-se sempre, mesmo sem cores da Mesa: a
+    # linha de cima do letreiro e outra ("THE STORY OF"), e o intro_flipbook da-lhe outro nome (acaba
+    # em "_en") e outros metadados ("; lingua en"). O estado traduzido fica a apontar para a intro de
+    # sempre, como o portugues, e e aqui que ela passa a inglesa. Sem a variavel nada muda.
+    ingles = filme_em_ingles()
+    if not pedido and not ingles:
         return clips
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
     import render
@@ -579,6 +609,9 @@ def intro_da_paleta(clips, estilo, avisos, fazer=True):
         do_estilo = "com a letra %s da Mesa" % letra_nome
     else:
         do_estilo = "com as cores da Mesa"
+    if ingles:
+        do_estilo = ("%s e a linha de cima em ingles" % do_estilo
+                     if intro_flipbook.tem_paleta(cores, tamanho, fonte) else "com a linha de cima em ingles")
     saida = [dict(c) for c in clips]
     for k, c in enumerate(saida):
         if c.get("t", "foto") != "video":
@@ -591,7 +624,7 @@ def intro_da_paleta(clips, estilo, avisos, fazer=True):
                               "%sda intro so valem para a intro 5, e esta fica como esta"
                               % (ficheiro, "e a letra " if fonte else ""))
             continue
-        if not intro_flipbook.tem_paleta(cores, tamanho, fonte):
+        if not intro_flipbook.tem_paleta(cores, tamanho, fonte) and not ingles:
             continue
         nome = intro_flipbook.nome_da_intro(cores, tamanho, sem_preto, fonte)
         igualado = igualar_abertura.nome_igualado(nome)
@@ -1693,10 +1726,19 @@ def main():
         sys.exit("Diz qual a versao. Ex: py -3.11 scripts/montar_da_mesa.py demo_v3")
     qual = sys.argv[1]
     nome = sys.argv[sys.argv.index("--nome") + 1] if "--nome" in sys.argv else "v3"
+    # OUTRO ESTADO (4 de outubro), --estado <caminho>: o estado traduzido do filme em ingles, lido de
+    # um ficheiro a parte, para o data/mesa_estado.json do filme portugues nunca ser tocado. Com o
+    # --nome v3_en a montagem fica em data/montagens/v3_en.*, ao lado dos v3.*. Sem ele e o ESTADO de
+    # sempre, e nada muda.
+    caminho_estado = sys.argv[sys.argv.index("--estado") + 1] if "--estado" in sys.argv else ESTADO
 
-    if not os.path.exists(ESTADO):
-        sys.exit("Falta %s. Le a base de dados do artefacto primeiro." % ESTADO)
-    estado = json.load(open(ESTADO, encoding="utf-8"))
+    if not os.path.exists(caminho_estado):
+        sys.exit("Falta %s. Le a base de dados do artefacto primeiro." % caminho_estado)
+    estado = json.load(open(caminho_estado, encoding="utf-8"))
+    if caminho_estado != ESTADO:
+        print("Estado lido de %s" % caminho_estado)
+    if filme_em_ingles():
+        print("FILME_LINGUA=en: os textos do programa (meses, datas, nome do bebe, intro) vao em ingles")
 
     versao = None
     for v in estado.get("versoes", []):
@@ -1768,9 +1810,11 @@ def main():
                     meio = linha_tempo.meio_da_paragem(
                         i, len(passos), 0.70, parar_no_primeiro=abre) * anda
                     return (t, l, meio) if com_linha else t
-        chave = "bebe" if quem == "Clara" else quem
+        chave = CARTAO_BEBE if quem == "Clara" else quem
+        # em ingles (FILME_LINGUA=en) o cartao traduzido diz "baby": vale como o "bebe" de sempre
+        chaves = [chave] + ([CARTAO_BEBE_EN] if quem == "Clara" and filme_em_ingles() else [])
         for l in linhas:
-            if l["tipo"] == "cartao" and sem_acentos(chave) in sem_acentos(l["texto_ecra"]):
+            if l["tipo"] == "cartao" and any(sem_acentos(k) in sem_acentos(l["texto_ecra"]) for k in chaves):
                 return (l["inicio_s"] - desvio0, None, None) if com_linha else l["inicio_s"] - desvio0
         return (None, None, None) if com_linha else None
 
@@ -1874,7 +1918,8 @@ def main():
         if c.get("t") != "cartao":
             return False
         x = (c.get("x") or "").lower()
-        return "nasce" in x or "nascimento" in x
+        # as palavras de sempre, e em ingles (FILME_LINGUA=en) tambem as do estado traduzido
+        return any(p in x for p in CARTAO_NASCE + (CARTAO_NASCE_EN if filme_em_ingles() else ()))
 
     clips = [dict(c) for c in versao.get("clips", [])]
     # A INTRO COM AS CORES DA MESA troca-se antes das duas passagens, que medem o mesmo ficheiro.
@@ -2107,13 +2152,13 @@ def main():
             if quem_nasce and quem_nasce not in nomes_postos:
                 nomes_postos.add(quem_nasce)
                 if e_fotos_agora:
-                    junta_clip("nome", "", "", NOME_ATE_A_FOTO + NOME_FOTO_SOBE, NOME_DO_BEBE[quem_nasce],
+                    junta_clip("nome", "", "", NOME_ATE_A_FOTO + NOME_FOTO_SOBE, nome_do_bebe(quem_nasce),
                                "fiel", NOME_ENCADEADO)
                     trans = NOME_FOTO_SOBE
                 else:
                     avisos.append("o nome \"%s\" no preto nao entra: a seguir a fita do nascimento vem um "
                                   "clip do tipo %s, e nao uma foto (clip %d)"
-                                  % (NOME_DO_BEBE[quem_nasce], tipo, len(linhas) + 1))
+                                  % (nome_do_bebe(quem_nasce), tipo, len(linhas) + 1))
         segura = float(c.get("_segura") or 0.0) if tipo == "marcos" else 0.0
         # O CONTADOR PARADO NO FIM, clip.cp (contrato de 3 de outubro, ponto 6). O Tiago: "precisava
         # que ficasse mais 3 segundos depois de chegar a data de 4 de outubro de 2026". Pela mesma

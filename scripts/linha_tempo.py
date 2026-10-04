@@ -33,6 +33,7 @@ nenhum marco levar mais do que uma linha curta de texto.
 """
 import datetime
 import math
+import os
 import re
 
 from PIL import Image, ImageDraw, ImageFont
@@ -256,6 +257,51 @@ def contraste(a, b):
 # leitura de perto, e em maiusculas as tres letras leem-se melhor a 15 metros.
 MESES_CURTOS = ["JAN", "FEV", "MAR", "ABR", "MAI", "JUN",
                 "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"]
+
+# ------------------------------------------------- a lingua do filme (4 de outubro)
+# O Tiago, no dia do casamento, com o filme da sala ja fechado: "cria-me um, mas traduz-me todos os
+# textos que estao em portugues para Ingles". Os textos DELE (legendas, cartoes, marcos, rotulos)
+# vem de um estado traduzido a parte; os que o PROGRAMA escreve sozinho sao estes: os meses da regua
+# e da fita de 1995, as datas por extenso do contador e da fita, o nome do bebe (montar_da_mesa), a
+# data dos creditos (ponto5_creditos) e a linha de cima do letreiro da intro (intro_flipbook).
+#
+# A ESCOLHA E UMA VARIAVEL DE AMBIENTE, FILME_LINGUA=en, e le-se AQUI e so aqui: o render desenha em
+# processos filhos (as fatias), que herdam o ambiente, e assim chega a todos sem mexer nos argumentos
+# de ninguem. SEM ELA, OU COM OUTRA COISA, E O PORTUGUES DE SEMPRE, AO BYTE: as listas de cima e as de
+# baixo ficam como estao, e so as funcoes meses_curtos(), meses_por_extenso(), dia_e_mes() e
+# data_por_extenso() olham para a lingua, a cada chamada (um processo que faca os dois filmes, como
+# os testes, nao fica com a lingua do primeiro).
+#
+# SO MUDA O QUE SE ESCREVE, NUNCA O QUE SE LE. As datas que o programa le (12/09, 24/11, 20/05/2012)
+# sao numeros com barras e nao tem lingua; quem nasce na fita reconhece-se pela data ou pelo nome
+# (decisao 088), e os foguetes de cada nascimento ficam no mesmo segundo nas duas linguas.
+LINGUA_VARIAVEL = "FILME_LINGUA"
+MESES_CURTOS_EN = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN",
+                   "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]
+MESES_POR_EXTENSO_EN = ["January", "February", "March", "April", "May", "June", "July", "August",
+                        "September", "October", "November", "December"]
+
+
+def lingua():
+    """"en" com FILME_LINGUA=en; "" (o portugues de sempre) sem ela ou com outra coisa."""
+    return "en" if (os.environ.get(LINGUA_VARIAVEL) or "").strip().lower() == "en" else ""
+
+
+def meses_curtos():
+    """Os doze meses em tres letras maiusculas, na lingua do filme: os da regua e da data grande."""
+    return MESES_CURTOS_EN if lingua() == "en" else MESES_CURTOS
+
+
+def meses_por_extenso():
+    """Os doze meses por extenso, na lingua do filme."""
+    return MESES_POR_EXTENSO_EN if lingua() == "en" else MESES_POR_EXTENSO
+
+
+def dia_e_mes(dia, mes):
+    """A data de um marco da fita de 1995: "12 de setembro", ou "12 September" em ingles."""
+    if lingua() == "en":
+        return "%d %s" % (dia, MESES_POR_EXTENSO_EN[mes - 1])
+    return "%d de %s" % (dia, MESES_POR_EXTENSO[mes - 1])
 
 # ATE ONDE UM CONTADOR POR DATAS DIZ ALGUMA COISA. Acima de tres anos a regua de meses
 # passa depressa de mais para os nomes se lerem e cada fotograma salta semanas: ai o
@@ -687,7 +733,7 @@ def texto_da_data(data):
     Dia, mes por extenso curto e ano. Nao "04/10/2026": a 15 metros um numero de dois
     algarismos entre barras le-se mal e confunde-se com a hora; o nome do mes nao.
     """
-    return "%d %s %d" % (data.day, MESES_CURTOS[data.month - 1], data.year)
+    return "%d %s %d" % (data.day, meses_curtos()[data.month - 1], data.year)
 
 
 def paragens_das_datas(de, para, marcos):
@@ -786,7 +832,7 @@ def datas(L, A, de, para, marcos, t_rel, duracao, fim_aceso=False):
         if x > L + largura_mes:
             break
         maiores.append((x, baixo <= mes <= cima,
-                        MESES_CURTOS[mes.month - 1] if baixo <= mes <= cima else None))
+                        meses_curtos()[mes.month - 1] if baixo <= mes <= cima else None))
         mes = datetime.date(mes.year + mes.month // 12, mes.month % 12 + 1, 1)
 
     # OS DIAS SO APARECEM COM A FITA QUASE PARADA, e a regua vai de borda a borda em
@@ -960,7 +1006,7 @@ def meses(L, A, ano, marcas, t_rel, duracao, troco=(0.0, 1.0), abre=True):
             cinza = tuple(int(c * k) for c in REGUA_TEXTO)
             d.line([(x, y_linha - 9), (x, y_linha + 9)],
                    fill=tuple(int(c * k) for c in LINHA), width=2)
-            _texto(d, MESES_CURTOS[m], f_mes, x, y_linha + 34, cinza)
+            _texto(d, meses_curtos()[m], f_mes, x, y_linha + 34, cinza)
 
     for dia, mes, txt, grande, _img in marcas:
         fr = fracao(dia, mes)
@@ -1004,9 +1050,7 @@ def meses(L, A, ano, marcas, t_rel, duracao, troco=(0.0, 1.0), abre=True):
         # de sempre, ao byte
         afasta = int(round(NASC_DATA_AFASTA * A / 1080.0)) if DATA_AFASTADA else 0
         desce = (NASC_DATA_DESCE + afasta) if grande else 0
-        _texto(d, "%d de %s" % (dia, ["janeiro", "fevereiro", "março", "abril", "maio",
-                                      "junho", "julho", "agosto", "setembro", "outubro",
-                                      "novembro", "dezembro"][mes - 1]),
+        _texto(d, dia_e_mes(dia, mes),
                (f_data_nasc if grande else f_data), x, y_linha + 64 + desce,
                tuple(int(c * aceso) for c in (NASC_COR if grande else _cor_da_data_da_marca())))
     return tela
@@ -1168,11 +1212,11 @@ def _regua_do_ano(d, L, A, y_linha, ano, desvio, largura, entrada):
         x = desvio + m * mes_px
         if x < -mes_px or x > L + mes_px:
             continue
-        caixa = d.textbbox((0, 0), MESES_CURTOS[m], font=f_mes)
+        caixa = d.textbbox((0, 0), meses_curtos()[m], font=f_mes)
         vao = abs(x - L / 2.0) - (caixa[2] - caixa[0]) / 2.0 - PONTEIRO_LARGURA / 2.0
         aceso = acende * min(1.0, max(0.0, (vao - NOME_PERTO) / float(NOME_LONGE - NOME_PERTO)))
         if aceso > 0.0:
-            _texto(d, MESES_CURTOS[m], f_mes, x, y_linha + Y_REGUA_TEXTO, _mistura(FUNDO, REGUA_TEXTO, aceso))
+            _texto(d, meses_curtos()[m], f_mes, x, y_linha + Y_REGUA_TEXTO, _mistura(FUNDO, REGUA_TEXTO, aceso))
 
 
 def _meses_numa_peca(L, A, ano, marcas, t_rel, duracao, troco=(0.0, 1.0), abre=True):
@@ -1238,7 +1282,7 @@ def _meses_numa_peca(L, A, ano, marcas, t_rel, duracao, troco=(0.0, 1.0), abre=T
         base = _texto_pelo_topo(d, txt, f_txt, x, topo,
                                 tuple(int(c * aceso) for c in (NASC_COR if grande else MARCO_TEXTO)), alfa=aceso)
         folga = PECA_FOLGA_DATA + (NASC_DATA_DESCE if grande else 0)
-        _texto_pelo_topo(d, "%d de %s" % (dia, MESES_POR_EXTENSO[mes - 1]), f_data, x,
+        _texto_pelo_topo(d, dia_e_mes(dia, mes), f_data, x,
                          base + f_txt.getmetrics()[1] + int(round(folga * e)),
                          tuple(int(c * aceso) for c in (NASC_COR if grande else _cor_da_data_da_marca())))
         if img:
@@ -1320,7 +1364,12 @@ def ler_datas(texto):
 
 
 def data_por_extenso(data):
-    """datetime.date -> "20 de maio de 2012": a data inteira como ele a escreve no contador do inicio."""
+    """datetime.date -> "20 de maio de 2012": a data inteira como ele a escreve no contador do inicio.
+
+    Em ingles (FILME_LINGUA=en, 4 de outubro) "20 May 2012": dia, mes e ano, sem "of" nem virgulas.
+    """
+    if lingua() == "en":
+        return "%d %s %d" % (data.day, MESES_POR_EXTENSO_EN[data.month - 1], data.year)
     return "%d de %s de %d" % (data.day, MESES_POR_EXTENSO[data.month - 1], data.year)
 
 
