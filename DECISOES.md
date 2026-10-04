@@ -4618,7 +4618,11 @@ que está acima. Sem commits.
 
 **Por ele decidir, se quiser:** as oito escolhas de tradução listadas no fim de `saida/discussao/final_1004/en/traducao_final.md` (o trocadilho do clip 20, «SÉC XVIII», «praxe», os padrinhos, britânico ou americano).
 
-**Quem:** o Tiago pediu; o Claude montou e renderizou; três agentes fizeram o código, a tradução e a revisão.
+**A validação (12:47 a 13:25), seis revisores só a ler** (`saida/discussao/final_1004/en/validacao/`): o som do filme inglês é o do português ao byte (o mesmo md5); a imagem só difere nos 89 clips com texto, dentro da caixa do texto; 128 textos lidos no ecrã em 91 clips, sem gralhas, sem legendas cortadas e sem meses nem datas em português; créditos com "CLARA & TIAGO, 4 OCTOBER 2026" e "Guests" uma vez, por cima dos primeiros nomes; -21,9 LUFS; descodifica inteiro sem erros; acaba a preto. O único português no ecrã é o que está dentro das próprias fotografias.
+
+**Depois do casamento:** o remendo do som (`remendar_som_creditos.py`) passa o som por WAV e perde os tempos dos pacotes, por isso o som dos dois ficheiros `_FINAL`, o português e o inglês, fica 22 ms adiantado em relação à imagem até aos 20,8 s e 63 ms daí até ao fim. O filme não tem vozes nem vídeos com fala no corpo, é música por baixo de fotografias, e não se nota; corrige-se descodificando com `aresample=async=1:first_pts=0`. Os nomes mais largos dos créditos ficam a 46 px da borda direita, nas duas línguas.
+
+**Quem:** o Tiago pediu; o Claude montou e renderizou; três agentes fizeram o código, a tradução e a revisão, e seis validaram.
 
 ## Em aberto
 

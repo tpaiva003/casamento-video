@@ -9,6 +9,11 @@ dois lados, e a musica dos creditos volta ao instante certo da imagem. No fim so
 
 A imagem nao se toca (copia do fluxo de video). Sai um ficheiro NOVO.
 
+POR CORRIGIR (medido a 4 de outubro, decisao 118): o som passa por WAV e perde os tempos dos pacotes
+(o som do render comeca no pts 1069 e tem um salto de 40,8 ms entre a fanfarra e a intro). O ficheiro
+remendado fica com o som 22 ms adiantado ate aos 20,8 s e 63 ms dai ate ao fim. Num filme so com musica
+por baixo de fotografias nao se nota; com vozes, descodificar com aresample=async=1:first_pts=0.
+
 Uso: py -3.11 scripts/remendar_som_creditos.py <entrega.mp4> <filme_sem_creditos.mp4> <saida.mp4>
 """
 import os
