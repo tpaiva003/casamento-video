@@ -1101,6 +1101,19 @@ final dos créditos. Contrato em `saida/discussao/contrato_1003.md`, com as pala
   - **23:30, ele:** *"Antes de saltar o clip confirma se as fotos estão todas na mesa."* Conferi: 771 fotos
     registadas e publicadas, nenhuma em falta na montagem (decisão 115). Entrou a foto das 23:31
     (f0771). Depois corrigi o salto de clip do Pré-visualizar: parado, aterra com o clip inteiro.
+  - **4 de outubro, 00:20 a 01:45, o render final (decisão 116).** Os cinco pedidos dele (descida em todas
+    as músicas, os foguetes na primeira foto da Clara, os dois contadores do fim, o lado a lado da 111 e
+    «Convidados» nos créditos) e as respostas ao ouvir as provas:
+    - *"tres da manhã é realista? [...] assim que acordar tenho video pronto"*, e logo a seguir *"not
+      true"* e *"se mo mandares o rehearsal dentro de momentos eu vejo"*: ficou acordado a validar.
+    - *"fiz meia dúzia de ajustes nos créditos"* (entrou também uma foto no filme, e o render das 00:37
+      parou); *"Está fechada. Não vou mexer mais."*
+    - *"Agora temos duas vezes Ana Faria, está mal. E não percebi a pergunta dos 4s e dos 2s. Naquela
+      parte do início entre rei leão e celine não quero o fadeout no rei leão, nem o fade in, pois isso
+      faria com que nem se ouvisse, mas no resto é ok."*
+    - *"Mas parece-te bem 2s ou 4 é melhor?"* Respondi que 2 s; ficou.
+    - *"No rei leão e celine é importante que fique smooth e não se note um corte estranho."* Ouviu
+      quatro versões e escolheu: *"C"*, *"PARECE-ME E MELHOR"*.
 - **Fica para depois, palavras dele:** «trocar a foto x por 5-3» (*"vamos vigiar, mas para já
   ignora"*). A `01-NOVAS/5-3.jpg` é igual à original (f0009), que já está no clip 24.
 - As fotos de 04:29 a 04:31 estavam nas Transferências e foram copiadas para a `01-NOVAS`, sem mexer

@@ -19583,6 +19583,125 @@ def teste_creditos_titulo_primeiro_depois_de_o_filme_se_apagar():
              % (fa, ultimo_do_filme, len(do_filme), Tt["dur"]))
 
 
+def teste_creditos_titulo_dos_nomes():
+    """O titulo por cima dos nomes do rolo dos creditos (est.creditos.titulo_nomes, 4 de outubro).
+
+    O PEDIDO: "ESCREVE "Convidados" NO TOPO DA LISTA DO SCROLL NOS CREDITOS em cima dos nomes."
+
+    O DEFEITO QUE ISTO APANHA:
+    - sem a chave, os creditos a mudar um bit: o dicionario dos textos, o rolo (corrido e por grupos) e a assinatura
+      de antes dos vinte fotogramas;
+    - com ela, o titulo a nao estar la, a nao ser o letreiro de um titulo de grupo, a ficar encostado ao primeiro nome,
+      ou os nomes por baixo a deixarem de ser os de sempre;
+    - a duracao a nao contar com a altura do titulo: com os nomes a mandar os creditos crescem essa altura a 150 px/s;
+      com as fotos a mandar (o filme de hoje) a duracao fica e os nomes andam um pouco mais depressa, para acabarem juntos;
+    - o fotograma a nao ter o titulo por cima do primeiro nome;
+    - um valor que nao e texto a mudar o filme calado. A segunda conta da duracao (a do juncao_creditos, para a musica)
+      prova-se no teste_juncao_mede_os_creditos_como_o_ponto5, com um caso com o titulo.
+    """
+    import hashlib
+    import render
+    p5 = _ponto5()
+    problemas = []
+    render.aplicar_estilo(None)
+    TIT = "Convidados"
+    # 1. A ESCOLHA: so um texto entra, limpo e numa linha; sem ele o dicionario dos textos e o de sempre
+    de_sempre = {"cargos", "titulo", "data", "grupos", "cargos_primeiro", "partes", "nomes_corridos", "velocidade"}
+    for valor, fica, avisa in ((None, None, False), ("", None, False), ("   ", None, False), (5, None, True),
+                               (True, None, True), ([TIT], None, True), ("  Convidados ", TIT, False),
+                               ("Os\nconvidados", "Os convidados", False)):
+        av = []
+        t = p5.textos_dos_creditos({"creditos": {"nomes_corridos": True, "titulo_nomes": valor}}, av)
+        if t.get("titulo_nomes") != fica or bool(av) != avisa or (fica is None and set(t) != de_sempre):
+            problemas.append("titulo_nomes %r: %r, %s" % (valor, t.get("titulo_nomes"), av))
+    t_sem = p5.textos_dos_creditos({"creditos": {"nomes_corridos": True}})
+    t_com = p5.textos_dos_creditos({"creditos": {"nomes_corridos": True, "titulo_nomes": TIT}})
+    if set(t_sem) != de_sempre or "o titulo por cima dos nomes" in p5.textos_mudados(t_sem) \
+            or "o titulo por cima dos nomes" not in p5.textos_mudados(t_com):
+        problemas.append("os textos mudados: %s / %s" % (p5.textos_mudados(t_sem), p5.textos_mudados(t_com)))
+    # 2. SEM A CHAVE, AO BYTE: o rolo por grupos, o corrido, e os vinte fotogramas da assinatura de antes
+    blocos = p5.por_grupo(CONVIDADOS_DE_ENSAIO)[0]
+    coluna = _coluna_de_ensaio()
+    grupos, corrido = p5.rolo_de_nomes(blocos), p5.rolo_de_nomes(blocos, True)
+    for vazio in (None, ""):
+        if p5.rolo_de_nomes(blocos, False, vazio).tobytes() != grupos.tobytes() \
+                or p5.rolo_de_nomes(blocos, True, vazio).tobytes() != corrido.tobytes():
+            problemas.append("sem titulo (%r) o rolo nao e o de sempre ao byte" % (vazio,))
+    t0 = p5.textos_dos_creditos({"creditos": {"titulo_nomes": ""}})
+    r0 = p5.rolo_de_nomes(blocos, t0["nomes_corridos"], t0.get("titulo_nomes"))
+    T0 = p5.tempos_dos_creditos(r0.height, coluna.height, len(t0["cargos"]), t0["cargos_primeiro"], t0["partes"],
+                                t0["velocidade"])
+    cred0 = p5.desenho_dos_creditos(r0, coluna, t0, {}, T0)
+    md5 = hashlib.md5(b"".join(cred0(x).tobytes() for x in _instantes_dos_creditos(T0))).hexdigest()
+    if md5 != ASSINATURAS_CREDITOS_ANTES["hoje"]:
+        problemas.append("sem o titulo os creditos nao sao os de antes ao byte (%s)" % md5)
+    # 3. COM A CHAVE: o titulo no topo, no letreiro de um titulo de grupo, e os nomes de sempre por baixo
+    larg = corrido.width
+    alto = p5.letreiro_do_titulo(TIT).height - 2 * 110        # o letreiro cortado como o de um titulo de grupo
+    d = alto + p5.TITULO_NOMES_GAP
+    com = p5.rolo_de_nomes(blocos, True, TIT)
+    faixa = com.crop((0, 0, larg, alto))
+    if com.size != (larg, corrido.height + d):
+        problemas.append("o rolo corrido com o titulo tem %d px, e devia ter %d + %d" % (com.height, corrido.height, d))
+    else:
+        de_grupo = p5.rolo_de_nomes([(TIT, "x", [["Ana Um"]])]).crop((0, 0, larg, alto))
+        if faixa.getbbox() is None or faixa.tobytes() != de_grupo.tobytes():
+            problemas.append("o topo do rolo nao e o letreiro de um titulo de grupo com o texto dele")
+        if faixa.tobytes() == p5.rolo_de_nomes(blocos, True, "Amigos").crop((0, 0, larg, alto)).tobytes():
+            problemas.append("o titulo nao muda com o texto")
+        if com.crop((0, alto, larg, d)).getbbox() is not None:
+            problemas.append("o espaco entre o titulo e o primeiro nome nao esta vazio")
+        if com.crop((0, d, larg, com.height)).tobytes() != corrido.tobytes():
+            problemas.append("os nomes por baixo do titulo nao sao os de sempre, ao byte")
+    # por grupos: o titulo, os 90 px de antes de um titulo de grupo, e o rolo de sempre
+    com_g = p5.rolo_de_nomes(blocos, False, TIT)
+    dg = alto + 90
+    if com_g.size != (larg, grupos.height + dg) or com_g.crop((0, 0, larg, alto)).tobytes() != faixa.tobytes() \
+            or com_g.crop((0, alto, larg, dg)).getbbox() is not None \
+            or com_g.crop((0, dg, larg, com_g.height)).tobytes() != grupos.tobytes():
+        problemas.append("por grupos, o titulo nao fica no topo com o rolo de sempre por baixo (%d px contra %d + %d)"
+                         % (com_g.height, grupos.height, dg))
+    # 4. A DURACAO CONTA COM O TITULO
+    so = ["titulo", "rolo"]
+    # os nomes a mandar (uma coluna curta): os creditos crescem a altura do titulo, a 150 px/s
+    Ns, Nc = (p5.tempos_dos_creditos(h, 100, 0, False, so) for h in (corrido.height, com.height))
+    if abs((Nc["dur"] - Ns["dur"]) - d / p5.VELOCIDADE_NOMES) > 1e-9 or abs(Nc["vel_nomes"] - p5.VELOCIDADE_NOMES) > 1e-9:
+        problemas.append("com os nomes a mandar os creditos crescem %.3f s, e deviam %.3f" % (Nc["dur"] - Ns["dur"],
+                                                                                         d / p5.VELOCIDADE_NOMES))
+    # as fotos a mandar (o filme de hoje): a duracao fica, e os nomes andam mais depressa para acabarem com elas
+    Fs, Fc = (p5.tempos_dos_creditos(h, coluna.height, 0, False, so) for h in (corrido.height, com.height))
+    if Fc["dur"] != Fs["dur"] or not Fc["vel_nomes"] > Fs["vel_nomes"] \
+            or abs(Fc["vel_nomes"] * Fc["t_rolo"] - (com.height + p5.A * 0.55)) > 1e-6:
+        problemas.append("com as fotos a mandar: %.3f s contra %.3f, os nomes a %.2f contra %.2f px/s"
+                         % (Fc["dur"], Fs["dur"], Fc["vel_nomes"], Fs["vel_nomes"]))
+    # com a velocidade dos nomes escolhida, crescem a altura do titulo a essa velocidade
+    Vs, Vc = (p5.tempos_dos_creditos(h, 100, 0, False, so, {"nomes": 60.0}) for h in (corrido.height, com.height))
+    if abs((Vc["dur"] - Vs["dur"]) - d / 60.0) > 1e-9:
+        problemas.append("com os nomes a 60 px/s os creditos crescem %.3f s, e deviam %.3f" % (Vc["dur"] - Vs["dur"], d / 60.0))
+    # 5. NO FOTOGRAMA: quando o rolo acaba de entrar, o titulo esta a meio do ecra e o primeiro nome por baixo dele
+    T = p5.tempos_dos_creditos(com.height, coluna.height, len(t_com["cargos"]), t_com["cargos_primeiro"], t_com["partes"],
+                               t_com["velocidade"])
+    quadro = p5.desenho_dos_creditos(com, coluna, t_com, {}, T)(T["t_rolo_entra"] + T["t_entrada"])
+    x0, y0 = p5.PAINEL_NOMES[0] - p5.MARGEM_BRILHO, int(p5.A * 0.45)
+    cabe = p5.L - x0                              # o rolo e mais largo do que o painel, e o ecra corta-lhe a folga
+    if quadro.crop((x0, y0, p5.L, y0 + alto)).tobytes() != com.crop((0, 0, cabe, alto)).tobytes():
+        problemas.append("o titulo nao esta no fotograma, no topo do rolo")
+    if quadro.crop((x0, y0 + d, p5.L, y0 + d + 78)).tobytes() != corrido.crop((0, 0, cabe, 78)).tobytes() \
+            or quadro.crop((x0, y0 + d, p5.L, y0 + d + 78)).getbbox() is None:
+        problemas.append("o primeiro nome nao esta por baixo do titulo no fotograma")
+    # 6. O AVISO de um caracter que a letra nao tem (a segunda conta da duracao, a da juncao da musica, prova-se no
+    # teste_juncao_mede_os_creditos_como_o_ponto5)
+    estranho = dict(t_com, titulo_nomes="Convidados 中")
+    if not any("o titulo por cima dos nomes" in a for a in p5.caracteres_que_faltam(estranho, [])) \
+            or any("o titulo por cima dos nomes" in a for a in p5.caracteres_que_faltam(t_com, [])):
+        problemas.append("o aviso do caracter que a letra nao tem no titulo por cima dos nomes")
+    verifica("creditos: o titulo por cima dos nomes", not problemas,
+             "; ".join(problemas[:3]) if problemas else
+             "sem a chave ao byte; com ela o rolo corrido cresce %d px (o titulo %d e %d de espaco), os nomes de sempre "
+             "por baixo; com os nomes a mandar mais %.2f s, com as fotos a mandar a mesma duracao"
+             % (d, alto, p5.TITULO_NOMES_GAP, d / p5.VELOCIDADE_NOMES))
+
+
 def _monta_congelado(mexe=None, com_texto=False):
     """Monta a demo_v3 do estado congelado (rev 242), mexido por `mexe(versao)`, numa pasta temporaria.
 
@@ -19996,6 +20115,8 @@ def teste_juncao_mede_os_creditos_como_o_ponto5():
                 t = p5.textos_dos_creditos({"creditos": cr}, [])
                 blocos = p5.por_grupo(CONVIDADOS_DE_ENSAIO, t["grupos"])[0]
                 rolo = p5.rolo_de_nomes(blocos, True) if t["nomes_corridos"] else p5.rolo_de_nomes(blocos)
+                if t.get("titulo_nomes"):         # o titulo por cima dos nomes (4 de outubro) faz o rolo mais alto
+                    rolo = p5.rolo_de_nomes(blocos, t["nomes_corridos"], t["titulo_nomes"])
                 coluna = p5.coluna_de_fotos(fotos)
                 render.aplicar_estilo(estilo_antes)
             return p5.tempos_dos_creditos(rolo.height, coluna.height, len(t["cargos"]), t["cargos_primeiro"],
@@ -20004,7 +20125,10 @@ def teste_juncao_mede_os_creditos_como_o_ponto5():
                  ("o titulo antes, sem cargos e corridos", {"partes": ["titulo", "rolo"], "nomes_corridos": True}),
                  ("o titulo, os cargos e o rolo", {"partes": ["titulo", "cargos", "rolo"]}),
                  ("as fotos a 100", {"velocidade": {"fotos": 100}}),
-                 ("os nomes a 30", {"nomes_corridos": True, "velocidade": {"nomes": 30}})]
+                 ("os nomes a 30", {"nomes_corridos": True, "velocidade": {"nomes": 30}}),
+                 # o titulo por cima dos nomes (4 de outubro): com os nomes a mandar, a duracao conta com ele
+                 ("os nomes a 30 com o titulo por cima", {"nomes_corridos": True, "velocidade": {"nomes": 30},
+                                                          "titulo_nomes": "Convidados"})]
         # a medida usa o estilo da montagem e devolve o deste processo: ve-se logo a seguir a ela, antes
         # de o do_ponto5() o repor
         jc.duracao_dos_creditos(({"creditos": {}}, "ensaio"))
@@ -20022,6 +20146,9 @@ def teste_juncao_mede_os_creditos_como_o_ponto5():
                              % {k: round(v, 3) for k, v in duracoes.items()})
         if abs(duracoes["os cargos primeiro"] - duracoes["como esta"] - 0.9) > 1e-6:
             problemas.append("os cargos primeiro nao somam os 0,9 s da 109")
+        if not duracoes["os nomes a 30 com o titulo por cima"] > duracoes["os nomes a 30"] + 5.0:
+            problemas.append("o titulo por cima dos nomes nao entra na duracao da juncao (%.3f s contra %.3f)"
+                             % (duracoes["os nomes a 30 com o titulo por cima"], duracoes["os nomes a 30"]))
         if render.estilo_ativo() != estilo_antes:
             problemas.append("a medida deixou o estilo do processo em %s" % render.estilo_ativo())
         sys.argv = ["juncao_creditos.py", "--creditos", "167,787"]
@@ -20566,6 +20693,7 @@ def main():
     teste_creditos_partes_e_nomes_corridos()
     teste_creditos_velocidade()
     teste_creditos_titulo_primeiro_depois_de_o_filme_se_apagar()
+    teste_creditos_titulo_dos_nomes()
     print("os acertos de 3 de outubro: os sons automaticos e a marca a continuar")
     teste_som_auto_liga_e_desliga()
     teste_marca_a_continuar()

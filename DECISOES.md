@@ -4556,6 +4556,29 @@ que está acima. Sem commits.
 
 **Quem:** o Tiago pediu; o Claude corrigiu; dois agentes reviram.
 
+### 2026-10-04 | 116 | O render final: os cinco pedidos da meia-noite, o som medido passagem a passagem e o filme da sala
+
+**O que ele pediu (00:20, palavras dele):** *"Todas as músicas devem, no final, ir reduzindo gradualmente o volume, de modo a assegurar uma transição suave para a música seguinte"*; *"na pré-visualização os foguetes estão a tocar já na primeira foto da Clara. Como posso ficar tranquilo de forma rápida e eficaz"*; *"um Contador de 2023 onde vai direto no mesmo Contador para 25 de dezembro de 2025 e o texto tem de ser Pedido. Depois o outro contador quero tenha o mesmo estilo do anterior"*; *"zoom out [...] na posição 111 [...] o mesmo zoom out nas duas, assim ficam alinhadinhas"*; *"ESCREVE Convidados NO TOPO DA LISTA DO SCROLL NOS CRÉDITOS"*; e *"Precisava de ter o vídeo com a melhor e absoluta qualidade"*. Às 00:56: *"Está fechada. Não vou mexer mais."*
+
+**Decisão e o que se fez:**
+- **O som mediu-se no filme e não no Pré-visualizar.** O `saida/discussao/final_1004/passagens.py` constrói a banda sonora verdadeira sem desenhar fotogramas, diz como entra e como sai cada faixa e corta 12 s de cada passagem para ele ouvir. Resultado: as músicas descem todas 2,2 s por baixo da que entra, os foguetes 1 s, nenhum silêncio. Os foguetes de cada nascimento calam-se 0,6 s antes de a primeira foto começar a subir; o que ele via na Mesa era a montagem das 13:09.
+- **O cruzamento fica em 2,2 s.** Ele ouviu as passagens com 2,2 s e com 4 s, perguntou o que me parecia e ficou como estava: com 4 s a música nova também demora 4 s a subir, e cada troca cai num cartão de 3 a 3,6 s.
+- **A Ana Faria tocava duas vezes, desfasada 0,4 s,** na primeira foto da Clara (a automática do nome e a marca dele aos 8 s). Ele ouviu: *"Agora temos duas vezes Ana Faria, está mal."* A marca passou a `in: "continua"` e fica uma entrada só.
+- **Do Rei Leão para a Céline** ele quis primeiro sem descida nem subida (*"pois isso faria com que nem se ouvisse"*) e depois *"é importante que fique smooth e não se note um corte estranho"*. Dois agentes mediram quatro versões (A troca imediata, B cerca de 1 s, C 2,2 s, D com a Céline 0,3 s à frente), sem escrever letras, e recomendaram a A. **Ele ouviu e escolheu a C** (*"C"*, *"parece-me e melhor"*): o cruzamento de sempre. Nas quatro o Rei Leão toca os 4,9 s em cheio. A linha de fim de frase que eu tinha acrescentado para a A saiu outra vez.
+- **Os fins de frase medidos (096) já não batem com esta montagem** (Rei Leão para Céline e Riptide para BTO): descem no corte, como as outras. Não se mediram de novo, a pedido dele de descida gradual em todas.
+- **Os contadores do fim:** `2023>25/12/2025|25/12/2025=Pedido` e, no mesmo estilo, `2025>04/10/2026|25 de dezembro de 2025`. Sem palavra por baixo da data do casamento: ele não a deu.
+- **O lado a lado das duas fotos das 20:07** (posição 111 quando pediu) leva `li`, as fotos inteiras, como a 113.
+- **«Convidados» por cima dos nomes:** chave nova e opcional `creditos.titulo_nomes`, lida pelo `ponto5_creditos.py` e pelo `juncao_creditos.py`. Sem a chave tudo sai igual ao byte. A Mesa guarda-a mas ainda não a desenha na pré-visualização dos créditos.
+- **`scripts/refazer_som.py`:** refaz só o som de um filme já desenhado e junta-o outra vez, em minutos, quando a imagem não mudou. Recusa-se se o corpo em disco não tiver a duração da montagem.
+
+**O filme:** `C:\casamento-video-media\saida\v3_2026-10-04_0139.mp4`, da revisão 2759 da base, 1920x1080, 11:47, -21,8 LUFS. Com créditos: o `--master` do `ponto5_creditos.py` sobre esse ficheiro. Um primeiro render arrancado às 00:37 foi parado aos 17 minutos, porque ele ainda acrescentou uma foto.
+
+**Razão:** é o dia do casamento. O Pré-visualizar é uma aproximação e fica desatualizado quando ele mexe na montagem; para ele ficar tranquilo antes de uma hora de render, mostra-se o som verdadeiro em 4 minutos e as imagens verdadeiras em fotogramas.
+
+**O que fica por fazer depois do casamento:** a pré-visualização dos créditos na Mesa desenhar o título dos nomes; o `passagens.py` passar para `scripts/`; o testes.py inteiro não correu depois destas mudanças (só os testes dos créditos e os da Mesa).
+
+**Quem:** o Tiago pediu, ouviu e escolheu; o Claude mediu, corrigiu e renderizou; cinco agentes mediram e verificaram.
+
 ## Em aberto
 
 Não assumir nenhuma destas sem decisão explícita do Tiago.

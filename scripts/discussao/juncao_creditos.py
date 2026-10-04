@@ -100,6 +100,8 @@ def tempos_da_leitura(leitura):
             fotos, _fonte = p5.fotos_marcadas(leitura)
             corridos = textos["nomes_corridos"]
             rolo = p5.rolo_de_nomes(blocos, corridos) if corridos else p5.rolo_de_nomes(blocos)
+            if textos.get("titulo_nomes"):       # o titulo por cima dos nomes (4 de outubro) faz o rolo mais alto
+                rolo = p5.rolo_de_nomes(blocos, corridos, textos["titulo_nomes"])
             coluna = p5.coluna_de_fotos(fotos)
         finally:
             render.aplicar_estilo(antes)

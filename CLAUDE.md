@@ -320,6 +320,21 @@ filme e os créditos saem iguais ao byte.
   É a conta da retoma da 060, e serve para o Lang Lang dos contadores 57 e 143 em vez dos segundos
   feitos à mão (43,7 e 52).
 
+**O render final faz-se com o som medido, não com o Pré-visualizar (decisão 116).** O Pré-visualizar é
+uma aproximação e usa a montagem da última publicação da Mesa. Antes de um render longo:
+- `py -3.11 saida/discussao/final_1004/passagens.py` constrói a banda sonora verdadeira sem desenhar
+  fotogramas (4 a 8 minutos), escreve `passagens.md` (como entra e como sai cada faixa; procurar
+  «CORTA», «ECO» e «DA JUNCAO») e `passagens.mp4` (12 s de cada passagem, para ele ouvir).
+- Mudar só o som não obriga a desenhar o filme outra vez: se o `data/montagens/v3.csv` sair igual ao
+  byte, `py -3.11 scripts/refazer_som.py v3` refaz o som e a junção a partir do corpo que o render
+  deixou em disco. O render lê o `v3.som.csv` só depois de desenhar, por isso um montar corrido a meio
+  do desenho ainda entra.
+- Uma marca da mesma música que a automática, mas noutro segundo, toca por cima dela em eco: a marca
+  passa a `in: "continua"`.
+- **Nos créditos, `creditos.titulo_nomes`** põe um título por cima dos nomes do rolo («Convidados»).
+  O ficheiro da sala é o `--master` do `ponto5_creditos.py`, com `--estado data/mesa_estado.json` e
+  `--filme` com o render do filme; o estado tem de ser o mesmo com que o montar fez o filme.
+
 **A pilha vai até 60 em monte, e só até 24 em leque** (decisões 091 e 102): desenhado a sério, o
 leque deixa de mostrar 20% de cada foto de baixo a partir de 25. O montar põe em monte um leque
 maior.

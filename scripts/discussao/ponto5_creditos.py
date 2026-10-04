@@ -70,6 +70,11 @@ das fotos"):
   entre grupos, pela mesma ordem (rolo_de_nomes);
 - est.creditos.velocidade = {fotos, nomes} em px/s (velocidade_da_escolha, avisos_da_velocidade).
 Sem estas chaves, tudo igual ao byte (teste_creditos_partes_e_nomes_corridos, teste_creditos_velocidade).
+
+O TITULO POR CIMA DOS NOMES (4 de outubro, o Tiago: "ESCREVE \"Convidados\" NO TOPO DA LISTA DO SCROLL NOS CREDITOS em
+cima dos nomes"): est.creditos.titulo_nomes = "Convidados" poe esse titulo no topo do rolo, por cima do primeiro nome, a
+subir com ele, no letreiro dos titulos dos grupos (TITULO_CORPO). O rolo fica mais alto, e os tempos contam com isso.
+Sem a chave, tudo igual ao byte (teste_creditos_titulo_dos_nomes).
 """
 import csv
 import glob
@@ -161,6 +166,10 @@ MARGEM_BRILHO = 60            # o rolo e mais largo do que o painel, para o bril
 LARGURA_FOTO = 760
 CENTRO_FOTOS = 460
 TITULO_CORPO, TITULO_ESPACO = 60, 0.18
+# O TITULO POR CIMA DOS NOMES (est.creditos.titulo_nomes, 4 de outubro): o letreiro de um titulo de grupo, no topo do
+# rolo. Com os nomes corridos nao ha subtitulo entre ele e o primeiro nome, e leva este espaco por baixo; por grupos, o
+# primeiro titulo de grupo vem os 90 px de sempre depois dele.
+TITULO_NOMES_GAP = 30
 # OS TEXTOS DELE TEM DE CABER (2 de outubro). Um cargo, um titulo ou uma data que a Mesa deixe escrever
 # mais compridos do que o ecra eram cortados nas pontas, e num projetor que ainda corta as bordas
 # perdiam-se letras. Mede-se antes de desenhar, contra a zona segura dos titulos da EBU (R 95, 90% da
@@ -426,7 +435,7 @@ def quem_que_encolhe(textos):
     return avisos
 
 
-def rolo_de_nomes(blocos, corridos=False):
+def rolo_de_nomes(blocos, corridos=False, titulo_nomes=None):
     """Os nomes todos numa imagem alta, preta, com a largura do painel da direita.
 
     Um titulo de grupo mais largo do que o painel encolhe ate caber (letreiro_do_titulo) e nunca
@@ -436,6 +445,13 @@ def rolo_de_nomes(blocos, corridos=False):
     divisoes por grupinhos. Nos so queremos os nomes dos convidados corridos"): com `corridos` saem os
     titulos e os subtitulos dos grupos e o espaco entre grupos. Ficam so as linhas dos nomes, pela ordem
     de hoje (a dos grupos, e dentro de cada grupo a de hoje), cada uma nos 78 px de sempre.
+
+    O TITULO POR CIMA DOS NOMES (4 de outubro; o Tiago: "ESCREVE \"Convidados\" NO TOPO DA LISTA DO SCROLL NOS
+    CREDITOS em cima dos nomes"): com `titulo_nomes` o rolo comeca por esse titulo, no letreiro de um titulo de
+    grupo (o mesmo corpo, a mesma letra, e encolhe se nao couber), e os nomes vem por baixo, a subir com ele. Com
+    os nomes corridos leva TITULO_NOMES_GAP por baixo; por grupos, o primeiro grupo vem os 90 px de sempre depois.
+    O rolo fica mais alto exatamente a altura do titulo mais esse espaco, e o resto e o de sempre, ao byte, mais
+    abaixo. Sem ele (None ou ""), o rolo de sempre ao byte.
     """
     larg_texto = PAINEL_NOMES[1] - PAINEL_NOMES[0]
     larg = larg_texto + 2 * MARGEM_BRILHO
@@ -445,6 +461,10 @@ def rolo_de_nomes(blocos, corridos=False):
     f_sub = letra_de_ler(SUB_CORPO)
     cor_nome = cor_dos_nomes()
     pecas, anterior = [], None
+    if titulo_nomes:
+        pecas.append(("titulo", letreiro_do_titulo(titulo_nomes)))
+        if corridos:
+            pecas.append(("gap", TITULO_NOMES_GAP))
     for titulo, sub, linhas in blocos:
         if corridos:
             for ln in linhas:
@@ -707,6 +727,11 @@ def textos_dos_creditos(est, avisos=None):
             saida["cargos"] = lista
     saida["titulo"] = _texto_dele(cr.get("titulo"), "titulo", avisos) or TITULO
     saida["data"] = _texto_dele(cr.get("data"), "data", avisos) or DATA
+    # O TITULO POR CIMA DOS NOMES (4 de outubro): a chave so existe na saida quando ele o escreveu, e por isso sem
+    # ela o dicionario e o de sempre. Numa linha so: e um letreiro, e uma mudanca de linha fica um espaco.
+    titulo_nomes = _texto_dele(cr.get("titulo_nomes"), "titulo_nomes", avisos, "fica sem titulo por cima dos nomes")
+    if titulo_nomes:
+        saida["titulo_nomes"] = " ".join(titulo_nomes.split())
     grupos = cr.get("grupos")
     if grupos is not None:
         if not isinstance(grupos, dict):
@@ -744,6 +769,7 @@ def textos_mudados(textos):
             + (["a ordem (os cargos primeiro)"] if textos.get("cargos_primeiro") else [])
             + (["as partes (%s)" % ", ".join(partes)] if novas else [])
             + (["os nomes corridos"] if textos.get("nomes_corridos") else [])
+            + (["o titulo por cima dos nomes"] if textos.get("titulo_nomes") else [])
             + (["a velocidade (%s)" % ", ".join("%s %g px/s" % (k, v) for k, v in sorted(textos["velocidade"].items()))]
                if textos.get("velocidade") else [])
             + (["titulo"] if textos["titulo"] != TITULO else []) + (["data"] if textos["data"] != DATA else [])
@@ -964,6 +990,8 @@ def caracteres_que_faltam(textos, blocos):
     def mau(p):
         return render.caracteres_sem_letra(p, f_ler) or render.texto_emojis.sequencias(p)
     corridos = textos.get("nomes_corridos")
+    if textos.get("titulo_nomes"):    # o titulo por cima dos nomes vai no letreiro, na letra do cartao (4 de outubro)
+        ve("o titulo por cima dos nomes \"%s\"" % textos["titulo_nomes"], textos["titulo_nomes"], f_cartao)
     for titulo, sub, linhas in blocos:
         if not corridos:              # com os nomes corridos os titulos e os subtitulos nao vao ao ecra
             ve("o titulo de grupo \"%s\"" % titulo, titulo, f_cartao)
@@ -1528,8 +1556,10 @@ def main():
         raise SystemExit("Nenhuma foto para a coluna dos creditos (%s)" % fonte)
     # com os nomes corridos os titulos dos grupos nao vao ao ecra, e nao se dizem (3 de outubro)
     corridos = textos["nomes_corridos"]
-    for a in (titulos_que_encolhem([] if corridos else blocos) + quem_que_encolhe(textos)
-              + caracteres_que_faltam(textos, blocos)):
+    # o titulo por cima dos nomes (4 de outubro) e um titulo como os dos grupos: se nao couber, encolhe e diz-se
+    titulo_nomes = textos.get("titulo_nomes")
+    for a in (titulos_que_encolhem(([(titulo_nomes, "", [])] if titulo_nomes else []) + ([] if corridos else blocos))
+              + quem_que_encolhe(textos) + caracteres_que_faltam(textos, blocos)):
         print("  AVISO: %s" % a)
     nao_cabem = textos_que_nao_cabem(textos, blocos)
     for p in nao_cabem:
@@ -1537,6 +1567,12 @@ def main():
     if nao_cabem and "--so-dizer" not in sys.argv:
         raise SystemExit("%d textos dos creditos nao cabem no ecra; nada foi desenhado" % len(nao_cabem))
     rolo = rolo_de_nomes(blocos, corridos) if corridos else rolo_de_nomes(blocos)
+    if titulo_nomes:
+        # O TITULO POR CIMA DOS NOMES: o rolo comeca por ele, e os tempos contam com a altura que ele acrescenta
+        sem_titulo = rolo.height
+        rolo = rolo_de_nomes(blocos, corridos, titulo_nomes)
+        print("titulo por cima dos nomes: \"%s\", no topo do rolo (mais %d px de rolo)"
+              % (titulo_nomes, rolo.height - sem_titulo))
     coluna = coluna_de_fotos(fotos)
     T = tempos_dos_creditos(rolo.height, coluna.height, len(textos["cargos"]), textos["cargos_primeiro"],
                             textos["partes"], textos["velocidade"])
