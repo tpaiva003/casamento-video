@@ -4579,6 +4579,28 @@ que está acima. Sem commits.
 
 **Quem:** o Tiago pediu, ouviu e escolheu; o Claude mediu, corrigiu e renderizou; cinco agentes mediram e verificaram.
 
+### 2026-10-04 | 117 | O filme da sala: a foto trocada, a validação e o ficheiro `_FINAL`
+
+**O que ele disse (02:10 a 02:50):** *"Continua com esse a acabar, pois assim fico já com o backup. Quero fazer uma alteração de troca de uma foto por outra na mesa e voltas a lançar novo vídeo com máximo de qualidade"*; *"feito. já troquei"*; e depois *"Faz testes de validação. Confirma que as fotos que estamos a usar estão ou com a qualidade original se boa ou com as melhorias que fizemos, sendo que essas têm de respeitar a máxima de não inventar caras e assim, mantendo sempre real a pessoa, as feições. Não te esqueças que este vai ser o vídeo que vai ficar na cabeça de 131 no nosso casamento."*
+
+**O que se fez:**
+- A troca dele (revisão 2766 da base) mudou uma foto só, a da posição 139: entrou a f0772, largada na `01-NOVAS` às 02:08. Render novo `v3_2026-10-04_0243.mp4` (33 minutos) e `--master` com créditos. O das 01:39 fica como cópia de segurança.
+- **Validação, cinco revisores só a ler** (`saida/discussao/final_1004/validacao/`):
+  - **Fotos:** 212 no filme e nos créditos, 144 original ao byte e 68 Lanczos refeitas a partir do original e iguais ao byte; nenhuma igual às 586 imagens da rede ou de restauro que há em disco; 172 caras medidas nas ampliadas, todas entre 0,80 e 0,98 do detalhe do original (regra da 086: 0,80 a 1,25).
+  - **Filme contra a montagem:** 161 de 161 clips batem; nenhum preto fora dos clips escuros; o filme novo só difere do anterior no clip trocado.
+  - **Entrega:** descodifica inteira sem erros; -21,9 LUFS; por minuto varia 1,8 dB; acaba a preto.
+  - **Textos:** cinco gralhas pequenas e 20 legendas rápidas, reportadas e não corrigidas (082).
+  - **Testes:** três falhas novas, todas de testes desatualizados face ao estado de hoje, nenhuma no código que fez o filme.
+- **O buraco de som na colagem dos créditos.** A validação mediu 52 ms de zeros aos 700,3 s e o som 32,2 ms atrasado a partir daí; vem do `master_com_creditos` e do `colar_no_filme`, e todas as cópias com créditos feitas até hoje o têm. No ficheiro `_FINAL` o buraco foi tapado com o som do próprio filme e o resto andou 1548 amostras para a frente. A imagem é cópia do fluxo de vídeo, igual ao byte (md5 do vídeo 82f14556...). Um verificador independente confirmou.
+
+**O ficheiro que vai para a sala:** `C:\casamento-video-media\saida\v3_2026-10-04_0243_com_creditos_FINAL.mp4`, 900,88 s, 1920x1080, 326 MB.
+
+**Por ele decidir, se quiser novo render:** os números de telemóvel legíveis nas placas da caricatura do fim; as cinco gralhas; os 136 nomes dos créditos contra os 131 convidados de que falou.
+
+**Depois do casamento:** corrigir a colagem no `ponto5_creditos.py` (o som da primeira parte fica mais curto do que a imagem); atualizar os três testes (`teste_finais_cobre_o_que_precisa`, «contador mostra a data escrita na Mesa», «Mesa: o som toca como o render» com a marca que continua); a pasta `C:\casamento-video-media\saida` tem dois ficheiros a mais desta noite (`_com_creditos.mp4` das 03:10 e `_com_creditos_v2.mp4`), que não se apagam sem ele dizer.
+
+**Quem:** o Tiago trocou a foto e pediu a validação; o Claude renderizou e remendou o som; seis agentes validaram.
+
 ## Em aberto
 
 Não assumir nenhuma destas sem decisão explícita do Tiago.
